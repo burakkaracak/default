@@ -78,7 +78,7 @@ function reflowQueue(){ queue.forEach((g,k)=>{ const p=qPos(k); g.qk=k; g.goTo(0
 function pickType(){
   const st=stars(), opts=Object.keys(GTYPES).filter(k=>GTYPES[k].stars<=st);
   let maxLv=0; for(const k in state.rooms) maxLv=Math.max(maxLv,ROOM_T[state.rooms[k].type].lvl);
-  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1);
+  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1)*festTypeW(k);
   let tot=0; opts.forEach(k=>tot+=w(k)); let r=Math.random()*tot;
   for(const k of opts){ r-=w(k); if(r<=0) return k; } return 'tourist';
 }
@@ -113,7 +113,7 @@ function checkIn(g,id){
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
-  g.sat=clamp(g.sat+priceSat()+3*skillLv('g1'),5,100);
+  g.sat=clamp(g.sat+priceSat()+3*skillLv('g1')+(s.perfect?5:0),5,100); if(s.perfect){ s.perfect=false; fxEmoji(g.x,2.8,g.z,0,'✨'); }
   if(g.pref){ if(s.theme===g.pref){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.6,g.z,0,RTHEMES[g.pref].e); } else g.sat=clamp(g.sat-3,5,100); }
   if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
@@ -142,7 +142,7 @@ function checkout(g){
   if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
-  noteGuestDay(g,mood,false); noteLoyal(g);
+  noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
   applyRoomState(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
@@ -176,7 +176,7 @@ function tryAmenity(g){
 function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
   const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
-  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); qEv('amen');
+  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen');
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
@@ -199,7 +199,7 @@ function updateGuests(dt){
     const g=guests[i];
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
-      if(!g.path){ g.pat-=dt*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
+      if(!g.path){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
         if(built('cafe')&&!g.coffee&&g.state==='queue'&&!powerOut()){ if(g.coffeeT==null) g.coffeeT=rnd(1.5,5); g.coffeeT-=dt; if(g.coffeeT<=0) sellCoffee(g); } }
     }
     if(g.state==='room'){
@@ -270,7 +270,7 @@ function updateStaff(dt){
       j.t-=dt*staffSpeedMul(e.kind); e.anim='work';
       const s=state.rooms[j.id];
       if(j.type==='clean'&&!s.dirty||j.type==='fix'&&!s.broken){ finishJob(e); continue; }
-      if(j.t<=0){ if(j.type==='clean') cleanRoom(j.id,true); else fixRoom(j.id,true); staffWorked(e); finishJob(e); }
+      if(j.t<=0){ if(j.type==='clean'){ cleanerNow=e; cleanRoom(j.id,true); } else fixRoom(j.id,true); staffWorked(e); finishJob(e); }
     }
   }
 }

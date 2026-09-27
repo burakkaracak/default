@@ -149,6 +149,8 @@
   #toasts{position:absolute;top:calc(96px + var(--st));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90vw;}
   @media (max-width:520px){ #fsBtn{display:none;} }
   .pbar{height:7px;border-radius:4px;background:rgba(0,0,0,.35);overflow:hidden;margin:3px 0;} .pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));}
+  #fixGame{position:absolute;left:50%;bottom:calc(120px + var(--sb));transform:translateX(-50%);background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:8px 10px;display:flex;gap:10px;align-items:center;pointer-events:auto;animation:tin .2s;}
+  #fixGame .fgbar{position:relative;width:170px;height:16px;border-radius:8px;background:rgba(0,0,0,.45);overflow:hidden;} #fixGame .fgz{position:absolute;top:0;bottom:0;background:#5fd98a;} #fixGame .fgm{position:absolute;top:-2px;width:5px;height:20px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff;}
   .citem{pointer-events:auto;cursor:pointer;display:inline-block;padding:0 1px;transition:transform .1s;} .citem:hover{transform:scale(1.25);}
   .toast.tap{pointer-events:auto;cursor:pointer;border-color:#7dffae;} .toast.tap:hover{filter:brightness(1.15);}
   .toast{background:var(--panel);border:2px solid var(--gold);padding:2px 14px 3px;border-radius:12px;font-weight:700;font-size:14px;animation:tin .25s ease-out;text-align:center;}
@@ -460,13 +462,13 @@ function isNight(){ const h=hourNow(); return h>=22.5||h<6.5; }
 function capacity(){ return UPG.cap.vals[state.up.cap]; }
 function magnetR(){ return UPG.magnet.vals[state.up.magnet]; }
 function built(id){ return !!state.built[id]; }
-function poolOpen(){ return built('pool')&&!isWinter()&&(state.weather==='sun'||state.weather==='cloud')&&!isNight(); }
+function poolOpen(){ return built('pool')&&!isWinter()&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
 function restOpen(){ const h=hourNow(); return built('rest')&&h>=8&&h<22.5; }
 function gymOpen(){ const h=hourNow(); return built('gym')&&h>=7&&h<22; }
 function floorsBuilt(){ return built('roof')?4:built('f3')?3:built('f2')?2:1; }
 const ROOF=3;
 function floorName(f){ return f===ROOF?'Çatı':(f+1)+'. kat'; }
-function roofOpen(){ const h=hourNow(); return built('roof')&&h>=10&&h<23.5&&state.weather!=='rain'&&state.weather!=='snow'; }
+function roofOpen(){ const h=hourNow(); return built('roof')&&h>=10&&h<23.5&&state.weather!=='rain'&&state.weather!=='snow'&&!stormOn(); }
 
 // =====================================================================
 // SOUND (synthesized)
@@ -1987,7 +1989,7 @@ function reflowQueue(){ queue.forEach((g,k)=>{ const p=qPos(k); g.qk=k; g.goTo(0
 function pickType(){
   const st=stars(), opts=Object.keys(GTYPES).filter(k=>GTYPES[k].stars<=st);
   let maxLv=0; for(const k in state.rooms) maxLv=Math.max(maxLv,ROOM_T[state.rooms[k].type].lvl);
-  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1);
+  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1)*festTypeW(k);
   let tot=0; opts.forEach(k=>tot+=w(k)); let r=Math.random()*tot;
   for(const k of opts){ r-=w(k); if(r<=0) return k; } return 'tourist';
 }
@@ -2022,7 +2024,7 @@ function checkIn(g,id){
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
-  g.sat=clamp(g.sat+priceSat()+3*skillLv('g1'),5,100);
+  g.sat=clamp(g.sat+priceSat()+3*skillLv('g1')+(s.perfect?5:0),5,100); if(s.perfect){ s.perfect=false; fxEmoji(g.x,2.8,g.z,0,'✨'); }
   if(g.pref){ if(s.theme===g.pref){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.6,g.z,0,RTHEMES[g.pref].e); } else g.sat=clamp(g.sat-3,5,100); }
   if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
@@ -2051,7 +2053,7 @@ function checkout(g){
   if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
-  noteGuestDay(g,mood,false); noteLoyal(g);
+  noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
   applyRoomState(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
@@ -2085,7 +2087,7 @@ function tryAmenity(g){
 function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
   const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
-  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); qEv('amen');
+  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen');
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
@@ -2108,7 +2110,7 @@ function updateGuests(dt){
     const g=guests[i];
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
-      if(!g.path){ g.pat-=dt*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
+      if(!g.path){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
         if(built('cafe')&&!g.coffee&&g.state==='queue'&&!powerOut()){ if(g.coffeeT==null) g.coffeeT=rnd(1.5,5); g.coffeeT-=dt; if(g.coffeeT<=0) sellCoffee(g); } }
     }
     if(g.state==='room'){
@@ -2179,7 +2181,7 @@ function updateStaff(dt){
       j.t-=dt*staffSpeedMul(e.kind); e.anim='work';
       const s=state.rooms[j.id];
       if(j.type==='clean'&&!s.dirty||j.type==='fix'&&!s.broken){ finishJob(e); continue; }
-      if(j.t<=0){ if(j.type==='clean') cleanRoom(j.id,true); else fixRoom(j.id,true); staffWorked(e); finishJob(e); }
+      if(j.t<=0){ if(j.type==='clean'){ cleanerNow=e; cleanRoom(j.id,true); } else fixRoom(j.id,true); staffWorked(e); finishJob(e); }
     }
   }
 }
@@ -2335,8 +2337,8 @@ function updatePlayerZones(dt){
     const s=state.rooms[rid], R=RT(rid);
     if(s.tip>0) collectTip(rid);
     if(R.req&&p.c.items.includes(R.req.item)){ removeItem(R.req.item); fulfillReq(rid); tutEvent('deliver'); }
-    if(s.dirty){ R.cleanP+=dt/playerCleanTime(); workRing={p:R.cleanP,icon:'🧹'}; if(!p.moving&&!p.path) p.anim='work'; if(R.cleanP>=1) cleanRoom(rid,false); }
-    else if(s.broken){ R.fixP+=dt/playerFixTime(); workRing={p:R.fixP,icon:'🔧'}; if(!p.moving&&!p.path) p.anim='work'; if(R.fixP>=1) fixRoom(rid,false); }
+    if(s.dirty){ noteCleanMove(R,p); R.cleanP+=dt/playerCleanTime(); workRing={p:R.cleanP,icon:'🧹'}; if(!p.moving&&!p.path) p.anim='work'; if(R.cleanP>=1) cleanRoom(rid,false); }
+    else if(s.broken){ if(R.fixP<0.02&&!fixGame) startFixGame(rid); R.fixP+=dt/playerFixTime(); workRing={p:R.fixP,icon:'🔧'}; if(!p.moving&&!p.path) p.anim='work'; if(R.fixP>=1) fixRoom(rid,false); }
   }
   if(p.f===0&&p.x>L.serve.x0&&p.x<L.serve.x1&&p.z>L.serve.z0&&p.z<L.serve.z1) atDesk=true;
   extraPlayerZones(p,dt); megaZones(p,dt);
@@ -2351,7 +2353,7 @@ function updatePlayerZones(dt){
 function cleanRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.dirty) return;
   s.dirty=false; R.cleanP=0; const sp=roomSpots(id); sparkleAt(sp.stand.x,sp.stand.f*FH+0.8,sp.stand.z); sfx('sparkle'); applyRoomState(id);
-  if(!byStaff){ tutEvent('clean'); qEv('clean'); } afterRoomCleaned(byStaff); markSave();
+  if(!byStaff){ tutEvent('clean'); qEv('clean'); } cleanQuality(id,byStaff,byStaff?cleanerNow:null); afterRoomCleaned(byStaff); markSave();
 }
 function fixRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.broken) return;
@@ -2498,7 +2500,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'));
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
   if(isNight()) f*=0.3;
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
@@ -2623,6 +2625,7 @@ function tutEvent(ev){
 function goal(){
   const s=state.tut;
   const cg=crisisGoal(); if(cg) return cg;
+  const emg=emergencyGoal(); if(emg) return emg;
   if(s===0) return {icon:'👆',text:TUT[0].text,target:null};
   if(s===1) return {icon:'🛏️',text:TUT[1].text,target:padTarget('r102'),price:PADMAP.r102.cost-(state.paid.r102||0)};
   if(s===2) return {icon:'🛎️',text:TUT[2].text,target:{x:L.serve.cx,y:0,z:L.serve.cz,f:0}};
@@ -3890,7 +3893,7 @@ const SPA_TABLES=[-15.3,-13.65,-12.0];
 SPA_TABLES.forEach(tx=>SEATS.push({amen:'spa',x:tx,z:-7.75,px:tx,pz:-9.2,py:0.62,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 [-7.1,-6.1].forEach(z=>SEATS.push({amen:'spa',x:-12.25,z,px:-11.52,pz:z,py:0.12,rot:-Math.PI/2,pose:'sit',busy:null}));
 function spaOpen(){ const h=hourNow(); return built('spa')&&h>=8&&h<22; }
-function amenBonus(a){ return a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1; }
+function amenBonus(a){ return (a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
 function shellWalls(S,B,wallM,trimM){
   const cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2, w=B.x1-B.x0, d=B.z1-B.z0;
   S.add(mesh(box(w,2.4,0.16),wallM,cx,1.2,B.z0-0.08,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x0-0.08,1.2,cz,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x1+0.08,1.2,cz,true));
@@ -3999,9 +4002,9 @@ const EVT={
   concert:{e:'🎸',name:'Konser',    need:'pool',needN:'Havuz',      rooms:4,types:['influencer','tourist','student'],n:6,rew:1000}};
 const FEST=[{e:'🌷',name:'Lale Festivali'},{e:'🎶',name:'Yaz Konser Festivali'},{e:'🍇',name:'Hasat Festivali'},{e:'🎄',name:'Yılbaşı Festivali'}];
 function festivalOn(){ return !!state&&state.day>=3&&(state.day-1)%(SEASON_DAYS*2)===2; }
-function festival(){ return FEST[seasonIx()]; }
+function festival(){ return cityFestOn()?CITY_FEST[city().name]:FEST[seasonIx()]; }
 function eventReady(){ return readyRooms().length; }
-function eventsDayEnd(){
+function eventsDayEnd(){ events3DayEnd();
   if(state.offer&&state.offer.made<state.day){ toast(`📅 ${EVT[state.offer.k].name} teklifi zaman aşımına uğradı`,'bad'); state.offer=null; }
   if(state.event&&!state.event.started&&state.day>state.event.day){ failEvent('Etkinlik günü geçti'); }
   if(!state.event&&!state.offer&&state.tut>=TUT.length&&!state.sandbox&&state.day>=4&&nRoomsNow()>=6&&Math.random()<0.45){
@@ -4154,6 +4157,7 @@ function depthDayEnd(){
   const t=state.today;
   if(state.loan){ const i=Math.round(state.loan.left*0.03); state.money-=i; t.interest=i; }
   if(state.money<0){ state.negDays=(state.negDays||0)+1; if(state.negDays>=3){ changeRep(-5); setTimeout(()=>toast('🏦 Borçlar birikti, itibarın zedelendi · −5 ün','bad'),2500); state.negDays=0; } } else state.negDays=0;
+  t.zam=zamBill(); if(t.zam) state.money-=t.zam;
   t.chainInc=chainIncome(); if(t.chainInc) state.money+=t.chainInc;
   rivalDayEnd(); careerDayEnd();
 }
@@ -4333,6 +4337,137 @@ function bootDepth2(){
 }
 
 // =====================================================================
+// DEPTH 3: story guests, weather events, city festivals, emergencies
+// (thief, lost child), cleaning quality, repair timing mini-game
+// =====================================================================
+
+// ---------- story chains: special guests who come back chapter by chapter ----------
+const STORIES={
+  writer:{e:'✍️',name:'Yazar Deniz Kaya',type:'business',need:[0,1,2],
+    lines:['Yeni romanım için sakin bir yer arıyorum. Burası ilham verebilir mi?','İlk bölüm burada doğdu! Daha konforlu bir odada ikinci bölüme devam etmek istiyorum.','Romanım bitti ve adı otelinizin adı! Teşekkür ederim.'],
+    ok:['Deniz Kaya ilham buldu, 2 gün sonra dönecek ✍️','Roman hızla ilerliyor, final için tekrar gelecek!','📖 Roman çok satanlar listesinde, otelin ünlendi!']},
+  critic:{e:'🍷',name:'Yemek eleştirmeni Selim Ateş',type:'vip',need:[0,1,2],amen:'rest',
+    lines:['Gizlice otelleri puanlıyorum ama... bunu söylemedim.','Geçen sefer fena değildi. Bu sefer restoranınızı gerçekten deneyeceğim.','Son ziyaretim: köşe yazımı sizin için yazacağım.'],
+    ok:['Selim Ateş notlar aldı, yine gelecek 🍷','Restoranınız eleştirmenin listesinde!','📰 Köşe yazısı yayında: "Şehrin en iyi oteli!"']},
+  couple:{e:'💍',name:'Mehmet & Ayten (50. yıl)',type:'couple',need:[0,1,2],
+    lines:['50. evlilik yıl dönümümüz yaklaşıyor, bir keşif turu yapıyoruz.','Burayı çok sevdik! Torunlarımıza da anlattık.','Bu gece 50. yıl dönümümüz. Burada kutlamak istedik 💕'],
+    ok:['Çift çok mutlu ayrıldı, yıl dönümü için dönecekler','Torunlar da otelinizi merak ediyor!','💕 Unutulmaz bir yıl dönümü! Aileleri sadık müşterin oldu']}};
+function storyState(){ state.stories=state.stories||{}; return state.stories; }
+function activeStory(){ const S=storyState(); for(const k in STORIES){ const s=S[k]; if(s&&s.ch<3) return k; } return null; }
+function updateStories(dt){
+  if(state.tut<TUT.length||state.sandbox) return; const S=storyState();
+  if(!activeStory()){ const k=Object.keys(STORIES).find(k=>!S[k]); if(k&&state.day>=4&&nRoomsNow()>=5) S[k]={ch:0,next:state.day}; else return; }
+  const k=activeStory(), s=S[k], h=hourNow(); if(state.day<s.next||h<9||h>16||guests.some(g=>g.story)||queue.length>=7) return;
+  const St=STORIES[k], g=spawnGuest(St.type); g.name=St.name; g.story={k,ch:s.ch}; g.patMax=g.pat=g.patMax*1.5;
+  s.next=state.day+99; banner(`${St.e} ${St.name} geldi!`,`Bölüm ${s.ch+1}/3 · “${St.lines[s.ch]}”`); sfx('req'); markSave();
+}
+async function storyCheckout(g,id,mood){
+  const st=g.story; if(!st) return; const St=STORIES[st.k], S=storyState(), s=S[st.k], lvl=ROOM_T[state.rooms[id].type].lvl;
+  const ok=g.sat>=72&&lvl>=St.need[st.ch]&&(!St.amen||(g.amenUsed||[]).includes(St.amen)||st.ch<1);
+  if(!ok){ s.next=state.day+3; toast(`${St.e} ${St.name} tam memnun kalmadı (${lvl<St.need[st.ch]?'daha iyi bir oda istiyordu':'memnuniyet düşüktü'}). Yeniden gelecek.`,'bad'); markSave(); return; }
+  s.ch++; s.next=state.day+rint(2,3); const reward=r10(300*cm()*s.ch*(s.ch===3?3:1));
+  state.piles.desk+=reward; pileChanged('desk'); changeRep(2*s.ch); onGameEvent('story',1);
+  let txt=St.ok[s.ch-1];
+  const r=await aiJSON(`Bir otel işletme oyununda süregelen bir misafir hikâyesi: ${St.name}. Az önce ${s.ch}. bölüm mutlu bitti ("${St.lines[s.ch-1]}"). ${s.ch<3?'Sonraki ziyarete merak uyandıran':'Hikâyeyi güzelce bağlayan'} tek ve kısa bir Türkçe cümle yaz (en fazla 20 kelime, 1 emoji).
+SADECE JSON: {"cumle":"..."}`);
+  if(r&&clip(r.cumle,160)) txt=clip(r.cumle,160);
+  banner(`${St.e} Hikâye: bölüm ${s.ch}/3 tamam!`,`${txt} · ${fmt(reward)} ₺ masada`); sfx('star'); confettiAt(L.desk.x,1.5,L.desk.z,s.ch===3?110:50);
+  if(s.ch===3){ state.keys=(state.keys||0)+2; setTimeout(()=>toast(`${St.e} Hikâye finali: +2 🗝️ anahtar`),2500); }
+  logEvent(`${St.e} ${St.name}: ${txt}`); markSave();
+}
+
+// ---------- weather & world events ----------
+const WX_EV={storm:{e:'⛈️',name:'Fırtına',sub:'Çatı ve havuz kapalı, daha az misafir gelir'},heat:{e:'🥵',name:'Sıcak hava dalgası',sub:'Havuz ve spa ücretleri %60 fazla, sırada sabır azalır'},zam:{e:'⚡',name:'Elektrik zammı',sub:'Gün sonunda ekstra enerji faturası gelir'}};
+function wxEv(k){ return !!state.wxEv&&state.wxEv.day===state.day&&(!k||state.wxEv.k===k); }
+function stormOn(){ return wxEv('storm'); }
+function eventsDayRoll(){
+  state.wxEv=null;
+  if(state.tut>=TUT.length&&!state.sandbox&&state.day>=5&&Math.random()<0.18){
+    const opts=['storm','zam']; if(seasonIx()===1) opts.push('heat','heat');
+    const k=rand(opts); state.wxEv={k,day:state.day}; if(k==='storm'){ state.weather='rain'; applyWeather(); }
+    const W=WX_EV[k]; setTimeout(()=>{ banner(`${W.e} ${W.name}!`,W.sub); sfx('alarm'); },5000); }
+  if(!state.emergDue&&state.tut>=TUT.length&&state.day>=4&&Math.random()<0.3) state.emergDue=rand(['thief','child']);
+}
+function zamBill(){ return wxEv('zam')?r10(Math.max(50,wagesToday()*0.3+roomRateSum()*0.5*incomeMult()*0.2)):0; }
+
+// ---------- city festivals (every other festival is the city's own) ----------
+const CITY_FEST={'İstanbul':{e:'🏃',name:'İstanbul Maratonu',types:['athlete','business']},'Antalya':{e:'🎬',name:'Film Festivali',types:['influencer','vip']},
+  'Kapadokya':{e:'🎈',name:'Balon Festivali',types:['couple','tourist']},'Bodrum':{e:'⛵',name:'Yat Festivali',types:['vip','couple']},
+  'Paris':{e:'👗',name:'Moda Haftası',types:['influencer','vip']},'Dubai':{e:'🛍️',name:'Alışveriş Festivali',types:['vip','family']}};
+function cityFestOn(){ return festivalOn()&&Math.floor((state.day-1)/(SEASON_DAYS*2))%2===1&&!!CITY_FEST[city().name]; }
+function festTypeW(k){ return cityFestOn()&&CITY_FEST[city().name].types.includes(k)?2.5:1; }
+
+// ---------- emergencies: thief & lost child ----------
+let emerg=null;
+function startEmergency(k){
+  if(emerg) return;
+  if(k==='thief'){ const e=new Ent({skin:rand(SKINS),hair:0x1a1a1a,hs:'short',top:0x1a1a1a,bottom:0x2b2b2b,hat:'cap',hatC:0x1a1a1a,shades:true,bag:0x2b2b2b});
+    e.place(0.3,8.9,0); e.speed=1.6; e.goTo(0,L.piles.desk.x+0.6,L.piles.desk.z+0.8); emerg={k,e,t:32,x:0,z:0};
+    banner('🦹 Lobide hırsız var!','Kasaya ulaşmadan yakala: yanına koş'); sfx('alarm'); camShake(0.15); }
+  else { const spots=[[10.2,7.9],[-12,7.9],[-4.3,9.0],[5.5,10.4]], [x,z]=rand(spots);
+    const e=new Ent({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['short','bun','pony']),top:rand(TOPS),bottom:rand(BOTTOMS),scale:0.62}); e.place(x,z,0);
+    emerg={k,e,t:70,carry:false}; banner('😢 Kayıp çocuk!','Çocuğu bul, resepsiyona getir'); sfx('req'); }
+  emerg.tag=tagAdd({kind:'spot',get:()=>emerg&&emerg.e?{x:emerg.e.x,z:emerg.e.z,f:0}:null,iconF:()=>emerg.k==='thief'?'🦹':emerg.carry?'🧒':'😢',cls:'warn',y:emerg.k==='thief'?2.2:1.5});
+}
+function endEmergency(win){
+  const m=emerg; if(!m) return; emerg=null; tagRemove(m.tag);
+  if(m.k==='thief'){ if(win){ const b=r10(90*cm()); addMoney(b,m.e.x,1,m.e.z,0,true); changeRep(2); banner('👮 Hırsız yakalandı!',`+2 ün · ${fmt(b)} ₺ ödül`); sfx('star'); confettiAt(m.e.x,1.5,m.e.z,40); onGameEvent('hero',1); m.e.remove(); }
+    else { const s=Math.round(state.piles.desk*0.6); state.piles.desk-=s; pileChanged('desk'); changeRep(-2); banner('🦹 Hırsız kaçtı!',`Kasadan ${fmt(s)} ₺ çalındı · −2 ün`); sfx('fail'); m.e.goTo(0,-16.9,12.15,()=>m.e.remove()); } }
+  else { if(win){ const b=r10(60*cm()); addMoney(b,L.serve.cx,1,L.serve.cz,0,true); changeRep(1.5); banner('🤗 Çocuk ailesine kavuştu!',`+1.5 ün · ${fmt(b)} ₺ teşekkür`); sfx('star'); onGameEvent('hero',1); }
+    else { changeRep(-2); toast('😢 Çocuğu başka biri buldu · −2 ün','bad'); } m.e.remove(); }
+  markSave();
+}
+function updateEmergency(dt){
+  if(!emerg){ if(state.emergDue&&!state.sandbox){ const h=hourNow(); if(h>=10&&h<18&&Math.random()<dt*0.02){ const k=state.emergDue; state.emergDue=null; startEmergency(k); } } return; }
+  const m=emerg, e=m.e; m.t-=dt;
+  if(m.k==='thief'){
+    if(player.f===0&&d2(player.x,player.z,e.x,e.z)<0.95*0.95){ endEmergency(true); return; }
+    if(!e.path||m.t<=0) endEmergency(false); }
+  else { if(!m.carry){ if(Math.random()<dt*0.6) fxEmoji(e.x,1.3,e.z,0,'😢'); if(player.f===0&&d2(player.x,player.z,e.x,e.z)<0.9*0.9){ m.carry=true; fxEmoji(e.x,1.4,e.z,0,'🙂'); sfx('pick'); } }
+    else { e.x+=(player.x-0.5-e.x)*Math.min(1,dt*6); e.z+=(player.z-0.4-e.z)*Math.min(1,dt*6); e.tRot=player.rot; e.moving=player.moving;
+      if(player.f===0&&d2(player.x,player.z,L.serve.cx,L.serve.cz)<1.3*1.3){ endEmergency(true); return; } }
+    if(m.t<=0) endEmergency(false); }
+}
+function emergencyGoal(){ const m=emerg; if(!m) return null;
+  if(m.k==='thief') return {icon:'🦹',text:`Hırsızı yakala! (${Math.ceil(m.t)} sn)`,target:{x:m.e.x,y:0,z:m.e.z,f:0},crisis:true};
+  return m.carry?{icon:'🧒',text:'Çocuğu resepsiyona getir',target:{x:L.serve.cx,y:0,z:L.serve.cz,f:0},crisis:true}:{icon:'😢',text:`Kayıp çocuğu bul (${Math.ceil(m.t)} sn)`,target:{x:m.e.x,y:0,z:m.e.z,f:0},crisis:true}; }
+
+// ---------- cleaning quality ----------
+let cleanerNow=null;
+function noteCleanMove(R,p){ if(p.moving) R.cleanMoved=true; }
+function cleanQuality(id,byStaff,e){
+  const s=state.rooms[id], R=RT(id); s.perfect=byStaff?(e?rankOf(e)>=2:false):!R.cleanMoved; R.cleanMoved=false;
+  if(s.perfect&&!byStaff){ const sp=roomSpots(id); fxEmoji(sp.stand.x,sp.stand.f*FH+1.6,sp.stand.z,sp.stand.f,'⭐'); if(!state.tips.perfect){ state.tips.perfect=true; hint('⭐ Kusursuz temizlik: temizlerken kıpırdamazsan sonraki misafir +5 memnun olur',5.5); } }
+}
+
+// ---------- repair timing mini-game ----------
+let fixGame=null;
+function startFixGame(id){
+  if(fixGame||state.sandbox) return; const el=document.createElement('div'); el.id='fixGame';
+  el.innerHTML=`<div class="fgbar"><i class="fgz"></i><b class="fgm"></b></div><button class="btn gold" id="fgHit">🔧 Şimdi! <small>(boşluk)</small></button>`;
+  document.getElementById('hud').appendChild(el); const z0=rnd(0.2,0.65);
+  el.querySelector('.fgz').style.left=(z0*100)+'%'; el.querySelector('.fgz').style.width='18%';
+  fixGame={id,el,t:0,z0,z1:z0+0.18,done:false}; el.querySelector('#fgHit').onclick=hitFixGame;
+}
+function endFixGame(){ if(fixGame){ fixGame.el.remove(); fixGame=null; } }
+function hitFixGame(){
+  const f=fixGame; if(!f||f.done) return; f.done=true; const x=(Math.sin(f.t*3.2)+1)/2, s=state.rooms[f.id], R=RT(f.id);
+  if(x>=f.z0&&x<=f.z1&&s&&s.broken){ fixRoom(f.id,false); gainXP(10); const sp=roomSpots(f.id); fxText(sp.ns.x,sp.ns.f*FH+1.4,sp.ns.z,sp.ns.f,'Kusursuz tamir!'); sfx('star'); }
+  else { R.fixP=Math.max(0,R.fixP-0.25); fxEmoji(player.x,player.y+2.2,player.z,player.f,'💥'); sfx('fail'); }
+  setTimeout(endFixGame,350);
+}
+function updateFixGame(dt){
+  const f=fixGame; if(!f) return; const s=state.rooms[f.id];
+  if(!s||!s.broken||roomAt(player.f,player.x,player.z)!==f.id&&roomDoorAt(player.f,player.x,player.z)!==f.id){ endFixGame(); return; }
+  if(!f.done){ f.t+=dt; f.el.querySelector('.fgm').style.left=((Math.sin(f.t*3.2)+1)/2*100)+'%'; }
+}
+window.addEventListener('keydown',e=>{ if(e.key===' '&&fixGame){ hitFixGame(); } });
+
+// ---------- hooks ----------
+function updateEvents3(dt){ updateStories(dt); updateEmergency(dt); }
+function events3DayEnd(){ eventsDayRoll(); }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -4349,7 +4484,7 @@ function renderTags(){
     let x,y,z,f=0,html='',show=true;
     switch(t.kind){
       case 'patience':{ const g=t.ent; x=g.x; y=g.y+t.y; z=g.z; f=g.f; show=g.state==='queue'||(g.state==='arrive'&&!g.path);
-        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${(g.tour?'🚌':g.T.e)+(g.pref?RTHEMES[g.pref].e:'')}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
+        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${(g.tour?'🚌':g.T.e)+(g.pref?RTHEMES[g.pref].e:'')+(g.story?STORIES[g.story.k].e:'')}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
           t.bar.style.width=(p*100)+'%'; t.bar.style.background=p>0.5?'#5fd98a':p>0.25?'#f2c14e':'#e0574f'; }
         html=null; break; }
       case 'pad':{ const d=t.def; x=d.x; y=d.f*FH+t.y; z=d.z; f=d.f; const lk=padLocked(d), rem=Math.ceil(d.cost-(state.paid[d.id]||0));
@@ -4418,7 +4553,7 @@ function updateHUD(){
   $('repBar').firstChild.style.width=(s===5||capped?100:(state.rep%20)/20*100)+'%';
   if(lastStarsHud!=null&&s>lastStarsHud){ banner(`${'★'.repeat(s)}`,`Otelin ${s} yıldız oldu! Gelir x${STAR_MULT[s-1]}`); sfx('star'); refreshPads(); } lastStarsHud=s;
   const h=hourNow(); $('clock').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor((h%1)*4)*15).padStart(2,'0');
-  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
+  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${state.wxEv&&state.wxEv.day===state.day?' '+WX_EV[state.wxEv.k].e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
   if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
@@ -4691,12 +4826,12 @@ function renderAdminSheet(){
     ADMIN[a](v===''?undefined:isNaN(+v)?v:+v); markSave(); updateHUD(); if(sheetMode==='admin'){ sheet._h=null; renderSheet(); } });
 }
 function showReport(day,t,repNow){
-  const inc=t.rooms+t.tips+t.amen+t.req+(t.chainInc||0), net=inc-t.wages-(t.interest||0), dr=t.rep0==null?null:Math.round(repNow-t.rep0);
+  const inc=t.rooms+t.tips+t.amen+t.req+(t.chainInc||0), net=inc-t.wages-(t.interest||0)-(t.zam||0), dr=t.rep0==null?null:Math.round(repNow-t.rep0);
   openModal(`<h3>🌅 ${day}. gün bitti</h3><p class="sub">${season().e} ${season().name} · yarın ${WEATHER[state.weather].e}</p>
     <div class="kv"><span>🛏️ Oda gelirleri</span><b>${fmt(t.rooms)} ₺</b></div>
     <div class="kv"><span>💵 Bahşiş ve istekler</span><b>${fmt(t.tips+t.req)} ₺</b></div>
     <div class="kv"><span>🍽️ Tesisler${t.cafe?' ve kahve':''}</span><b>${fmt(t.amen+(t.cafe||0))} ₺</b></div>${t.quest?`<div class="kv"><span>🎯 Görev ödülleri</span><b>${fmt(t.quest)} ₺</b></div>`:''}
-    ${t.chainInc?`<div class="kv"><span>🏨 Zincir otelleri</span><b>${fmt(t.chainInc)} ₺</b></div>`:''}<div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>${t.interest?`<div class="kv neg"><span>🏦 Kredi faizi</span><b>−${fmt(t.interest)} ₺</b></div>`:''}
+    ${t.chainInc?`<div class="kv"><span>🏨 Zincir otelleri</span><b>${fmt(t.chainInc)} ₺</b></div>`:''}<div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>${t.zam?`<div class="kv neg"><span>⚡ Elektrik zammı</span><b>−${fmt(t.zam)} ₺</b></div>`:''}${t.interest?`<div class="kv neg"><span>🏦 Kredi faizi</span><b>−${fmt(t.interest)} ₺</b></div>`:''}
     <div class="kv tot${net<0?' neg':''}"><span>Net</span><b>${net<0?'−':''}${fmt(Math.abs(net))} ₺</b></div>
     <div class="grid2" style="margin-top:10px"><div class="stat">Misafir<b>${t.guests}</b></div><div class="stat">Mutlu / mutsuz<b>😄 ${t.happy} · 😠 ${t.unhappy}</b></div>
     <div class="stat">Bekleyip giden<b>${t.left}</b></div><div class="stat">Ün değişimi<b>${dr==null?'—':(dr>=0?'+':'')+dr}</b></div></div>
@@ -4900,7 +5035,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();

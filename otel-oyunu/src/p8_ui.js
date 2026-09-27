@@ -16,7 +16,7 @@ function renderTags(){
     let x,y,z,f=0,html='',show=true;
     switch(t.kind){
       case 'patience':{ const g=t.ent; x=g.x; y=g.y+t.y; z=g.z; f=g.f; show=g.state==='queue'||(g.state==='arrive'&&!g.path);
-        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${(g.tour?'🚌':g.T.e)+(g.pref?RTHEMES[g.pref].e:'')}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
+        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${(g.tour?'🚌':g.T.e)+(g.pref?RTHEMES[g.pref].e:'')+(g.story?STORIES[g.story.k].e:'')}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
           t.bar.style.width=(p*100)+'%'; t.bar.style.background=p>0.5?'#5fd98a':p>0.25?'#f2c14e':'#e0574f'; }
         html=null; break; }
       case 'pad':{ const d=t.def; x=d.x; y=d.f*FH+t.y; z=d.z; f=d.f; const lk=padLocked(d), rem=Math.ceil(d.cost-(state.paid[d.id]||0));
@@ -85,7 +85,7 @@ function updateHUD(){
   $('repBar').firstChild.style.width=(s===5||capped?100:(state.rep%20)/20*100)+'%';
   if(lastStarsHud!=null&&s>lastStarsHud){ banner(`${'★'.repeat(s)}`,`Otelin ${s} yıldız oldu! Gelir x${STAR_MULT[s-1]}`); sfx('star'); refreshPads(); } lastStarsHud=s;
   const h=hourNow(); $('clock').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor((h%1)*4)*15).padStart(2,'0');
-  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
+  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${state.wxEv&&state.wxEv.day===state.day?' '+WX_EV[state.wxEv.k].e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
   if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
@@ -358,12 +358,12 @@ function renderAdminSheet(){
     ADMIN[a](v===''?undefined:isNaN(+v)?v:+v); markSave(); updateHUD(); if(sheetMode==='admin'){ sheet._h=null; renderSheet(); } });
 }
 function showReport(day,t,repNow){
-  const inc=t.rooms+t.tips+t.amen+t.req+(t.chainInc||0), net=inc-t.wages-(t.interest||0), dr=t.rep0==null?null:Math.round(repNow-t.rep0);
+  const inc=t.rooms+t.tips+t.amen+t.req+(t.chainInc||0), net=inc-t.wages-(t.interest||0)-(t.zam||0), dr=t.rep0==null?null:Math.round(repNow-t.rep0);
   openModal(`<h3>🌅 ${day}. gün bitti</h3><p class="sub">${season().e} ${season().name} · yarın ${WEATHER[state.weather].e}</p>
     <div class="kv"><span>🛏️ Oda gelirleri</span><b>${fmt(t.rooms)} ₺</b></div>
     <div class="kv"><span>💵 Bahşiş ve istekler</span><b>${fmt(t.tips+t.req)} ₺</b></div>
     <div class="kv"><span>🍽️ Tesisler${t.cafe?' ve kahve':''}</span><b>${fmt(t.amen+(t.cafe||0))} ₺</b></div>${t.quest?`<div class="kv"><span>🎯 Görev ödülleri</span><b>${fmt(t.quest)} ₺</b></div>`:''}
-    ${t.chainInc?`<div class="kv"><span>🏨 Zincir otelleri</span><b>${fmt(t.chainInc)} ₺</b></div>`:''}<div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>${t.interest?`<div class="kv neg"><span>🏦 Kredi faizi</span><b>−${fmt(t.interest)} ₺</b></div>`:''}
+    ${t.chainInc?`<div class="kv"><span>🏨 Zincir otelleri</span><b>${fmt(t.chainInc)} ₺</b></div>`:''}<div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>${t.zam?`<div class="kv neg"><span>⚡ Elektrik zammı</span><b>−${fmt(t.zam)} ₺</b></div>`:''}${t.interest?`<div class="kv neg"><span>🏦 Kredi faizi</span><b>−${fmt(t.interest)} ₺</b></div>`:''}
     <div class="kv tot${net<0?' neg':''}"><span>Net</span><b>${net<0?'−':''}${fmt(Math.abs(net))} ₺</b></div>
     <div class="grid2" style="margin-top:10px"><div class="stat">Misafir<b>${t.guests}</b></div><div class="stat">Mutlu / mutsuz<b>😄 ${t.happy} · 😠 ${t.unhappy}</b></div>
     <div class="stat">Bekleyip giden<b>${t.left}</b></div><div class="stat">Ün değişimi<b>${dr==null?'—':(dr>=0?'+':'')+dr}</b></div></div>
@@ -567,7 +567,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();

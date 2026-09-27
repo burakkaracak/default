@@ -135,8 +135,8 @@ function updatePlayerZones(dt){
     const s=state.rooms[rid], R=RT(rid);
     if(s.tip>0) collectTip(rid);
     if(R.req&&p.c.items.includes(R.req.item)){ removeItem(R.req.item); fulfillReq(rid); tutEvent('deliver'); }
-    if(s.dirty){ R.cleanP+=dt/playerCleanTime(); workRing={p:R.cleanP,icon:'🧹'}; if(!p.moving&&!p.path) p.anim='work'; if(R.cleanP>=1) cleanRoom(rid,false); }
-    else if(s.broken){ R.fixP+=dt/playerFixTime(); workRing={p:R.fixP,icon:'🔧'}; if(!p.moving&&!p.path) p.anim='work'; if(R.fixP>=1) fixRoom(rid,false); }
+    if(s.dirty){ noteCleanMove(R,p); R.cleanP+=dt/playerCleanTime(); workRing={p:R.cleanP,icon:'🧹'}; if(!p.moving&&!p.path) p.anim='work'; if(R.cleanP>=1) cleanRoom(rid,false); }
+    else if(s.broken){ if(R.fixP<0.02&&!fixGame) startFixGame(rid); R.fixP+=dt/playerFixTime(); workRing={p:R.fixP,icon:'🔧'}; if(!p.moving&&!p.path) p.anim='work'; if(R.fixP>=1) fixRoom(rid,false); }
   }
   if(p.f===0&&p.x>L.serve.x0&&p.x<L.serve.x1&&p.z>L.serve.z0&&p.z<L.serve.z1) atDesk=true;
   extraPlayerZones(p,dt); megaZones(p,dt);
@@ -151,7 +151,7 @@ function updatePlayerZones(dt){
 function cleanRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.dirty) return;
   s.dirty=false; R.cleanP=0; const sp=roomSpots(id); sparkleAt(sp.stand.x,sp.stand.f*FH+0.8,sp.stand.z); sfx('sparkle'); applyRoomState(id);
-  if(!byStaff){ tutEvent('clean'); qEv('clean'); } afterRoomCleaned(byStaff); markSave();
+  if(!byStaff){ tutEvent('clean'); qEv('clean'); } cleanQuality(id,byStaff,byStaff?cleanerNow:null); afterRoomCleaned(byStaff); markSave();
 }
 function fixRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.broken) return;
@@ -298,7 +298,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'));
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
   if(isNight()) f*=0.3;
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
@@ -423,6 +423,7 @@ function tutEvent(ev){
 function goal(){
   const s=state.tut;
   const cg=crisisGoal(); if(cg) return cg;
+  const emg=emergencyGoal(); if(emg) return emg;
   if(s===0) return {icon:'👆',text:TUT[0].text,target:null};
   if(s===1) return {icon:'🛏️',text:TUT[1].text,target:padTarget('r102'),price:PADMAP.r102.cost-(state.paid.r102||0)};
   if(s===2) return {icon:'🛎️',text:TUT[2].text,target:{x:L.serve.cx,y:0,z:L.serve.cz,f:0}};

@@ -107,6 +107,7 @@ function depthDayEnd(){
   const t=state.today;
   if(state.loan){ const i=Math.round(state.loan.left*0.03); state.money-=i; t.interest=i; }
   if(state.money<0){ state.negDays=(state.negDays||0)+1; if(state.negDays>=3){ changeRep(-5); setTimeout(()=>toast('🏦 Borçlar birikti, itibarın zedelendi · −5 ün','bad'),2500); state.negDays=0; } } else state.negDays=0;
+  t.zam=zamBill(); if(t.zam) state.money-=t.zam;
   t.chainInc=chainIncome(); if(t.chainInc) state.money+=t.chainInc;
   rivalDayEnd(); careerDayEnd();
 }

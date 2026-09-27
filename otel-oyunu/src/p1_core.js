@@ -215,13 +215,13 @@ function isNight(){ const h=hourNow(); return h>=22.5||h<6.5; }
 function capacity(){ return UPG.cap.vals[state.up.cap]; }
 function magnetR(){ return UPG.magnet.vals[state.up.magnet]; }
 function built(id){ return !!state.built[id]; }
-function poolOpen(){ return built('pool')&&!isWinter()&&(state.weather==='sun'||state.weather==='cloud')&&!isNight(); }
+function poolOpen(){ return built('pool')&&!isWinter()&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
 function restOpen(){ const h=hourNow(); return built('rest')&&h>=8&&h<22.5; }
 function gymOpen(){ const h=hourNow(); return built('gym')&&h>=7&&h<22; }
 function floorsBuilt(){ return built('roof')?4:built('f3')?3:built('f2')?2:1; }
 const ROOF=3;
 function floorName(f){ return f===ROOF?'Çatı':(f+1)+'. kat'; }
-function roofOpen(){ const h=hourNow(); return built('roof')&&h>=10&&h<23.5&&state.weather!=='rain'&&state.weather!=='snow'; }
+function roofOpen(){ const h=hourNow(); return built('roof')&&h>=10&&h<23.5&&state.weather!=='rain'&&state.weather!=='snow'&&!stormOn(); }
 
 // =====================================================================
 // SOUND (synthesized)

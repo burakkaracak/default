@@ -10,7 +10,7 @@ const SPA_TABLES=[-15.3,-13.65,-12.0];
 SPA_TABLES.forEach(tx=>SEATS.push({amen:'spa',x:tx,z:-7.75,px:tx,pz:-9.2,py:0.62,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 [-7.1,-6.1].forEach(z=>SEATS.push({amen:'spa',x:-12.25,z,px:-11.52,pz:z,py:0.12,rot:-Math.PI/2,pose:'sit',busy:null}));
 function spaOpen(){ const h=hourNow(); return built('spa')&&h>=8&&h<22; }
-function amenBonus(a){ return a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1; }
+function amenBonus(a){ return (a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
 function shellWalls(S,B,wallM,trimM){
   const cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2, w=B.x1-B.x0, d=B.z1-B.z0;
   S.add(mesh(box(w,2.4,0.16),wallM,cx,1.2,B.z0-0.08,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x0-0.08,1.2,cz,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x1+0.08,1.2,cz,true));
@@ -119,9 +119,9 @@ const EVT={
   concert:{e:'🎸',name:'Konser',    need:'pool',needN:'Havuz',      rooms:4,types:['influencer','tourist','student'],n:6,rew:1000}};
 const FEST=[{e:'🌷',name:'Lale Festivali'},{e:'🎶',name:'Yaz Konser Festivali'},{e:'🍇',name:'Hasat Festivali'},{e:'🎄',name:'Yılbaşı Festivali'}];
 function festivalOn(){ return !!state&&state.day>=3&&(state.day-1)%(SEASON_DAYS*2)===2; }
-function festival(){ return FEST[seasonIx()]; }
+function festival(){ return cityFestOn()?CITY_FEST[city().name]:FEST[seasonIx()]; }
 function eventReady(){ return readyRooms().length; }
-function eventsDayEnd(){
+function eventsDayEnd(){ events3DayEnd();
   if(state.offer&&state.offer.made<state.day){ toast(`📅 ${EVT[state.offer.k].name} teklifi zaman aşımına uğradı`,'bad'); state.offer=null; }
   if(state.event&&!state.event.started&&state.day>state.event.day){ failEvent('Etkinlik günü geçti'); }
   if(!state.event&&!state.offer&&state.tut>=TUT.length&&!state.sandbox&&state.day>=4&&nRoomsNow()>=6&&Math.random()<0.45){
