@@ -216,6 +216,7 @@ function updateEventSpawns(dt){
     state.busDue=false; state.lastBus=state.day; startBus(); markSave(); }
 }
 function inspectorVerdict(g,mood){
+  if(!state.sandbox) setTimeout(()=>inspReport(g,mood),0);
   if(mood==='happy'){ onGameEvent('insp',1); const b=Math.round(150*incomeMult()); state.piles.desk+=b; pileChanged('desk'); changeRep(6);
     banner('🕵️ Müfettiş çok memnun!',`+6 ün · ${fmt(b)} ₺ ödül masada`); sfx('star'); confettiAt(g.x,g.y+1.5,g.z,50); }
   else if(mood==='neutral'){ changeRep(1); toast('🕵️ Müfettiş: “Fena değil.” +1 ün'); }

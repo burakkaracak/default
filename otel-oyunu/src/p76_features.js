@@ -296,6 +296,121 @@ async function sendChat(text){
   fxEmoji(g.x,g.y+2.2,g.z,g.f,d>=4?'😊':d<=-4?'😠':'💬'); sfx(d>=4?'sparkle':d<=-4?'fail':'req');
   renderSheet();
 }
+// ---------- ortak yapay zekâ çağrısı (kapalıysa null döner, oyun şablonla devam eder) ----------
+async function aiJSON(prompt){
+  if(!(sampleFn&&aiState==='ready')) return null;
+  try{ return await sampleFn.json(prompt,{modelTier:'quick',cache:false}); }
+  catch(e){ const c=e&&e.code; if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared'||c==='capability_disabled'||c==='capability_removed') aiState='off'; return null; }
+}
+const clip=(s,n)=>typeof s==='string'&&s.trim()?s.trim().slice(0,n):null;
+
+// ---------- misafir olayları: 3 seçenekli küçük ikilemler (şehre özgü) ----------
+const DIL_FX=[{e:'🎁',c:0.6,sat:18,rep:0.5},{e:'🤝',c:0.1,sat:8,rep:0},{e:'🙅',c:0,sat:-10,rep:-0.5}];
+const DIL_BASE=[
+  {s:'Odamın manzarası fotoğraflardaki gibi değil, çok hayal kırıklığına uğradım!',o:['Ücretsiz üst kat odaya taşıyalım','Özür dileyip meyve tabağı gönderelim','Maalesef yapabileceğimiz bir şey yok'],r:['Harika, çok teşekkürler!','Nazik bir jest, sağ olun.','Hiç hoş değil…']},
+  {s:'Bugün doğum günüm, küçük bir sürpriz olsa ne güzel olurdu 🎂',o:['Pasta ve süsleme yapalım','Kart ve çikolata bırakalım','Bu hizmetimiz yok'],r:['İnanamıyorum, çok mutlu oldum! 🥳','Ne tatlı, teşekkürler!','Peki… anladım.']},
+  {s:'Yan odadan gece çok ses geliyordu, hiç uyuyamadım!',o:['Bir gece ücretsiz olsun','Kulak tıkacı ve kahve ikram edelim','Başka misafirlere karışamayız'],r:['Çok anlayışlısınız, teşekkürler.','İdare eder, sağ olun.','Bu cevap beni tatmin etmedi.']},
+  {s:'Geç check-out yapabilir miyim? Uçağım akşam.',o:['Ücretsiz geç çıkış + öğle yemeği','Saat 14:00\'e kadar olur','Kurallar gereği mümkün değil'],r:['Muhteşem bir otel!','Yeterli, teşekkürler.','Keşke biraz esneklik olsaydı.']}];
+const DIL_CITY={
+  'İstanbul':{s:'Boğaz turu yapmak istiyorum, ayarlayabilir misiniz?',o:['Özel tekne turu hediyemiz olsun','Güvenilir bir tur firması önerelim','Kendiniz bakmanız gerekiyor'],r:['Rüya gibi bir gün oldu!','Teşekkürler, bakarım.','Pek yardımcı olmadınız.']},
+  'Antalya':{s:'Plajda şezlong kalmamış, yer bulamadım!',o:['Özel VIP şezlong ayıralım','Havuz başında yer açalım','Plaj otelin değil, maalesef'],r:['İşte buna tatil denir!','Olur, teşekkürler.','Tatilim yarım kaldı.']},
+  'Kapadokya':{s:'Balon turu hava yüzünden iptal oldu, çok üzgünüm!',o:['Yarın için ücretsiz balon turu ayarlayalım','ATV turu önerelim','Hava durumu elimizde değil'],r:['Hayatımın en güzel sabahıydı!','Fena fikir değil.','Çok üzüldüm…']},
+  'Bodrum':{s:'Tekne turunda telefonumu denize düşürdüm, bir şey yapabilir misiniz?',o:['Yedek telefon ve dalgıç ayarlayalım','Otel telefonunu kullanabilirsiniz','Bu konuda yardımcı olamayız'],r:['Kahramanlarsınız!','Çok teşekkürler.','Kötü bir gün oldu.']},
+  'Paris':{s:'Eyfel\'in görüneceği romantik bir akşam yemeği istiyoruz.',o:['Çatıda özel masa hazırlayalım','Yakın bir restoran rezerve edelim','Tüm masalar dolu'],r:['C\'est magnifique! 😍','Merci, güzel olur.','Hayal kırıklığı…']},
+  'Dubai':{s:'Çölde bir safari yapmak istiyorum ama hepsi dolu.',o:['Özel cip safarisi ayarlayalım','Yarın için sıraya yazalım','Maalesef yer yok'],r:['Unutulmaz bir deneyim!','Olur, beklerim.','Çok üzüldüm.']}};
+let dilT=90, dilCur=null;
+function dilemmaGuest(){ const ids=roomsWhere(id=>{ const g=RT(id).guest; return g&&g.state==='room'&&!g.asleep&&g.type!=='insp'&&!g.dilDone; }); return ids.length?RT(rand(ids)).guest:null; }
+function updateDilemmas(dt){
+  if(state.tut<TUT.length||state.sandbox||nRoomsNow()<3||dilCur) return;
+  dilT-=dt; if(dilT>0) return; dilT=rnd(80,150);
+  if((state.dilDay===state.day?state.dilN||0:0)>=2||isNight()||sheetMode||modalWrap.classList.contains('show')) return;
+  const g=dilemmaGuest(); if(g) startDilemma(g);
+}
+async function startDilemma(g){
+  g.dilDone=true; if(state.dilDay!==state.day){ state.dilDay=state.day; state.dilN=0; } state.dilN++;
+  const cityT=DIL_CITY[city().name], base=Math.random()<0.4&&cityT?cityT:rand(DIL_BASE);
+  const d={g,room:g.room,s:base.s,o:base.o.slice(),r:base.r.slice()}; dilCur=d;
+  fxEmoji(g.x,g.y+2.3,g.z,g.f,'❗'); sfx('req');
+  const r=await aiJSON(`Bir otel işletme oyununda misafirin müdürden bir isteği ya da şikâyeti var. Türkçe, kısa, doğal ve eğlenceli yaz; uygunsuz içerik yok.
+Otel: "${hotelName()}", ${city().name} (bu şehre özgü bir durum olabilir), ${stars()} yıldız, mevsim ${season().name}, hava ${({sun:'güneşli',cloud:'bulutlu',rain:'yağmurlu',snow:'karlı'})[state.weather]}.
+Misafir: ${g.name}, ${g.T.name} (${PERSONA[g.type]||PERSONA.tourist}), ${ROOM_T[state.rooms[g.room].type].name} odada.
+Örnek (kopyalama, yeni bir tane üret): "${base.s}"
+Üç seçenek yaz: 0 = cömert ve masraflı çözüm, 1 = ilgili ama ucuz çözüm, 2 = kibarca reddetme. Her seçenek için misafirin kısa tepkisini de yaz.
+SADECE JSON: {"durum":"misafirin sözü (en fazla 2 cümle)","secenekler":["0","1","2"],"tepkiler":["0","1","2"]}`);
+  if(dilCur!==d) return;
+  if(r&&clip(r.durum,220)&&Array.isArray(r.secenekler)&&r.secenekler.length===3&&Array.isArray(r.tepkiler)&&r.tepkiler.length===3&&r.secenekler.every(x=>clip(x,70))){
+    d.s=clip(r.durum,220); d.o=r.secenekler.map(x=>clip(x,70)); d.r=r.tepkiler.map((x,i)=>clip(x,140)||d.r[i]); }
+  showDilemma(d);
+}
+function dilCost(d,i){ return Math.round(roomRate(d.room)*DIL_FX[i].c*incomeMult()); }
+function showDilemma(d){
+  if(dilCur!==d) return; const g=d.g;
+  if(modalWrap.classList.contains('show')){ setTimeout(()=>showDilemma(d),1500); return; }
+  openModal(`<h3>🛎️ Oda ${d.room} <small style="font-size:13px;color:var(--muted)">${g.T.e} ${escH(g.name)}</small></h3>
+    <div class="cb them" style="max-width:100%;margin:6px 0 10px">${escH(d.s)}</div>
+    ${d.o.map((t,i)=>{ const c=dilCost(d,i); return `<button class="btn ${i===0?'gold':i===1?'':'ghost'} wide" data-dil="${i}" ${c>state.money?'disabled':''}>${DIL_FX[i].e} ${escH(t)}${c?` · ${fmt(c)} ₺`:''}</button>`; }).join('')}
+    <p class="note">Cevap vermezsen misafir kırılır.</p>`,m=>{ m.querySelectorAll('[data-dil]').forEach(b=>b.onclick=()=>resolveDilemma(d,+b.dataset.dil)); });
+  d.timer=setTimeout(()=>{ if(dilCur===d){ closeModal(); resolveDilemma(d,-1); } },25000);
+}
+function resolveDilemma(d,i){
+  if(dilCur!==d) return; dilCur=null; clearTimeout(d.timer); closeModal();
+  const g=d.g; if(!guests.includes(g)||g.room!==d.room) return;
+  if(i<0){ g.sat=clamp(g.sat-6,0,100); fxEmoji(g.x,g.y+2.2,g.z,g.f,'😒'); toast(`${g.T.e} ${g.name} cevapsız kaldı · memnuniyet −6`,'bad'); return; }
+  const F=DIL_FX[i], c=dilCost(d,i); if(c){ state.money-=c; }
+  g.sat=clamp(g.sat+F.sat,0,100); if(F.rep) changeRep(F.rep*(g.T.rep||1));
+  fxEmoji(g.x,g.y+2.2,g.z,g.f,i===0?'😍':i===1?'🙂':'😠'); sfx(i<2?'sparkle':'fail'); onGameEvent('chat',1);
+  toast(`${g.T.e} “${d.r[i]}” · memnuniyet ${F.sat>0?'+':''}${F.sat}${c?` · −${fmt(c)} ₺`:''}`,i===2?'bad':null); markSave();
+}
+
+// ---------- otel danışmanı ----------
+function ruleTips(){
+  const t=[], P=hotelProgress(), dirty=roomsWhere(id=>state.rooms[id].dirty).length, broken=roomsWhere(id=>state.rooms[id].broken).length, st=state.staff, nR=nRoomsNow();
+  if(dirty>=3&&st.clean.n<STAFF.clean.max) t.push([9,`🧹 ${dirty} kirli oda var: bir temizlikçi daha al, misafirler kapıda beklemesin.`]);
+  if(broken>=2&&st.tech.n<STAFF.tech.max&&built('staff')) t.push([8,`🔧 ${broken} arızalı oda var: teknisyen işe al.`]);
+  if(!st.rec.n&&built('staff')) t.push([8,'🛎️ Resepsiyonist al: sen odalarla uğraşırken misafirler kayıt olmaya devam eder.']);
+  if(state.today.left>=2) t.push([8,`😤 Bugün ${state.today.left} misafir beklemekten sıkılıp gitti: Karşılama ve Sakinlik yeteneklerini yükselt.`]);
+  const miss=starMissing(stars()+1); if(stars()<5&&miss.length) t.push([7,`⭐ ${stars()+1} yıldız için eksikler: ${miss.join(', ')}.`]);
+  const op=openPads()[0]; if(op) t.push([6,`🏗️ Sıradaki en ucuz alan: ${op.label} (${fmt(op.cost-(state.paid[op.id]||0))} ₺).`]);
+  const eco=roomsWhere(id=>state.rooms[id].type==='eco').length; if(eco>=4&&stars()>=2) t.push([6,`🛏️ ${eco} ekonomi odan var: birkaçını Deluxe'e yükseltmek geliri ciddi artırır.`]);
+  if(state.money>upgCost('magnet')&&state.up.magnet<2) t.push([4,'🧲 Mıknatıs yükseltmesiyle parayı uzaktan toplarsın, çok zaman kazandırır.']);
+  if(wagesToday()>0&&state.today.rooms<wagesToday()) t.push([7,'💸 Maaşlar oda gelirini geçiyor: fazla personeli değil, oda sayısını artır.']);
+  if(state.done) t.push([10,'🚚 Otelin tamamlandı! Taşınıp 🗝️ anahtar kazan, miras bonusları al.']);
+  if(!t.length) t.push([1,'👍 Her şey yolunda görünüyor. Günlük görevleri tamamlamayı unutma!']);
+  return t.sort((a,b)=>b[0]-a[0]).map(x=>x[1]).slice(0,4);
+}
+let advCd=0, advBusy=false;
+async function openAdvisor(){
+  if(advBusy) return; const tips=ruleTips();
+  const draw=(txt,note)=>openModal(`<h3>🧠 Otel danışmanı <button class="xbtn" id="advX" aria-label="Kapat">✖</button></h3><p class="sub">${city().e||''} ${city().name} · ${state.day}. gün · ${'★'.repeat(stars())}</p>${txt.map(t=>`<div class="row" style="font-weight:700;font-size:14px">${escH(t)}</div>`).join('')}<p class="note">${note}</p>`,m=>{ m.querySelector('#advX').onclick=closeModal; });
+  const canAI=sampleFn&&aiState==='ready'&&performance.now()>advCd;
+  draw(tips,canAI?'🧠 Danışman düşünüyor…':'Kural tabanlı analiz');
+  if(!canAI) return; advBusy=true; advCd=performance.now()+45000;
+  const r=await aiJSON(`Bir otel işletme oyununda oyuncunun deneyimli, samimi otel danışmanısın. Türkçe, kısa ve somut konuş.
+Durum: ${city().name}, gün ${state.day}, para ${fmt(state.money)} ₺, ${stars()} yıldız (ün ${Math.round(state.rep)}/100), ${nRoomsNow()} oda, otel ilerlemesi %${Math.round(hotelProgress().p*100)}, personel: resepsiyon ${state.staff.rec.n}, temizlik ${state.staff.clean.n}, kat görevlisi ${state.staff.bell.n}, teknisyen ${state.staff.tech.n}. Bugün: ${state.today.guests} misafir, ${state.today.happy} mutlu, ${state.today.unhappy} mutsuz, ${state.today.left} bekleyip gitti. Günlük maaş ${fmt(wagesToday())} ₺.
+Oyunun kendi analizi: ${tips.join(' | ')}
+Bu analize dayanarak en önemli 3 öneriyi, her biri tek cümle ve başında uygun bir emoji olacak şekilde yaz. Oyunda olmayan özellik uydurma.
+SADECE JSON: {"oneriler":["...","...","..."]}`);
+  advBusy=false;
+  const L=r&&Array.isArray(r.oneriler)?r.oneriler.map(x=>clip(x,200)).filter(Boolean).slice(0,3):null;
+  if(modal.querySelector('#advX')) draw(L&&L.length?L:tips,L&&L.length?'🧠 Yapay zekâ danışman':'Kural tabanlı analiz');
+}
+
+// ---------- müfettiş raporu ----------
+async function inspReport(g,mood){
+  const score={happy:9,neutral:6,unhappy:3,left:1}[mood]||5, dirty=roomsWhere(id=>state.rooms[id].dirty).length, broken=roomsWhere(id=>state.rooms[id].broken).length;
+  const facts=[mood==='left'?`Resepsiyonda ${Math.round(g.patMax)} saniyeden fazla bekledi ve ayrıldı.`:`Resepsiyonda ${Math.round(g.waited||0)} sn bekledi, ${g.lastRoomT||'standart'} odada kaldı, memnuniyet %${Math.round(g.sat)}.`,
+    `Otelde şu an ${dirty} kirli, ${broken} arızalı oda var.`, `Otel ${stars()} yıldızlı, ${nRoomsNow()} odalı.`];
+  const canned={happy:'Kusursuz hizmet, temiz odalar ve güler yüzlü personel. Kesinlikle tavsiye edilir.',neutral:'Genel olarak yeterli; bekleme süreleri ve oda bakımı geliştirilebilir.',unhappy:'Hizmet kalitesi beklentinin altında. Temizlik ve bakım acilen iyileştirilmeli.',left:'Resepsiyonda kabul edilemez bir bekleme yaşandı; değerlendirme yapılamadı.'}[mood]||'';
+  let text=canned;
+  const r=await aiJSON(`Bir otel işletme oyununda gizli otel müfettişisin. Resmi ama akıcı Türkçe ile 2-3 cümlelik kısa bir denetim raporu yaz. Puan: ${score}/10 (tonu buna uygun olsun). Gözlemler: ${facts.join(' ')} Otel: "${hotelName()}", ${city().name}.
+SADECE JSON: {"rapor":"..."}`);
+  if(r&&clip(r.rapor,400)) text=clip(r.rapor,400);
+  state.reports=(state.reports||[]).concat([{d:state.day,s:score,t:text}]).slice(-10); logEvent(`🕵️ Müfettiş raporu (${score}/10): ${text}`); markSave();
+  const show=()=>{ if(modalWrap.classList.contains('show')){ setTimeout(show,2000); return; }
+    openModal(`<h3>🕵️ Denetim raporu</h3><p class="sub">${escH(hotelName())} · ${city().name} · ${state.day}. gün</p><div class="stat" style="text-align:center">Puan<b style="font-size:30px;color:${score>=7?'#9dffc0':score>=5?'var(--gold2)':'#ff9d8f'}">${score}/10</b></div><div class="cb them" style="max-width:100%;margin:10px 0">${escH(text)}</div><button class="btn wide" id="irOk">Tamam</button>`,m=>{ m.querySelector('#irOk').onclick=closeModal; }); };
+  setTimeout(show,2800);
+}
+
 // ---------- gün sonu misafir yorumları ----------
 let dayGuests=[];
 function noteGuestDay(g,mood,left){ if(g.type==='insp') return;
@@ -340,6 +455,7 @@ function updateFeatures(dt,t){
     if(g.type==='dog'&&g.path&&Math.random()<dt*0.25) fxEmoji(g.x-0.5,g.y+0.9,g.z,g.f,'🐾');
     if(g.lucky&&Math.random()<dt*2) fxEmoji(g.x+rnd(-0.3,0.3),g.y+rnd(0.8,1.9),g.z,g.f,'✨'); });
   if(sheetMode==='chat') renderChatSheet();
+  updateDilemmas(dt*gameSpeed);
 }
 function bootFeatures(){
   const T=THEMES[themeKey()]; if(T) applyHotelTheme();

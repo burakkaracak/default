@@ -197,6 +197,7 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
+  const av=sheet.querySelector('[data-adv]'); if(av) av.onclick=()=>{ sfx('click'); openAdvisor(); };
   const mp=sheet.querySelector('[data-map]'); if(mp) mp.onclick=()=>{ sfx('click'); openCityMap(); };
   sheet.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>buyLegacy(b.dataset.leg));
 }
@@ -213,7 +214,7 @@ function progressHtml(next){
   return `<div class="row" style="margin-top:10px"><div class="ic">${city().e||'🏙️'}</div><div class="tx">${city().name}${state.prestige?` · ${state.prestige+1}. otelin`:''}
     <small>Otel ilerlemesi: ${P.b}/${P.n} alan · %${pc}</small><div class="pbar"><i style="width:${pc}%"></i></div>
     <small>${state.done?`Tamamlandı! ${next.name}'ya taşın: 🗝️ ${moveKeys().total} anahtar kazanırsın`:`Bitirince ${next.e||''} ${next.name} açılır (gelir x${next.mult})`}</small></div>
-    <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-map>🗺️ Harita</button><button class="btn gold" data-move ${state.done?'':'disabled'}>Taşın</button></div></div>`;
+    <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-map>🗺️ Harita</button><button class="btn ghost" data-adv>🧠 Danışman</button><button class="btn gold" data-move ${state.done?'':'disabled'}>Taşın</button></div></div>`;
 }
 function moveKeys(){
   const d=state.day, speed=d<=15?3:d<=22?2:d<=30?1:0, guests=Math.min(3,Math.floor((state.served||0)/60)), st=stars()>=5?1:0;
