@@ -14,8 +14,8 @@ function someoneInDoor(id){
   const own=RT(id).guest; for(const g of guests) if(g!==own&&near(g)) return true; return false;
 }
 function makeDoor(R){
-  const hd=RD/2, wood=tmat('woodDark',1,1), mk=sd=>{ const pv=new THREE.Group(); pv.position.set(sd*0.7,0,hd-0.06);
-    const pan=mesh(rbox(0.68,0.5,0.05,.02),wood,-sd*0.35,0.27,0,true); pv.add(pan); pv.add(mesh(box(0.5,0.03,0.055),M.gold,-sd*0.35,0.46,0)); pv.add(mesh(sph(0.03,8,6),M.gold,-sd*0.62,0.3,0.04)); R.group.add(pv); return pv; };
+  const hd=RD/2, wood=tmat('woodDark',1,1), mk=sd=>{ const pv=new THREE.Group(), T=new THREE.Group(); pv.position.set(sd*0.7,0,hd-0.06);
+    T.add(mesh(rbox(0.68,0.5,0.05,.02),wood,-sd*0.35,0.27,0,true)); T.add(mesh(box(0.5,0.03,0.055),M.gold,-sd*0.35,0.46,0)); T.add(mesh(sph(0.03,8,6),M.gold,-sd*0.62,0.3,0.04)); pv.add(bake(T)); R.group.add(pv); return pv; };
   R.parts.door=[mk(-1),mk(1)]; R.parts.doorA=R.doorClosed?0:1; R.parts.doorG=R.group;
 }
 function setDoorCol(id,closed){ const ri=roomInfo(id), hd=RD/2; if(closed) addCols('door'+id,[[ri.f,ri.x-0.72,ri.x+0.72,ri.z+hd-0.14,ri.z+hd+0.02]]); else removeCols('door'+id); }

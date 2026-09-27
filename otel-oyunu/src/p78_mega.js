@@ -116,6 +116,12 @@ function setupGrassSway(){
     sh.vertexShader='uniform float uTime; uniform float uWind;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n float hh=max(position.y,0.)*5.; vec4 wp0=instanceMatrix*vec4(0.,0.,0.,1.); transformed.x+=(sin(uTime*2.3+wp0.x*0.8+wp0.z*0.5)*0.35+0.5)*0.05*hh*uWind; transformed.z+=cos(uTime*1.8+wp0.z*0.7)*0.025*hh*uWind;'); };
   m.needsUpdate=true;
 }
+// şehir ambiyansı ve adım sesi döngüleri (örnekler yüklenince başlar)
+const loops={};
+function loopOf(k){ if(loops[k]) return loops[k]; const b=SMP[k], c=Sound.ctx; if(!b||!c) return null; const s=c.createBufferSource(), g=c.createGain(); s.buffer=b; s.loop=true; g.gain.value=0; s.connect(g); g.connect(Sound.sfx); s.start(0,Math.random()*b.duration); return loops[k]={s,g}; }
+function updateLoops(dt){ if(!Sound.ctx||state.sound===false) return; const sm=(L,v,k)=>{ if(L) L.g.gain.value+=(v-L.g.gain.value)*Math.min(1,dt*k); };
+  const amb=loopOf('amb'), ground=(viewFloor===0||fpMode)&&player.f===0; sm(amb,(ground?0.2:0.07)*(1-0.7*nightF)*(state.weather==='rain'?0.5:1),1.2);
+  const st=loopOf('steps'), walking=!!(player.moving||player.path&&player.path.length)&&!player.riding; sm(st,walking?0.16:0,8); if(st) st.s.playbackRate.value=Math.min(1.5,playerSpeed()/3.3); }
 function startAmbience(){
   if(windAmb||!Sound.ctx||!Sound.noise) return; const c=Sound.ctx;
   const buf=Sound.pink||Sound.noise;
@@ -141,6 +147,7 @@ function updateWeatherFeel(dt,t){
   if(flashT>0){ flashT-=dt; fx.style.opacity=(flashT>0.2||(flashT>0.08&&flashT<0.14))?0.55:0; } else if(fx.style.opacity!=='0') fx.style.opacity=0;
   // ambience audio
   if(Sound.ctx&&!windAmb) startAmbience();
+  updateLoops(dt);
   if(windAmb){ const out=viewFloor===0||fpMode?1:0.6; windAmb.wind.g.gain.value=0.045*wind*out; windAmb.wind.f.frequency.value=300+wind*400; const rw=state.weather==='rain'?(stormOn&&stormOn()?1.4:1):0, sm=(k,v)=>{ k.g.gain.value+=(v-k.g.gain.value)*Math.min(1,dt*1.5); };
     sm(windAmb.rain,rw*0.07*out); sm(windAmb.rainLo,rw*0.05*out);
     if(rw&&state.sound!==false&&Math.random()<dt*9){ const c=Sound.ctx, t=c.currentTime, o=c.createOscillator(), g=c.createGain(); o.type='sine'; const f=rnd(1800,4200); o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*0.55,t+0.035);
@@ -193,7 +200,7 @@ function buildSeasonProps(){
       G.add(mesh(box(0.5,0.08,0.08),mat(0xc0392b),x,1.25,z+0.1)); cols.push([0,x-0.45,x+0.45,z-0.45,z+0.45]); });
     const bc=[0xff4d4d,0x4dd2ff,0xffd24d,0x7dff7d];
     [[-17.2,-1.6],[1.6,17.2]].forEach(([a,b])=>{ for(let x=a;x<b;x+=0.55) G.add(mesh(sph(0.05,6,4),new THREE.MeshBasicMaterial({color:bc[Math.floor(x*3)&3]}),x,0.64,11.35)); }); }
-  if(cols.length) addCols('season',cols);
+  if(cols.length) addCols('season',cols); bakeStatic(G);
 }
 function seasonFlash(){
   const s=season(), el=$('seasonFx'); el.innerHTML=`<div>${s.e}</div><b>${s.name}</b><small>${SEASON_TIPS[seasonIx()]}</small>`;

@@ -175,7 +175,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:44, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:45, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -252,6 +252,7 @@ function audioInit(){
         e[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; }
       const f=Math.floor(c.sampleRate*0.05); for(let i=0;i<f;i++){ const k=i/f; e[pl-f+i]=e[pl-f+i]*(1-k)+e[i]*k; } }
     Sound.pink=pb;
+    loadSamples();
     startMusic();
   }catch(e){ Sound.ctx=null; }
 }
@@ -271,16 +272,24 @@ function noiseBurst(dur,vol,freq,delay=0){
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   s.connect(f); f.connect(g); g.connect(Sound.sfx); s.start(t); s.stop(t+dur+0.05);
 }
+// ---------- gerçek ses örnekleri (Kenney MIT + uisfx CC0), yüklenemezse sentez sese düşer ----------
+const SMP={};
+function loadSamples(){ const S=window.__SND; if(!S||!Sound.ctx) return;
+  for(const k in S){ if(k in SMP) continue; SMP[k]=null; try{ const bin=atob(S[k].split(',')[1]), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+      const p=Sound.ctx.decodeAudioData(u.buffer,ab=>{ SMP[k]=ab; },()=>{}); if(p&&p.catch) p.catch(()=>{}); }catch(e){} } }
+function playSmp(k,vol=1,rate=1,dest,delay=0){ const b=SMP[k], c=Sound.ctx; if(!b||!c) return false; const s=c.createBufferSource(), g=c.createGain(); s.buffer=b; s.playbackRate.value=rate; g.gain.value=vol; s.connect(g); g.connect(dest||Sound.sfx); s.start(c.currentTime+delay); return true; }
+const SMAP={thud:[['place',.9]],build:[['place',.9],['ok',.45,1,.12]],star:[['star',.75]],fail:[['fail',.6]],req:[['req',.6]],sparkle:[['ok',.5]],pick:[['pick',.5]],drop:[['drop',.5]],click:[['click',.45]],doorO:[['open',.3]],doorC:[['close',.35]]};
 let lastSfx={}, coinStreak=0, coinLastT=0;
 function sfx(name,p){
   if(!Sound.ctx||!state.sound) return;
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
+  const sm=SMAP[name]; if(sm&&SMP[sm[0][0]]){ sm.forEach(([k,v,r,d])=>playSmp(k,v,(r||1)*(0.97+Math.random()*0.06),null,d||0)); return; }
   switch(name){
     case 'ding':  tone(1568,1.1,'sine',.1); tone(2093,.8,'sine',.04,.01); tone(3136,.3,'sine',.012); break;
     case 'bell':  tone(2093,.7,'sine',.035); tone(2637,.55,'sine',.018,.09); break;   // hafif resepsiyon zili
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
-      tone(1319*m+Math.random()*30,.09,'triangle',.05); tone(1976*m,.26,'sine',.05,.055); break; }
+      if(playSmp('coin',.45,m*(0.98+Math.random()*0.04))) break; tone(1319*m+Math.random()*30,.09,'triangle',.05); tone(1976*m,.26,'sine',.05,.055); break; }
     case 'doorC': tone(95,.16,'sine',.1,0,null,60); noiseBurst(.08,.05,900); break;
     case 'doorO': noiseBurst(.12,.025,1400); tone(520,.06,'triangle',.015,.02); break;
     case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
