@@ -78,7 +78,7 @@ function reflowQueue(){ queue.forEach((g,k)=>{ const p=qPos(k); g.qk=k; g.goTo(0
 function pickType(){
   const st=stars(), opts=Object.keys(GTYPES).filter(k=>GTYPES[k].stars<=st);
   let maxLv=0; for(const k in state.rooms) maxLv=Math.max(maxLv,ROOM_T[state.rooms[k].type].lvl);
-  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1);
+  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k);
   let tot=0; opts.forEach(k=>tot+=w(k)); let r=Math.random()*tot;
   for(const k of opts){ r-=w(k); if(r<=0) return k; } return 'tourist';
 }
@@ -107,11 +107,12 @@ function checkIn(g,id){
   R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
   const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
   g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)+(stars()-3)*3-Math.min(14,Math.max(0,waited-10)*0.35)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
-  const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
+  const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle)*priceMult()*(g.loyal?1.2:1));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
+  g.sat=clamp(g.sat+priceSat(),5,100);
   if(g.pref){ if(s.theme===g.pref){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.6,g.z,0,RTHEMES[g.pref].e); } else g.sat=clamp(g.sat-3,5,100); }
   if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
@@ -140,7 +141,7 @@ function checkout(g){
   if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
-  noteGuestDay(g,mood,false);
+  noteGuestDay(g,mood,false); noteLoyal(g);
   applyRoomState(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
@@ -256,9 +257,9 @@ function updateStaff(dt){
       if(e.kind==='clean'){ const id=nearestRoom(e,roomsWhere(id=>state.rooms[id].dirty&&!RT(id).task)); if(id){ RT(id).task=e; e.job={type:'clean',id}; goRoom(e,id); } else if(!staffSpotJob(e,'mess')) staffGoIdle(e); }
       else if(e.kind==='tech'){ if(staffSpotJob(e,'crisis')){} else { const id=nearestRoom(e,roomsWhere(id=>state.rooms[id].broken&&!RT(id).ftask)); if(id){ RT(id).ftask=e; e.job={type:'fix',id}; goRoom(e,id); } else staffGoIdle(e); } }
       else if(e.kind==='bell'){
-        const id=nearestRoom(e,roomsWhere(id=>{ const R=RT(id); return R.req&&!R.req.by&&(R.req.item!=='food'||built('rest')); }));
+        const id=nearestRoom(e,roomsWhere(id=>{ const R=RT(id); return R.req&&!R.req.by&&(R.req.item!=='food'||built('rest'))&&stockHas(R.req.item); }));
         if(id){ const R=RT(id); R.req.by=e; e.job={type:'fetch',id,item:R.req.item}; const src=R.req.item==='food'?L.pass:L.shelf[R.req.item];
-          if(!e.goTo(0,src.x,src.z,()=>{ e.wait=0.5; e.job.type='carry'; setHold(e.c,[e.job.item]); sfx('pick'); goRoom(e,id); })){ R.req.by=null; e.job=null; } }
+          if(!e.goTo(0,src.x,src.z,()=>{ e.wait=0.5; e.job.type='carry'; useStock(e.job.item); setHold(e.c,[e.job.item]); sfx('pick'); goRoom(e,id); })){ R.req.by=null; e.job=null; } }
         else staffGoIdle(e);
       }
       continue;

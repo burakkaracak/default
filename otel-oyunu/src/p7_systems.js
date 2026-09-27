@@ -143,7 +143,7 @@ function updatePlayerZones(dt){
   pickT-=dt;
   for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
-    if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36&&canPick(it)){ addItem(it); pickT=0.5; tutEvent('pick'); break; } } }
+    if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36&&stockHas(it)&&canPick(it)){ useStock(it); addItem(it); pickT=0.5; tutEvent('pick'); break; } } }
     if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')){ addItem('food'); pickT=0.5; }
   }
   if(floorsBuilt()>1&&d2(p.x,p.z,L.elev.x,L.elev.z)<0.3&&!p.moving&&!p.path) elevHere=true;
@@ -184,7 +184,7 @@ function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoo
 function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale(); }
 function wagesToday(){ let w=0; for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
-  const w=wagesToday(); state.money-=w; state.today.wages=w;
+  const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
   const rep=Object.assign({},state.today), day=state.day, repNow=state.rep;
   const oldS=seasonIx(); state.day++;
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
@@ -298,10 +298,12 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6;
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand();
   if(isNight()) f*=0.3;
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
+  if(Math.random()<rivalPull()){ spawnPasser(); return; }
+  if(state.tut>=TUT.length&&tryLoyalSpawn()) return;
   spawnGuest();
 }
 let brkT=70;

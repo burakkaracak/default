@@ -186,7 +186,7 @@ function renderSheet(){
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+eventsHtml()+legacyHtml()+luxHtml();
+      ${progressHtml(next)}`+depthHtml()+eventsHtml()+legacyHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -197,6 +197,7 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
+  bindDepth(sheet);
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
   sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
   const av=sheet.querySelector('[data-adv]'); if(av) av.onclick=()=>{ sfx('click'); openAdvisor(); };
@@ -353,12 +354,12 @@ function renderAdminSheet(){
     ADMIN[a](v===''?undefined:isNaN(+v)?v:+v); markSave(); updateHUD(); if(sheetMode==='admin'){ sheet._h=null; renderSheet(); } });
 }
 function showReport(day,t,repNow){
-  const inc=t.rooms+t.tips+t.amen+t.req, net=inc-t.wages, dr=t.rep0==null?null:Math.round(repNow-t.rep0);
+  const inc=t.rooms+t.tips+t.amen+t.req+(t.chainInc||0), net=inc-t.wages-(t.interest||0), dr=t.rep0==null?null:Math.round(repNow-t.rep0);
   openModal(`<h3>🌅 ${day}. gün bitti</h3><p class="sub">${season().e} ${season().name} · yarın ${WEATHER[state.weather].e}</p>
     <div class="kv"><span>🛏️ Oda gelirleri</span><b>${fmt(t.rooms)} ₺</b></div>
     <div class="kv"><span>💵 Bahşiş ve istekler</span><b>${fmt(t.tips+t.req)} ₺</b></div>
     <div class="kv"><span>🍽️ Tesisler${t.cafe?' ve kahve':''}</span><b>${fmt(t.amen+(t.cafe||0))} ₺</b></div>${t.quest?`<div class="kv"><span>🎯 Görev ödülleri</span><b>${fmt(t.quest)} ₺</b></div>`:''}
-    <div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>
+    ${t.chainInc?`<div class="kv"><span>🏨 Zincir otelleri</span><b>${fmt(t.chainInc)} ₺</b></div>`:''}<div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>${t.interest?`<div class="kv neg"><span>🏦 Kredi faizi</span><b>−${fmt(t.interest)} ₺</b></div>`:''}
     <div class="kv tot${net<0?' neg':''}"><span>Net</span><b>${net<0?'−':''}${fmt(Math.abs(net))} ₺</b></div>
     <div class="grid2" style="margin-top:10px"><div class="stat">Misafir<b>${t.guests}</b></div><div class="stat">Mutlu / mutsuz<b>😄 ${t.happy} · 😠 ${t.unhappy}</b></div>
     <div class="stat">Bekleyip giden<b>${t.left}</b></div><div class="stat">Ün değişimi<b>${dr==null?'—':(dr>=0?'+':'')+dr}</b></div></div>
@@ -562,7 +563,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();
@@ -589,7 +590,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);
