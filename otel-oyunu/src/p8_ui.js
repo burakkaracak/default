@@ -167,6 +167,7 @@ function renderSheet(){
   if(sheetMode==='ach') return renderAchSheet();
   if(sheetMode==='skills') return renderSkillSheet();
   if(sheetMode==='pass') return renderPassSheet();
+  if(sheetMode==='album') return renderAlbumSheet();
   const tabs=[['staff','👥 Personel'],['me','🧍 Sen'],['hotel','🏨 Otel']];
   let h=`<h3>📋 Yönetim <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" class="${k===mgmtTab?'on':''}">${l}</button>`).join('')}</div>`;
   if(mgmtTab==='staff'){
@@ -196,10 +197,11 @@ function renderSheet(){
     const H=hotelSub;
     h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
     if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
+    if(H==='gen') h+=tierHtml()+mgrHtml()+floorsHtml();
     if(H==='eco') h+=depthHtml()+invHtml()+luxHtml();
     else if(H==='evt') h+=eventsHtml()+partyHtml();
     else if(H==='rule') h+=opsHtml();
-    else if(H==='city') h+=progressHtml(next)+legacyHtml();
+    else if(H==='city') h+=specialHtml()+progressHtml(next)+legacyHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -214,6 +216,8 @@ function renderSheet(){
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
   bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet);
+  const spb=sheet.querySelector('[data-spbuy]'); if(spb) spb.onclick=buySpecial; const mgo=sheet.querySelector('[data-mgopen]'); if(mgo) mgo.onclick=openMgr;
+  sheet.querySelectorAll('[data-fth]').forEach(b=>b.onclick=()=>{ const [f,k]=b.dataset.fth.split(':'); buyFloorTheme(+f,k); }); sheet.querySelectorAll('[data-flo]').forEach(b=>b.onclick=()=>buyLounge(+b.dataset.flo));
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
   const pty=sheet.querySelector('[data-party]'); if(pty) pty.onclick=throwParty;
   sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
@@ -282,7 +286,7 @@ function confirmMove(){
     <button class="btn wide" id="mvYes">Taşın!</button><button class="btn ghost wide" id="mvNo">Vazgeç</button>`,m=>{
     m.querySelector('#mvNo').onclick=closeModal;
     m.querySelector('#mvYes').onclick=()=>{ const ni=state.city+1, s=freshState(ni,state.prestige+1); s.sound=state.sound; s.music=state.music; s.custom=Object.assign({},state.custom); s.vol=state.vol; s.gfx=state.gfx; s.lvl=state.lvl; s.xp=state.xp; s.ach=state.ach; s.stats=state.stats; s.tut=TUT.length; s.tips=state.tips;
-      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
+      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.album=state.album; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
       state=s; save(); location.reload(); };
   });
 }
@@ -604,7 +608,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -630,7 +634,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

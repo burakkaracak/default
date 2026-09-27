@@ -122,6 +122,7 @@ function checkIn(g,id){
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
   g.state='toRoom'; const sp=roomSpots(id);
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
+  g.sat=clamp(g.sat+floorSat(roomInfo(id).f),5,100); albumNoteGuest(g);
   tutEvent('checkin'); qEv('guest'); markSave();
 }
 function enterRoom(g){
@@ -240,7 +241,7 @@ function spawnStaff(kind,fromDoor){
   const sp=fromDoor?{x:rnd(-0.5,0.5),z:8.5,f:0}:staffIdleSpot(e.slot); e.place(sp.x,sp.z,sp.f); staffEnts.push(e);
   e.speed=2.3*staffSpeedMul(kind); return e;
 }
-function staffSpeedMul(kind){ return STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
+function staffSpeedMul(kind){ return mgrStaff()*STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
 function roomsWhere(fn){ return Object.keys(state.rooms).map(Number).filter(fn); }
 function nearestRoom(e,list){ let best=null,bd=1e9; list.forEach(id=>{ const ri=roomInfo(id), d=d2(e.x,e.z,ri.x,ri.z)+Math.abs(ri.f-e.f)*40; if(d<bd){ bd=d; best=id; } }); return best; }
 function staffGoIdle(e){
