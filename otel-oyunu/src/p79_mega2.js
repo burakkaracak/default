@@ -10,7 +10,7 @@ const SPA_TABLES=[-15.3,-13.65,-12.0];
 SPA_TABLES.forEach(tx=>SEATS.push({amen:'spa',x:tx,z:-7.75,px:tx,pz:-9.2,py:0.62,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 [-7.1,-6.1].forEach(z=>SEATS.push({amen:'spa',x:-12.25,z,px:-11.52,pz:z,py:0.12,rot:-Math.PI/2,pose:'sit',busy:null}));
 function spaOpen(){ const h=hourNow(); return built('spa')&&h>=8&&h<22; }
-function amenBonus(a){ return (a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
+function amenBonus(a){ return invAmen(a)*(a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
 function shellWalls(S,B,wallM,trimM){
   const cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2, w=B.x1-B.x0, d=B.z1-B.z0;
   S.add(mesh(box(w,2.4,0.16),wallM,cx,1.2,B.z0-0.08,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x0-0.08,1.2,cz,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x1+0.08,1.2,cz,true));
@@ -133,15 +133,16 @@ function eventsDayEnd(){ events3DayEnd();
   if(natFestOn()){ const F=festival(); setTimeout(()=>{ banner(`${F.e} ${F.name}!`,'Bugün misafir akını var ve gelirler %15 fazla'); sfx('star'); },4200); }
   staffDayEnd();
 }
-function acceptOffer(){ if(!state.offer) return; state.event=Object.assign({started:false},state.offer); state.offer=null; sfx('build'); toast(`${EVT[state.event.k].e} Rezervasyon onaylandı: ${state.event.day}. gün 12:00`); save(); renderSheet(); }
+function acceptOffer(){ if(!state.offer) return; const dep=eventDeposit(state.offer.rew); if(!spend(dep)) { toast(`Kapora için ${fmt(dep)} ₺ gerekli`,'bad'); return; } state.event=Object.assign({started:false,dep},state.offer); state.offer=null; sfx('build'); toast(`${EVT[state.event.k].e} Rezervasyon onaylandı: ${state.event.day}. gün 12:00`); save(); renderSheet(); }
 function declineOffer(){ state.offer=null; sfx('click'); save(); renderSheet(); }
-function failEvent(why){ const E=EVT[state.event.k]; state.event=null; changeRep(-3); banner(`${E.e} ${E.name} iptal oldu`,`${why} · −3 ün`); sfx('fail'); markSave(); }
+function failEvent(why){ const E=EVT[state.event.k]; if(state.event.dep) why+=` · ${fmt(state.event.dep)} ₺ kapora yandı`; state.event=null; changeRep(-3); banner(`${E.e} ${E.name} iptal oldu`,`${why} · −3 ün`); sfx('fail'); markSave(); }
 function updateEvents(dt){
   const ev=state.event; if(!ev||ev.started||state.day!==ev.day||hourNow()<12||hourNow()>=22) return;
   ev.started=true; const E=EVT[ev.k], ready=eventReady(ev), fac=built(E.need), calm=!state.crisis&&!state.mess;
   const score=Math.min(1,ready/E.rooms)*0.7+(fac?0.2:0)+(calm?0.1:0), full=Math.round(ev.rew*score*1.15), pay=Math.round(full*0.35);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; onGameEvent('event',1);
   changeRep(score>=0.9?3:score>=0.6?1:-2);
+  if(ev.dep){ if(score>=0.6){ state.piles.desk+=ev.dep; pileChanged('desk'); } else toast(`💸 Hazırlık yetersiz: ${fmt(ev.dep)} ₺ kapora yandı`,'bad'); }
   banner(`${E.e} ${E.name} ${score>=0.9?'muhteşem başladı!':score>=0.6?'başladı':'aksak başladı'}`,`CANLI 18:00'e kadar · hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada, kalanı etkinlik boyunca akar`);
   sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40); startLive(ev.k,score,full-pay);
   for(let i=0;i<E.n;i++) setTimeout(()=>{ if(queue.length<10){ const g=spawnGuest(rand(E.types),rand([L.spawnL,L.spawnR]),true); g.evt=ev.k; } },i*900);
@@ -156,7 +157,7 @@ function eventGoal(){
 function eventsHtml(){
   let h=`<div class="ugh">📅 Etkinlikler ve festivaller</div>`;
   const O=state.offer, V=state.event;
-  if(O){ const E=EVT[O.k]; h+=`<div class="row"><div class="ic">${E.e}</div><div class="tx">${E.name} teklifi · ${O.day}. gün 12:00<small>Gerekli: ${E.rooms} hazır oda + ${E.needN} · ${E.n} misafir gelir · ödül ${fmt(O.rew)} ₺ (hazırlığa göre)</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn gold" data-evt="yes">Kabul</button><button class="btn ghost" data-evt="no">Reddet</button></div></div>`; }
+  if(O){ const E=EVT[O.k]; h+=`<div class="row"><div class="ic">${E.e}</div><div class="tx">${E.name} teklifi · ${O.day}. gün 12:00<small>Gerekli: ${E.rooms} hazır oda + ${E.needN} · ${E.n} misafir gelir · ödül ${fmt(O.rew)} ₺ (hazırlığa göre)</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn gold" data-evt="yes" ${state.money<eventDeposit(O.rew)?'disabled':''}>Kabul<br><small>kapora ${fmt(eventDeposit(O.rew))}</small></button><button class="btn ghost" data-evt="no">Reddet</button></div></div>`; }
   else if(V){ const E=EVT[V.k]; h+=`<div class="row"><div class="ic">${E.e}</div><div class="tx">${E.name} · ${V.day}. gün 12:00<small>Şu an ${eventReady(V)}/${E.rooms} hazır oda · ${E.needN} ${built(E.need)?'✅':'❌'} · ödül ${fmt(V.rew)} ₺</small></div></div>`; }
   else h+=`<p class="note">Şu an teklif yok. Otel büyüdükçe düğün, konferans ve konser teklifleri gelir.</p>`;
   let next=1; while(next<20&&((state.day+next-1)%(SEASON_DAYS*2)!==2||state.day+next<3)) next++;

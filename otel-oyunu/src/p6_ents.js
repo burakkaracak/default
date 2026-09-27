@@ -104,12 +104,12 @@ function pickRoom(g){
   return best;
 }
 function decorSat(s){ let v=designSat(s); for(const k in s.decor) if(s.decor[k]) v+=DECOR[k].sat; return v; }
-function roomRate(id){ const s=state.rooms[id]; return ROOM_T[s.type].rate*(1+0.3*roomInfo(id).f)*(state.lux&&state.lux.brand?1.1:1); }
+function roomRate(id){ const s=state.rooms[id]; return invRate(id)*ROOM_T[s.type].rate*(1+0.3*roomInfo(id).f)*(state.lux&&state.lux.brand?1.1:1); }
 function checkIn(g,id){
   const s=state.rooms[id], R=RT(id), T=ROOM_T[s.type];
   R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
   const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
-  g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)+(stars()-3)*3-Math.min(14,Math.max(0,waited-10)*0.35)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
+  g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)-expectPen()-Math.min(16,Math.max(0,waited-waitGrace())*(0.35+0.08*(stars()-1)))+viewSat(g,id)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
   const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle)*priceMult()*(g.loyal?1.2:1));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
@@ -187,7 +187,7 @@ function endAmenity(g){
 function makeRequest(g){
   const R=RT(g.room); if(R.req) return;
   const items=['paper','towel']; if(restOpen()) items.push('food');
-  R.req={item:rand(items),left:48,max:48,by:null};
+  R.req={item:rand(items),left:reqTime(),max:reqTime(),by:null};
   sfx('req'); tutEvent('request');
 }
 function fulfillReq(id){

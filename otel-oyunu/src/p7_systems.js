@@ -181,10 +181,10 @@ function updateDesk(dt){
 // =====================================================================
 function updateTime(dt){ state.t+=dt/DAY_SEC; if(state.t>=1){ state.t-=1; endDay(); } }
 function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
-function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*(1-0.12*skillLv('o4')); }
+function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*(1-0.12*skillLv('o4')); }
 function wagesToday(){ let w=crewPremium(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
-  const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
+  repDrift(state.today); const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
   const rep=Object.assign({},state.today), day=state.day, repNow=state.rep;
   const oldS=seasonIx(); state.day++;
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
@@ -242,7 +242,7 @@ function updateBus(dt,t){
 }
 let cafeWork=0;
 function sellCoffee(g){
-  g.coffee=true; const fee=Math.round(COFFEE_FEE*(g.T.pay||1)*incomeMult());
+  g.coffee=true; const fee=Math.round(COFFEE_FEE*(g.T.pay||1)*incomeMult()*invAmen('cafe'));
   state.piles.cafe+=fee; pileChanged('cafe'); state.today.cafe+=fee;
   g.pat=Math.min(g.patMax,g.pat+g.patMax*0.2); setHold(g.c,['coffee']);
   fxEmoji(g.x,2.3,g.z,0,'☕'); cafeWork=1.8; qEv('coffee'); markSave();
@@ -298,7 +298,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
   if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1);
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3)*flowSpawnMul();
   if(queue.length>=Math.min(6,nRooms+1)) return;

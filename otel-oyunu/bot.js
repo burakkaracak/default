@@ -1,7 +1,7 @@
 window.simStep=(dt)=>{ updatePlayer(dt); updatePlayerZones(dt); updatePads(dt); updateDesk(dt); updateGuests(dt); updateStaff(dt);
   for(const e of ents.slice()) if(e!==player) e.step(dt); updateBus(dt,0); cafeWork=Math.max(0,cafeWork-dt); updateSpawner(dt); updateBreakdowns(dt); updateMega2(dt); updateDepth(dt); updateOps(dt); updateLive(dt,gtime); updateAmenLife(dt); updateFlow(dt); updateTime(dt);
   viewFloor=player.f; };
-window.botBuy=()=>{ state.stayPol='yes';
+window.botBuy=()=>{ state.stayPol='yes'; if(stars()>=4) for(const k in INV){ const c=invCost(k); if(c!=null&&state.money>c*2.5){ buyInv(k); break; } }
   if(state.quests) state.quests.list.forEach((q,i)=>{ if(q.done&&!q.claimed) claimQuest(i); });
   if(built('staff')){
     const plan=[['clean',1],['rec',1],['bell',1],['clean',2],['tech',1],['clean',3],['bell',2],['clean',4],['tech',2],['bell',3]];

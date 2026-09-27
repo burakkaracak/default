@@ -182,12 +182,12 @@ function renderSheet(){
   } else {
     const nR=Object.keys(state.rooms).length, next=CITIES[(state.city+1)%CITIES.length], adsOn=state.adsUntil>state.day+state.t;
     h+=`<div class="grid2">
-      <div class="stat">Yıldız<b>${'★'.repeat(stars())}</b></div><div class="stat">Ün<b>${Math.round(state.rep)}/100</b></div>
+      <div class="stat">Yıldız<b>${'★'.repeat(stars())}</b></div><div class="stat">Ün<b>${Math.round(state.rep)}/100${repTrendHtml()}</b></div>
       <div class="stat">Odalar<b>${nR}</b></div><div class="stat">Ağırlanan misafir<b>${fmt(state.served)}</b></div>
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+flowHtml()+opsHtml()+legacyHtml()+luxHtml();
+      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+flowHtml()+opsHtml()+legacyHtml()+invHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -200,7 +200,7 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
-  bindDepth(sheet); bindOps(sheet); bindFlow(sheet);
+  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet);
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
   const pty=sheet.querySelector('[data-party]'); if(pty) pty.onclick=throwParty;
   sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
@@ -263,13 +263,13 @@ function openCityMap(){
 function confirmMove(){
   const next=CITIES[(state.city+1)%CITIES.length], K=moveKeys();
   const line=(t,v)=>v?`<div class="row" style="padding:4px 8px"><div class="tx">${t}</div><b>+${v} 🗝️</b></div>`:'';
-  openModal(`<h3>🚚 ${next.e||''} ${next.name}'ya taşın</h3><p class="sub">Yeni şehirde sıfırdan bir otel kuracaksın: gelirler x${next.mult}, kalıcı +%15 gelir ve miras bonusların seninle gelir.</p>
+  openModal(`<h3>🚚 ${next.e||''} ${next.name}'ya taşın</h3><p class="sub">Yeni şehirde sıfırdan bir otel kuracaksın: gelirler x${next.mult}, kalıcı +%15 gelir ve miras bonusların seninle gelir. Paranın %10'u (${fmt(moveCarry())} ₺) sermaye olarak taşınır.</p>
     ${line('Otel tamamlandı',K.base)}${line(`Hızlı bitirdin (${state.day}. gün)`,K.speed)}${line(`${fmt(state.served)} misafir ağırladın`,K.guests)}${line('5 yıldız',K.st)}
     <div class="row" style="padding:4px 8px;border:2px solid var(--gold2)"><div class="tx"><b>Toplam</b></div><b>🗝️ ${K.total}</b></div>
     <button class="btn wide" id="mvYes">Taşın!</button><button class="btn ghost wide" id="mvNo">Vazgeç</button>`,m=>{
     m.querySelector('#mvNo').onclick=closeModal;
     m.querySelector('#mvYes').onclick=()=>{ const ni=state.city+1, s=freshState(ni,state.prestige+1); s.sound=state.sound; s.music=state.music; s.custom=Object.assign({},state.custom); s.vol=state.vol; s.gfx=state.gfx; s.lvl=state.lvl; s.xp=state.xp; s.ach=state.ach; s.stats=state.stats; s.tut=TUT.length; s.tips=state.tips;
-      s.keys=(state.keys||0)+K.total; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
+      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
       state=s; save(); location.reload(); };
   });
 }
@@ -376,6 +376,7 @@ function showReport(day,t,repNow){
     <div class="kv"><span>💵 Bahşiş ve istekler</span><b>${fmt(t.tips+t.req)} ₺</b></div>
     <div class="kv"><span>🍽️ Tesisler${t.cafe?' ve kahve':''}</span><b>${fmt(t.amen+(t.cafe||0))} ₺</b></div>${t.quest?`<div class="kv"><span>🎯 Görev ödülleri</span><b>${fmt(t.quest)} ₺</b></div>`:''}
     ${t.chainInc?`<div class="kv"><span>🏨 Zincir otelleri</span><b>${fmt(t.chainInc)} ₺</b></div>`:''}<div class="kv neg"><span>👥 Maaşlar</span><b>−${fmt(t.wages)} ₺</b></div>${t.zam?`<div class="kv neg"><span>⚡ Elektrik zammı</span><b>−${fmt(t.zam)} ₺</b></div>`:''}${t.interest?`<div class="kv neg"><span>🏦 Kredi faizi</span><b>−${fmt(t.interest)} ₺</b></div>`:''}
+    ${t.perf!=null?`<div class="kv"><span>⭐ Günün performansı</span><b>${t.perf}/100${t.repDrift?` · ün ${t.repDrift>0?'+':''}${t.repDrift}`:''}</b></div>`:''}
     <div class="kv tot${net<0?' neg':''}"><span>Net</span><b>${net<0?'−':''}${fmt(Math.abs(net))} ₺</b></div>
     <div class="grid2" style="margin-top:10px"><div class="stat">Misafir<b>${t.guests}</b></div><div class="stat">Mutlu / mutsuz<b>😄 ${t.happy} · 😠 ${t.unhappy}</b></div>
     <div class="stat">Bekleyip giden<b>${t.left}</b></div><div class="stat">Ün değişimi<b>${dr==null?'—':(dr>=0?'+':'')+dr}</b></div></div>

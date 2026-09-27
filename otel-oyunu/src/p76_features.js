@@ -414,7 +414,7 @@ SADECE JSON: {"rapor":"..."}`);
 
 // ---------- gün sonu misafir yorumları ----------
 let dayGuests=[];
-function noteGuestDay(g,mood,left){ if(g.type==='insp') return;
+function noteGuestDay(g,mood,left){ if(g.type==='insp') return; perfNote(g.sat,left);
   dayGuests.push({name:g.name,type:g.T.name,e:g.T.e,sat:Math.round(g.sat),left:!!left,room:g.lastRoomT||'',waited:Math.round(g.waited||0),chatted:!!g.chatted,gifted:!!g.gifted,persona:PERSONA[g.type]||PERSONA.tourist});
   if(dayGuests.length>40) dayGuests.shift(); }
 function reviewStars(x){ return x.left?1:x.sat>=85?5:x.sat>=68?4:x.sat>=50?3:x.sat>=35?2:1; }

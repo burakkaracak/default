@@ -105,7 +105,7 @@ function updateLive(dt,t){
   if(L&&!live3) live3=buildLiveSet(L.k);
   if(!L){ if(live3) dropLiveSet(); return; }
   if(L.day!==state.day||hourNow()>=LIVE_END||hourNow()<11){ finishLive(L.day!==state.day); return; }
-  const S=live3, V=S.V; S.t+=dt;
+  const S=live3, V=S.V; S.t+=dt; updateIncidents(dt); if(!state.live) return;
   // coşku: yakında durmak coşkuyu artırır
   const near=player.f===0&&Math.hypot(player.x-V.x,player.z-(V.z+2))<6.5;
   L.hype=clamp((L.hype||0)+(near?dt*0.06:-dt*0.012),0,1);
@@ -143,7 +143,7 @@ function liveHud(){
     document.head.appendChild(st); liveEl=document.createElement('div'); liveEl.id='livePill'; document.body.appendChild(liveEl); liveEl.addEventListener('pointerdown',e=>e.stopPropagation()); }
   const L=state.live; if(!L||!live3){ liveEl.style.display='none'; return; }
   const E=EVT[L.k]; liveEl.style.display='flex';
-  liveEl.innerHTML=`<span class="dot"></span><span class="lbl">CANLI ${E.e} ${E.name} · ${LIVE_END}:00'e kadar</span><span title="Coşku: yakında dur">🔥</span><span class="hb"><i style="width:${Math.round((L.hype||0)*100)}%"></i></span><button id="lvW">👀 İzle</button>`;
+  liveEl.innerHTML=`<span class="dot"></span><span class="lbl">CANLI ${E.e} ${E.name} · ${LIVE_END}:00'e kadar</span>${incHtml()}<span title="Coşku: yakında dur">🔥</span><span class="hb"><i style="width:${Math.round((L.hype||0)*100)}%"></i></span><button id="lvW">👀 İzle</button>`;
   liveEl.querySelector('#lvW').onclick=e=>{ e.stopPropagation(); const V=live3.V; camFocus={x:V.x,z:V.z+2.5,t:8}; peekFloor=null; sfx('click'); toast('🔥 Etkinliğin yanında durursan coşku ve kazanç artar'); };
 }
 
