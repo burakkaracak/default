@@ -35,6 +35,8 @@ class Ent{
     let dr=this.tRot-this.rot; while(dr>Math.PI) dr-=2*Math.PI; while(dr<-Math.PI) dr+=2*Math.PI; this.rot+=dr*Math.min(1,dt*12);
     const r=this.c.root; r.position.set(this.x,this.y+this.yOff,this.z); r.rotation.set(this.rx,this.rot,0);
     this.c.mode=this.anim||(this.path&&!this.riding&&!this.elevWait||this.moving?'walk':'idle'); this.c.spd=this.speed/2.3;
+    if(this.sqT>0){ this.sqT=Math.max(0,this.sqT-dt); const bs=this.c.bs||(this.c.bs=r.scale.x||1), u=1-this.sqT/0.4, a=Math.sin(u*Math.PI*2.5)*(1-u)*0.22;
+      r.scale.set(bs*(1+a),bs*(1-a),bs*(1+a)); if(this.sqT===0) r.scale.setScalar(bs); }
     r.visible=floorVisible(this.y);
     if(r.visible) animChar(this.c,dt);
   }
@@ -107,7 +109,7 @@ function checkIn(g,id){
   const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
-  fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑');
+  fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
   sfx('ding');
   if(g.tag){ tagRemove(g.tag); g.tag=null; }

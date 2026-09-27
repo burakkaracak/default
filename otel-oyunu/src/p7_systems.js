@@ -45,11 +45,11 @@ function addMoney(amt,x,y,z,f,noQuest){
 }
 function collectPile(k){
   const amt=state.piles[k]; if(amt<=0) return;
-  state.piles[k]=0; const P=L.piles[k]; addMoney(amt,P.x,0.5,P.z,P.f); coinBurst(P.x,P.f*FH+0.3,P.z,Math.min(10,3+amt/(25*city().mult))); pileChanged(k); tutEvent('collect');
+  state.piles[k]=0; const P=L.piles[k]; addMoney(amt,P.x,0.5,P.z,P.f); coinBurst(P.x,P.f*FH+0.3,P.z,Math.min(10,3+amt/(25*city().mult))); pileChanged(k); tutEvent('collect'); if(player) player.sqT=0.4;
 }
 function collectTip(id){
   const s=state.rooms[id]; if(s.tip<=0) return; const sp=roomSpots(id), amt=s.tip; s.tip=0;
-  const ri=roomInfo(id); addMoney(amt,ri.x+TIP_X,0.6,ri.z+TIP_Z,ri.f); coinBurst(ri.x+TIP_X,ri.f*FH+0.2,ri.z+TIP_Z,4); applyRoomState(id); tutEvent('collect');
+  const ri=roomInfo(id); addMoney(amt,ri.x+TIP_X,0.6,ri.z+TIP_Z,ri.f); coinBurst(ri.x+TIP_X,ri.f*FH+0.2,ri.z+TIP_Z,4); applyRoomState(id); tutEvent('collect'); if(player) player.sqT=0.4;
 }
 
 // =====================================================================
@@ -89,7 +89,7 @@ function updatePads(dt){
   const pay=Math.min(remain,rate*dt,state.money);
   if(pay>0.001){
     state.money-=pay; state.paid[on.id]=paid+pay; updatePadFill(on); markSave();
-    padCoinT-=dt; if(padCoinT<=0){ padCoinT=0.07; coinArc(p.x,p.y+1.1,p.z,on.x,on.f*FH+0.2,on.z); sfx('tick'); }
+    padCoinT-=dt; if(padCoinT<=0){ padCoinT=0.07; coinArc(p.x,p.y+1.1,p.z,on.x,on.f*FH+0.2,on.z); sfx('tick',state.paid[on.id]/on.cost); }
   } else if(remain>0.5&&noMoneyT<=0){ toast('Yeterli paran yok — önce para topla 💰','bad'); noMoneyT=3; }
   if((state.paid[on.id]||0)>=on.cost-0.01) completePad(on);
 }
@@ -366,6 +366,14 @@ function sparkleAt(x,y,z){
   for(let i=0;i<14;i++){ const m=new THREE.Mesh(sph(0.05,6,4),new THREE.MeshBasicMaterial({color:rand([0xfff6c2,0xffffff,0xaef0ff]),transparent:true,blending:THREE.AdditiveBlending}));
     m.position.set(x+rnd(-0.6,0.6),y+rnd(-0.3,0.5),z+rnd(-0.6,0.6)); world.add(m); fx3.push({m,v:new THREE.Vector3(0,rnd(0.6,1.4),0),life:0.9,max:0.9,g:0,drag:1,twinkle:true}); }
 }
+function buildThud(v){
+  const R=v.r;
+  const ring=new THREE.Mesh(new THREE.RingGeometry(R*0.7,R,32),new THREE.MeshBasicMaterial({color:0xf3ecde,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(v.x,v.y+0.06,v.z); world.add(ring); fx3.push({m:ring,v:new THREE.Vector3(),g:0,life:.55,max:.55,grow:4.5/R});
+  for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, m=new THREE.Mesh(sph(0.1,6,4),new THREE.MeshBasicMaterial({color:0xe8e2d6,transparent:true,opacity:.6,depthWrite:false}));
+    m.position.set(v.x+Math.cos(a)*R,v.y+0.12,v.z+Math.sin(a)*R); world.add(m); fx3.push({m,v:new THREE.Vector3(Math.cos(a)*2.4,rnd(0.3,0.9),Math.sin(a)*2.4),life:.6,max:.6,g:0,drag:0.9,grow:0.8}); }
+  sfx('thud'); camShake(0.12);
+}
 const coinGeo=new THREE.CylinderGeometry(0.09,0.09,0.025,12);
 function coinArc(ax,ay,az,bx,by,bz){
   const m=new THREE.Mesh(coinGeo,M.gold); m.position.set(ax,ay,az); world.add(m);
@@ -374,7 +382,7 @@ function coinArc(ax,ay,az,bx,by,bz){
 function updateFx3(dt){
   for(let i=fx3.length-1;i>=0;i--){ const f=fx3[i]; f.life-=dt; const k=1-f.life/f.max;
     if(f.arc){ const a=f.arc; f.m.position.set(lerp(a.ax,a.bx,k),lerp(a.ay,a.by,k)+Math.sin(k*Math.PI)*1.2,lerp(a.az,a.bz,k)); f.m.rotation.x+=dt*12; }
-    else { f.v.y-=f.g*dt; f.v.multiplyScalar(f.drag||1); f.m.position.addScaledVector(f.v,dt); if(f.bounceY!=null&&f.m.position.y<f.bounceY&&f.v.y<0){ f.m.position.y=f.bounceY; f.v.y*=-0.45; f.v.x*=0.7; f.v.z*=0.7; } if(f.s){ f.m.rotation.x+=f.s.x*dt; f.m.rotation.y+=f.s.y*dt; } if(f.m.material.opacity!==undefined) f.m.material.opacity=Math.min(1,f.life/f.max*2)*(f.twinkle?0.6+0.4*Math.sin(f.life*30):1); }
+    else { f.v.y-=f.g*dt; f.v.multiplyScalar(f.drag||1); f.m.position.addScaledVector(f.v,dt); if(f.bounceY!=null&&f.m.position.y<f.bounceY&&f.v.y<0){ f.m.position.y=f.bounceY; f.v.y*=-0.45; f.v.x*=0.7; f.v.z*=0.7; } if(f.grow) f.m.scale.multiplyScalar(1+f.grow*dt); if(f.s){ f.m.rotation.x+=f.s.x*dt; f.m.rotation.y+=f.s.y*dt; } if(f.m.material.opacity!==undefined) f.m.material.opacity=Math.min(1,f.life/f.max*2)*(f.twinkle?0.6+0.4*Math.sin(f.life*30):1); }
     if(f.life<=0){ world.remove(f.m); if(f.m.material!==M.gold) f.m.material.dispose(); fx3.splice(i,1); }
   }
 }

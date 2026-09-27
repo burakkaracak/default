@@ -8,9 +8,21 @@ const floorRoots=[];
 function floorRoot(f){ if(!floorRoots[f]){ const g=new THREE.Group(); g.position.y=f*FH; world.add(g); floorRoots[f]=g; } return floorRoots[f]; }
 const anims=[];   // pop-in animations
 function popIn(obj,delay=0){ obj.scale.setScalar(0.001); anims.push({obj,t:-delay,dur:.6}); }
+const easeOutBounce=t=>{ const n=7.5625,d=2.75; if(t<1/d) return n*t*t; if(t<2/d) return n*(t-=1.5/d)*t+.75; if(t<2.5/d) return n*(t-=2.25/d)*t+.9375; return n*(t-=2.625/d)*t+.984375; };
+// build juice: children drop from the sky one after another, bounce, then a dust ring + thud
+function dropIn(G){
+  const bb=new THREE.Box3().setFromObject(G), c=bb.getCenter(new THREE.Vector3()), sz=bb.getSize(new THREE.Vector3());
+  const spot=bb.isEmpty()?null:{x:c.x,y:bb.min.y,z:c.z,r:clamp(Math.max(sz.x,sz.z)/2,0.6,2.4)};
+  const kids=G.children.slice(), many=kids.length>28, list=many?[G]:kids, step=Math.min(0.07,0.9/Math.max(1,list.length));
+  list.forEach((o,i)=>{ o.scale.setScalar(0.001); anims.push({obj:o,t:-i*step,dur:.7,drop:true,y0:o.position.y,land:i===list.length-1?spot:null}); });
+}
 function updateAnims(dt){
   for(let i=anims.length-1;i>=0;i--){ const a=anims[i]; a.t+=dt; if(a.t<0) continue;
-    const k=Math.min(1,a.t/a.dur); a.obj.scale.setScalar(Math.max(0.001,easeOutBack(k))); if(k>=1){ a.obj.scale.setScalar(1); anims.splice(i,1); } }
+    const k=Math.min(1,a.t/a.dur);
+    if(a.drop){ a.obj.position.y=a.y0+3.2*(1-easeOutBounce(k)); a.obj.scale.setScalar(Math.max(0.001,easeOutBack(Math.min(1,k*1.8))));
+      if(a.land&&k>=0.36&&!a.landed){ a.landed=true; buildThud(a.land); } }
+    else a.obj.scale.setScalar(Math.max(0.001,easeOutBack(k)));
+    if(k>=1){ a.obj.scale.setScalar(1); if(a.drop) a.obj.position.y=a.y0; anims.splice(i,1); } }
 }
 function applyTheme(){ const c=city(); M.facade.color.setHex(c.facade); M.trim.color.setHex(c.trim); M.accent.color.setHex(c.accent); }
 
@@ -321,7 +333,7 @@ function buildFeature(id,pop){
     case 'f3': buildUpperFloor(2); g=buildElevator(); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
   }
-  if(g){ featureGroups[id]=g; if(pop) popIn(g); }
+  if(g){ featureGroups[id]=g; if(pop) dropIn(g); }
 }
 function buildDepo(){
   const G=floorRoot(0), S=new THREE.Group();
@@ -687,7 +699,7 @@ function buildRoomVisual(id,pop){
   const lc=[[-1.5,1.5,-1.52,-1.38],[-1.5,-1.38,-1.4,1.4],[1.38,1.5,-1.4,1.4],[-1.5,-0.7,1.28,1.42],[0.7,1.5,1.28,1.42],
     [0.67,1.5,-1.4,-0.4],[-1.4,b.right,-1.4,0.72],[b.right+0.02,b.right+0.44,-1.4,-0.98],...cols];
   addCols('room'+id,lc.map(([a,c,e,g])=>[ri.f,ri.x+a,ri.x+c,ri.z+e,ri.z+g]));
-  if(pop) popIn(G);
+  if(pop) dropIn(G);
   applyRoomState(id);
 }
 function applyRoomState(id){

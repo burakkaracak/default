@@ -467,17 +467,19 @@ function noiseBurst(dur,vol,freq,delay=0){
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   s.connect(f); f.connect(g); g.connect(Sound.sfx); s.start(t); s.stop(t+dur+0.05);
 }
-let lastSfx={};
-function sfx(name){
+let lastSfx={}, coinStreak=0, coinLastT=0;
+function sfx(name,p){
   if(!Sound.ctx||!state.sound) return;
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
   switch(name){
     case 'ding':  tone(1568,.9,'sine',.12); tone(2093,.7,'sine',.05,.01); break;
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
-    case 'coin':  tone(1319+Math.random()*120,.07,'square',.028); tone(1976,.22,'square',.028,.06); break;
+    case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
+      tone(1319*m+Math.random()*40,.07,'square',.028); tone(1976*m,.22,'square',.028,.06); break; }
+    case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
     case 'pick':  tone(660,.08,'triangle',.08,0,null,990); break;
     case 'drop':  tone(990,.1,'triangle',.08,0,null,520); break;
-    case 'tick':  tone(1400+Math.random()*300,.04,'square',.018); break;
+    case 'tick':  tone(p==null?1400+Math.random()*300:700+p*1100,.04,'square',.018); break;
     case 'clean': noiseBurst(.16,.07,3000); noiseBurst(.16,.07,2400,.18); break;
     case 'sparkle': [0,.06,.12].forEach((d,k)=>tone(1760+k*440,.18,'sine',.04,d)); break;
     case 'fix':   [0,.13,.26].forEach(d=>{ tone(180,.07,'square',.05,d); noiseBurst(.05,.06,1800,d); }); break;
@@ -885,9 +887,21 @@ const floorRoots=[];
 function floorRoot(f){ if(!floorRoots[f]){ const g=new THREE.Group(); g.position.y=f*FH; world.add(g); floorRoots[f]=g; } return floorRoots[f]; }
 const anims=[];   // pop-in animations
 function popIn(obj,delay=0){ obj.scale.setScalar(0.001); anims.push({obj,t:-delay,dur:.6}); }
+const easeOutBounce=t=>{ const n=7.5625,d=2.75; if(t<1/d) return n*t*t; if(t<2/d) return n*(t-=1.5/d)*t+.75; if(t<2.5/d) return n*(t-=2.25/d)*t+.9375; return n*(t-=2.625/d)*t+.984375; };
+// build juice: children drop from the sky one after another, bounce, then a dust ring + thud
+function dropIn(G){
+  const bb=new THREE.Box3().setFromObject(G), c=bb.getCenter(new THREE.Vector3()), sz=bb.getSize(new THREE.Vector3());
+  const spot=bb.isEmpty()?null:{x:c.x,y:bb.min.y,z:c.z,r:clamp(Math.max(sz.x,sz.z)/2,0.6,2.4)};
+  const kids=G.children.slice(), many=kids.length>28, list=many?[G]:kids, step=Math.min(0.07,0.9/Math.max(1,list.length));
+  list.forEach((o,i)=>{ o.scale.setScalar(0.001); anims.push({obj:o,t:-i*step,dur:.7,drop:true,y0:o.position.y,land:i===list.length-1?spot:null}); });
+}
 function updateAnims(dt){
   for(let i=anims.length-1;i>=0;i--){ const a=anims[i]; a.t+=dt; if(a.t<0) continue;
-    const k=Math.min(1,a.t/a.dur); a.obj.scale.setScalar(Math.max(0.001,easeOutBack(k))); if(k>=1){ a.obj.scale.setScalar(1); anims.splice(i,1); } }
+    const k=Math.min(1,a.t/a.dur);
+    if(a.drop){ a.obj.position.y=a.y0+3.2*(1-easeOutBounce(k)); a.obj.scale.setScalar(Math.max(0.001,easeOutBack(Math.min(1,k*1.8))));
+      if(a.land&&k>=0.36&&!a.landed){ a.landed=true; buildThud(a.land); } }
+    else a.obj.scale.setScalar(Math.max(0.001,easeOutBack(k)));
+    if(k>=1){ a.obj.scale.setScalar(1); if(a.drop) a.obj.position.y=a.y0; anims.splice(i,1); } }
 }
 function applyTheme(){ const c=city(); M.facade.color.setHex(c.facade); M.trim.color.setHex(c.trim); M.accent.color.setHex(c.accent); }
 
@@ -1198,7 +1212,7 @@ function buildFeature(id,pop){
     case 'f3': buildUpperFloor(2); g=buildElevator(); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
   }
-  if(g){ featureGroups[id]=g; if(pop) popIn(g); }
+  if(g){ featureGroups[id]=g; if(pop) dropIn(g); }
 }
 function buildDepo(){
   const G=floorRoot(0), S=new THREE.Group();
@@ -1564,7 +1578,7 @@ function buildRoomVisual(id,pop){
   const lc=[[-1.5,1.5,-1.52,-1.38],[-1.5,-1.38,-1.4,1.4],[1.38,1.5,-1.4,1.4],[-1.5,-0.7,1.28,1.42],[0.7,1.5,1.28,1.42],
     [0.67,1.5,-1.4,-0.4],[-1.4,b.right,-1.4,0.72],[b.right+0.02,b.right+0.44,-1.4,-0.98],...cols];
   addCols('room'+id,lc.map(([a,c,e,g])=>[ri.f,ri.x+a,ri.x+c,ri.z+e,ri.z+g]));
-  if(pop) popIn(G);
+  if(pop) dropIn(G);
   applyRoomState(id);
 }
 function applyRoomState(id){
@@ -1853,6 +1867,8 @@ class Ent{
     let dr=this.tRot-this.rot; while(dr>Math.PI) dr-=2*Math.PI; while(dr<-Math.PI) dr+=2*Math.PI; this.rot+=dr*Math.min(1,dt*12);
     const r=this.c.root; r.position.set(this.x,this.y+this.yOff,this.z); r.rotation.set(this.rx,this.rot,0);
     this.c.mode=this.anim||(this.path&&!this.riding&&!this.elevWait||this.moving?'walk':'idle'); this.c.spd=this.speed/2.3;
+    if(this.sqT>0){ this.sqT=Math.max(0,this.sqT-dt); const bs=this.c.bs||(this.c.bs=r.scale.x||1), u=1-this.sqT/0.4, a=Math.sin(u*Math.PI*2.5)*(1-u)*0.22;
+      r.scale.set(bs*(1+a),bs*(1-a),bs*(1+a)); if(this.sqT===0) r.scale.setScalar(bs); }
     r.visible=floorVisible(this.y);
     if(r.visible) animChar(this.c,dt);
   }
@@ -1925,7 +1941,7 @@ function checkIn(g,id){
   const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
-  fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑');
+  fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
   sfx('ding');
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
@@ -2138,11 +2154,11 @@ function addMoney(amt,x,y,z,f,noQuest){
 }
 function collectPile(k){
   const amt=state.piles[k]; if(amt<=0) return;
-  state.piles[k]=0; const P=L.piles[k]; addMoney(amt,P.x,0.5,P.z,P.f); coinBurst(P.x,P.f*FH+0.3,P.z,Math.min(10,3+amt/(25*city().mult))); pileChanged(k); tutEvent('collect');
+  state.piles[k]=0; const P=L.piles[k]; addMoney(amt,P.x,0.5,P.z,P.f); coinBurst(P.x,P.f*FH+0.3,P.z,Math.min(10,3+amt/(25*city().mult))); pileChanged(k); tutEvent('collect'); if(player) player.sqT=0.4;
 }
 function collectTip(id){
   const s=state.rooms[id]; if(s.tip<=0) return; const sp=roomSpots(id), amt=s.tip; s.tip=0;
-  const ri=roomInfo(id); addMoney(amt,ri.x+TIP_X,0.6,ri.z+TIP_Z,ri.f); coinBurst(ri.x+TIP_X,ri.f*FH+0.2,ri.z+TIP_Z,4); applyRoomState(id); tutEvent('collect');
+  const ri=roomInfo(id); addMoney(amt,ri.x+TIP_X,0.6,ri.z+TIP_Z,ri.f); coinBurst(ri.x+TIP_X,ri.f*FH+0.2,ri.z+TIP_Z,4); applyRoomState(id); tutEvent('collect'); if(player) player.sqT=0.4;
 }
 
 // =====================================================================
@@ -2182,7 +2198,7 @@ function updatePads(dt){
   const pay=Math.min(remain,rate*dt,state.money);
   if(pay>0.001){
     state.money-=pay; state.paid[on.id]=paid+pay; updatePadFill(on); markSave();
-    padCoinT-=dt; if(padCoinT<=0){ padCoinT=0.07; coinArc(p.x,p.y+1.1,p.z,on.x,on.f*FH+0.2,on.z); sfx('tick'); }
+    padCoinT-=dt; if(padCoinT<=0){ padCoinT=0.07; coinArc(p.x,p.y+1.1,p.z,on.x,on.f*FH+0.2,on.z); sfx('tick',state.paid[on.id]/on.cost); }
   } else if(remain>0.5&&noMoneyT<=0){ toast('Yeterli paran yok — önce para topla 💰','bad'); noMoneyT=3; }
   if((state.paid[on.id]||0)>=on.cost-0.01) completePad(on);
 }
@@ -2459,6 +2475,14 @@ function sparkleAt(x,y,z){
   for(let i=0;i<14;i++){ const m=new THREE.Mesh(sph(0.05,6,4),new THREE.MeshBasicMaterial({color:rand([0xfff6c2,0xffffff,0xaef0ff]),transparent:true,blending:THREE.AdditiveBlending}));
     m.position.set(x+rnd(-0.6,0.6),y+rnd(-0.3,0.5),z+rnd(-0.6,0.6)); world.add(m); fx3.push({m,v:new THREE.Vector3(0,rnd(0.6,1.4),0),life:0.9,max:0.9,g:0,drag:1,twinkle:true}); }
 }
+function buildThud(v){
+  const R=v.r;
+  const ring=new THREE.Mesh(new THREE.RingGeometry(R*0.7,R,32),new THREE.MeshBasicMaterial({color:0xf3ecde,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(v.x,v.y+0.06,v.z); world.add(ring); fx3.push({m:ring,v:new THREE.Vector3(),g:0,life:.55,max:.55,grow:4.5/R});
+  for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, m=new THREE.Mesh(sph(0.1,6,4),new THREE.MeshBasicMaterial({color:0xe8e2d6,transparent:true,opacity:.6,depthWrite:false}));
+    m.position.set(v.x+Math.cos(a)*R,v.y+0.12,v.z+Math.sin(a)*R); world.add(m); fx3.push({m,v:new THREE.Vector3(Math.cos(a)*2.4,rnd(0.3,0.9),Math.sin(a)*2.4),life:.6,max:.6,g:0,drag:0.9,grow:0.8}); }
+  sfx('thud'); camShake(0.12);
+}
 const coinGeo=new THREE.CylinderGeometry(0.09,0.09,0.025,12);
 function coinArc(ax,ay,az,bx,by,bz){
   const m=new THREE.Mesh(coinGeo,M.gold); m.position.set(ax,ay,az); world.add(m);
@@ -2467,7 +2491,7 @@ function coinArc(ax,ay,az,bx,by,bz){
 function updateFx3(dt){
   for(let i=fx3.length-1;i>=0;i--){ const f=fx3[i]; f.life-=dt; const k=1-f.life/f.max;
     if(f.arc){ const a=f.arc; f.m.position.set(lerp(a.ax,a.bx,k),lerp(a.ay,a.by,k)+Math.sin(k*Math.PI)*1.2,lerp(a.az,a.bz,k)); f.m.rotation.x+=dt*12; }
-    else { f.v.y-=f.g*dt; f.v.multiplyScalar(f.drag||1); f.m.position.addScaledVector(f.v,dt); if(f.bounceY!=null&&f.m.position.y<f.bounceY&&f.v.y<0){ f.m.position.y=f.bounceY; f.v.y*=-0.45; f.v.x*=0.7; f.v.z*=0.7; } if(f.s){ f.m.rotation.x+=f.s.x*dt; f.m.rotation.y+=f.s.y*dt; } if(f.m.material.opacity!==undefined) f.m.material.opacity=Math.min(1,f.life/f.max*2)*(f.twinkle?0.6+0.4*Math.sin(f.life*30):1); }
+    else { f.v.y-=f.g*dt; f.v.multiplyScalar(f.drag||1); f.m.position.addScaledVector(f.v,dt); if(f.bounceY!=null&&f.m.position.y<f.bounceY&&f.v.y<0){ f.m.position.y=f.bounceY; f.v.y*=-0.45; f.v.x*=0.7; f.v.z*=0.7; } if(f.grow) f.m.scale.multiplyScalar(1+f.grow*dt); if(f.s){ f.m.rotation.x+=f.s.x*dt; f.m.rotation.y+=f.s.y*dt; } if(f.m.material.opacity!==undefined) f.m.material.opacity=Math.min(1,f.life/f.max*2)*(f.twinkle?0.6+0.4*Math.sin(f.life*30):1); }
     if(f.life<=0){ world.remove(f.m); if(f.m.material!==M.gold) f.m.material.dispose(); fx3.splice(i,1); }
   }
 }

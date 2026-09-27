@@ -232,17 +232,19 @@ function noiseBurst(dur,vol,freq,delay=0){
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   s.connect(f); f.connect(g); g.connect(Sound.sfx); s.start(t); s.stop(t+dur+0.05);
 }
-let lastSfx={};
-function sfx(name){
+let lastSfx={}, coinStreak=0, coinLastT=0;
+function sfx(name,p){
   if(!Sound.ctx||!state.sound) return;
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
   switch(name){
     case 'ding':  tone(1568,.9,'sine',.12); tone(2093,.7,'sine',.05,.01); break;
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
-    case 'coin':  tone(1319+Math.random()*120,.07,'square',.028); tone(1976,.22,'square',.028,.06); break;
+    case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
+      tone(1319*m+Math.random()*40,.07,'square',.028); tone(1976*m,.22,'square',.028,.06); break; }
+    case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
     case 'pick':  tone(660,.08,'triangle',.08,0,null,990); break;
     case 'drop':  tone(990,.1,'triangle',.08,0,null,520); break;
-    case 'tick':  tone(1400+Math.random()*300,.04,'square',.018); break;
+    case 'tick':  tone(p==null?1400+Math.random()*300:700+p*1100,.04,'square',.018); break;
     case 'clean': noiseBurst(.16,.07,3000); noiseBurst(.16,.07,2400,.18); break;
     case 'sparkle': [0,.06,.12].forEach((d,k)=>tone(1760+k*440,.18,'sine',.04,d)); break;
     case 'fix':   [0,.13,.26].forEach(d=>{ tone(180,.07,'square',.05,d); noiseBurst(.05,.06,1800,d); }); break;
