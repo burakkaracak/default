@@ -114,9 +114,14 @@ function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',st
 // PLAYER INTERACTION ZONES
 // =====================================================================
 let atDesk=false, elevHere=false, pickT=0, workRing=null;
+function roomDoorAt(f,x,z){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri.f===f&&Math.abs(x-ri.x)<1.0&&z>ri.z+1.3&&z<ri.z+2.5) return +k; } return null; }
 function roomAt(f,x,z){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri.f===f&&Math.abs(x-ri.x)<1.38&&Math.abs(z-ri.z)<1.3) return +k; } return null; }
 function playerCleanTime(){ return 2.4/(1+0.35*state.up.clean); }
 function playerFixTime(){ return 3.2/(1+0.35*state.up.fix); }
+// one item per visit to a shelf; more only while open requests still need that item
+const pickArmed={paper:true,towel:true,food:true};
+function itemDemand(it){ let n=0; for(const k in state.rooms){ const R=RT(+k); if(R.req&&R.req.item===it&&!R.req.by) n++; } return n; }
+function canPick(it){ if(pickArmed[it]){ pickArmed[it]=false; return true; } return player.c.items.filter(x=>x===it).length<itemDemand(it); }
 function addItem(it){ const items=player.c.items.concat([it]); setHold(player.c,items); updateCarryUI(); sfx('pick'); }
 function removeItem(it){ const items=player.c.items.slice(); const i=items.indexOf(it); if(i>=0) items.splice(i,1); setHold(player.c,items); updateCarryUI(); }
 function updatePlayerZones(dt){
@@ -125,7 +130,7 @@ function updatePlayerZones(dt){
   const mr=magnetR();
   for(const k in state.rooms){ if(state.rooms[k].tip<=0) continue; const ri=roomInfo(+k); if(ri.f===p.f&&d2(p.x,p.z,ri.x+TIP_X,ri.z+TIP_Z)<(mr+0.7)*(mr+0.7)) collectTip(+k); }
   for(const k in L.piles){ const P=L.piles[k]; if(state.piles[k]>0&&P.f===p.f&&d2(p.x,p.z,P.x,P.z)<mr*mr) collectPile(k); }
-  const rid=roomAt(p.f,p.x,p.z);
+  const rid=roomAt(p.f,p.x,p.z)||roomDoorAt(p.f,p.x,p.z);
   if(rid){
     const s=state.rooms[rid], R=RT(rid);
     if(s.tip>0) collectTip(rid);
@@ -136,9 +141,10 @@ function updatePlayerZones(dt){
   if(p.f===0&&p.x>L.serve.x0&&p.x<L.serve.x1&&p.z>L.serve.z0&&p.z<L.serve.z1) atDesk=true;
   extraPlayerZones(p,dt);
   pickT-=dt;
+  for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
-    if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36){ addItem(it); pickT=0.28; tutEvent('pick'); break; } } }
-    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4){ addItem('food'); pickT=0.35; }
+    if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36&&canPick(it)){ addItem(it); pickT=0.5; tutEvent('pick'); break; } } }
+    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')){ addItem('food'); pickT=0.5; }
   }
   if(floorsBuilt()>1&&d2(p.x,p.z,L.elev.x,L.elev.z)<0.3&&!p.moving&&!p.path) elevHere=true;
 }
@@ -274,7 +280,7 @@ function qEv(k,v=1){
   if(!questsOn()) return;
   for(const q of state.quests.list){ if(q.k!==k||q.done) continue;
     q.have=Math.min(q.n,q.have+v);
-    if(q.have>=q.n){ q.done=true; toast(`✅ Görev tamam: ${questText(q)} · ödülü al 🎁`); sfx('sparkle'); }
+    if(q.have>=q.n){ q.done=true; const qi=state.quests.list.indexOf(q); toast(`✅ Görev tamam: ${questText(q)} · ödül için dokun 🎁`,null,()=>claimQuest(qi)); sfx('sparkle'); }
     markSave(); }
 }
 function claimQuest(i){

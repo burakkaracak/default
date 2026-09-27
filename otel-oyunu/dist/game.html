@@ -145,6 +145,9 @@
   #hint{position:absolute;bottom:calc(130px + var(--sb));left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--gold);border-radius:16px;padding:6px 16px;font-weight:700;font-size:15px;text-align:center;display:none;pointer-events:none;max-width:88vw;}
   #hint.show{display:block;animation:tin .3s ease-out;}
   #toasts{position:absolute;top:calc(96px + var(--st));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90vw;}
+  @media (max-width:520px){ #fsBtn{display:none;} }
+  .citem{pointer-events:auto;cursor:pointer;display:inline-block;padding:0 1px;transition:transform .1s;} .citem:hover{transform:scale(1.25);}
+  .toast.tap{pointer-events:auto;cursor:pointer;border-color:#7dffae;} .toast.tap:hover{filter:brightness(1.15);}
   .toast{background:var(--panel);border:2px solid var(--gold);padding:2px 14px 3px;border-radius:12px;font-weight:700;font-size:14px;animation:tin .25s ease-out;text-align:center;}
   .toast.bad{border-color:var(--red);}
   @keyframes tin{from{transform:translateY(-8px);opacity:0}}
@@ -205,6 +208,7 @@
       <div class="pill money" id="moneyPill"><span class="coin"></span><b id="money">0</b></div>
       <div class="pill stars" title="Otel yıldızı"><span id="stars">★★☆☆☆</span><span id="repBar"><i></i></span></div>
       <div class="pill clock"><span id="wxIcon">☀️</span><b id="clock">07:00</b><small id="dayLbl">Gün 1</small></div>
+      <button class="round" id="fsBtn" aria-label="Tam ekran" title="Tam ekran (F)">⛶</button>
       <button class="round" id="setBtn" aria-label="Ayarlar">⚙️</button>
     </div>
     <div id="lvlBox" role="button" aria-label="Seviye ve başarımlar"><b id="lvlN">1</b><span><i id="lvlBar"></i></span></div>
@@ -2250,9 +2254,14 @@ function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',st
 // PLAYER INTERACTION ZONES
 // =====================================================================
 let atDesk=false, elevHere=false, pickT=0, workRing=null;
+function roomDoorAt(f,x,z){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri.f===f&&Math.abs(x-ri.x)<1.0&&z>ri.z+1.3&&z<ri.z+2.5) return +k; } return null; }
 function roomAt(f,x,z){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri.f===f&&Math.abs(x-ri.x)<1.38&&Math.abs(z-ri.z)<1.3) return +k; } return null; }
 function playerCleanTime(){ return 2.4/(1+0.35*state.up.clean); }
 function playerFixTime(){ return 3.2/(1+0.35*state.up.fix); }
+// one item per visit to a shelf; more only while open requests still need that item
+const pickArmed={paper:true,towel:true,food:true};
+function itemDemand(it){ let n=0; for(const k in state.rooms){ const R=RT(+k); if(R.req&&R.req.item===it&&!R.req.by) n++; } return n; }
+function canPick(it){ if(pickArmed[it]){ pickArmed[it]=false; return true; } return player.c.items.filter(x=>x===it).length<itemDemand(it); }
 function addItem(it){ const items=player.c.items.concat([it]); setHold(player.c,items); updateCarryUI(); sfx('pick'); }
 function removeItem(it){ const items=player.c.items.slice(); const i=items.indexOf(it); if(i>=0) items.splice(i,1); setHold(player.c,items); updateCarryUI(); }
 function updatePlayerZones(dt){
@@ -2261,7 +2270,7 @@ function updatePlayerZones(dt){
   const mr=magnetR();
   for(const k in state.rooms){ if(state.rooms[k].tip<=0) continue; const ri=roomInfo(+k); if(ri.f===p.f&&d2(p.x,p.z,ri.x+TIP_X,ri.z+TIP_Z)<(mr+0.7)*(mr+0.7)) collectTip(+k); }
   for(const k in L.piles){ const P=L.piles[k]; if(state.piles[k]>0&&P.f===p.f&&d2(p.x,p.z,P.x,P.z)<mr*mr) collectPile(k); }
-  const rid=roomAt(p.f,p.x,p.z);
+  const rid=roomAt(p.f,p.x,p.z)||roomDoorAt(p.f,p.x,p.z);
   if(rid){
     const s=state.rooms[rid], R=RT(rid);
     if(s.tip>0) collectTip(rid);
@@ -2272,9 +2281,10 @@ function updatePlayerZones(dt){
   if(p.f===0&&p.x>L.serve.x0&&p.x<L.serve.x1&&p.z>L.serve.z0&&p.z<L.serve.z1) atDesk=true;
   extraPlayerZones(p,dt);
   pickT-=dt;
+  for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
-    if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36){ addItem(it); pickT=0.28; tutEvent('pick'); break; } } }
-    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4){ addItem('food'); pickT=0.35; }
+    if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36&&canPick(it)){ addItem(it); pickT=0.5; tutEvent('pick'); break; } } }
+    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')){ addItem('food'); pickT=0.5; }
   }
   if(floorsBuilt()>1&&d2(p.x,p.z,L.elev.x,L.elev.z)<0.3&&!p.moving&&!p.path) elevHere=true;
 }
@@ -2410,7 +2420,7 @@ function qEv(k,v=1){
   if(!questsOn()) return;
   for(const q of state.quests.list){ if(q.k!==k||q.done) continue;
     q.have=Math.min(q.n,q.have+v);
-    if(q.have>=q.n){ q.done=true; toast(`✅ Görev tamam: ${questText(q)} · ödülü al 🎁`); sfx('sparkle'); }
+    if(q.have>=q.n){ q.done=true; const qi=state.quests.list.indexOf(q); toast(`✅ Görev tamam: ${questText(q)} · ödül için dokun 🎁`,null,()=>claimQuest(qi)); sfx('sparkle'); }
     markSave(); }
 }
 function claimQuest(i){
@@ -3767,14 +3777,16 @@ function floorBusy(f){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri
 function updateCarryUI(){
   const el=$('carry'), it=player.c.items;
   if(!it.length){ el.classList.remove('show'); return; }
-  el.classList.add('show'); el.innerHTML=`${it.map(i=>ITEMS[i].e).join('')} <small style="color:var(--muted)">${it.length}/${capacity()}</small> <button class="xbtn" style="width:28px;height:28px;font-size:13px;pointer-events:auto;margin-left:4px" aria-label="Eşyaları bırak">✖</button>`;
+  el.classList.add('show'); el.innerHTML=`${it.map((i,k)=>`<span class="citem" data-k="${k}" role="button" aria-label="Bunu bırak">${ITEMS[i].e}</span>`).join('')} <small style="color:var(--muted)">${it.length}/${capacity()}</small> <button class="xbtn" style="width:28px;height:28px;font-size:13px;pointer-events:auto;margin-left:4px" aria-label="Eşyaları bırak">✖</button>`;
   el.querySelector('button').onclick=()=>{ setHold(player.c,[]); updateCarryUI(); sfx('drop'); };
+  el.querySelectorAll('.citem').forEach(s=>s.onclick=()=>{ const items=player.c.items.slice(); items.splice(+s.dataset.k,1); setHold(player.c,items); updateCarryUI(); sfx('drop'); });
 }
 let toastN=0;
-function toast(msg,kind){ logEvent(msg);
+function toast(msg,kind,onTap){ logEvent(msg);
   const box=$('toasts'); while(box.children.length>=3) box.firstChild.remove();
-  const el=document.createElement('div'); el.className='toast'+(kind==='bad'?' bad':''); el.textContent=msg; box.appendChild(el);
-  setTimeout(()=>el.remove(),2700);
+  const el=document.createElement('div'); el.className='toast'+(kind==='bad'?' bad':'')+(onTap?' tap':''); el.textContent=msg; box.appendChild(el);
+  if(onTap) el.onclick=e=>{ e.stopPropagation(); el.remove(); onTap(); };
+  setTimeout(()=>el.remove(),onTap?6000:2700);
 }
 let bannerT=null;
 function banner(big,small){ logEvent(big+(small?' · '+small:'')); const b=$('banner'); b.innerHTML=`${big}${small?`<small>${small}</small>`:''}`; b.classList.add('show'); clearTimeout(bannerT); bannerT=setTimeout(()=>b.classList.remove('show'),2600); }
@@ -3971,12 +3983,14 @@ function openSettings(){
     <div class="row"><div class="ic">🔊</div><div class="tx">Efektler</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.sfx*100)}" id="vSfx" aria-label="Efekt ses seviyesi"></div></div>
     <div class="row"><div class="ic">🎵</div><div class="tx">Müzik</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.music*100)}" id="vMus" aria-label="Müzik ses seviyesi"></div></div>
     <div class="row" style="flex-wrap:wrap"><div class="ic">🖼️</div><div class="tx">Grafik kalitesi<small>${state.gfxAuto!==false?'Otomatik: oyun yavaşlarsa kaliteyi düşürür':'Elle seçildi'}</small></div><div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${[['low','Düşük'],['mid','Orta'],['high','Yüksek']].map(([k,l])=>`<button class="btn ${gfxLevel()===k?'':'ghost'}" style="padding:4px 8px;min-height:34px" data-gfx="${k}">${l}</button>`).join('')}<button class="btn ${state.gfxAuto!==false?'':'ghost'}" style="padding:4px 8px;min-height:34px" id="gAuto">Oto</button></div></div>
+    ${(document.fullscreenEnabled||document.webkitFullscreenEnabled)?`<button class="btn wide" id="sFs">⛶ Tam ekran ${fsEl()?'kapat':'aç'}</button>`:''}
     <button class="btn wide" id="sHelp">📖 Nasıl oynanır</button>
     <button class="btn wide" id="sCustom">🎨 Otelim ve karakterim</button>
     <div style="display:flex;gap:6px"><button class="btn ghost wide" id="sExp">💾 Kaydı indir</button><button class="btn ghost wide" id="sImp">📂 Kayıt yükle</button></div>
     <button class="btn gold wide" id="sAdmin">🛠️ Admin paneli</button>
     <button class="btn red wide" id="sReset">İlerlemeyi sıfırla</button>`,m=>{
-    const vs=m.querySelector('#vSfx'), vm=m.querySelector('#vMus');
+    const vs=m.querySelector('#vSfx'), vm=m.querySelector('#vMus'), fb=m.querySelector('#sFs');
+    if(fb) fb.onclick=()=>{ sfx('click'); closeModal(); toggleFullscreen(); };
     vs.oninput=()=>{ state.vol=Object.assign({},state.vol,{sfx:vs.value/100}); state.sound=vs.value>0; audioInit(); applyAudioPrefs(); };
     vm.oninput=()=>{ state.vol=Object.assign({},state.vol,{music:vm.value/100}); state.music=vm.value>0; audioInit(); applyAudioPrefs(); };
     vs.onchange=()=>{ sfx('coin'); save(); }; vm.onchange=()=>save();
@@ -3994,13 +4008,19 @@ function openSettings(){
 $('mgmtBtn').onclick=()=>{ sfx('click'); openSheet('mgmt'); };
 $('questBtn').onclick=()=>{ sfx('click'); openSheet('quests'); };
 $('setBtn').onclick=()=>{ sfx('click'); openSettings(); };
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+function toggleFullscreen(){ const d=document.documentElement;
+  try{ if(fsEl()) (document.exitFullscreen||document.webkitExitFullscreen).call(document); else { const r=(d.requestFullscreen||d.webkitRequestFullscreen).call(d); if(r&&r.catch) r.catch(()=>{}); } }catch(e){} }
+$('fsBtn').onclick=()=>{ sfx('click'); toggleFullscreen(); };
+if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled)) $('fsBtn').style.display='none';
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{ $('fsBtn').textContent=fsEl()?'🗗':'⛶'; }));
 $('goal').onclick=()=>{ const g=curGoal; if(g&&g.target){ sfx('click'); peekFloor=null; player.goTo(g.target.f,g.target.x,g.target.z); } };
 
 // =====================================================================
 // INPUT
 // =====================================================================
 const keys={}; let curGoal=null;
-window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; if(e.key==='p'||e.key==='P'||e.key==='F2'){ e.preventDefault(); if(sheetMode==='admin') closeSheet(); else openAdmin(); return; } keys[e.key.toLowerCase()]=true; if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); if(e.key==='Escape'){ closeSheet(); closeModal(); } });
+window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; if(e.key==='p'||e.key==='P'||e.key==='F2'){ e.preventDefault(); if(sheetMode==='admin') closeSheet(); else openAdmin(); return; } keys[e.key.toLowerCase()]=true; if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); if(e.key==='Escape'){ closeSheet(); closeModal(); } if((e.key==='f'||e.key==='F')&&!e.repeat) toggleFullscreen(); });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
 window.addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 const joy={on:false,id:null,sx:0,sy:0,dx:0,dy:0};

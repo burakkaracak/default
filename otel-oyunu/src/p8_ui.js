@@ -111,14 +111,16 @@ function floorBusy(f){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri
 function updateCarryUI(){
   const el=$('carry'), it=player.c.items;
   if(!it.length){ el.classList.remove('show'); return; }
-  el.classList.add('show'); el.innerHTML=`${it.map(i=>ITEMS[i].e).join('')} <small style="color:var(--muted)">${it.length}/${capacity()}</small> <button class="xbtn" style="width:28px;height:28px;font-size:13px;pointer-events:auto;margin-left:4px" aria-label="Eşyaları bırak">✖</button>`;
+  el.classList.add('show'); el.innerHTML=`${it.map((i,k)=>`<span class="citem" data-k="${k}" role="button" aria-label="Bunu bırak">${ITEMS[i].e}</span>`).join('')} <small style="color:var(--muted)">${it.length}/${capacity()}</small> <button class="xbtn" style="width:28px;height:28px;font-size:13px;pointer-events:auto;margin-left:4px" aria-label="Eşyaları bırak">✖</button>`;
   el.querySelector('button').onclick=()=>{ setHold(player.c,[]); updateCarryUI(); sfx('drop'); };
+  el.querySelectorAll('.citem').forEach(s=>s.onclick=()=>{ const items=player.c.items.slice(); items.splice(+s.dataset.k,1); setHold(player.c,items); updateCarryUI(); sfx('drop'); });
 }
 let toastN=0;
-function toast(msg,kind){ logEvent(msg);
+function toast(msg,kind,onTap){ logEvent(msg);
   const box=$('toasts'); while(box.children.length>=3) box.firstChild.remove();
-  const el=document.createElement('div'); el.className='toast'+(kind==='bad'?' bad':''); el.textContent=msg; box.appendChild(el);
-  setTimeout(()=>el.remove(),2700);
+  const el=document.createElement('div'); el.className='toast'+(kind==='bad'?' bad':'')+(onTap?' tap':''); el.textContent=msg; box.appendChild(el);
+  if(onTap) el.onclick=e=>{ e.stopPropagation(); el.remove(); onTap(); };
+  setTimeout(()=>el.remove(),onTap?6000:2700);
 }
 let bannerT=null;
 function banner(big,small){ logEvent(big+(small?' · '+small:'')); const b=$('banner'); b.innerHTML=`${big}${small?`<small>${small}</small>`:''}`; b.classList.add('show'); clearTimeout(bannerT); bannerT=setTimeout(()=>b.classList.remove('show'),2600); }
@@ -315,12 +317,14 @@ function openSettings(){
     <div class="row"><div class="ic">🔊</div><div class="tx">Efektler</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.sfx*100)}" id="vSfx" aria-label="Efekt ses seviyesi"></div></div>
     <div class="row"><div class="ic">🎵</div><div class="tx">Müzik</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.music*100)}" id="vMus" aria-label="Müzik ses seviyesi"></div></div>
     <div class="row" style="flex-wrap:wrap"><div class="ic">🖼️</div><div class="tx">Grafik kalitesi<small>${state.gfxAuto!==false?'Otomatik: oyun yavaşlarsa kaliteyi düşürür':'Elle seçildi'}</small></div><div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${[['low','Düşük'],['mid','Orta'],['high','Yüksek']].map(([k,l])=>`<button class="btn ${gfxLevel()===k?'':'ghost'}" style="padding:4px 8px;min-height:34px" data-gfx="${k}">${l}</button>`).join('')}<button class="btn ${state.gfxAuto!==false?'':'ghost'}" style="padding:4px 8px;min-height:34px" id="gAuto">Oto</button></div></div>
+    ${(document.fullscreenEnabled||document.webkitFullscreenEnabled)?`<button class="btn wide" id="sFs">⛶ Tam ekran ${fsEl()?'kapat':'aç'}</button>`:''}
     <button class="btn wide" id="sHelp">📖 Nasıl oynanır</button>
     <button class="btn wide" id="sCustom">🎨 Otelim ve karakterim</button>
     <div style="display:flex;gap:6px"><button class="btn ghost wide" id="sExp">💾 Kaydı indir</button><button class="btn ghost wide" id="sImp">📂 Kayıt yükle</button></div>
     <button class="btn gold wide" id="sAdmin">🛠️ Admin paneli</button>
     <button class="btn red wide" id="sReset">İlerlemeyi sıfırla</button>`,m=>{
-    const vs=m.querySelector('#vSfx'), vm=m.querySelector('#vMus');
+    const vs=m.querySelector('#vSfx'), vm=m.querySelector('#vMus'), fb=m.querySelector('#sFs');
+    if(fb) fb.onclick=()=>{ sfx('click'); closeModal(); toggleFullscreen(); };
     vs.oninput=()=>{ state.vol=Object.assign({},state.vol,{sfx:vs.value/100}); state.sound=vs.value>0; audioInit(); applyAudioPrefs(); };
     vm.oninput=()=>{ state.vol=Object.assign({},state.vol,{music:vm.value/100}); state.music=vm.value>0; audioInit(); applyAudioPrefs(); };
     vs.onchange=()=>{ sfx('coin'); save(); }; vm.onchange=()=>save();
@@ -338,13 +342,19 @@ function openSettings(){
 $('mgmtBtn').onclick=()=>{ sfx('click'); openSheet('mgmt'); };
 $('questBtn').onclick=()=>{ sfx('click'); openSheet('quests'); };
 $('setBtn').onclick=()=>{ sfx('click'); openSettings(); };
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+function toggleFullscreen(){ const d=document.documentElement;
+  try{ if(fsEl()) (document.exitFullscreen||document.webkitExitFullscreen).call(document); else { const r=(d.requestFullscreen||d.webkitRequestFullscreen).call(d); if(r&&r.catch) r.catch(()=>{}); } }catch(e){} }
+$('fsBtn').onclick=()=>{ sfx('click'); toggleFullscreen(); };
+if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled)) $('fsBtn').style.display='none';
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{ $('fsBtn').textContent=fsEl()?'🗗':'⛶'; }));
 $('goal').onclick=()=>{ const g=curGoal; if(g&&g.target){ sfx('click'); peekFloor=null; player.goTo(g.target.f,g.target.x,g.target.z); } };
 
 // =====================================================================
 // INPUT
 // =====================================================================
 const keys={}; let curGoal=null;
-window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; if(e.key==='p'||e.key==='P'||e.key==='F2'){ e.preventDefault(); if(sheetMode==='admin') closeSheet(); else openAdmin(); return; } keys[e.key.toLowerCase()]=true; if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); if(e.key==='Escape'){ closeSheet(); closeModal(); } });
+window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; if(e.key==='p'||e.key==='P'||e.key==='F2'){ e.preventDefault(); if(sheetMode==='admin') closeSheet(); else openAdmin(); return; } keys[e.key.toLowerCase()]=true; if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); if(e.key==='Escape'){ closeSheet(); closeModal(); } if((e.key==='f'||e.key==='F')&&!e.repeat) toggleFullscreen(); });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
 window.addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 const joy={on:false,id:null,sx:0,sy:0,dx:0,dy:0};
