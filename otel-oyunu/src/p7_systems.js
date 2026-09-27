@@ -190,7 +190,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras();
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep);
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
@@ -298,8 +298,8 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
-  if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1);
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*mgrDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
+  if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1)*mgrNight();
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3)*flowSpawnMul();
   if(queue.length>=Math.min(6,nRooms+1)) return;
   if(Math.random()<rivalPull()){ spawnPasser(); return; }

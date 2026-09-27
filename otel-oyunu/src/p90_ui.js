@@ -14,9 +14,9 @@ function upgOrder(){ const ks=Object.keys(UPG).filter(k=>k!=='auto'), i=ks.index
   if(state.up.auto>0||state.up.magnet>=UPG.magnet.costs.length) ks.splice(i+1,0,'auto'); return ks; }
 
 // ---------- tek Görevler ekranı ----------
-const QTABS=[['quests','📅 Bugün'],['pass','🎖️ Bu hafta'],['ach','🏆 Kalıcı']];
+const QTABS=[['quests','📅 Bugün'],['pass','🎖️ Hafta'],['ach','🏆 Kalıcı'],['album','📖 Albüm']];
 function qTabDot(k){ if(k==='quests') return !!(state.quests&&state.quests.list.some(q=>q.done&&!q.claimed))||!!(state.streak&&!state.streak.got);
-  if(k==='pass') return passClaimable(); return false; }
+  if(k==='pass') return passClaimable(); if(k==='album') return albClaimables().length>0; return false; }
 function qTabsHtml(cur){ return `<div class="tabs">${QTABS.map(([k,l])=>`<button data-qt="${k}" class="${k===cur?'on':''}">${l}${qTabDot(k)?'<i class="sdot"></i>':''}</button>`).join('')}</div>`; }
 function bindQTabs(root){ root.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ if(sheetMode===b.dataset.qt) return; sfx('click'); openSheet(b.dataset.qt); }); }
 function streakRowHtml(){ const S=state.streak; if(!S||!S.n) return '';

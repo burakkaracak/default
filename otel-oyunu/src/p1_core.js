@@ -174,7 +174,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:41, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:43, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -205,7 +205,7 @@ const STAR_REQ={
 function starCap(){ let c=2; for(let s=3;s<=5;s++){ if(STAR_REQ[s].every(r=>r[1]())) c=s; else break; } return c; }
 function stars(){ return Math.min(rawStars(),starCap()); }
 function starMissing(s){ return (STAR_REQ[s]||[]).filter(r=>!r[1]()).map(r=>r[0]); }
-function incomeMult(){ return city().mult*(1+0.15*state.prestige)*STAR_MULT[stars()-1]*(state.lux&&state.lux.statue?1.05:1)*(1+0.05*((state.legacy||{}).income||0))*(festivalOn()?1.15:1)*(state.rival&&state.rival.bought?1.1:1); }
+function incomeMult(){ return city().mult*(1+0.15*state.prestige)*STAR_MULT[stars()-1]*(state.lux&&state.lux.statue?1.05:1)*(1+0.05*((state.legacy||{}).income||0))*(festivalOn()?1.15:1)*(state.rival&&state.rival.bought?1.1:1)*tierMult(); }
 function seasonIx(){ return Math.floor((state.day-1)/SEASON_DAYS)%4; }
 function season(){ return SEASONS[seasonIx()]; }
 function isWinter(){ return seasonIx()===3; }

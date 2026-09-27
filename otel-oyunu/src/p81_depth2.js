@@ -97,7 +97,7 @@ function claimPass(i){
 function unlockHat(v){ if(!CUST.hat.some(x=>x[0]===v)) CUST.hat.push([v,HAT_N[v]]); }
 function renderPassSheet(){
   ensureWeek(); const tier=passTier(), pts=(state.pass&&state.pass.pts)||0, got=(state.pass&&state.pass.got)||[];
-  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('pass')}<p class="sub">${pts} puan · her 100 puan bir ödül · puanlar: günlük görev +20, haftalık +60, hedef +5, başarım +10</p>`;
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('pass')}`+leagueHtml()+`<p class="sub">${pts} puan · her 100 puan bir ödül · puanlar: günlük görev +20, haftalık +60, hedef +5, başarım +10</p>`;
   if(state.week){ h+=`<div class="ugh">📆 Bu haftanın görevleri (${7-((state.day-1)%7)} gün kaldı) · her biri +${fmt(state.week.rew)} ₺</div>`;
     state.week.list.forEach(q=>{ const D=WDEF[q.k]; h+=`<div class="row${q.done?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${D.t(q.n)}<small>${q.k==='earn'?fmt(q.have)+' / '+fmt(q.n):q.have+' / '+q.n}</small><div class="qbar"><i style="width:${(q.have/q.n*100).toFixed(0)}%"></i></div></div>${q.done?'✅':''}</div>`; }); }
   h+=`<div class="ugh">🎖️ Ödüller</div>`+claimAllBtn(passClaimables().length,'data-pall');

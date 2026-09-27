@@ -99,7 +99,7 @@ function buildGround(){
   [[-17.5,-1.5],[1.5,17.5]].forEach(([a,b])=>outdoor.add(mesh(rbox(b-a,0.6,0.42,.14),hedge,(a+b)/2,0.3,11.35,true)));
   flowerBed(outdoor,-6.6,-1.7,7.7,8.2); flowerBed(outdoor,1.7,6.6,7.7,8.2);
   buildFountain(-4.3,10.25); scatterFlowers();
-  [[4.3,10.2],[-8.7,10.4],[8.7,10.4],[-15.6,10.2],[15.6,10.2]].forEach(([x,z],k)=>{ if(city().palm) palm(outdoor,x,z,1.05); else tree(outdoor,x,z,0.95+(k%3)*0.08); });
+  [[4.3,10.2],[-8.7,10.4],[8.7,10.4],[-15.6,10.2]].forEach(([x,z],k)=>{ if(city().palm) palm(outdoor,x,z,1.05); else tree(outdoor,x,z,0.95+(k%3)*0.08); });
   [[-2.1,10.9],[2.1,10.9],[-10.5,10.9],[10.5,10.9]].forEach(([x,z])=>lampPost(outdoor,x,z));
   bench(outdoor,-6.4,10.9,Math.PI); bench(outdoor,6.4,10.9,Math.PI);
   // side lawns trees (behind amenities)

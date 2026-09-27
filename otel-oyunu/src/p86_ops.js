@@ -25,7 +25,7 @@ Misafir: ${g.name}, ${g.T.name}. Bu misafirin internete yazdığı ${st}/5 yıld
 SADECE JSON: {"yorum":"..."}`).then(r=>{ const t=r&&clip(r.yorum,220); if(t) R.t=t; show(); markSave(); });
   markSave();
 }
-function turnAway(g,kind){
+function turnAway(g,kind){ albumNote(g.type);
   const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); }
   if(g.tag){ tagRemove(g.tag); g.tag=null; } g.asking=false;
   fxEmoji(g.x,2.5,g.z,0,POLICY[kind].no); fxText(g.x,2.1,g.z,0,kind==='dog'?'Evcil hayvan yok':'Alkol yok'); sfx('req');

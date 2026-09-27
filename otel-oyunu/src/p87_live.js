@@ -10,7 +10,7 @@ const LIVE_FX={wedding:['🌸','💐','💕','🥂'],conf:['💡','📊','👏',
 function venueFor(k){
   if((k==='wedding'||k==='conf')&&built('rest')) return {k:'rest',x:-12,z:-0.9,rot:0,pile:'rest'};
   if(k==='concert'&&built('pool')) return {k:'pool',x:12,z:-2.35,rot:0,pile:'pool'};
-  return {k:'garden',x:13.7,z:9.8,rot:-Math.PI/2,pile:'desk'};
+  return {k:'garden',x:-13.7,z:9.8,rot:Math.PI/2,pile:'desk'};
 }
 function liveCount(){ return state.lowFx||LOWQ?6:11; }
 function mkNpc(G,tp,x,y,z,rot,mode){ const c=makeChar(LOOKS.guest(tp)); c.root.position.set(x,y,z); c.root.rotation.y=rot; c.mode=mode; c.baseMode=mode; c.ph0=Math.random()*6; G.add(c.root); return c; }

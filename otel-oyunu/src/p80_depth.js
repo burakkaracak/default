@@ -6,7 +6,7 @@
 
 // ---------- price policy ----------
 const PRICES=[0.8,0.9,1,1.2,1.5];
-function priceMult(){ return state.price||1; }
+function priceMult(){ return (state.price||1)*mgrPrice(); }
 function priceDemand(){ const p=priceMult(); return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3*(1-0.5*skillLv('m4'))); }
 function priceSat(){ const p=priceMult(); return p<1?(1-p)*30:-(p-1)*25; }
 function priceTypeW(k){ const p=priceMult();
