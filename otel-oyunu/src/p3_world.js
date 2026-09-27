@@ -362,6 +362,7 @@ function buildFeature(id,pop){
     case 'f2': buildUpperFloor(1); g=buildElevator(); break;
     case 'f3': buildUpperFloor(2); g=buildElevator(); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
+    case 'mescit': buildMescit(); g=buildElevator(); break;
   }
   if(g){ featureGroups[id]=g; if(pop) dropIn(g); }
 }

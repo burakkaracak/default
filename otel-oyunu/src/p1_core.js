@@ -156,6 +156,7 @@ function padDefs(){
   const c3=[3200,3450,3700,4000,4300,4650,5000,5350,5750,6150,6600,7100];
   ROOM_SEQ.forEach((l,k)=>{ room(2,l,c3[k],[prev]); prev='r'+roomId(2,l); });
   push({id:'roof',kind:'floor',floor:3,f:2,x:3.0,z:CORR[0],size:1.6,cost:16000,req:[prev],stars:5,icon:'🚁',label:'Çatı katı: bar, havuz, helikopter pisti'});
+  push({id:'mescit',kind:'floor',floor:4,f:3,x:1.8,z:0.9,size:1.6,cost:15000,req:['roof'],stars:5,icon:'🕌',label:'Mescit katı: imam, cemaat, İstanbul vakitlerinde ezan'});
   return P;
 }
 
@@ -174,7 +175,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:43, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:44, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -218,9 +219,9 @@ function built(id){ return !!state.built[id]; }
 function poolOpen(){ return built('pool')&&!(isWinter()&&state.weather==='snow')&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
 function restOpen(){ const h=hourNow(); return built('rest')&&h>=8&&h<22.5; }
 function gymOpen(){ const h=hourNow(); return built('gym')&&h>=7&&h<22; }
-function floorsBuilt(){ return built('roof')?4:built('f3')?3:built('f2')?2:1; }
+function floorsBuilt(){ return built('mescit')?5:built('roof')?4:built('f3')?3:built('f2')?2:1; }
 const ROOF=3;
-function floorName(f){ return f===ROOF?'Çatı':(f+1)+'. kat'; }
+function floorName(f){ return f===4?'Mescit':f===ROOF?'Çatı':(f+1)+'. kat'; }
 function roofOpen(){ const h=hourNow(); return built('roof')&&h>=10&&h<23.5&&state.weather!=='rain'&&state.weather!=='snow'&&!stormOn(); }
 
 // =====================================================================

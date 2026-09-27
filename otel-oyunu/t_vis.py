@@ -14,6 +14,6 @@ with sync_playwright() as p:
         if s.startswith('js:'): print(pg.evaluate(s[3:]))
         elif s.startswith('key:'): pg.keyboard.type(s[4:]) 
         elif s.startswith('wait:'): pg.wait_for_timeout(int(s[5:]))
-        elif s.startswith('shot:'): pg.screenshot(path=SP+'/'+s[5:]+'.png')
+        elif s.startswith('shot:'): pg.screenshot(path=SP+'/'+s[5:]+'.png',timeout=180000)
     print('clock',pg.inner_text('#clock'),'ERR',errs[:5])
     b.close()
