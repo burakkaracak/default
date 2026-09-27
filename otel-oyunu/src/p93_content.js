@@ -162,7 +162,7 @@ function buildSpecial(){
   else if(D.prop==='balloon'){ P.add(mesh(rbox(0.4,0.35,0.4,.04),tmat('wood'),0,0.18,0,true)); const b=mesh(sph(0.55,14,12),mat(0xe0574f),0,1.25,0,true); b.scale.y=1.2; P.add(b); }
   else if(D.prop==='easel'){ P.add(mesh(box(0.05,1.2,0.05),tmat('wood'),0,0.6,0)); const cv=mesh(plane(0.6,0.45),new THREE.MeshStandardMaterial({map:tex('art1')}),0,0.95,0.04); P.add(cv); }
   else { P.add(mesh(rbox(1.0,0.45,0.6,.1),mat(0xe0a93a),0,0.4,0,true)); [-0.3,0.3].forEach(x=>[-0.3,0.3].forEach(z=>{ const w=mesh(cyl(0.15,0.15,0.1,12),M.dark,x,0.15,z); w.rotation.x=Math.PI/2; P.add(w); })); }
-  addCols('special',[[0,SP_POS.x-0.85,SP_POS.x+0.85,SP_POS.z-0.4,SP_POS.z+0.4],[0,SP_POS.x-1.8,SP_POS.x-0.9,SP_POS.z-0.3,SP_POS.z+0.5]]);
+  bakeStatic(g); addCols('special',[[0,SP_POS.x-0.85,SP_POS.x+0.85,SP_POS.z-0.4,SP_POS.z+0.4],[0,SP_POS.x-1.8,SP_POS.x-0.9,SP_POS.z-0.3,SP_POS.z+0.5]]);
 }
 // her 1/6 günde bir kalkış: yakındaysan rehberlik bonusu (x2) ve tüm misafirlere +3 memnuniyet
 function spInterval(){ return DAY_SEC/6; }
@@ -199,7 +199,7 @@ function buildGarden(){
     else if(nm==='Dubai'){ P.add(mesh(sph(0.6,10,6),mat(0xe8cf9a,{roughness:1}),0,-0.25,0)); P.add(mesh(cyl(0.12,0.1,0.45,8),mat(0xb8913a,{metalness:.6,roughness:.3}),0.35,0.22,0.1)); P.add(mesh(sph(0.07,6,4),M.lampOn,0.35,0.5,0.1)); }
     else { P.add(mesh(cyl(0.34,0.3,0.4,12),mat(0x9b3f30),0,0.2,0,true)); P.add(mesh(sph(0.36,8,6),mat(0xe0574f,{flatShading:true,roughness:1}),0,0.62,0)); for(let k=0;k<5;k++) P.add(mesh(sph(0.08,6,4),mat(0xf2d48a),rnd(-0.25,0.25),0.8,rnd(-0.25,0.25))); }
     cols.push([0,x-0.35,x+0.35,z-0.35,z+0.35]); });
-  addCols('garden',cols);
+  addCols('garden',cols); bakeStatic(g);
 }
 
 // ---------- boot / per-frame / gün sonu ----------

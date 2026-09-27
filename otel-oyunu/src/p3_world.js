@@ -32,7 +32,7 @@ function tree(parent,x,z,s=1,cols){
   const g=new THREE.Group(); g.position.set(x,0,z); g.scale.setScalar(s);
   g.add(mesh(cyl(0.11,0.17,1.3,8),mat(0x6b4a30),0,0.65,0,true));
   [[0,1.75,0,.78],[.36,1.45,.2,.55],[-.32,1.5,-.15,.6],[0,2.25,0,.52],[.1,1.6,-.38,.5]].forEach(([a,b,c,r],k)=>g.add(mesh(new THREE.IcosahedronGeometry(r,1),cols?mat(cols[k%3],{flatShading:true}):treeMats[k%3],a,b,c,true)));
-  g.add(blob(0.9)); parent.add(g); g.userData.ph=Math.random()*6; SWAY.push(g); return g;
+  g.add(blob(0.9)); bakeStatic(g); parent.add(g); g.userData.ph=Math.random()*6; SWAY.push(g); return g;
 }
 const SWAY=[];
 function palm(parent,x,z,s=1){
@@ -41,7 +41,7 @@ function palm(parent,x,z,s=1){
   for(let i=0;i<6;i++){ const m=mesh(cyl(0.12-i*0.008,0.14-i*0.008,0.5,8),trunk,Math.sin(i*.35)*0.12*i*.3,0.25+i*0.48,0,true); m.rotation.z=-0.06*i; g.add(m); }
   const leaf=mat(0x3f8f3a,{side:THREE.DoubleSide,flatShading:true});
   for(let k=0;k<7;k++){ const lf=mesh(cone(0.28,1.7,4),leaf,0,0,0,true); const a=k/7*Math.PI*2; lf.position.set(0.5+Math.cos(a)*0.62,3.0,Math.sin(a)*0.62); lf.rotation.set(Math.sin(a)*1.25,0,-Math.cos(a)*1.25); lf.scale.set(1,1,0.25); g.add(lf); }
-  g.add(mesh(sph(0.1,8,6),mat(0x6b4a2a),0.45,2.95,0.1)); g.add(blob(0.8)); parent.add(g); g.userData.ph=Math.random()*6; SWAY.push(g); return g;
+  g.add(mesh(sph(0.1,8,6),mat(0x6b4a2a),0.45,2.95,0.1)); g.add(blob(0.8)); bakeStatic(g); parent.add(g); g.userData.ph=Math.random()*6; SWAY.push(g); return g;
 }
 function bigPlant(parent,x,z,s=1,y=0){
   const g=new THREE.Group(); g.position.set(x,y,z); g.scale.setScalar(s);
@@ -57,7 +57,7 @@ function flowerBed(parent,x0,x1,z0,z1){
   const cols=[0xe0574f,0xf2b632,0xf7f0f5,0xc36bd9,0xff8fb1];
   for(let x=x0+0.2;x<x1-0.1;x+=0.32) for(let z=z0+0.18;z<z1-0.1;z+=0.3){
     g.add(mesh(sph(0.07,6,5),mat(0x4f8d46),x,0.3,z)); g.add(mesh(sph(0.055,6,5),mat(rand(cols)),x+rnd(-.05,.05),0.38,z+rnd(-.05,.05))); }
-  parent.add(g); return g;
+  parent.add(bake(g)); return g;
 }
 function bench(parent,x,z,rot=0){
   const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot;
@@ -65,7 +65,7 @@ function bench(parent,x,z,rot=0){
   for(let i=0;i<3;i++) g.add(mesh(rbox(1.5,0.05,0.13,.02),w,0,0.45,-0.15+i*0.15,true));
   for(let i=0;i<2;i++) g.add(mesh(rbox(1.5,0.12,0.05,.02),w,0,0.62+i*0.16,-0.25,true));
   [-0.62,0.62].forEach(a=>{ g.add(mesh(box(0.06,0.45,0.4),M.dark,a,0.22,-0.05)); g.add(mesh(box(0.06,0.5,0.05),M.dark,a,0.65,-0.26)); });
-  parent.add(g); return g;
+  parent.add(bake(g)); return g;
 }
 const streetGlows=[];
 function lampPost(parent,x,z){
@@ -117,7 +117,7 @@ function makeCar(color,dir,z){
   [-0.62,0.62].forEach(x=>[-0.44,0.44].forEach(zz=>{ const w=mesh(cyl(0.18,0.18,0.14,14),M.dark,x,0.18,zz); w.rotation.x=Math.PI/2; g.add(w); }));
   [-0.3,0.3].forEach(zz=>g.add(mesh(sph(0.06,8,6),M.lampOn,0.98,0.44,zz)));
   const sh=blob(1.15); sh.scale.set(1,0.55,1); g.add(sh);
-  g.rotation.y=dir>0?0:Math.PI; outdoor.add(g); cars.push({g,dir,speed:3+Math.random()*2.5});
+  bakeStatic(g); g.rotation.y=dir>0?0:Math.PI; outdoor.add(g); cars.push({g,dir,speed:3+Math.random()*2.5});
 }
 let fountain=null;
 function buildFountain(x,z){
@@ -191,6 +191,7 @@ function buildBackdrop(){
     const cols=[[0xe0574f,0xf2b632],[0x2e86c1,0xf7f0f5],[0x8e44ad,0xf2b632],[0x27ae60,0xf1c40f],[0xe67e22,0xc0392b],[0xf06292,0x5c6bc0],[0x16a085,0xf5f5f5]];
     for(let i=0;i<9;i++) makeBalloon(rnd(-30,30),rnd(8,19),rnd(-34,-6),cols[i%cols.length]);
   }
+  bakeStatic(B,new Set(boats.map(b=>b.g)));
   for(let i=0;i<5;i++) makeBird();
 }
 let seaTex=null;
@@ -435,6 +436,7 @@ function buildCafe(){
   for(let k=0;k<4;k++){ const p=mesh(sph(0.045,6,4),stM.clone(),cx-0.5+(k%2?0.13:-0.13),1.1,cz+0.14); p.userData.ph=k/4; G.add(p); cafeSteam.push(p); }
   cafeBarista=makeChar(LOOKS.barista()); cafeBarista.root.position.set(cx-0.2,0,cz-0.52); G.add(cafeBarista.root);
   addCols('cafe',[[0,cx-0.96,cx+0.96,cz-0.3,cz+0.3],[0,cx-0.6,cx+0.6,cz-0.62,cz-0.3],[0,cx-1.45,cx-0.95,cz-0.4,cz+0.1]]);
+  bakeStatic(G,new Set([...cafeSteam,cafeBarista.root,cafeCups]));
   return G;
 }
 function buildBusModel(){
@@ -708,7 +710,7 @@ function buildRoomVisual(id,pop){
   if(s.theme&&RTHEMES[s.theme]){ const em=signPlane(RTHEMES[s.theme].e,0.34,0.34,{w:128,h:128,font:'90px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'}); em.position.set(1.15,1.95,-hd+0.03); S.add(em); }
   // number plate
   const pl=mesh(plane(0.36,0.18),new THREE.MeshBasicMaterial({map:textTex(String(id),{w:128,h:64,bg:'#e0a93a',fg:'#2a1c00',r:10,font:'800 44px "Baloo 2"'})}),-1.0,0.22,hd+0.005); S.add(pl);
-  const G=new THREE.Group(); G.userData.roomId=id; G.add(bake(S)); const win=roomWindowMesh(G);
+  const G=new THREE.Group(); G.userData.roomId=id; G.add(bake(S)); const win=roomWindowMesh(G); perfRoomPrep(G,win);
   // ---- dynamic parts ----
   const made=new THREE.Group(), messy=new THREE.Group(), flies=new THREE.Group(), broken=new THREE.Group(), tip=new THREE.Group();
   made.add(mesh(rbox(b.bw+0.03,0.08,1.35,.05),mat(duv,{roughness:.95}),b.bx,0.47,0.03,true));
@@ -737,7 +739,7 @@ function buildRoomVisual(id,pop){
     [0.67,1.5,-1.4,-0.4],[-1.4,b.right,-1.4,0.72],[b.right+0.02,b.right+0.44,-1.4,-0.98],...cols];
   addCols('room'+id,lc.map(([a,c,e,g])=>[ri.f,ri.x+a,ri.x+c,ri.z+e,ri.z+g]));
   if(pop) dropIn(G);
-  applyRoomState(id);
+  applyRoomState(id); perfRoomPost(id);
 }
 function applyRoomState(id){
   const s=state.rooms[id], R=RT(id); if(!R.parts) return;

@@ -93,9 +93,56 @@ function makeChar(o){
   if(o.cane){ const cn=mesh(cyl(0.015,0.015,0.62,6),mat(0x5a3d22),0,-0.55,0.04); arms[1].add(cn); }
   if(o.phone){ arms[0].add(mesh(box(0.08,0.14,0.015),M.dark,0,-0.33,0.07)); }
   if(o.partner&&!child){ child=makeChar({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['long','bun','short','curly','pony']),top:o.top,bottom:rand(BOTTOMS),scale:0.97}); child.root.position.set(-0.52,0,-0.05); root.add(child.root); }
+  const c={root,body,head,legs,arms,hold,bag,child,dog,eyes,face,hunch:o.hunch?0.16:0,t:Math.random()*10,ph:Math.random()*10,blink:1+Math.random()*4,sm:null,mode:'idle',spd:1,items:[]};
+  if(window.CHAR_SKIN!==false) skinChar(c);
   const s=o.scale||1; root.scale.setScalar(s);
-  return {root,body,head,legs,arms,hold,bag,child,dog,eyes,face,hunch:o.hunch?0.16:0,t:Math.random()*10,ph:Math.random()*10,blink:1+Math.random()*4,sm:null,mode:'idle',spd:1,items:[]};
+  return c;
 }
+// ---------- performans: karakteri tek bir iskeletli ağa (SkinnedMesh) çevir ----------
+// Her hareketli parça (gövde, baş, bacaklar, kollar, gözler, çanta, köpek, kuyruk) bir kemik olur;
+// tüm sabit parçalar köşe renkleriyle tek geometride birleşir → karakter başına ~30 yerine ~3 çizim çağrısı.
+let CHAR_MAT=null;
+function skinChar(c){
+  try{
+    const root=c.root; root.updateMatrixWorld(true);
+    const parts=[['body',c.body],['head',c.head],['leg0',c.legs[0]],['leg1',c.legs[1]],['arm0',c.arms[0]],['arm1',c.arms[1]],['eye0',c.eyes[0]],['eye1',c.eyes[1]]];
+    if(c.bag) parts.push(['bag',c.bag]); if(c.dog){ parts.push(['dog',c.dog]); if(c.dog.userData.tail) parts.push(['tail',c.dog.userData.tail]); }
+    const P=new Map(parts.map(([k,o],i)=>[o,i+1]));   // 0 = kök kemik
+    const keep=new Set([c.hold]); if(c.child) keep.add(c.child.root); const F=c.face; if(F){ [F.smile,F.frown,F.flat,...F.brows].forEach(m=>keep.add(m)); }
+    const rootBone=new THREE.Bone(), bones=[rootBone], invW=new THREE.Matrix4(), tmp=new THREE.Matrix4();
+    const partOf=o=>{ let q=o; while(q&&q!==root){ if(P.has(q)) return q; q=q.parent; } return null; };
+    parts.forEach(([k,o])=>{ const b=new THREE.Bone(); b.name=k; bones.push(b); });
+    parts.forEach(([k,o],i)=>{ const b=bones[i+1], pp=partOf(o.parent), pb=pp?bones[P.get(pp)]:rootBone;
+      invW.copy(pp?pp.matrixWorld:root.matrixWorld).invert(); tmp.multiplyMatrices(invW,o.matrixWorld); tmp.decompose(b.position,b.quaternion,b.scale); pb.add(b); });
+    const pos=[],nor=[],col=[],si=[],sw=[], merged=[], moveOut=[];
+    const walk=o=>{ if(keep.has(o)){ moveOut.push(o); return; }
+      if(o.isMesh){ const m=o.material;
+        if(!m||Array.isArray(m)||m.map||m.transparent||!m.color||o===c.blobMesh||m===M.shadow){ moveOut.push(o); return; }
+        const pt=partOf(o), bi=pt?P.get(pt):0; invW.copy(root.matrixWorld).invert(); tmp.multiplyMatrices(invW,o.matrixWorld);
+        let g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); g.applyMatrix4(tmp);
+        const pa=g.attributes.position, na=g.attributes.normal, cc=m.color;
+        for(let i=0;i<pa.count;i++){ pos.push(pa.getX(i),pa.getY(i),pa.getZ(i)); if(na) nor.push(na.getX(i),na.getY(i),na.getZ(i)); else nor.push(0,1,0); col.push(cc.r,cc.g,cc.b); si.push(bi,0,0,0); sw.push(1,0,0,0); }
+        g.dispose(); merged.push(o); }
+      o.children.slice().forEach(walk); };
+    root.children.slice().forEach(walk);
+    if(!pos.length) return;
+    const G=new THREE.BufferGeometry();
+    G.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); G.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3)); G.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+    G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4)); G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));
+    if(!CHAR_MAT) CHAR_MAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75,metalness:0,skinning:true});
+    const sk=new THREE.SkinnedMesh(G,CHAR_MAT); sk.castShadow=true; sk.frustumCulled=false; sk.add(rootBone);
+    // birleşmeyenleri (yüz, gölge, el, çocuk) yeni kemiklerine taşı
+    moveOut.forEach(o=>{ const pt=partOf(o.parent)||(P.has(o.parent)?o.parent:null), nb=pt?bones[P.get(pt)]:null;
+      if(nb&&o.parent!==root){ o.parent.updateMatrixWorld(true); invW.copy(pt.matrixWorld).invert(); tmp.multiplyMatrices(invW,o.matrixWorld); tmp.decompose(o.position,o.quaternion,o.scale); nb.add(o); } });
+    merged.forEach(o=>{ if(o.parent) o.parent.remove(o); });
+    parts.forEach(([k,o])=>{ if(o.parent) o.parent.remove(o); });
+    root.add(sk); sk.updateMatrixWorld(true); sk.bind(new THREE.Skeleton(bones));
+    const B=i=>bones[i+1]; c.body=B(0); c.head=B(1); c.legs=[B(2),B(3)]; c.arms=[B(4),B(5)]; c.eyes=[B(6),B(7)];
+    let k=8; if(c.bag){ c.bag=B(k++); c.bag.isBoneVis=true; } if(c.dog){ const d=B(k++); d.isBoneVis=true; d.userData.bs=d.scale.x; d.userData.tail=c.dog.userData.tail?B(k++):null; c.dog=d; }
+    c.skin=sk;
+  }catch(e){ console.warn('skinChar',e); }
+}
+function partVis(o,v){ if(!o) return; if(o.isBoneVis){ const s=v?(o.userData.bs||1):0.0001; if(o.scale.x!==s) o.scale.setScalar(s); } else o.visible=v; }
 function setHold(c,items){
   while(c.hold.children.length) c.hold.remove(c.hold.children[0]);
   c.items=items.slice();
@@ -166,7 +213,7 @@ function animChar(c,dt){
   if(c.sm){ const k=Math.min(1,dt*16); for(let i=0;i<8;i++) c.sm[i]+=(tgt[i]-c.sm[i])*k; } else c.sm=tgt.slice();
   const S=c.sm; L[0].rotation.x=S[0]; L[1].rotation.x=S[1]; A[0].rotation.x=S[2]; A[1].rotation.x=S[3]; A[0].rotation.z=S[4]; A[1].rotation.z=S[5]; B.position.y=S[6]; B.rotation.x=S[7]+(c.hunch||0);
   if(c.child){ c.child.mode=m==='walk'?'walk':'idle'; c.child.spd=c.spd; animChar(c.child,dt); c.child.root.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'); }
-  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'; c.dog.visible=!hide; c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
+  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'; partVis(c.dog,!hide); c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
     c.dog.userData.tail.rotation.y=Math.sin(c.ph*(fast?14:6))*0.6; }
-  if(c.bag&&!c.child&&c.bag.parent===c.root) c.bag.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type');
+  if(c.bag&&!c.child&&(c.bag.parent===c.root||c.bag.isBoneVis&&c.bag.name==='bag'&&c.bag.parent&&c.bag.parent.type==='Bone'&&!c.bag.parent.name)) partVis(c.bag,!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'));
 }

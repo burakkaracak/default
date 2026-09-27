@@ -3,10 +3,14 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 CHROME=os.environ.get('CHROME') or (sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))+['chromium'])[0]
 import sys
 SP=HERE+'/'
-P=['p1_core','p2_render','p26_gfx','p3_world','p4_nav','p5_chars','p6_ents','p7_systems','p75_extras','p76_features','p77_polish','p78_mega','p79_mega2','p80_depth','p81_depth2','p82_events','p83_gfx2','p84_ai2','p85_polish3','p86_ops','p87_live','p88_flow','p89_econ','p90_ui','p91_real','p92_view','p93_content','p94_mescit','p8_ui']
+P=['p1_core','p2_render','p26_gfx','p3_world','p4_nav','p5_chars','p6_ents','p7_systems','p75_extras','p76_features','p77_polish','p78_mega','p79_mega2','p80_depth','p81_depth2','p82_events','p83_gfx2','p84_ai2','p85_polish3','p86_ops','p87_live','p88_flow','p89_econ','p90_ui','p91_real','p92_view','p93_content','p94_mescit','p95_perf','p8_ui']
 g=open(SP+'vendor/adhan.umd.min.js').read()+';\n'+''.join(open(SP+'src/'+p+'.js').read() for p in P)
 open(SP+'src/g.js','w').write(g)
-html=open(SP+'src/p0_head.html').read()+g+'\n</script>\n</body>\n</html>\n'
+import base64,glob as _g
+snd='<script>window.__SND={'+','.join('"%s":"data:audio/mpeg;base64,%s"'%(os.path.basename(f)[:-4],base64.b64encode(open(f,'rb').read()).decode()) for f in sorted(_g.glob(SP+'snd/*.mp3')))+'}</script>\n'
+head=open(SP+'src/p0_head.html').read()
+i=head.rfind('<script>')
+html=head[:i]+snd+head[i:]+g+'\n</script>\n</body>\n</html>\n'
 open(SP+'src/game.html','w').write(html)
 t=html.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>','<script>'+open(SP+'mock2.js').read()+'</script>')
 if '--bot' in sys.argv: t=t.replace('\nboot();\n','\n'+open(SP+'bot.js').read()+'\nboot();\n')

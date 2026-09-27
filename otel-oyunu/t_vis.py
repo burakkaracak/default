@@ -8,7 +8,7 @@ steps=sys.argv[1:]
 with sync_playwright() as p:
     b=p.chromium.launch(executable_path=CHROME,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
     pg=b.new_page(viewport={'width':int(__import__('os').environ.get('VW','900')),'height':int(__import__('os').environ.get('VH','640'))}); errs=[]
-    pg.on('pageerror',lambda e: errs.append(str(e)))
+    pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('console',lambda m: print('CONSOLE',m.text[:200]) if m.type in ('warning','error') and 'skinChar' in m.text else None)
     pg.goto('file://'+SP+'/vis.html'); pg.wait_for_timeout(3000)
     for i,s in enumerate(steps):
         if s.startswith('js:'): print(pg.evaluate(s[3:]))
