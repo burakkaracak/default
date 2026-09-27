@@ -9,7 +9,9 @@ with sync_playwright() as p:
     pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.goto('file://'+SP+'/test2.html'); pg.wait_for_timeout(900)
     pg.add_script_tag(path=SP+'/bot.js')
-    E=pg.evaluate
+    def E(x):
+        r=pg.evaluate('(()=>{ const __r=(()=>{ return eval('+repr(x)+'); })(); return (__r&&(typeof __r==="object"||typeof __r==="function"))?String(__r):__r; })()')
+        return r
     E("localStorage.clear(); state.tut=5; ADMIN.allOpen(); window.botThink=()=>{}; spawnT=1e9;")
     print('roof built',E("built('roof')"),'floors',E("floorsBuilt()"),'roof pad label',E("PADMAP.roof.label"))
     print('roof seats reachable:',E("SEATS.filter(s=>s.amen==='roof').map(s=>{const p=route(0,0,5,ROOF,s.x,s.z); return p?1:0}).join('')"))
@@ -18,7 +20,7 @@ with sync_playwright() as p:
     # guest to roof amenity
     E("state.t=0.3; state.weather='sun'; spawnGuest('vip'); const g=queue[0]; g.path=null; g.state='queue'; checkIn(g,pickRoom(g)); for(let i=0;i<400;i++) simStep(0.05); window._g=g;")
     print('guest state',E("_g.state+' f'+_g.f"))
-    E("_g.state='room'; _g.inRoom=true; _g.path=null; const ok=(()=>{ const s=SEATS.find(s=>s.amen==='roof'&&s.pose==='sit'); s.busy=_g; _g.seat=s; _g.state='toAmen'; return _g.goTo(ROOF,s.x,s.z,()=>{ _g.pose(s); _g.state='amen'; _g.amenLeft=5; }); })(); window._ok=ok;")
+    E("_g.state='room'; _g.inRoom=true; _g.path=null; const ok=(()=>{ standUp(_g); const s=SEATS.find(s=>s.amen==='roof'&&s.pose==='sit'); s.busy=_g; _g.seat=s; _g.state='toAmen'; return _g.goTo(ROOF,s.x,s.z,()=>{ _g.pose(s); _g.state='amen'; _g.amenLeft=5; }); })(); window._ok=ok;")
     E("for(let i=0;i<1200&&_g.state!=='amen';i++) simStep(0.05)")
     print('guest reached roof seat:',E("_ok+' '+_g.state+' f'+_g.f"))
     E("for(let i=0;i<200;i++) simStep(0.05)"); print('roof pile',E("state.piles.roof"))

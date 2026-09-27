@@ -4,7 +4,7 @@ CHROME=os.environ.get('CHROME') or (sorted(glob.glob('/opt/pw-browsers/chromium*
 import sys
 SP=HERE+''
 from playwright.sync_api import sync_playwright
-setup=sys.argv[1]
+setup=sys.argv[1] if len(sys.argv)>1 else 'ADMIN.allOpen(); spawnT=1e9;'
 with sync_playwright() as p:
     b=p.chromium.launch(executable_path=CHROME)
     pg=b.new_page(viewport={'width':390,'height':844}); errs=[]

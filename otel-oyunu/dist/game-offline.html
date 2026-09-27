@@ -448,7 +448,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:45, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:46, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -736,7 +736,7 @@ const geoCache={}, matCache={};
 function mat(color,o={}){ const k=color+JSON.stringify(o,(key,v)=>v&&v.isTexture?v.uuid:v); return matCache[k]||(matCache[k]=new THREE.MeshStandardMaterial(Object.assign({color,roughness:.78,metalness:0},o))); }
 const TEX_ROUGH={marble:.2,tile:.3,poolTile:.18,wood:.5,woodDark:.42,woodLight:.52,corridor:.62,paving:.85,asphalt:.92,concrete:.9,stone:.85,rubber:.95,sand:.95};
 function tmat(name,rx,ry,o={}){ const m=tmat0(name,rx,ry,o); if(typeof themeTint==='function') themeTint(m); return m; }
-function tmat0(name,rx,ry,o={}){ return mat(0xffffff,Object.assign({map:tex(name,rx,ry)},TEX_ROUGH[name]!=null&&o.roughness==null?{roughness:TEX_ROUGH[name]}:{},o)); }
+function tmat0(name,rx,ry,o={}){ return mat(0xffffff,withNormal(name,rx,ry,Object.assign({map:tex(name,rx,ry)},TEX_ROUGH[name]!=null&&o.roughness==null?{roughness:TEX_ROUGH[name]}:{},o))); }
 function box(w,h,d){ const k=`b${w}_${h}_${d}`; return geoCache[k]||(geoCache[k]=new THREE.BoxGeometry(w,h,d)); }
 function cyl(rt,rb,h,s=16){ const k=`c${rt}_${rb}_${h}_${s}`; return geoCache[k]||(geoCache[k]=new THREE.CylinderGeometry(rt,rb,h,s)); }
 function sph(r,ws=16,hs=12){ const k=`s${r}_${ws}_${hs}`; return geoCache[k]||(geoCache[k]=new THREE.SphereGeometry(r,ws,hs)); }
@@ -4918,11 +4918,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=45;
+const GAME_VER=46;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -5692,11 +5692,11 @@ function buildFloorDeco(f){
     CORR.forEach(z=>{ g.add(mesh(box(12.6,0.014,0.9),cm1,0,0.03,z)); for(let x=-5.5;x<=5.5;x+=2.2) g.add(mesh(box(0.5,0.016,0.5),cm2,x,0.034,z)); });
     [-6.5,6.5].forEach(x=>CORR.forEach(z=>{ if(F.theme==='garden') bigPlant(g,x,z+0.55,0.5); else { const o=mesh(sph(0.16,10,8),cm2,x,1.7,z+0.55); g.add(o); } }));
     const sg=signPlane(`${T.e} ${T.n.toUpperCase()}`,1.8,0.34,{bg:'#'+T.c.toString(16).padStart(6,'0'),fg:'#fff',font:'800 56px "Baloo 2"',fit:true}); sg.position.set(0,2.35,BACK+0.12); g.add(sg); }
-  if(F.lounge){ const x=-5.6, z=CORR[0]-0.05, wood=tmat('woodDark',1,1), sm=mat(F.theme?FTHEME[F.theme].c:0x8a2f3a,{roughness:.9});
-    g.add(mesh(rbox(1.3,0.35,0.55,.1),sm,x,0.2,z-0.45,true)); g.add(mesh(rbox(1.3,0.45,0.14,.06),sm,x,0.45,z-0.68,true));
-    g.add(mesh(cyl(0.22,0.22,0.04,16),wood,x+1.0,0.5,z-0.4)); g.add(mesh(cyl(0.03,0.03,0.48,6),M.gold,x+1.0,0.25,z-0.4)); g.add(mesh(cyl(0.05,0.04,0.12,8),mat(0xe0574f),x+1.0,0.58,z-0.4));
-    const lp=mesh(cyl(0.1,0.14,0.2,12),M.lampOn,x-0.85,1.0,z-0.55); g.add(lp); g.add(mesh(cyl(0.02,0.02,0.9,6),M.gold,x-0.85,0.45,z-0.55));
-    addCols('lounge'+f,[[f,x-0.95,x+1.25,z-0.78,z-0.15]]); }
+  if(F.lounge){ const z=CORR[0], wood=tmat('woodDark',1,1), sm=mat(F.theme?FTHEME[F.theme].c:0x8a2f3a,{roughness:.9});   // koridor ucunda, duvara yaslı: oda kapılarını kapatmaz
+    g.add(mesh(rbox(0.55,0.35,1.3,.1),sm,-6.5,0.2,z,true)); g.add(mesh(rbox(0.14,0.45,1.3,.06),sm,-6.78,0.45,z,true));
+    g.add(mesh(cyl(0.2,0.2,0.04,16),wood,-6.52,0.5,z-0.95)); g.add(mesh(cyl(0.03,0.03,0.48,6),M.gold,-6.52,0.25,z-0.95)); g.add(mesh(cyl(0.05,0.04,0.12,8),mat(0xe0574f),-6.52,0.58,z-0.95));
+    g.add(mesh(cyl(0.1,0.14,0.2,12),M.lampOn,-6.7,1.0,z+0.85)); g.add(mesh(cyl(0.02,0.02,0.9,6),M.gold,-6.7,0.45,z+0.85));
+    addCols('lounge'+f,[[f,-6.88,-6.2,z-0.68,z+0.68],[f,-6.75,-6.28,z-1.18,z-0.72]]); }
 }
 function floorSat(f){ const F=(state.floors||{})[f]; return F?(F.theme?4:0)+(F.lounge?3:0):0; }
 function buyFloorTheme(f,k){ const c=floorThemeCost(f); const F=(state.floors||(state.floors={}))[f]||(state.floors[f]={}); if(F.theme===k||!spend(c)) return; F.theme=k; buildFloorDeco(f); sfx('build'); toast(`${FTHEME[k].e} ${f+1}. kat artık ${FTHEME[k].n}`); save(); renderSheet(); }
@@ -6024,6 +6024,108 @@ function mergeOutdoorStatic(){
   const b=bake(cont); if(b===cont){ list.forEach(o=>outdoor.add(o)); return; } outdoor.add(b); outdoorMerged=b;
 }
 function perfStats(){ let n=0; scene.traverse(o=>{ if((o.isMesh||o.isLine||o.isPoints)&&o.visible){ let p=o, v=true; while(p){ if(!p.visible){ v=false; break; } p=p.parent; } if(v) n++; } }); return n; }
+
+// =====================================================================
+// GRAFİK 3: prosedürel normal haritaları (mermer, ahşap, taş, halı…),
+// dalgalı-parlayan su + kostik ışık deseni, gökyüzü kubbesi (güneş, bulut,
+// saat rengine göre), karakterlere kenar ışığı, lobide ışık huzmesinde toz
+// =====================================================================
+function gfxOn(){ return gfxLevel()!=='low'; }
+// yüzey → normal haritası şiddeti (textures p2 tmat0 içinde bağlanır)
+function normalSpec(n){ return ({marble:.35,wood:.9,woodDark:.9,woodLight:.8,paving:1.3,stone:1.4,concrete:.8,asphalt:1.0,tile:.7,poolTile:.6,corridor:.6,runner:.8,runnerKilim:.8,sandTile:.9,rubber:.7,wallpaperStripe:.35,sand:1.1})[n]; }
+const nrmCanvas={};
+function normalCanvasOf(name){
+  if(nrmCanvas[name]) return nrmCanvas[name]; const src=texCanvas[name]||(texCanvas[name]=drawTex(name)); if(!src) return null;
+  const w=Math.min(src.width,512), h=Math.min(src.height,512), c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.drawImage(src,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data, out=x.createImageData(w,h), o=out.data, L=new Float32Array(w*h), s=normalSpec(name)||0.8;
+  for(let i=0;i<w*h;i++) L[i]=(d[i*4]*0.299+d[i*4+1]*0.587+d[i*4+2]*0.114)/255;
+  const at=(X,Y)=>L[((Y+h)%h)*w+((X+w)%w)];
+  for(let y=0;y<h;y++) for(let X=0;X<w;X++){
+    const dx=(at(X+1,y-1)+2*at(X+1,y)+at(X+1,y+1))-(at(X-1,y-1)+2*at(X-1,y)+at(X-1,y+1)), dy=(at(X-1,y+1)+2*at(X,y+1)+at(X+1,y+1))-(at(X-1,y-1)+2*at(X,y-1)+at(X+1,y-1));
+    let nx=-dx*s*2.2, ny=-dy*s*2.2, nz=1; const l=Math.hypot(nx,ny,nz); nx/=l; ny/=l; nz/=l; const k=(y*w+X)*4; o[k]=(nx*0.5+0.5)*255; o[k+1]=(ny*0.5+0.5)*255; o[k+2]=(nz*0.5+0.5)*255; o[k+3]=255; }
+  x.putImageData(out,0,0); return nrmCanvas[name]=c;
+}
+const nrmCache={};
+function normalTex(name,rx,ry){ const key=name+'|'+rx+'|'+ry; if(nrmCache[key]) return nrmCache[key]; const cv=normalCanvasOf(name); if(!cv) return null;
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy()); return nrmCache[key]=t; }
+function withNormal(name,rx,ry,o){ try{ if(!normalSpec(name)||!gfxOn()||o.normalMap) return o; const n=normalTex(name,rx,ry); if(!n) return o; return Object.assign({normalMap:n,normalScale:new THREE.Vector2(0.9,0.9)},o); }catch(e){ return o; } }
+
+// ---------- su: dalga normali + kostik ----------
+let waveTex=null, causticTex=null, causticMats=[], waterMats=new Set();
+function makeWaveNormal(){ const S=256, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d'), im=x.createImageData(S,S), o=im.data;
+  const H=(u,v)=>Math.sin(u*6.283*3+Math.sin(v*6.283*2)*1.2)*0.5+Math.sin(v*6.283*4+u*6.283*1.5)*0.35+Math.sin((u+v)*6.283*5)*0.15;
+  for(let y=0;y<S;y++) for(let X=0;X<S;X++){ const u=X/S, v=y/S, e=1/S, dx=(H(u+e,v)-H(u-e,v))*6, dy=(H(u,v+e)-H(u,v-e))*6; let nx=-dx, ny=-dy, nz=1; const l=Math.hypot(nx,ny,nz); const k=(y*S+X)*4; o[k]=(nx/l*0.5+0.5)*255; o[k+1]=(ny/l*0.5+0.5)*255; o[k+2]=(nz/l*0.5+0.5)*255; o[k+3]=255; }
+  x.putImageData(im,0,0); const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t; }
+function makeCaustic(){ const S=256, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d'); x.fillStyle='#000'; x.fillRect(0,0,S,S);
+  x.strokeStyle='rgba(190,240,255,.55)'; x.lineWidth=2.2; x.lineCap='round';
+  for(let k=0;k<70;k++){ const cx=Math.random()*S, cy=Math.random()*S, r=8+Math.random()*22; for(const [ox,oy] of [[0,0],[S,0],[-S,0],[0,S],[0,-S]]){ x.beginPath(); for(let a=0;a<=6.3;a+=0.35){ const rr=r*(0.75+0.35*Math.sin(a*3+k)); const px=cx+ox+Math.cos(a)*rr, py=cy+oy+Math.sin(a)*rr; a?x.lineTo(px,py):x.moveTo(px,py); } x.stroke(); } }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t; }
+function upgradeWater(){
+  if(!gfxOn()) return; if(!waveTex) waveTex=makeWaveNormal(); if(!causticTex) causticTex=makeCaustic();
+  scene.traverse(o=>{ const m=o.material; if(!o.isMesh||!m||!m.map||!m.map.userData||m.map.userData.tex!=='water'||waterMats.has(m)) return;
+    m.normalMap=waveTex; m.normalScale=new THREE.Vector2(0.55,0.55); m.roughness=0.04; m.metalness=0.15; m.envMapIntensity=(m.envMapIntensity||1)*1.6; m.needsUpdate=true; waterMats.add(m);
+    // kostik: suyun hemen altında, eklemeli ışık deseni
+    const g=o.geometry; if(!g.boundingBox) g.computeBoundingBox(); const bb=g.boundingBox, w=(bb.max.x-bb.min.x)*o.scale.x, d=(bb.max.z-bb.min.z)*o.scale.z; if(w<2||d<2) return;
+    const cm=new THREE.MeshBasicMaterial({map:causticTex.clone(),transparent:true,opacity:0.32,blending:THREE.AdditiveBlending,depthWrite:false}); cm.map.needsUpdate=true; cm.map.repeat.set(w/2.2,d/2.2);
+    const p=new THREE.Mesh(new THREE.PlaneGeometry(w*0.98,d*0.98),cm); p.rotation.x=-Math.PI/2; p.position.set(o.position.x,o.position.y-0.08,o.position.z); o.parent.add(p); causticMats.push(cm); });
+}
+
+// ---------- gökyüzü kubbesi ----------
+let skyMesh=null; const SKY_TOP=new THREE.Color(0x2f78d6), SKY_HOR=new THREE.Color(0xd8ecfa), SKY_DUSK=new THREE.Color(0xffa36b);
+function buildSky(){
+  if(skyMesh||!gfxOn()) return;
+  const mt=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
+    uniforms:{top:{value:new THREE.Color(0x5b9ee8)},hor:{value:new THREE.Color(0xcfe6f5)},sunDir:{value:new THREE.Vector3(0,1,0)},sunC:{value:new THREE.Color(0xfff2d0)},t:{value:0},cloud:{value:0.35},night:{value:0}},
+    vertexShader:'varying vec3 vD; void main(){ vD=normalize(position); vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position=p.xyww; }',
+    fragmentShader:`uniform vec3 top,hor,sunDir,sunC; uniform float t,cloud,night; varying vec3 vD;
+      float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+      float n2(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y); }
+      float fbm(vec2 p){ float a=0.,w=.5; for(int i=0;i<5;i++){ a+=w*n2(p); p*=2.03; w*=.5; } return a; }
+      void main(){ vec3 d=normalize(vD); float y=max(d.y,0.); vec3 c=mix(hor,top,pow(y,0.55));
+        float s=max(dot(d,normalize(sunDir)),0.); c+=sunC*(pow(s,900.)*6.+pow(s,24.)*0.35)*(1.-night);
+        if(d.y>0.02){ vec2 uv=d.xz/(d.y+0.12)*1.6+vec2(t*0.012,t*0.004); float cl=smoothstep(0.52-cloud*0.3,0.85,fbm(uv)); vec3 cc=mix(vec3(1.),hor*0.9,0.25)*(1.-night*0.8)+sunC*pow(s,6.)*0.4; c=mix(c,cc,cl*smoothstep(0.02,0.25,d.y)*0.85); }
+        if(night>0.3){ float st=step(0.9985,h2(floor(d.xz/(d.y+0.3)*420.))); c+=vec3(st)*smoothstep(0.3,1.,night)*y; }
+        gl_FragColor=vec4(c,1.); }`});
+  skyMesh=new THREE.Mesh(new THREE.SphereGeometry(230,32,16),mt); skyMesh.frustumCulled=false; skyMesh.renderOrder=-10; scene.add(skyMesh);
+}
+function updateSky(t){
+  if(!skyMesh) return; const U=skyMesh.material.uniforms, bg=scene.background&&scene.background.isColor?scene.background:null;
+  skyMesh.position.copy(camera.position);
+  if(bg){ const day=1-nightF, dusk=clamp(1-Math.abs(hourNow()-19)/1.6,0,1)+clamp(1-Math.abs(hourNow()-6.8)/1.3,0,1);
+    U.hor.value.copy(bg).lerp(SKY_HOR,0.55*day).lerp(SKY_DUSK,0.55*dusk*day);
+    U.top.value.copy(bg).lerp(SKY_TOP,0.75*day).multiplyScalar(0.55+0.45*day); }
+  U.sunDir.value.copy(sun.position).sub(sun.target.position).normalize(); U.sunC.value.copy(sun.color); U.t.value=t; U.night.value=nightF;
+  U.cloud.value=state.weather==='cloud'?0.8:state.weather==='rain'||state.weather==='snow'?1.0:0.35;
+}
+
+// ---------- karakterlere kenar ışığı ----------
+let rimU=null;
+function upgradeCharMat(){
+  if(!CHAR_MAT||CHAR_MAT.userData.rim||!gfxOn()) return; CHAR_MAT.userData.rim=true; rimU={value:new THREE.Color(0xfff1d6)};
+  CHAR_MAT.onBeforeCompile=sh=>{ sh.uniforms.rimC=rimU; sh.fragmentShader='uniform vec3 rimC;\n'+sh.fragmentShader.replace('#include <output_fragment>',
+    'float rimF=1.0-abs(dot(normalize(normal),normalize(vViewPosition))); outgoingLight+=rimC*pow(rimF,2.6)*0.32;\n#include <output_fragment>'); };
+  CHAR_MAT.needsUpdate=true;
+}
+
+// ---------- lobide ışık huzmesinde toz ----------
+let dustPts=null;
+function buildDust(){
+  if(dustPts||gfxLevel()!=='high') return; const n=160, pos=new Float32Array(n*3); for(let i=0;i<n;i++){ pos[i*3]=rnd(-6.5,6.5); pos[i*3+1]=rnd(0.3,2.6); pos[i*3+2]=rnd(3,7.3); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  dustPts=new THREE.Points(g,new THREE.PointsMaterial({color:0xfff1c4,size:0.035,transparent:true,opacity:0.5,depthWrite:false,blending:THREE.AdditiveBlending})); floorRoot(0).add(dustPts);
+}
+function updateDust(dt,t){ if(!dustPts) return; const p=dustPts.geometry.attributes.position; for(let i=0;i<p.count;i++){ let y=p.getY(i)+dt*0.04*(0.5+(i%5)*0.2); if(y>2.7) y=0.3; p.setY(i,y); p.setX(i,p.getX(i)+Math.sin(t*0.3+i)*dt*0.02); } p.needsUpdate=true;
+  dustPts.material.opacity=0.45*(1-nightF)*(state.weather==='sun'?1:0.4); dustPts.visible=viewFloor===0&&dustPts.material.opacity>0.03; }
+
+// ---------- hooks ----------
+let gfx3Scan=0;
+function bootGfx3(){ try{ buildSky(); upgradeWater(); upgradeCharMat(); buildDust(); }catch(e){ console.warn('gfx3',e); } }
+function updateGfx3(dt,t){
+  updateSky(t); updateDust(dt,t);
+  if(waveTex){ waveTex.offset.set(t*0.02,t*0.013); } causticMats.forEach((m,i)=>{ m.map.offset.set(Math.sin(t*0.25+i)*0.3+t*0.015,Math.cos(t*0.2+i)*0.3); m.opacity=0.32*(0.35+0.65*(1-nightF)); });
+  if(rimU){ rimU.value.setRGB(1,0.95,0.84).lerp(new THREE.Color(0.55,0.7,1),nightF); }
+  gfx3Scan-=dt; if(gfx3Scan<=0){ gfx3Scan=3; upgradeWater(); upgradeCharMat(); }
+}
 
 // =====================================================================
 // WORLD-PINNED TAGS (DOM)
@@ -6634,7 +6736,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -6660,7 +6762,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); }
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);
