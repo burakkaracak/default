@@ -143,7 +143,7 @@ const cm=()=>city().mult;
 function staffHireCost(k){ const s=state.staff[k], c=STAFF[k].cost[s.n]; return c==null?null:Math.round(c*cm()); }
 function staffLvlCost(k){ const s=state.staff[k], c=STAFF_LVL_COST[s.lvl-1]; return c==null?null:Math.round(c*cm()); }
 function upgCost(k){ const c=UPG[k].costs[state.up[k]]; return c==null?null:Math.round(c*cm()); }
-function adsCost(){ return Math.round((90+stars()*40)*cm()); }
+function adsCost(){ return Math.round((90+stars()*40)*cm()*(1-0.3*skillLv('m2'))); }
 function roomUpCost(id){ const s=state.rooms[id], i=ROOM_ORDER.indexOf(s.type); if(i>=2) return null; return Math.round(ROOM_T[ROOM_ORDER[i+1]].up*FLOOR_MULT[roomInfo(id).f]*cm()); }
 function decorCost(k){ return Math.round(DECOR[k].cost*cm()); }
 function mgmtHasDeal(){
@@ -160,12 +160,14 @@ function renderSheet(){
   if(sheetMode==='chat') return renderChatSheet();
   if(sheetMode==='log') return renderLogSheet();
   if(sheetMode==='ach') return renderAchSheet();
+  if(sheetMode==='skills') return renderSkillSheet();
+  if(sheetMode==='pass') return renderPassSheet();
   const tabs=[['staff','👥 Personel'],['me','🧍 Sen'],['hotel','🏨 Otel']];
   let h=`<h3>📋 Yönetim <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" class="${k===mgmtTab?'on':''}">${l}</button>`).join('')}</div>`;
   if(mgmtTab==='staff'){
     if(!built('staff')) h+=`<p class="note">🔒 Personel işe almak için önce lobideki <b>Personel odası</b>nı aç.</p>`;
     for(const k in STAFF){ const S=STAFF[k], s=state.staff[k], hc=staffHireCost(k), lc=staffLvlCost(k), needOk=!S.needs||built(S.needs), can=built('staff')&&needOk;
-      h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?` · önce ${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs} gerekli`:''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${pips(s.lvl,STAFF_SPEED.length)}</div>
+      h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?` · önce ${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs} gerekli`:''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${crewNames(k)}${pips(s.lvl,STAFF_SPEED.length)}</div>
         <div style="display:flex;flex-direction:column;gap:6px">
           ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
           ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>`:''}
@@ -208,7 +210,7 @@ function spend(c){ if(c==null||state.money<c) return false; state.money-=c; mark
 function hireStaff(k){ const c=staffHireCost(k); if(!built('staff')||!spend(c)) return; state.staff[k].n++; spawnStaff(k,true); sfx('build'); toast(`${STAFF[k].e} ${STAFF[k].name} işe başladı!`); save(); renderSheet(); }
 function staffLvl(k){ const c=staffLvlCost(k); if(!spend(c)) return; state.staff[k].lvl++; qEv('upg'); sfx('star'); save(); renderSheet(); }
 function buyUpg(k){ const c=upgCost(k); if(!spend(c)) return; state.up[k]++; qEv('upg'); sfx('star'); updateCarryUI(); save(); renderSheet(); }
-function buyAds(){ const c=adsCost(); if(!spend(c)) return; state.adsUntil=state.day+state.t+0.5; spawnT=0.5; sfx('build'); toast('📣 Reklam yayında! Misafirler yolda'); save(); renderSheet(); }
+function buyAds(){ const c=adsCost(); if(!spend(c)) return; state.adsUntil=state.day+state.t+0.5*(1+0.5*skillLv('m2')); spawnT=0.5; sfx('build'); toast('📣 Reklam yayında! Misafirler yolda'); save(); renderSheet(); }
 // ---------- ilerleme: şehirler, anahtarlar, miras ----------
 function hotelProgress(){ const n=PADS.length||1, b=PADS.filter(d=>built(d.id)).length; return {b,n,p:b/n}; }
 function tourOf(ix){ return Math.floor(ix/CITIES.length)+1; }
@@ -249,7 +251,7 @@ function openCityMap(){
     const best=hs.length?hs.reduce((a,b)=>a.days<=b.days?a:b):null, here=cur%CITIES.length===i, done=ix<cur;
     const st=here?`📍 Buradasın · %${Math.round(hotelProgress().p*100)}`:done||best?`✅ ${best?best.days+' günde · '+'★'.repeat(best.stars):'tamamlandı'}`:'🔒 Kilitli';
     rows+=`<div class="row${here?' on':''}" style="${here?'border:2px solid var(--gold2)':''}${!here&&!done&&!best?';opacity:.6':''}"><div class="ic">${C.e}</div><div class="tx">${C.name}<small>Gelir x${C.mult}${best&&hs.length>1?` · ${hs.length} kez`:''}</small></div><div style="font-weight:800;font-size:13px;text-align:right">${st}</div></div>`; }
-  openModal(`<h3>🗺️ Otel zinciri${tour>1?` · ${tour}. tur`:''} <button class="xbtn" id="cmX" aria-label="Kapat">✖</button></h3><p class="sub">${(state.hist||[]).length} otel tamamlandı · 🗝️ ${state.keys||0} anahtar · kalıcı gelir +%${Math.round(state.prestige*15+5*((state.legacy||{}).income||0))}</p>${rows}${cur%CITIES.length===CITIES.length-1?'<p class="sub">Son şehirden sonra zincir İstanbul\'dan yeni bir turla, daha yüksek prestijle devam eder.</p>':''}`,m=>{ m.querySelector('#cmX').onclick=closeModal; });
+  openModal(`<h3>🗺️ Otel zinciri${tour>1?` · ${tour}. tur`:''} <button class="xbtn" id="cmX" aria-label="Kapat">✖</button></h3><p class="sub">${(state.hist||[]).length} otel tamamlandı · 🗝️ ${state.keys||0} anahtar · kalıcı gelir +%${Math.round(state.prestige*15+5*((state.legacy||{}).income||0))}</p>${rows}${chainHtml()}${cur%CITIES.length===CITIES.length-1?'<p class="sub">Son şehirden sonra zincir İstanbul\'dan yeni bir turla, daha yüksek prestijle devam eder.</p>':''}`,m=>{ m.querySelector('#cmX').onclick=closeModal; m.querySelectorAll('[data-mgr]').forEach(b=>b.onclick=()=>hireManager(+b.dataset.mgr)); });
 }
 function confirmMove(){
   const next=CITIES[(state.city+1)%CITIES.length], K=moveKeys();
@@ -288,11 +290,13 @@ function renderQuestSheet(){
   Q.list.forEach((q,i)=>{ const D=QDEF[q.k], p=q.have/q.n, prog=q.k==='earn'?`${fmt(q.have)} / ${fmt(q.n)} ₺`:`${q.have} / ${q.n}`;
     h+=`<div class="row${q.claimed?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${questText(q)}<small>${prog}</small><div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div></div>
       ${q.claimed?'<button class="btn" disabled>Alındı ✓</button>':q.done?`<button class="btn gold qclaim" data-claim="${i}">Al 🎁<br>+${fmt(q.rew)} ₺</button>`:`<button class="btn ghost" disabled>🎁 ${fmt(q.rew)} ₺</button>`}</div>`; });
+  h+=`<button class="btn gold wide" data-pass>🎖️ Ödül yolu ve haftalık görevler (${(state.pass&&state.pass.pts)||0} puan)</button>`;
   h+=`<button class="btn ghost wide" data-achs>🏆 Başarımlar (${ACH.filter(a=>state.ach&&state.ach[a.id]).length}/${ACH.length})</button>`;
   h+=`<p class="note">${Q.bonus?'🎉 Bugünün bonusu alındı. Yarın yeni görevler gelecek!':'🎁 Üç görevi de bitirirsen ek para ve +3 ün kazanırsın.'}</p>`;
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   const ab=sheet.querySelector('[data-achs]'); if(ab) ab.onclick=()=>openSheet('ach');
+  const pb=sheet.querySelector('[data-pass]'); if(pb) pb.onclick=()=>openSheet('pass');
   sheet.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{ claimQuest(+b.dataset.claim); renderSheet(); });
 }
 // =====================================================================
@@ -563,7 +567,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();
@@ -590,7 +594,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

@@ -65,6 +65,9 @@ function makeChar(o){
   if(o.hat==='pillbox'){ head.add(mesh(cyl(0.17,0.17,0.13,16),mat(o.hatC),0,0.27,0.02)); head.add(mesh(cyl(0.175,0.175,0.03,16),M.gold,0,0.22,0.02)); }
   if(o.hat==='hard'){ head.add(mesh(new THREE.SphereGeometry(0.29,16,8,0,Math.PI*2,0,Math.PI*0.5),mat(o.hatC,{roughness:.4}),0,0.03,0)); head.add(mesh(cyl(0.34,0.34,0.025,20),mat(o.hatC,{roughness:.4}),0,0.04,0.03)); }
   if(o.hat==='fedora'){ head.add(mesh(cyl(0.4,0.4,0.025,20),mat(o.hatC),0,0.16,0)); head.add(mesh(cyl(0.2,0.25,0.22,16),mat(o.hatC),0,0.27,0)); head.add(mesh(cyl(0.255,0.255,0.05,16),M.dark,0,0.2,0)); }
+  if(o.hat==='crown'){ const gm=mat(0xf2c14e,{metalness:.9,roughness:.2}); head.add(mesh(cyl(0.2,0.2,0.1,12),gm,0,0.27,0)); for(let k=0;k<5;k++){ const a=k/5*Math.PI*2; head.add(mesh(cone(0.05,0.12,5),gm,Math.cos(a)*0.17,0.37,Math.sin(a)*0.17)); head.add(mesh(sph(0.025,6,4),mat(0xc0392b),Math.cos(a)*0.17,0.44,Math.sin(a)*0.17)); } }
+  if(o.hat==='beret'){ const b=mesh(cyl(0.27,0.25,0.08,16),mat(o.hatC||0x8a2f3a),0.04,0.24,-0.02); b.rotation.z=-0.25; head.add(b); head.add(mesh(sph(0.03,6,4),mat(o.hatC||0x8a2f3a),0.06,0.3,-0.02)); }
+  if(o.hat==='tophat'){ head.add(mesh(cyl(0.36,0.36,0.03,20),M.dark,0,0.17,0)); head.add(mesh(cyl(0.2,0.21,0.36,16),M.dark,0,0.35,0)); head.add(mesh(cyl(0.212,0.212,0.06,16),mat(0x8a2f3a),0,0.21,0)); }
   if(o.hat==='chef'){ head.add(mesh(cyl(0.2,0.2,0.2,16),M.white,0,0.27,0)); head.add(mesh(sph(0.24,12,8),M.white,0,0.42,0)); }
   [-1,1].forEach(sd=>{ const p=new THREE.Group(); p.position.set(0.235*sd,0.5,0); body.add(p);
     p.add(mesh(capsule(0.062,0.18,8),top,0,-0.15,0,true)); p.add(mesh(sph(0.066,8,6),skin,0,-0.3,0)); arms.push(p); });

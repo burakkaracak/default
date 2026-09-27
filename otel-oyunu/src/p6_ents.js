@@ -78,13 +78,14 @@ function reflowQueue(){ queue.forEach((g,k)=>{ const p=qPos(k); g.qk=k; g.goTo(0
 function pickType(){
   const st=stars(), opts=Object.keys(GTYPES).filter(k=>GTYPES[k].stars<=st);
   let maxLv=0; for(const k in state.rooms) maxLv=Math.max(maxLv,ROOM_T[state.rooms[k].type].lvl);
-  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k);
+  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1);
   let tot=0; opts.forEach(k=>tot+=w(k)); let r=Math.random()*tot;
   for(const k of opts){ r-=w(k); if(r<=0) return k; } return 'tourist';
 }
 function spawnGuest(type,from,tour,fl){
   const g=new Guest(type||pickType()), side=from||(Math.random()<.5?L.spawnL:L.spawnR);
   if(tour){ g.tour=true; g.patMax=g.pat=g.T.pat*1.25; }
+  if(skillLv('g3')) g.patMax=g.pat=g.patMax*1.12;
   g.place(side.x,side.z+rnd(-0.2,0.2),fl||0); queue.push(g); g.qk=queue.length-1;
   const p=qPos(g.qk); if(!g.goTo(0,p.x,p.z,()=>{ g.tRot=Math.PI; })) g.place(p.x,p.z,0);
   g.tag=tagAdd({kind:'patience',ent:g,y:1.95});
@@ -112,7 +113,7 @@ function checkIn(g,id){
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
-  g.sat=clamp(g.sat+priceSat(),5,100);
+  g.sat=clamp(g.sat+priceSat()+3*skillLv('g1'),5,100);
   if(g.pref){ if(s.theme===g.pref){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.6,g.z,0,RTHEMES[g.pref].e); } else g.sat=clamp(g.sat-3,5,100); }
   if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
@@ -134,11 +135,11 @@ function guestLeave(g){
 function checkout(g){
   const id=g.room, s=state.rooms[id], R=RT(id);
   const mood=g.sat>=68?'happy':g.sat>=42?'neutral':'unhappy', mult=g.T.rep||1;
-  const tip=mood==='unhappy'?0:Math.round(roomRate(id)*0.45*(g.sat/70)*g.T.tip*incomeMult()*(1+0.15*state.up.charm));
+  const tip=mood==='unhappy'?0:Math.round(roomRate(id)*0.45*(g.sat/70)*g.T.tip*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
   if(tip>0){ s.tip+=tip; state.today.tips+=tip; }
   s.dirty=true; R.guest=null; R.req=null; g.room=null; g.inRoom=false;
   if(g.type==='insp') inspectorVerdict(g,mood);
-  if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
+  if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
   noteGuestDay(g,mood,false); noteLoyal(g);
@@ -188,7 +189,7 @@ function makeRequest(g){
 }
 function fulfillReq(id){
   const R=RT(id), s=state.rooms[id]; if(!R.req) return;
-  const tip=Math.round(REQ_TIP[R.req.item]*incomeMult()*(1+0.15*state.up.charm));
+  const tip=Math.round(REQ_TIP[R.req.item]*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
   if(R.guest){ R.guest.sat=clamp(R.guest.sat+10,0,100); fxEmoji(R.guest.x,R.guest.y+2.1,R.guest.z,R.guest.f,'😊'); }
   s.tip+=tip; state.today.req+=tip; R.req=null; applyRoomState(id); sfx('drop'); qEv('req'); markSave();
 }
@@ -230,11 +231,11 @@ function updateGuests(dt){
 const staffEnts=[];
 function staffIdleSpot(k){ const s=L.staffIdle[k%L.staffIdle.length]; return {x:s[0],z:s[1],f:0}; }
 function spawnStaff(kind,fromDoor){
-  const e=new Ent(LOOKS[kind]()); e.kind=kind; e.job=null; e.wait=0; e.idx=staffEnts.length; e.name=rand(STAFF_NAMES); e.energy=100; e.slot=staffEnts.filter(x=>x.kind!=='rec').length; e.idleDone=false;
+  const e=new Ent(LOOKS[kind]()); e.kind=kind; e.job=null; e.wait=0; e.idx=staffEnts.length; e.rec=crewRec(kind); e.name=e.rec.n; e.energy=100; e.slot=staffEnts.filter(x=>x.kind!=='rec').length; e.idleDone=false;
   const sp=fromDoor?{x:rnd(-0.5,0.5),z:8.5,f:0}:staffIdleSpot(e.slot); e.place(sp.x,sp.z,sp.f); staffEnts.push(e);
   e.speed=2.3*staffSpeedMul(kind); return e;
 }
-function staffSpeedMul(kind){ return STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead); }
+function staffSpeedMul(kind){ return STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
 function roomsWhere(fn){ return Object.keys(state.rooms).map(Number).filter(fn); }
 function nearestRoom(e,list){ let best=null,bd=1e9; list.forEach(id=>{ const ri=roomInfo(id), d=d2(e.x,e.z,ri.x,ri.z)+Math.abs(ri.f-e.f)*40; if(d<bd){ bd=d; best=id; } }); return best; }
 function staffGoIdle(e){

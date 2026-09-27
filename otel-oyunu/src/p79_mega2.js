@@ -75,9 +75,9 @@ function staffPost(e){
 
 // ---------- staff energy + employee of the day ----------
 const STAFF_NAMES=['Ayşe','Fatma','Ali','Veli','Hasan','Zehra','Emine','Murat','Ömer','Hülya','Serkan','Yasemin','Levent','Nazlı'];
-function staffEnergyMul(e){ return (e.energy??100)<30?0.7:(e.star?1.15:1); }
+function staffEnergyMul(e){ return ((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e)); }
 function staffWorked(e){
-  e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7));
+  careerWorked(e); e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7));
   if(e.energy<30&&!e.tiredShown){ e.tiredShown=true; fxEmoji(e.x,e.y+2.1,e.z,e.f,'😓'); }
 }
 function staffRest(e,dt){ if(state.breakroom&&(e.energy??100)<100){ e.energy=Math.min(100,(e.energy??100)+dt*3); if(e.energy>=40) e.tiredShown=false; } }

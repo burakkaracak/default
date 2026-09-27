@@ -116,7 +116,7 @@ function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',st
 let atDesk=false, elevHere=false, pickT=0, workRing=null;
 function roomDoorAt(f,x,z){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri.f===f&&Math.abs(x-ri.x)<1.0&&z>ri.z+1.3&&z<ri.z+2.5) return +k; } return null; }
 function roomAt(f,x,z){ for(const k in state.rooms){ const ri=roomInfo(+k); if(ri.f===f&&Math.abs(x-ri.x)<1.38&&Math.abs(z-ri.z)<1.3) return +k; } return null; }
-function playerCleanTime(){ return 2.4/(1+0.35*state.up.clean); }
+function playerCleanTime(){ return 2.4/(1+0.35*state.up.clean)/(1+0.15*skillLv('o1')); }
 function playerFixTime(){ return 3.2/(1+0.35*state.up.fix); }
 // one item per visit to a shelf; more only while open requests still need that item
 const pickArmed={paper:true,towel:true,food:true};
@@ -181,8 +181,8 @@ function updateDesk(dt){
 // =====================================================================
 function updateTime(dt){ state.t+=dt/DAY_SEC; if(state.t>=1){ state.t-=1; endDay(); } }
 function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
-function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale(); }
-function wagesToday(){ let w=0; for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
+function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*(1-0.12*skillLv('o4')); }
+function wagesToday(){ let w=crewPremium(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
   const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
   const rep=Object.assign({},state.today), day=state.day, repNow=state.rep;
@@ -286,7 +286,7 @@ function qEv(k,v=1){
 }
 function claimQuest(i){
   const Q=state.quests; if(!Q) return; const q=Q.list[i]; if(!q||!q.done||q.claimed) return;
-  q.claimed=true; onGameEvent('quest',1); addMoney(q.rew,player.x,player.y+1.2,player.z,player.f,true); state.today.quest+=q.rew; sfx('build');
+  q.claimed=true; onGameEvent('quest',1); passPts(20); addMoney(q.rew,player.x,player.y+1.2,player.z,player.f,true); state.today.quest+=q.rew; sfx('build');
   if(!Q.bonus&&Q.list.every(x=>x.claimed)){ Q.bonus=true; const b=r10(q.rew*1.5);
     setTimeout(()=>{ addMoney(b,player.x,player.y+1.2,player.z,player.f,true); state.today.quest+=b; changeRep(3);
       banner('🎁 Günün tüm görevleri tamam!',`+${fmt(b)} ₺ bonus · +3 ün`); sfx('star'); confettiAt(player.x,player.y+2,player.z,60); },500); }
@@ -298,7 +298,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand();
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'));
   if(isNight()) f*=0.3;
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
@@ -456,7 +456,7 @@ function chainEv(k,v){ const c=state.chain; if(!chainOn()||!c||c.k!==k) return; 
 function chainDone(){
   const c=state.chain; state.chain=null; state.chainN=(state.chainN||0)+1;
   addMoney(c.rew,player.x,player.y+1.2,player.z,player.f,true); gainXP(8); sfx('sparkle'); confettiAt(player.x,player.y+1.8,player.z,30);
-  chainFlash=1.6; chainFlashTxt=`Hedef tamam! +${fmt(c.rew)} ₺`; markSave();
+  passPts(5); chainFlash=1.6; chainFlashTxt=`Hedef tamam! +${fmt(c.rew)} ₺`; markSave();
 }
 function chainTarget(k){
   const room=fn=>{ const ids=roomsWhere(fn); if(!ids.length) return null; let best=null,bd=1e9;

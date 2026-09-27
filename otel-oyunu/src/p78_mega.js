@@ -22,7 +22,7 @@ function xpNeed(l){ return Math.round(150*Math.pow(1.3,l-1)); }
 let combo=0, comboT=0;
 function onGameEvent(k,v=1){
   if(!state.stats) state.stats={};
-  state.stats[k]=(state.stats[k]||0)+v;
+  state.stats[k]=(state.stats[k]||0)+v; weeklyEv(k,v);
   if(state.sandbox) return;
   let xp=k==='earn'?Math.min(12,v/40):(XP_EV[k]||0)*v;
   if(k==='clean'||k==='req'||k==='earn'||k==='fix'){
@@ -80,7 +80,7 @@ function checkAch(dt){
   achT-=dt; if(achT>0||state.sandbox||state.tut<TUT.length) return; achT=1;
   if(!state.ach) state.ach={};
   for(const a of ACH){ if(state.ach[a.id]) continue; if(achVal(a.st)>=a.goal){ state.ach[a.id]=true; const r=achReward(a);
-      state.money+=r; state.earned+=r; gainXP(40*(a.tier+1)); toast(`🏆 Başarım: ${a.e} ${a.name} · +${fmt(r)} ₺`); sfx('sparkle'); if(player) confettiAt(player.x,player.y+2,player.z,35); markSave(); break; } }
+      state.money+=r; state.earned+=r; gainXP(40*(a.tier+1)); passPts(10); toast(`🏆 Başarım: ${a.e} ${a.name} · +${fmt(r)} ₺`); sfx('sparkle'); if(player) confettiAt(player.x,player.y+2,player.z,35); markSave(); break; } }
 }
 function renderAchSheet(){
   const done=ACH.filter(a=>state.ach&&state.ach[a.id]).length;
@@ -260,6 +260,6 @@ function updateMega(dt,t){
 function bootMega(){
   offlineCheck(); setupGrassSway(); buildLeaves(); buildSeasonProps(); applyThemeExtras();
   $('sbBadge').onclick=()=>openModal(`<h3>🧪 Deneme modu</h3><p class="sub">Şu an admin panelinin deneme kaydındasın.</p><button class="btn gold wide" id="sbBack">Ana oyuna dön</button><button class="btn ghost wide" id="sbStay">Burada kal</button>`,m=>{ m.querySelector('#sbBack').onclick=exitSandbox; m.querySelector('#sbStay').onclick=closeModal; });
-  $('lvlBox').onclick=()=>{ sfx('click'); openSheet('ach'); };
+  $('lvlBox').onclick=()=>{ sfx('click'); openSheet('skills'); };
   try{ if(state.sandbox&&localStorage.getItem('otel_open_admin')==='1'){ localStorage.removeItem('otel_open_admin'); setTimeout(()=>openSheet('admin'),900); } }catch(e){}
 }

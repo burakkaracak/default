@@ -70,6 +70,7 @@ const UPG={
   fame:  {g:2,name:'Şöhret',     e:'🌟',costs:[300,900,2200],desc:'Mutlu misafirler %15 daha çok ün kazandırır'},
   lead:  {g:3,name:'Liderlik',   e:'📣',costs:[500,1400,3200,6500],desc:'Tüm personel %10 daha hızlı çalışır'},
   calm:  {g:3,name:'Sakinlik',   e:'🧘',costs:[180,500,1200,2600],desc:'Sıradaki misafirler %12 daha sabırlı bekler'},
+  auto:  {g:2,name:'Kasa asistanı',e:'💼',vals:[0,25,10],costs:[2500,7000],desc:'Paraları ve bahşişleri kendiliğinden toplar (25 sn, sonra 10 sn\'de bir)'},
 };
 const UPG_GROUPS=['🏃 Hareket','🛠️ İş becerileri','💰 Kazanç','👥 Yönetim'];
 const ITEMS={paper:{e:'🧻',name:'Tuvalet kâğıdı'},towel:{e:'🧺',name:'Havlu'},food:{e:'🍽️',name:'Oda servisi'},linen:{e:'🧦',name:'Kirli çarşaf'}};
@@ -169,11 +170,11 @@ function freshState(cityIx,prestige){
   return {v:2, city:cityIx||0, prestige:prestige||0, money:Math.round(60*CITIES[(cityIx||0)%CITIES.length].mult), rep:30, day:1, t:0.02, weather:'sun',
     built:{}, paid:{}, rooms:{}, piles:{desk:0,rest:0,pool:0,gym:0,cafe:0,roof:0,spa:0,laundry:0},
     staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1},spaT:{n:0,lvl:1},laundry:{n:0,lvl:1}},
-    up:{speed:0,cap:0,clean:0,magnet:0,fix:0,desk:0,charm:0,haggle:0,fame:0,lead:0,calm:0},
+    up:{speed:0,cap:0,clean:0,magnet:0,fix:0,desk:0,charm:0,haggle:0,fame:0,lead:0,calm:0,auto:0},
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{

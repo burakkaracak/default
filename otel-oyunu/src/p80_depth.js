@@ -7,7 +7,7 @@
 // ---------- price policy ----------
 const PRICES=[0.8,0.9,1,1.2,1.5];
 function priceMult(){ return state.price||1; }
-function priceDemand(){ const p=priceMult(); return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3); }
+function priceDemand(){ const p=priceMult(); return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3*(1-0.5*skillLv('m4'))); }
 function priceSat(){ const p=priceMult(); return p<1?(1-p)*30:-(p-1)*25; }
 function priceTypeW(k){ const p=priceMult();
   if(p>1.1) return ({vip:1.7,business:1.6,couple:1.5,million:1.5,student:0.5,tourist:0.6})[k]||1;
@@ -108,7 +108,7 @@ function depthDayEnd(){
   if(state.loan){ const i=Math.round(state.loan.left*0.03); state.money-=i; t.interest=i; }
   if(state.money<0){ state.negDays=(state.negDays||0)+1; if(state.negDays>=3){ changeRep(-5); setTimeout(()=>toast('🏦 Borçlar birikti, itibarın zedelendi · −5 ün','bad'),2500); state.negDays=0; } } else state.negDays=0;
   t.chainInc=chainIncome(); if(t.chainInc) state.money+=t.chainInc;
-  rivalDayEnd();
+  rivalDayEnd(); careerDayEnd();
 }
 
 // ---------- hotel tab UI ----------
@@ -147,6 +147,3 @@ function bootDepth(){
   tagAdd({kind:'spot',get:()=>built('depo')&&state.stock?{x:L.shelf.paper.x+0.5,z:L.shelf.paper.z,f:0}:null,iconF:()=>`🧻${state.stock.paper}`,cls:'small',y:2.0});
   tagAdd({kind:'spot',get:()=>built('depo')&&state.stock?{x:L.shelf.towel.x+0.5,z:L.shelf.towel.z,f:0}:null,iconF:()=>`🧺${state.stock.towel}`,cls:'small',y:2.0});
 }
-// placeholders filled by later depth phases
-function skillLv(k){ return (state.skills&&state.skills[k])||0; }
-function chainIncome(){ return 0; }
