@@ -99,11 +99,11 @@ function buildGround(){
   [[-17.5,-1.5],[1.5,17.5]].forEach(([a,b])=>outdoor.add(mesh(rbox(b-a,0.6,0.42,.14),hedge,(a+b)/2,0.3,11.35,true)));
   flowerBed(outdoor,-6.6,-1.7,7.7,8.2); flowerBed(outdoor,1.7,6.6,7.7,8.2);
   buildFountain(-4.3,10.25); scatterFlowers();
-  [[4.3,10.2],[-8.7,10.4],[8.7,10.4],[-15.6,10.2],[15.6,10.2]].forEach(([x,z],k)=>{ if(city().name==='Antalya') palm(outdoor,x,z,1.05); else tree(outdoor,x,z,0.95+(k%3)*0.08); });
+  [[4.3,10.2],[-8.7,10.4],[8.7,10.4],[-15.6,10.2],[15.6,10.2]].forEach(([x,z],k)=>{ if(city().palm) palm(outdoor,x,z,1.05); else tree(outdoor,x,z,0.95+(k%3)*0.08); });
   [[-2.1,10.9],[2.1,10.9],[-10.5,10.9],[10.5,10.9]].forEach(([x,z])=>lampPost(outdoor,x,z));
   bench(outdoor,-6.4,10.9,Math.PI); bench(outdoor,6.4,10.9,Math.PI);
   // side lawns trees (behind amenities)
-  [[-17.2,-6],[-17.3,2],[17.3,-7],[17.3,1.5]].forEach(([x,z])=>{ if(city().name==='Antalya') palm(outdoor,x,z); else tree(outdoor,x,z,1.1); });
+  [[-17.2,-6],[-17.3,2],[17.3,-7],[17.3,1.5]].forEach(([x,z])=>{ if(city().palm) palm(outdoor,x,z); else tree(outdoor,x,z,1.1); });
   // cars
   const carCols=[0xc0392b,0xf1c40f,0x2c3e50,0xecf0f1,0x2e86c1,0x27ae60];
   for(let i=0;i<6;i++) makeCar(carCols[i],i%2?-1:1,i%2?15.95:14.6);
@@ -151,8 +151,9 @@ function scatterFlowers(){
   outdoor.add(bake(S));
 }
 function buildBackdrop(){
-  const name=city().name, B=new THREE.Group(); outdoor.add(B);
-  if(name==='İstanbul'||name==='Antalya'){
+  const bd=city().bd||'bos', name=bd==='bos'?'İstanbul':'Antalya', B=new THREE.Group(); outdoor.add(B);
+  if(bd==='paris'||bd==='dubai'){ buildSkyline(B,bd); for(let i=0;i<5;i++) makeBird(); return; }
+  if(bd==='bos'||bd==='beach'||bd==='aegean'){
     const sea=mesh(plane(260,80),new THREE.MeshStandardMaterial({map:tex('sea',26,8),roughness:.2,metalness:.1}),0,-0.12,-54); sea.rotation.x=-Math.PI/2; B.add(sea); seaTex=sea.material.map;
     if(name==='İstanbul'){
       B.add(mesh(box(260,0.7,1.2),mat(0x9a917f),0,0.2,-15.4,true));      // stone quay
@@ -176,6 +177,9 @@ function buildBackdrop(){
       const hills=mat(0x7d8f6a,{flatShading:true});
       for(let i=0;i<9;i++) B.add(mesh(cone(rnd(10,18),rnd(7,14),6),hills,-80+i*20,3,-100));
       for(let i=0;i<4;i++) makeBoat(B,i);
+      if(bd==='aegean'){ const wm=mat(0xffffff,{roughness:.9}), dm=mat(0x2a5fa8);   // beyaz kübik Bodrum evleri + yel değirmenleri
+        for(let i=0;i<34;i++){ const x=rnd(-70,70), z=rnd(-96,-84), h=rnd(1.4,2.6), w=rnd(1.6,2.6); B.add(mesh(box(w,h,w),wm,x,h/2+2+Math.max(0,8-Math.abs(x)/6),z)); if(i%3===0) B.add(mesh(box(0.5,0.8,0.1),dm,x,1.9+Math.max(0,8-Math.abs(x)/6),z+w/2+0.05)); }
+        [-24,-18,30].forEach(x=>{ const g=new THREE.Group(); g.position.set(x,6,-80); g.add(mesh(cyl(1,1.3,4,10),wm,0,2,0)); g.add(mesh(cone(1.2,1.2,10),mat(0x8a5a3c),0,4.6,0)); for(let k=0;k<4;k++){ const b=mesh(box(0.25,3.2,0.05),mat(0xe8e0d0),0,4,1.35); b.rotation.z=k*Math.PI/2+0.4; g.add(b); } B.add(g); }); }
     }
   } else {
     const rock=mat(0xe2c49a,{flatShading:true,roughness:1}), cap=mat(0x8a6a4a,{flatShading:true});
@@ -190,6 +194,24 @@ function buildBackdrop(){
   for(let i=0;i<5;i++) makeBird();
 }
 let seaTex=null;
+function buildSkyline(B,bd){
+  if(bd==='paris'){
+    const st=mat(0xd9d0bf), rf=mat(0x5d6873,{metalness:.2}), iron=mat(0x6b5a45,{metalness:.4,roughness:.5});
+    for(let i=0;i<46;i++){ const x=rnd(-80,80), z=rnd(-70,-28), h=rnd(4,7), w=rnd(3,6), d=rnd(3,5); B.add(mesh(box(w,h,d),st,x,h/2,z,true)); const r=mesh(cone(Math.max(w,d)*0.62,1.6,4),rf,x,h+0.8,z); r.rotation.y=Math.PI/4; r.scale.set(w/Math.max(w,d),1,d/Math.max(w,d)); B.add(r); }
+    const E=new THREE.Group(); E.position.set(-14,0,-58); B.add(E);   // Eyfel
+    [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([a,b])=>{ const l=mesh(box(0.7,9,0.7),iron,a*2.6,4.2,b*2.6); l.rotation.z=-a*0.28; l.rotation.x=b*0.28; E.add(l); });
+    E.add(mesh(box(5.4,0.6,5.4),iron,0,8.4,0)); E.add(mesh(cyl(0.9,1.8,10,4),iron,0,13.6,0)); E.add(mesh(box(2.8,0.4,2.8),iron,0,18.6,0)); E.add(mesh(cyl(0.25,0.9,9,4),iron,0,23.2,0)); E.add(mesh(cyl(0.05,0.1,2.4,6),iron,0,28.8,0));
+  } else {
+    const glass=[0x8fb8cf,0x6f9bb5,0xa9c6d6,0x5f8aa6].map(c=>mat(c,{metalness:.6,roughness:.15}));
+    B.add(mesh(box(260,0.05,80),tmat('sand',60,20),0,-0.02,-60));
+    for(let i=0;i<30;i++){ const x=rnd(-90,90), z=rnd(-95,-40), h=rnd(10,36), w=rnd(3,6); B.add(mesh(box(w,h,w),rand(glass),x,h/2,z,true)); }
+    const K=new THREE.Group(); K.position.set(12,0,-70); B.add(K);   // Burj
+    [[5,26],[4,22],[3,18],[2.1,14],[1.3,10]].reduce((y,[r,h])=>{ K.add(mesh(cyl(r*0.8,r,h,6),glass[2],0,y+h/2,0,true)); return y+h; },0);
+    K.add(mesh(cyl(0.1,0.6,12,6),glass[2],0,96,0));
+    for(let i=0;i<14;i++) palm(B,rnd(-40,40),rnd(-24,-16),rnd(.9,1.2));
+    for(let i=0;i<9;i++) B.add(mesh(new THREE.SphereGeometry(rnd(6,12),10,6,0,Math.PI*2,0,Math.PI/2),mat(0xe0c48e,{flatShading:true}),rnd(-110,110),-1,rnd(-120,-100)));
+  }
+}
 function makeBoat(parent,i){
   const g=new THREE.Group(); const z=-20-i*6-rnd(0,3); g.position.set(rnd(-40,40),0,z);
   g.add(mesh(rbox(3.2,0.6,1.1,.3),M.white,0,0.15,0,true)); g.add(mesh(rbox(1.8,0.55,0.9,.1),mat(0xe8e2d5),0.1,0.7,0,true));
@@ -468,7 +490,7 @@ let poolWater=null;
 function buildPool(){
   const G=new THREE.Group(); outdoor.add(G); const S=new THREE.Group();
   const x0=8.0,x1=16.2,z0=-3.5,z1=7.2;
-  const deck=tmat(city().name==='Kapadokya'?'stone':'paving',4,5);
+  const deck=tmat(city().stone?'stone':'paving',4,5);
   S.add(mesh(box(x1-x0,0.12,1.5),deck,(x0+x1)/2,-0.06,z1-0.75));
   S.add(mesh(box(x1-x0,0.12,z1-1.5-3.6),deck,(x0+x1)/2,-0.06,(3.6+z1-1.5)/2));
   S.add(mesh(box(x1-x0,0.12,-0.2-z0),deck,(x0+x1)/2,-0.06,(z0-0.2)/2));

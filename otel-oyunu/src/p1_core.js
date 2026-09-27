@@ -74,9 +74,20 @@ const AMEN_FEE={rest:14,pool:7,gym:9,roof:22};
 const COFFEE_FEE=6;
 const STAR_MULT=[0.9,1,1.1,1.2,1.3];
 const CITIES=[
-  {name:'İstanbul', mult:1,  facade:0xf2e6d2,trim:0x9b3f30,accent:0x2d5d8a,ground:'grass',   snow:true},
-  {name:'Antalya',  mult:1.9,facade:0xfbf3e4,trim:0x2a8a96,accent:0xe08a3c,ground:'grass',   snow:false},
-  {name:'Kapadokya',mult:3.4,facade:0xe9cda8,trim:0x8f5130,accent:0x6b4a8e,ground:'grassDry',snow:true}];
+  {name:'İstanbul', e:'🕌',mult:1,  facade:0xf2e6d2,trim:0x9b3f30,accent:0x2d5d8a,ground:'grass',   snow:true, bd:'bos'},
+  {name:'Antalya',  e:'🏖️',mult:1.9,facade:0xfbf3e4,trim:0x2a8a96,accent:0xe08a3c,ground:'grass',   snow:false,bd:'beach',palm:true},
+  {name:'Kapadokya',e:'🎈',mult:3.4,facade:0xe9cda8,trim:0x8f5130,accent:0x6b4a8e,ground:'grassDry',snow:true, bd:'chim',stone:true},
+  {name:'Bodrum',   e:'⛵',mult:5.6,facade:0xffffff,trim:0x2a5fa8,accent:0x3aa0c8,ground:'grass',   snow:false,bd:'aegean',palm:true},
+  {name:'Paris',    e:'🗼',mult:8.8,facade:0xece4d6,trim:0x3d4a5c,accent:0xb08d57,ground:'grass',   snow:true, bd:'paris'},
+  {name:'Dubai',    e:'🏙️',mult:14, facade:0xf4ead8,trim:0xb8913a,accent:0x1f6f8b,ground:'sand',    snow:false,bd:'dubai',palm:true,desert:true}];
+// kalıcı miras: taşınırken kazanılan 🗝️ anahtarlarla alınır, tüm otellerde geçerli
+const LEGACY={
+  cash:  {e:'💰',name:'Başlangıç sermayesi',max:5,desc:'Her yeni otelde (ve şimdi) +300 ₺ × şehir çarpanı'},
+  speed: {e:'👟',name:'Hızlı adımlar',     max:3,desc:'Hız geliştirmesi en az bu seviyeden başlar'},
+  magnet:{e:'🧲',name:'Mıknatıslı eller',  max:2,desc:'Mıknatıs geliştirmesi en az bu seviyeden başlar'},
+  rep:   {e:'⭐',name:'Tanınmış marka',    max:3,desc:'Her yeni otele (ve şimdi) +8 ün ile başla'},
+  income:{e:'📈',name:'Zincir geliri',     max:5,desc:'Tüm gelirler kalıcı +%5'}};
+const LEGACY_COST=[2,3,5,8,12];
 const SEASONS=[
   {name:'İlkbahar',e:'🌸',arr:0,   trees:[0xf2a7c8,0x74c05e,0xe98bb0],grass:0xf2fff0,wx:{sun:.5,cloud:.3,rain:.2}},
   {name:'Yaz',     e:'☀️',arr:.12, trees:[0x3f7a3e,0x4f8d46,0x346b37],grass:0xffffff,wx:{sun:.75,cloud:.2,rain:.05}},
@@ -149,14 +160,14 @@ const HOTEL_NAMES=['Grand Boğaziçi','Palas Lale','Mavi Martı','Altın Kum','Y
 const CAT_NAMES=['Pamuk','Tarçın','Boncuk','Minnoş','Duman','Karamel','Fıstık','Zeytin','Lokum','Paşa','Sütlaç','Maviş'];
 function blankToday(){ return {rooms:0,tips:0,amen:0,req:0,wages:0,happy:0,unhappy:0,left:0,guests:0,rep0:null,cafe:0,quest:0}; }
 function freshState(cityIx,prestige){
-  return {v:2, city:cityIx||0, prestige:prestige||0, money:60, rep:30, day:1, t:0.02, weather:'sun',
+  return {v:2, city:cityIx||0, prestige:prestige||0, money:Math.round(60*CITIES[(cityIx||0)%CITIES.length].mult), rep:30, day:1, t:0.02, weather:'sun',
     built:{}, paid:{}, rooms:{}, piles:{desk:0,rest:0,pool:0,gym:0,cafe:0,roof:0},
     staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1}},
     up:{speed:0,cap:0,clean:0,magnet:0,fix:0,desk:0,charm:0,haggle:0,fame:0,lead:0,calm:0},
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -187,7 +198,7 @@ const STAR_REQ={
 function starCap(){ let c=2; for(let s=3;s<=5;s++){ if(STAR_REQ[s].every(r=>r[1]())) c=s; else break; } return c; }
 function stars(){ return Math.min(rawStars(),starCap()); }
 function starMissing(s){ return (STAR_REQ[s]||[]).filter(r=>!r[1]()).map(r=>r[0]); }
-function incomeMult(){ return city().mult*(1+0.15*state.prestige)*STAR_MULT[stars()-1]*(state.lux&&state.lux.statue?1.05:1); }
+function incomeMult(){ return city().mult*(1+0.15*state.prestige)*STAR_MULT[stars()-1]*(state.lux&&state.lux.statue?1.05:1)*(1+0.05*((state.legacy||{}).income||0)); }
 function seasonIx(){ return Math.floor((state.day-1)/SEASON_DAYS)%4; }
 function season(){ return SEASONS[seasonIx()]; }
 function isWinter(){ return seasonIx()===3; }

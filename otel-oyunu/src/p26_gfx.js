@@ -74,7 +74,7 @@ function buildGrass(){
 function updateGrassSeason(){
   if(!grassMesh) return; const si=seasonIx();
   grassMesh.material.color.setHex([0xffffff,0xf2ffe0,0xffd9a0,0xc9d6cc][si]);
-  grassMesh.visible=!(isWinter()&&city().snow);
+  grassMesh.visible=!(isWinter()&&city().snow)&&!city().desert;
 }
 
 // ---------- post-processing (high quality only) ----------

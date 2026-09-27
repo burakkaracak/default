@@ -186,8 +186,7 @@ function renderSheet(){
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      <div class="row"><div class="ic">🏙️</div><div class="tx">${city().name}${state.prestige?` · ${state.prestige}. otelin`:''}<small>${state.done?`Otel tamamlandı! ${next.name}'ya taşın, orada her şey daha kârlı (kalıcı +%15 gelir)`:`Tüm alanları açınca ${next.name}'da yeni bir otel açabilirsin`}</small></div>
-        <button class="btn" data-move ${state.done?'':'disabled'}>Taşın</button></div>`+luxHtml();
+      ${progressHtml(next)}`+legacyHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -198,17 +197,67 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
+  const mp=sheet.querySelector('[data-map]'); if(mp) mp.onclick=()=>{ sfx('click'); openCityMap(); };
+  sheet.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>buyLegacy(b.dataset.leg));
 }
 function spend(c){ if(c==null||state.money<c) return false; state.money-=c; markSave(); return true; }
 function hireStaff(k){ const c=staffHireCost(k); if(!built('staff')||!spend(c)) return; state.staff[k].n++; spawnStaff(k,true); sfx('build'); toast(`${STAFF[k].e} ${STAFF[k].name} işe başladı!`); save(); renderSheet(); }
 function staffLvl(k){ const c=staffLvlCost(k); if(!spend(c)) return; state.staff[k].lvl++; qEv('upg'); sfx('star'); save(); renderSheet(); }
 function buyUpg(k){ const c=upgCost(k); if(!spend(c)) return; state.up[k]++; qEv('upg'); sfx('star'); updateCarryUI(); save(); renderSheet(); }
 function buyAds(){ const c=adsCost(); if(!spend(c)) return; state.adsUntil=state.day+state.t+0.5; spawnT=0.5; sfx('build'); toast('📣 Reklam yayında! Misafirler yolda'); save(); renderSheet(); }
+// ---------- ilerleme: şehirler, anahtarlar, miras ----------
+function hotelProgress(){ const n=PADS.length||1, b=PADS.filter(d=>built(d.id)).length; return {b,n,p:b/n}; }
+function tourOf(ix){ return Math.floor(ix/CITIES.length)+1; }
+function progressHtml(next){
+  const P=hotelProgress(), pc=Math.round(P.p*100);
+  return `<div class="row" style="margin-top:10px"><div class="ic">${city().e||'🏙️'}</div><div class="tx">${city().name}${state.prestige?` · ${state.prestige+1}. otelin`:''}
+    <small>Otel ilerlemesi: ${P.b}/${P.n} alan · %${pc}</small><div class="pbar"><i style="width:${pc}%"></i></div>
+    <small>${state.done?`Tamamlandı! ${next.name}'ya taşın: 🗝️ ${moveKeys().total} anahtar kazanırsın`:`Bitirince ${next.e||''} ${next.name} açılır (gelir x${next.mult})`}</small></div>
+    <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-map>🗺️ Harita</button><button class="btn gold" data-move ${state.done?'':'disabled'}>Taşın</button></div></div>`;
+}
+function moveKeys(){
+  const d=state.day, speed=d<=15?3:d<=22?2:d<=30?1:0, guests=Math.min(3,Math.floor((state.served||0)/60)), st=stars()>=5?1:0;
+  return {base:3,speed,guests,st,total:3+speed+guests+st};
+}
+function legacyCost(k){ const lv=(state.legacy||{})[k]||0; return lv>=LEGACY[k].max?null:LEGACY_COST[lv]; }
+function applyLegacyStart(s){
+  const L0=s.legacy||{};
+  s.money+=(L0.cash||0)*Math.round(300*CITIES[s.city%CITIES.length].mult);
+  s.up.speed=Math.max(s.up.speed,L0.speed||0); s.up.magnet=Math.max(s.up.magnet,L0.magnet||0); s.rep=Math.min(100,s.rep+8*(L0.rep||0));
+}
+function buyLegacy(k){
+  const c=legacyCost(k); if(c==null||(state.keys||0)<c){ sfx('fail'); return; }
+  state.keys-=c; state.legacy=state.legacy||{}; const lv=state.legacy[k]=(state.legacy[k]||0)+1;
+  if(k==='cash') addMoney(Math.round(300*city().mult),player.x,player.y+1.2,player.z,player.f,true);
+  if(k==='speed') state.up.speed=Math.max(state.up.speed,lv); if(k==='magnet') state.up.magnet=Math.max(state.up.magnet,lv);
+  if(k==='rep') changeRep(8);
+  sfx('star'); confettiAt(player.x,player.y+2,player.z,40); toast(`${LEGACY[k].e} ${LEGACY[k].name} ${lv}. seviye!`); updateCarryUI(); save(); sheet._h=null; renderSheet();
+}
+function legacyHtml(){
+  const K=state.keys||0; let h=`<h4 style="margin:12px 0 4px">🗝️ Miras <small style="color:var(--gold2)">· ${K} anahtar</small></h4><p class="sub" style="margin:0 0 4px">Otelini bitirip taşındıkça anahtar kazanırsın. Miras kalıcıdır, bütün otellerinde geçerli.</p>`;
+  for(const k in LEGACY){ const U=LEGACY[k], lv=(state.legacy||{})[k]||0, c=legacyCost(k);
+    h+=`<div class="row"><div class="ic">${U.e}</div><div class="tx">${U.name}<small>${U.desc}</small>${pips(lv,U.max)}</div>${c!=null?`<button class="btn gold" data-leg="${k}" ${K<c?'disabled':''}>🗝️ ${c}</button>`:'<button class="btn" disabled>Maks</button>'}</div>`; }
+  return h;
+}
+function openCityMap(){
+  const cur=state.city, tour=tourOf(cur); let rows='';
+  for(let i=0;i<CITIES.length;i++){ const C=CITIES[i], ix=(tour-1)*CITIES.length+i, hs=(state.hist||[]).filter(x=>x.city%CITIES.length===i);
+    const best=hs.length?hs.reduce((a,b)=>a.days<=b.days?a:b):null, here=cur%CITIES.length===i, done=ix<cur;
+    const st=here?`📍 Buradasın · %${Math.round(hotelProgress().p*100)}`:done||best?`✅ ${best?best.days+' günde · '+'★'.repeat(best.stars):'tamamlandı'}`:'🔒 Kilitli';
+    rows+=`<div class="row${here?' on':''}" style="${here?'border:2px solid var(--gold2)':''}${!here&&!done&&!best?';opacity:.6':''}"><div class="ic">${C.e}</div><div class="tx">${C.name}<small>Gelir x${C.mult}${best&&hs.length>1?` · ${hs.length} kez`:''}</small></div><div style="font-weight:800;font-size:13px;text-align:right">${st}</div></div>`; }
+  openModal(`<h3>🗺️ Otel zinciri${tour>1?` · ${tour}. tur`:''} <button class="xbtn" id="cmX" aria-label="Kapat">✖</button></h3><p class="sub">${(state.hist||[]).length} otel tamamlandı · 🗝️ ${state.keys||0} anahtar · kalıcı gelir +%${Math.round(state.prestige*15+5*((state.legacy||{}).income||0))}</p>${rows}${cur%CITIES.length===CITIES.length-1?'<p class="sub">Son şehirden sonra zincir İstanbul\'dan yeni bir turla, daha yüksek prestijle devam eder.</p>':''}`,m=>{ m.querySelector('#cmX').onclick=closeModal; });
+}
 function confirmMove(){
-  const next=CITIES[(state.city+1)%CITIES.length];
-  openModal(`<h3>🚚 ${next.name}'ya taşın</h3><p class="sub">Yeni şehirde sıfırdan bir otel kuracaksın. Fiyatlar ve gelirler daha yüksek, ayrıca her tamamlanan otel kalıcı +%15 gelir verir.</p><button class="btn wide" id="mvYes">Taşın!</button><button class="btn ghost wide" id="mvNo">Vazgeç</button>`,m=>{
+  const next=CITIES[(state.city+1)%CITIES.length], K=moveKeys();
+  const line=(t,v)=>v?`<div class="row" style="padding:4px 8px"><div class="tx">${t}</div><b>+${v} 🗝️</b></div>`:'';
+  openModal(`<h3>🚚 ${next.e||''} ${next.name}'ya taşın</h3><p class="sub">Yeni şehirde sıfırdan bir otel kuracaksın: gelirler x${next.mult}, kalıcı +%15 gelir ve miras bonusların seninle gelir.</p>
+    ${line('Otel tamamlandı',K.base)}${line(`Hızlı bitirdin (${state.day}. gün)`,K.speed)}${line(`${fmt(state.served)} misafir ağırladın`,K.guests)}${line('5 yıldız',K.st)}
+    <div class="row" style="padding:4px 8px;border:2px solid var(--gold2)"><div class="tx"><b>Toplam</b></div><b>🗝️ ${K.total}</b></div>
+    <button class="btn wide" id="mvYes">Taşın!</button><button class="btn ghost wide" id="mvNo">Vazgeç</button>`,m=>{
     m.querySelector('#mvNo').onclick=closeModal;
-    m.querySelector('#mvYes').onclick=()=>{ const s=freshState((state.city+1)%CITIES.length,state.prestige+1); s.sound=state.sound; s.music=state.music; s.custom=Object.assign({},state.custom); s.vol=state.vol; s.gfx=state.gfx; s.lvl=state.lvl; s.xp=state.xp; s.ach=state.ach; s.stats=state.stats; s.tut=TUT.length; s.tips=state.tips; state=s; save(); location.reload(); };
+    m.querySelector('#mvYes').onclick=()=>{ const ni=state.city+1, s=freshState(ni,state.prestige+1); s.sound=state.sound; s.music=state.music; s.custom=Object.assign({},state.custom); s.vol=state.vol; s.gfx=state.gfx; s.lvl=state.lvl; s.xp=state.xp; s.ach=state.ach; s.stats=state.stats; s.tut=TUT.length; s.tips=state.tips;
+      s.keys=(state.keys||0)+K.total; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
+      state=s; save(); location.reload(); };
   });
 }
 function renderRoomSheet(){
