@@ -260,6 +260,7 @@ function sfx(name,p){
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
   switch(name){
     case 'ding':  tone(1568,.9,'sine',.12); tone(2093,.7,'sine',.05,.01); break;
+    case 'bell':  tone(2093,.7,'sine',.035); tone(2637,.55,'sine',.018,.09); break;   // hafif resepsiyon zili
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
       tone(1319*m+Math.random()*40,.07,'square',.028); tone(1976*m,.22,'square',.028,.06); break; }

@@ -17,4 +17,4 @@ p0_head.html (CSS+HUD) → p1_core (veri, GTYPES, UPG, yıldız, ses, SAVE_KEY) 
 - Artifact: https://claude.ai/artifact/95QP8PCqhQZs5NMpWdDsF8 — hep AYNI url ile güncelle (Artifact publish, url=...), capabilities `{sample:{}, downloads:true, db:{}, user:{}}` korunsun (belirtilmezse korunur; db+user bulut kayıt için).
 - Kayıt anahtarı `otel_ustasi_v2` (+`_bak`, sandbox `otel_ustasi_v2_sandbox`) — eski kayıtlarla uyumluluğu bozma; yeni alanlara varsayılan ver.
 - Post-process scriptleri jsdelivr `npm/three@0.128.0/examples/js/` altından lazy yüklenir.
-- Mevcut sürüm: v29 (artifact). Şehirler 6 (İstanbul→Dubai, sonra tur); yapay zekâ özellikleri p76'da (sohbet, yorum, olay, danışman, müfettiş raporu), yapay zekâ yoksa şablona düşer.
+- Mevcut sürüm: v37 (artifact). Şehirler 6 (İstanbul→Dubai, sonra tur); yapay zekâ özellikleri p76'da (sohbet, yorum, olay, danışman, müfettiş raporu), yapay zekâ yoksa şablona düşer.

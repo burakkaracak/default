@@ -98,6 +98,17 @@ function partyHtml(){
   return `<div class="row"><div class="ic">🎉</div><div class="tx">Otel partisi<small>Bugünü festivale çevir: misafir x1.6, gelir +%15, +2 ün · her parti daha pahalı${partyOn()?' · <b>şu an parti var!</b>':''}</small></div><button class="btn gold" data-party ${partyOn()||state.money<partyCost()?'disabled':''}>${fmt(partyCost())} ₺</button></div>`;
 }
 
+// ---------- resepsiyon zili: bekleyen misafir varken hafifçe haber ver ----------
+let bellCd=0;
+function updateDeskBell(dt){
+  bellCd-=dt; const g=queue[0];
+  if(!g||g.state!=='queue'||g.path||deskState.server||state.tut<TUT.length) return;
+  const waited=g.patMax-g.pat, low=g.pat/g.patMax<0.4;
+  if(bellCd>0) return;
+  if(!g.belled&&waited>=6){ g.belled=true; bellCd=8; sfx('bell'); fxEmoji(L.desk.x,1.9,L.desk.z,0,'🛎️'); }
+  else if(g.belled&&!g.belled2&&low){ g.belled2=true; bellCd=8; sfx('bell'); fxEmoji(L.desk.x,1.9,L.desk.z,0,'🛎️'); }
+}
+
 // ---------- hooks ----------
-function updatePolish3(dt){ updateTips3(dt); if((gtime*4|0)!==(updatePolish3.s|0)){ updatePolish3.s=gtime*4; updateDots(); } }
+function updatePolish3(dt){ updateTips3(dt); updateDeskBell(dt*gameSpeed); if((gtime*4|0)!==(updatePolish3.s|0)){ updatePolish3.s=gtime*4; updateDots(); } }
 function bootPolish3(){ applyCityMusic(); whatsNew(); }

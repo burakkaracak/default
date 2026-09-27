@@ -518,6 +518,7 @@ function sfx(name,p){
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
   switch(name){
     case 'ding':  tone(1568,.9,'sine',.12); tone(2093,.7,'sine',.05,.01); break;
+    case 'bell':  tone(2093,.7,'sine',.035); tone(2637,.55,'sine',.018,.09); break;   // hafif resepsiyon zili
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
       tone(1319*m+Math.random()*40,.07,'square',.028); tone(1976*m,.22,'square',.028,.06); break; }
@@ -4814,8 +4815,19 @@ function partyHtml(){
   return `<div class="row"><div class="ic">🎉</div><div class="tx">Otel partisi<small>Bugünü festivale çevir: misafir x1.6, gelir +%15, +2 ün · her parti daha pahalı${partyOn()?' · <b>şu an parti var!</b>':''}</small></div><button class="btn gold" data-party ${partyOn()||state.money<partyCost()?'disabled':''}>${fmt(partyCost())} ₺</button></div>`;
 }
 
+// ---------- resepsiyon zili: bekleyen misafir varken hafifçe haber ver ----------
+let bellCd=0;
+function updateDeskBell(dt){
+  bellCd-=dt; const g=queue[0];
+  if(!g||g.state!=='queue'||g.path||deskState.server||state.tut<TUT.length) return;
+  const waited=g.patMax-g.pat, low=g.pat/g.patMax<0.4;
+  if(bellCd>0) return;
+  if(!g.belled&&waited>=6){ g.belled=true; bellCd=8; sfx('bell'); fxEmoji(L.desk.x,1.9,L.desk.z,0,'🛎️'); }
+  else if(g.belled&&!g.belled2&&low){ g.belled2=true; bellCd=8; sfx('bell'); fxEmoji(L.desk.x,1.9,L.desk.z,0,'🛎️'); }
+}
+
 // ---------- hooks ----------
-function updatePolish3(dt){ updateTips3(dt); if((gtime*4|0)!==(updatePolish3.s|0)){ updatePolish3.s=gtime*4; updateDots(); } }
+function updatePolish3(dt){ updateTips3(dt); updateDeskBell(dt*gameSpeed); if((gtime*4|0)!==(updatePolish3.s|0)){ updatePolish3.s=gtime*4; updateDots(); } }
 function bootPolish3(){ applyCityMusic(); whatsNew(); }
 
 // =====================================================================
