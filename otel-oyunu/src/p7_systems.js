@@ -367,7 +367,7 @@ function updateSky(tx,tz){
 // =====================================================================
 const fx3=[];
 const CONF_COLS=[0xe0574f,0xf2b632,0x2e86c1,0x27ae60,0x8e44ad,0xffffff];
-function confettiAt(x,y,z,n=40){
+function confettiAt(x,y,z,n=40){ if(state.lowFx) n=Math.ceil(n/4);
   for(let i=0;i<n;i++){ const m=new THREE.Mesh(plane(0.09,0.15),new THREE.MeshBasicMaterial({color:rand(CONF_COLS),side:THREE.DoubleSide,transparent:true}));
     m.position.set(x,y,z); world.add(m); fx3.push({m,v:new THREE.Vector3(rnd(-3,3),rnd(3.5,7),rnd(-3,3)),s:new THREE.Vector3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),life:1.8,max:1.8,g:9,drag:0.96}); }
 }
@@ -396,7 +396,7 @@ function updateFx3(dt){
   }
 }
 let shake=0;
-function camShake(a){ shake=Math.max(shake,a); }
+function camShake(a){ if(state.lowFx) return; shake=Math.max(shake,a); }
 
 // =====================================================================
 // TUTORIAL & GOALS

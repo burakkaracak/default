@@ -122,8 +122,6 @@ function toast(msg,kind,onTap){ logEvent(msg);
   if(onTap) el.onclick=e=>{ e.stopPropagation(); el.remove(); onTap(); };
   setTimeout(()=>el.remove(),onTap?6000:2700);
 }
-let bannerT=null;
-function banner(big,small){ logEvent(big+(small?' · '+small:'')); const b=$('banner'); b.innerHTML=`${big}${small?`<small>${small}</small>`:''}`; b.classList.add('show'); clearTimeout(bannerT); bannerT=setTimeout(()=>b.classList.remove('show'),2600); }
 let hintT=null;
 function hint(text,sec=4){ const h=$('hint'); h.textContent=text; h.classList.add('show'); clearTimeout(hintT); hintT=setTimeout(()=>h.classList.remove('show'),sec*1000); }
 
@@ -188,7 +186,7 @@ function renderSheet(){
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+depthHtml()+eventsHtml()+legacyHtml()+luxHtml();
+      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+legacyHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -201,6 +199,7 @@ function renderSheet(){
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
   bindDepth(sheet);
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
+  const pty=sheet.querySelector('[data-party]'); if(pty) pty.onclick=throwParty;
   sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
   const av=sheet.querySelector('[data-adv]'); if(av) av.onclick=()=>{ sfx('click'); openAdvisor(); };
   const mp=sheet.querySelector('[data-map]'); if(mp) mp.onclick=()=>{ sfx('click'); openCityMap(); };
@@ -381,6 +380,7 @@ function openSettings(){
     ${(document.fullscreenEnabled||document.webkitFullscreenEnabled)?`<button class="btn wide" id="sFs">⛶ Tam ekran ${fsEl()?'kapat':'aç'}</button>`:''}
     ${cloudHtml()}
     <button class="btn wide" id="sHelp">📖 Nasıl oynanır</button>
+    <div style="display:flex;gap:6px"><button class="btn wide" id="sGuide">📘 Rehber</button><button class="btn ghost wide" id="sLowFx">✨ Efektleri azalt: ${state.lowFx?'Açık':'Kapalı'}</button></div>
     <button class="btn wide" id="sCustom">🎨 Otelim ve karakterim</button>
     <div style="display:flex;gap:6px"><button class="btn ghost wide" id="sExp">💾 Kaydı indir</button><button class="btn ghost wide" id="sImp">📂 Kayıt yükle</button></div>
     <button class="btn gold wide" id="sAdmin">🛠️ Admin paneli</button>
@@ -394,6 +394,7 @@ function openSettings(){
     m.querySelectorAll('[data-gfx]').forEach(b=>b.onclick=()=>{ state.gfx=b.dataset.gfx; state.gfxAuto=false; save(); applyGfx(); openSettings(); if(b.dataset.gfx==='high'&&!composer) toast('Efektler yükleniyor…'); });
     m.querySelector('#gAuto').onclick=()=>{ state.gfxAuto=state.gfxAuto===false; save(); openSettings(); };
     m.querySelector('#sHelp').onclick=openHelp;
+    m.querySelector('#sGuide').onclick=openGuide; m.querySelector('#sLowFx').onclick=()=>{ state.lowFx=!state.lowFx; save(); openSettings(); };
     m.querySelector('#sCustom').onclick=()=>{ closeModal(); openSheet('custom'); };
     m.querySelector('#sExp').onclick=exportSave; m.querySelector('#sImp').onclick=importSave;
     m.querySelector('#sAdmin').onclick=()=>{ closeModal(); openAdmin(); };
@@ -555,28 +556,33 @@ function updateWorldAnim(dt,t){
   const rider=player&&player.riding?player:ents.find(e=>e.riding); if(rider&&cabin) cabin.position.y=rider.y;
   $('camCtl').classList.toggle('hide',fpMode);
 }
+// hata kalkanı: bir alt sistem hata verirse sadece o atlanır, oyun donmaz
+const gameErrs={}; window.__gameErrs=gameErrs; let errToastT=0;
+function guard(name,fn){ try{ fn(); }catch(e){ const k=name+': '+(e&&e.message||e); gameErrs[k]=(gameErrs[k]||0)+1;
+  if(gameErrs[k]===1){ console.error('[oyun]',name,e); if(performance.now()>errToastT){ errToastT=performance.now()+60000; try{ logEvent('⚠️ Küçük bir hata atlandı ('+name+')'); }catch(_){} } } } }
 function frame(now){
   requestAnimationFrame(frame);
   const rawDt=(now-last)/1000, dt=Math.min(0.05,rawDt); last=now; gtime+=dt; trackFps(rawDt);
   if(!player) return;
   for(let k=0;k<gameSpeed;k++){
-  updatePlayer(dt);
-  updatePlayerZones(dt); updatePads(dt); updateDesk(dt); if(chainFlash>0) chainFlash-=dt;
-  updateGuests(dt); updateStaff(dt);
-  for(const e of ents.slice()) if(e!==player) e.step(dt);
-  updateSpawner(dt); updateBreakdowns(dt); updateTime(dt);
+    guard('oyuncu',()=>{ updatePlayer(dt); updatePlayerZones(dt); updatePads(dt); updateDesk(dt); if(chainFlash>0) chainFlash-=dt; });
+    guard('misafir',()=>updateGuests(dt)); guard('personel',()=>updateStaff(dt));
+    guard('hareket',()=>{ for(const e of ents.slice()) if(e!==player) e.step(dt); });
+    guard('zaman',()=>{ updateSpawner(dt); updateBreakdowns(dt); updateTime(dt); });
   }
-  separateEnts(); updateCamKeys(dt);
-  viewFloor=peekFloor!=null?peekFloor:(player.riding?Math.max(player.f,player.path&&player.path[player.pi]?player.path[player.pi].f:player.f):player.f);
-  if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
-  if(cabin) cabin.visible=floorVisible(cabin.position.y);
-  for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt); updateGfx2(dt,gtime); updateCloud(dt);
-  updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
-  updateGoalArrow(gtime);
-  renderFrame();
-  renderTags(); updateMoneyHUD(dt);
-  hudT-=dt; if(hudT<=0){ hudT=0.25; updateHUD(); if(sheetMode&&performance.now()-sheetTouch>800) renderSheet(); }
+  guard('kalabalık',()=>{ separateEnts(); updateCamKeys(dt); });
+  guard('kat',()=>{ viewFloor=peekFloor!=null?peekFloor:(player.riding?Math.max(player.f,player.path&&player.path[player.pi]?player.path[player.pi].f:player.f):player.f);
+    if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
+    if(cabin) cabin.visible=floorVisible(cabin.position.y); });
+  guard('çizim',()=>{ for(const e of ents.slice()) e.sync(dt); });
+  guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
+  guard('dünya',()=>updateWorldAnim(dt,gtime));
+  guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt));
+  guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
+  guard('render',()=>renderFrame());
+  guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
+  hudT-=dt; if(hudT<=0){ hudT=0.25; guard('hud',()=>updateHUD()); if(sheetMode&&performance.now()-sheetTouch>800) guard('menü',()=>renderSheet()); }
   saveT-=dt; if(saveT<=0){ saveT=4; if(saveDirty) save(); }
 }
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) save(); });
@@ -598,7 +604,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

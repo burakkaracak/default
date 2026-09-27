@@ -191,7 +191,7 @@ function applyHotelTheme(){
   const T=THEMES[themeKey()], c=city();
   M.facade.color.setHex(T.facade??c.facade); M.trim.color.setHex(T.trim??c.trim); M.accent.color.setHex(T.accent??c.accent);
   for(const k in matCache) themeTint(matCache[k]);
-  CHORDS.length=0; T.chords.forEach(ch=>CHORDS.push(ch));
+  CHORDS.length=0; T.chords.forEach(ch=>CHORDS.push(ch)); applyCityMusic();
   if(typeof applyThemeExtras==='function'&&player) applyThemeExtras();
 }
 

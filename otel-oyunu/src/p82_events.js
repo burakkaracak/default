@@ -57,7 +57,7 @@ function zamBill(){ return wxEv('zam')?r10(Math.max(50,wagesToday()*0.3+roomRate
 const CITY_FEST={'İstanbul':{e:'🏃',name:'İstanbul Maratonu',types:['athlete','business']},'Antalya':{e:'🎬',name:'Film Festivali',types:['influencer','vip']},
   'Kapadokya':{e:'🎈',name:'Balon Festivali',types:['couple','tourist']},'Bodrum':{e:'⛵',name:'Yat Festivali',types:['vip','couple']},
   'Paris':{e:'👗',name:'Moda Haftası',types:['influencer','vip']},'Dubai':{e:'🛍️',name:'Alışveriş Festivali',types:['vip','family']}};
-function cityFestOn(){ return festivalOn()&&Math.floor((state.day-1)/(SEASON_DAYS*2))%2===1&&!!CITY_FEST[city().name]; }
+function cityFestOn(){ return natFestOn()&&Math.floor((state.day-1)/(SEASON_DAYS*2))%2===1&&!!CITY_FEST[city().name]; }
 function festTypeW(k){ return cityFestOn()&&CITY_FEST[city().name].types.includes(k)?2.5:1; }
 
 // ---------- emergencies: thief & lost child ----------

@@ -77,6 +77,7 @@
   .qbar i{display:block;height:100%;background:linear-gradient(90deg,#5fd98a,#9ff0b8);border-radius:4px;transition:width .3s;}
   .row.qdone{opacity:.6;}
   #lvlBox{position:absolute;left:8px;top:calc(52px + var(--st));display:flex;align-items:center;gap:5px;background:var(--panel);border:2px solid #8a6ad8;border-radius:999px;padding:1px 8px 1px 2px;height:26px;pointer-events:auto;cursor:pointer;}
+  #lvlBox .dot{position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;background:var(--red);border:2px solid #fff;display:none;} #lvlBox .dot.on{display:block;}
   #lvlBox b{background:linear-gradient(#c9b6ff,#8a6ad8);color:#1d0f3f;border-radius:50%;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;}
   #lvlBox span{width:52px;height:6px;background:rgba(0,0,0,.45);border-radius:3px;overflow:hidden;display:block;}
   #lvlBox i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b99cff,#ffd76a);transition:width .3s;}
@@ -148,10 +149,12 @@
   #hint.show{display:block;animation:tin .3s ease-out;}
   #toasts{position:absolute;top:calc(96px + var(--st));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90vw;}
   @media (max-width:520px){ #fsBtn{display:none;} }
+  @media (max-width:440px){ .top{gap:4px;left:6px;right:6px;} .pill{height:36px;padding:1px 8px 1px 4px;gap:4px;} .money{font-size:16px;min-width:0;} .coin{width:20px;height:20px;} .stars{padding:0 7px;} #stars{font-size:12px;letter-spacing:0;} #repBar{width:44px;} .clock{font-size:13px;padding:0 7px;gap:3px;} .clock small{font-size:10px;} .round{width:36px;height:36px;font-size:16px;} #goal{font-size:12.5px;top:calc(84px + var(--st));max-width:calc(100vw - 150px);overflow:hidden;} #toasts{top:calc(118px + var(--st));} #lvlBox{top:calc(48px + var(--st));} }
+  @media (max-width:370px){ .clock small{display:none;} }
   .pbar{height:7px;border-radius:4px;background:rgba(0,0,0,.35);overflow:hidden;margin:3px 0;} .pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));}
   #fixGame{position:absolute;left:50%;bottom:calc(120px + var(--sb));transform:translateX(-50%);background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:8px 10px;display:flex;gap:10px;align-items:center;pointer-events:auto;animation:tin .2s;}
   #fixGame .fgbar{position:relative;width:170px;height:16px;border-radius:8px;background:rgba(0,0,0,.45);overflow:hidden;} #fixGame .fgz{position:absolute;top:0;bottom:0;background:#5fd98a;} #fixGame .fgm{position:absolute;top:-2px;width:5px;height:20px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff;}
-  .dgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:8px 0;background:#10283c;padding:6px;border-radius:12px;} .dcell{aspect-ratio:1;border-radius:8px;border:2px dashed #3b6a93;background:#1f4262;font-size:20px;color:var(--cream);cursor:pointer;} .dcell.off{border-style:solid;background:#2b3440;opacity:.5;cursor:default;} .dcell.has{border-style:solid;border-color:var(--gold2);background:#264d70;}
+  .dgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:8px 0;background:#10283c;padding:6px;border-radius:12px;} .dcell{aspect-ratio:1;border-radius:8px;border:2px dashed #3b6a93;background:#1f4262;font-size:20px;color:var(--cream);cursor:pointer;} .dcell.off{border-style:solid;background:#2b3440;opacity:.5;cursor:default;} .dcell.has{border-style:solid;border-color:var(--gold2);background:#264d70;}
   .news{background:#f4efe3;color:#1b1b1b;border-radius:8px;padding:8px 10px;font-family:Georgia,serif;} .news b{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#6b5a45;} .news .nh{font-size:18px;font-weight:800;line-height:1.15;margin-top:2px;} .news .ns{font-size:13px;opacity:.85;margin-top:2px;}
   .citem{pointer-events:auto;cursor:pointer;display:inline-block;padding:0 1px;transition:transform .1s;} .citem:hover{transform:scale(1.25);}
   .toast.tap{pointer-events:auto;cursor:pointer;border-color:#7dffae;} .toast.tap:hover{filter:brightness(1.15);}
@@ -218,7 +221,7 @@
       <button class="round" id="fsBtn" aria-label="Tam ekran" title="Tam ekran (F)">⛶</button>
       <button class="round" id="setBtn" aria-label="Ayarlar">⚙️</button>
     </div>
-    <div id="lvlBox" role="button" aria-label="Seviye ve başarımlar"><b id="lvlN">1</b><span><i id="lvlBar"></i></span></div>
+    <div id="lvlBox" role="button" aria-label="Seviye, yetenekler ve başarımlar"><b id="lvlN">1</b><span><i id="lvlBar"></i></span><span class="dot" id="lvlDot"></span></div>
     <div id="sbBadge" role="button">🧪 DENEME MODU</div>
     <div id="goal" role="button" aria-label="Sıradaki hedef"><span id="goalIcon">🎯</span><span id="goalText"></span><span id="goalProg"><i></i></span></div>
     <div id="side">

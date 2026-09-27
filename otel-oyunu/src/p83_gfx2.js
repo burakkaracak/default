@@ -20,7 +20,7 @@ function fwSpot(){ return [cam.tx+rnd(-7,7),cam.ty+rnd(8,11),cam.tz+rnd(-9,-4)];
 function fireworksShow(){ for(let k=0;k<8;k++) setTimeout(()=>fireworksAt(...fwSpot()),k*420); }
 let fwT=2;
 function updateFireworks(dt){
-  if(!(festivalOn()||state.fwUntil>performance.now())||nightF<0.45||fpMode) return;
+  if(!festivalOn()||nightF<0.45||fpMode||state.lowFx) return;
   fwT-=dt; if(fwT>0) return; fwT=rnd(1.2,2.8); fireworksAt(...fwSpot());
 }
 
@@ -72,7 +72,7 @@ function faceFor(e){
 
 // ---------- cinematic camera ----------
 let cine=null;
-function cinematic(dur=3.4){ if(fpMode||cine) return; cine={t:0,dur,yaw0:cam.yaw,dist0:cam.dist}; }
+function cinematic(dur=3.4){ if(fpMode||cine||state.lowFx) return; cine={t:0,dur,yaw0:cam.yaw,dist0:cam.dist}; }
 function updateCine(dt){
   if(!cine) return; cine.t+=dt; const k=cine.t/cine.dur, e=Math.sin(Math.min(1,k)*Math.PI);
   cam.yaw=cine.yaw0+Math.sin(k*Math.PI*2)*0.55*e; cam.dist=cine.dist0*(1-0.28*e);

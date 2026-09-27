@@ -146,16 +146,16 @@ function padDefs(){
   room(0,8,500,['pool']); room(0,11,560,['r109']);
   push({id:'laundry',kind:'laundry',f:0,x:-9.3,z:-3.75,size:1.2,cost:450,req:['staff'],icon:'🧺',label:'Çamaşırhane'});
   push({id:'gym',kind:'gym',f:0,x:11.9,z:-2.3,size:1.7,cost:720,req:['r112'],icon:'🏋️',label:'Spor salonu'});
-  push({id:'spa',kind:'spa',f:0,x:-13.6,z:-3.75,size:1.2,cost:1600,req:['gym'],stars:3,icon:'💆',label:'Spa & sauna'});
-  push({id:'f2',kind:'floor',floor:1,f:0,x:L.elev.x,z:L.elev.z,size:1.3,cost:3000,req:['gym'],stars:3,icon:'🛗',label:'2. kat + asansör'});
+  push({id:'spa',kind:'spa',f:0,x:-13.6,z:-3.75,size:1.2,cost:2200,req:['gym'],stars:3,icon:'💆',label:'Spa & sauna'});
+  push({id:'f2',kind:'floor',floor:1,f:0,x:L.elev.x,z:L.elev.z,size:1.3,cost:4200,req:['gym'],stars:3,icon:'🛗',label:'2. kat + asansör'});
   let prev='f2';
-  const c2=[900,980,1060,1150,1250,1350,1460,1580,1700,1840,1980,2150];
+  const c2=[1200,1300,1420,1540,1680,1820,1970,2130,2300,2480,2680,2900];
   ROOM_SEQ.forEach((l,k)=>{ room(1,l,c2[k],[prev]); prev='r'+roomId(1,l); });
-  push({id:'f3',kind:'floor',floor:2,f:1,x:3.0,z:1.9,size:1.6,cost:8000,req:[prev],stars:4,icon:'🛗',label:'3. kat'});
+  push({id:'f3',kind:'floor',floor:2,f:1,x:3.0,z:1.9,size:1.6,cost:11000,req:[prev],stars:4,icon:'🛗',label:'3. kat'});
   prev='f3';
-  const c3=[2400,2600,2800,3000,3250,3500,3750,4000,4300,4600,4900,5300];
+  const c3=[3200,3450,3700,4000,4300,4650,5000,5350,5750,6150,6600,7100];
   ROOM_SEQ.forEach((l,k)=>{ room(2,l,c3[k],[prev]); prev='r'+roomId(2,l); });
-  push({id:'roof',kind:'floor',floor:3,f:2,x:3.0,z:CORR[0],size:1.6,cost:12000,req:[prev],stars:5,icon:'🚁',label:'Çatı katı: bar, havuz, helikopter pisti'});
+  push({id:'roof',kind:'floor',floor:3,f:2,x:3.0,z:CORR[0],size:1.6,cost:16000,req:[prev],stars:5,icon:'🚁',label:'Çatı katı: bar, havuz, helikopter pisti'});
   return P;
 }
 
@@ -174,7 +174,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:36, parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -199,9 +199,9 @@ function rawStars(){ return clamp(1+Math.floor(state.rep/20),1,5); }
 function roomsOfType(t){ let n=0; for(const k in state.rooms) if(state.rooms[k].type===t) n++; return n; }
 function nRoomsAll(){ return Object.keys(state.rooms).length; }
 const STAR_REQ={
-  3:[['6 oda',()=>nRoomsAll()>=6],['1 Deluxe oda',()=>roomsOfType('dlx')+roomsOfType('suite')>=1]],
-  4:[['Restoran',()=>built('rest')],['14 oda',()=>nRoomsAll()>=14],['1 Suit oda',()=>roomsOfType('suite')>=1]],
-  5:[['Havuz ve spor salonu',()=>built('pool')&&built('gym')],['22 oda',()=>nRoomsAll()>=22],['4 Suit oda',()=>roomsOfType('suite')>=4]]};
+  3:[['8 oda',()=>nRoomsAll()>=8],['2 Deluxe oda',()=>roomsOfType('dlx')+roomsOfType('suite')>=2]],
+  4:[['Restoran ve havuz',()=>built('rest')&&built('pool')],['16 oda',()=>nRoomsAll()>=16],['2 Suit oda',()=>roomsOfType('suite')>=2]],
+  5:[['Havuz, spor salonu ve spa',()=>built('pool')&&built('gym')&&built('spa')],['28 oda',()=>nRoomsAll()>=28],['6 Suit oda',()=>roomsOfType('suite')>=6]]};
 function starCap(){ let c=2; for(let s=3;s<=5;s++){ if(STAR_REQ[s].every(r=>r[1]())) c=s; else break; } return c; }
 function stars(){ return Math.min(rawStars(),starCap()); }
 function starMissing(s){ return (STAR_REQ[s]||[]).filter(r=>!r[1]()).map(r=>r[0]); }

@@ -12,31 +12,32 @@ const FURN={
   shelf: {e:'📚',name:'Kitaplık',    cost:150,sat:2},
   desk:  {e:'🖥️',name:'Çalışma masası',cost:180,sat:2},
   aqua:  {e:'🐠',name:'Akvaryum',    cost:260,sat:3}};
-const FG={cols:6,rows:6,x0:-1.5,z0:-1.4,cw:0.5,ch:2.8/6};
+const FG={cols:8,rows:7,x0:-1.5,z0:-1.4,cw:0.375,ch:0.4};
 function furnCost(k){ return Math.round(FURN[k].cost*cm()); }
 function cellCenter(i,j){ return {x:FG.x0+(i+0.5)*FG.cw,z:FG.z0+(j+0.5)*FG.ch}; }
 function roomBlockRects(id){
-  const s=state.rooms[id], b=bedGeom(s.type), R=[[-1.5,b.right+0.46,-1.4,0.74],[0.62,1.5,-1.4,-0.38],[-0.4,0.7,-0.25,1.4]];
+  const s=state.rooms[id], b=bedGeom(s.type), R=[[-1.5,b.right+0.04,-1.4,0.72],[b.right,b.right+0.46,-1.4,-0.95],[0.62,1.5,-1.4,-0.38],[-0.34,0.6,-0.15,1.4]];
   if(s.type==='eco') R.push([0.7,1.22,0.6,1.14]); if(s.type==='dlx') R.push([1.06,1.46,-0.34,0.34],[0.7,1.3,0.55,1.15]); if(s.type==='suite') R.push([0.98,1.46,-0.42,1.22],[0.48,0.96,0.16,0.64]);
   if(s.decor.plant) R.push([-1.46,-1.04,0.83,1.3]); if(s.decor.bar) R.push([-1.06,-0.7,0.84,1.22]);
   return R;
 }
-function cellFree(id,i,j){ const c=cellCenter(i,j), hw=FG.cw*0.42, hh=FG.ch*0.42;
+function cellFree(id,i,j){ const c=cellCenter(i,j), hw=FG.cw*0.45, hh=FG.ch*0.45;
   return !roomBlockRects(id).some(r=>c.x+hw>r[0]&&c.x-hw<r[1]&&c.z+hh>r[2]&&c.z-hh<r[3]); }
 function designSat(s){ const f=s.furn||[]; if(!f.length) return 0; const kinds=new Set(f.map(x=>x.k)).size; return Math.min(8,f.reduce((a,x)=>a+FURN[x.k].sat,0))+Math.min(2,kinds-1); }
-function buildFurn(S,s,cols){
-  (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), x=c.x, z=c.z;
+function migrateFurn(s){ (s.furn||[]).forEach(f=>{ if(f.g===2) return; const x=-1.5+(f.i+0.5)*0.5, z=-1.4+(f.j+0.5)*(2.8/6); f.i=clamp(Math.floor((x-FG.x0)/FG.cw),0,FG.cols-1); f.j=clamp(Math.floor((z-FG.z0)/FG.ch),0,FG.rows-1); f.g=2; }); }
+function buildFurn(S,s,cols){ migrateFurn(s); // eşyalar hücre merkezinde 0.8 ölçekli grup içine kurulur
+  (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), G0=new THREE.Group(); G0.position.set(c.x,0,c.z); G0.scale.setScalar(0.8); S.add(G0); const x=0, z=0, S0=S; S=G0;
     if(f.k==='lamp'){ S.add(mesh(cyl(0.12,0.14,0.03,12),M.dark,x,0.015,z)); S.add(mesh(cyl(0.015,0.015,1.1,6),M.gold,x,0.56,z)); S.add(mesh(cone(0.16,0.2,12),M.lampOn,x,1.15,z)); }
     else if(f.k==='plant2') bigPlant(S,x,z,0.55);
     else if(f.k==='chair'){ const m=mat(0xb0736a,{roughness:.95}); S.add(mesh(rbox(0.42,0.24,0.4,.08),m,x,0.2,z,true)); S.add(mesh(rbox(0.42,0.4,0.1,.05),m,x,0.42,z-0.16,true)); }
     else if(f.k==='shelf'){ S.add(mesh(rbox(0.44,1.3,0.26,.02),tmat('woodDark',1,2),x,0.65,z,true)); for(let r=0;r<3;r++) for(let b=0;b<5;b++) S.add(mesh(box(0.06,0.24,0.18),mat(rand([0xc0392b,0x2e86c1,0x27ae60,0xf2b632,0x8e44ad])),x-0.16+b*0.08,0.3+r*0.38,z+0.02)); }
     else if(f.k==='desk'){ S.add(mesh(rbox(0.46,0.05,0.32,.02),tmat('wood',1,1),x,0.62,z,true)); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,c2])=>S.add(mesh(cyl(0.015,0.015,0.6,6),M.dark,x+a*0.19,0.3,z+c2*0.12))); S.add(mesh(box(0.26,0.17,0.02),M.dark,x,0.76,z-0.08)); }
     else if(f.k==='aqua'){ S.add(mesh(rbox(0.46,0.5,0.3,.02),tmat('woodDark',1,1),x,0.25,z,true)); S.add(mesh(box(0.44,0.34,0.28),new THREE.MeshStandardMaterial({color:0x5fc4e8,transparent:true,opacity:.55,roughness:.05,emissive:0x0b5a8a,emissiveIntensity:.35}),x,0.68,z)); S.add(mesh(sph(0.03,6,4),mat(0xff8a3a),x+0.06,0.68,z)); S.add(mesh(sph(0.025,6,4),mat(0xf2d24a),x-0.08,0.62,z)); }
-    cols.push([x-FG.cw*0.44,x+FG.cw*0.44,z-FG.ch*0.44,z+FG.ch*0.44]); });
+    S=S0; cols.push([c.x-FG.cw*0.46,c.x+FG.cw*0.46,c.z-FG.ch*0.46,c.z+FG.ch*0.46]); });
 }
 let designSel='lamp';
 function openDesigner(id){
-  const s=state.rooms[id]; if(!s) return; s.furn=s.furn||[]; const busy=!!RT(id).guest, full=s.furn.length>=4;
+  const s=state.rooms[id]; if(!s) return; s.furn=s.furn||[]; migrateFurn(s); const busy=!!RT(id).guest, full=s.furn.length>=4;
   let grid=''; for(let j=0;j<FG.rows;j++) for(let i=0;i<FG.cols;i++){ const f=s.furn.find(x=>x.i===i&&x.j===j), free=cellFree(id,i,j);
     grid+=`<button class="dcell${f?' has':free?'':' off'}" data-c="${i},${j}" ${!f&&(!free||busy||full)?'disabled':''}>${f?FURN[f.k].e:free?'':'·'}</button>`; }
   openModal(`<h3>🛋️ Oda ${id} tasarımı <button class="xbtn" id="dsX" aria-label="Kapat">✖</button></h3>
@@ -48,7 +49,7 @@ function openDesigner(id){
     m.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ const [i,j]=b.dataset.c.split(',').map(Number), k=s.furn.findIndex(x=>x.i===i&&x.j===j);
       if(RT(id).guest) return;
       if(k>=0){ const f=s.furn.splice(k,1)[0]; state.money+=Math.round(furnCost(f.k)/2); sfx('drop'); }
-      else { if(s.furn.length>=4||!cellFree(id,i,j)||!spend(furnCost(designSel))) return; s.furn.push({k:designSel,i,j}); sfx('build'); qEv('upg'); }
+      else { if(s.furn.length>=4||!cellFree(id,i,j)||!spend(furnCost(designSel))) return; s.furn.push({k:designSel,i,j,g:2}); sfx('build'); qEv('upg'); }
       buildRoomVisual(id,false); ents.forEach(unstick); save(); openDesigner(id); }); });
 }
 

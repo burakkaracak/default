@@ -140,7 +140,7 @@ function checkout(g){
   if(tip>0){ s.tip+=tip; state.today.tips+=tip; }
   s.dirty=true; R.guest=null; R.req=null; g.room=null; g.inRoom=false;
   if(g.type==='insp') inspectorVerdict(g,mood);
-  if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
+  if(mood==='happy'){ changeRep(0.75*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
   noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
@@ -198,6 +198,7 @@ function updateGuests(dt){
   const night=isNight(), rc=readyCount();
   for(let i=guests.length-1;i>=0;i--){
     const g=guests[i];
+    try{
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
       if(!g.path){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
@@ -223,6 +224,7 @@ function updateGuests(dt){
     } else if(g.state==='toAmen'||g.state==='toRoom'){
       g.stay-=dt*0.5;
     }
+    }catch(err){ console.error('[misafir]',err); const q=queue.indexOf(g); if(q>=0){ queue.splice(q,1); reflowQueue(); } if(g.seat){ g.seat.busy=null; g.seat=null; } if(g.room!=null&&RT(g.room).guest===g) RT(g.room).guest=null; g.remove(); }
   }
 }
 

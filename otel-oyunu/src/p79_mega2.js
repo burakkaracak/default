@@ -118,8 +118,9 @@ const EVT={
   conf:   {e:'🎤',name:'Konferans', need:'cafe',needN:'Kahve köşesi',rooms:5,types:['business'],n:5,rew:750},
   concert:{e:'🎸',name:'Konser',    need:'pool',needN:'Havuz',      rooms:4,types:['influencer','tourist','student'],n:6,rew:1000}};
 const FEST=[{e:'🌷',name:'Lale Festivali'},{e:'🎶',name:'Yaz Konser Festivali'},{e:'🍇',name:'Hasat Festivali'},{e:'🎄',name:'Yılbaşı Festivali'}];
-function festivalOn(){ return !!state&&state.day>=3&&(state.day-1)%(SEASON_DAYS*2)===2; }
-function festival(){ return cityFestOn()?CITY_FEST[city().name]:FEST[seasonIx()]; }
+function festivalOn(){ return !!state&&(state.partyDay===state.day||state.day>=3&&(state.day-1)%(SEASON_DAYS*2)===2); }
+function natFestOn(){ return !!state&&state.day>=3&&(state.day-1)%(SEASON_DAYS*2)===2; }
+function festival(){ return state.partyDay===state.day&&!natFestOn()?{e:'🎉',name:'Otel partisi'}:cityFestOn()?CITY_FEST[city().name]:FEST[seasonIx()]; }
 function eventReady(){ return readyRooms().length; }
 function eventsDayEnd(){ events3DayEnd();
   if(state.offer&&state.offer.made<state.day){ toast(`📅 ${EVT[state.offer.k].name} teklifi zaman aşımına uğradı`,'bad'); state.offer=null; }
@@ -129,7 +130,7 @@ function eventsDayEnd(){ events3DayEnd();
     if(ks.length){ const k=rand(ks), E=EVT[k]; state.offer={k,made:state.day,day:state.day+2,rew:r10(E.rew*cm()*(1+stars()*0.15))};
       setTimeout(()=>{ banner(`📅 ${E.e} ${E.name} teklifi!`,`${state.offer?state.offer.day:''}. gün · ödül ${fmt(state.offer?state.offer.rew:0)} ₺ · Yönetim › Otel`); sfx('req'); },3000); } }
   if(state.event&&state.day===state.event.day){ const E=EVT[state.event.k]; setTimeout(()=>banner(`${E.e} Bugün ${E.name} var!`,`12:00'ye kadar ${E.rooms} hazır oda ve ${E.needN} gerekli`),3200); }
-  if(festivalOn()){ const F=festival(); setTimeout(()=>{ banner(`${F.e} ${F.name}!`,'Bugün misafir akını var ve gelirler %15 fazla'); sfx('star'); },4200); }
+  if(natFestOn()){ const F=festival(); setTimeout(()=>{ banner(`${F.e} ${F.name}!`,'Bugün misafir akını var ve gelirler %15 fazla'); sfx('star'); },4200); }
   staffDayEnd();
 }
 function acceptOffer(){ if(!state.offer) return; state.event=Object.assign({started:false},state.offer); state.offer=null; sfx('build'); toast(`${EVT[state.event.k].e} Rezervasyon onaylandı: ${state.event.day}. gün 12:00`); save(); renderSheet(); }

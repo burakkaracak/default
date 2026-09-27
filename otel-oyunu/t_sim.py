@@ -9,7 +9,7 @@ with sync_playwright() as p:
     pg=b.new_page(viewport={'width':390,'height':844}); errs=[]
     pg.on('pageerror',lambda e: errs.append('PAGEERR '+str(e)))
     pg.goto('file://'+HERE+'/test2.html'); pg.wait_for_timeout(1200)
-    pg.add_script_tag(path=HERE+'/bot.js')
+    if not pg.evaluate('typeof runSim==="function"'): pg.add_script_tag(path=HERE+'/bot.js')
     pg.evaluate("state.tut=5")
     reps=[]
     for d in range(days):
