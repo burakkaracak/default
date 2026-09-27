@@ -18,7 +18,8 @@ const LUX={
   chandelier:{e:'💎',name:'Kristal avize',    cost:25000,desc:'Lobiye asılır · tüm misafirler +3 memnuniyet'},
   limo:      {e:'🚗',name:'Limuzin servisi',  cost:35000,desc:'Ünlüler iki kat sık gelir ve %20 fazla öder'},
   statue:    {e:'🗽',name:'Bahçe heykeli',    cost:45000,desc:'Otelin simgesi olur · tüm gelirler +%5'},
-  brand:     {e:'👑',name:'Lüks otel markası',cost:90000,desc:'Tüm oda fiyatları +%10'}};
+  brand:     {e:'👑',name:'Lüks otel markası',cost:90000,desc:'Tüm oda fiyatları +%10'},
+  led:       {e:'🌈',name:'LED cephe',        cost:30000,desc:'Gece renk değiştiren cephe ışıkları · gece %25 daha çok misafir'}};
 function luxCost(k){ return Math.round(LUX[k].cost*cm()); }
 function luxHtml(){
   let h=`<div class="ugh">💎 Prestij yatırımları</div>`;
@@ -63,6 +64,7 @@ function buildLux(k,pop){
     g.add(mesh(rbox(3.9,0.46,1.0,.16),body,0,0.42,0,true)); g.add(mesh(rbox(2.6,0.36,0.9,.14),mat(0x1c2733,{metalness:.7,roughness:.08}),-0.2,0.78,0,true));
     [-1.35,-0.6,1.3].forEach(x=>[-0.47,0.47].forEach(zz=>{ const w=mesh(cyl(0.2,0.2,0.14,14),M.dark,x,0.2,zz); w.rotation.x=Math.PI/2; g.add(w); }));
     [-0.3,0.3].forEach(zz=>g.add(mesh(sph(0.06,8,6),M.lampOn,1.96,0.45,zz))); g.add(mesh(box(0.05,0.3,0.02),M.gold,1.7,0.8,0.3)); const sh=blob(2.0); sh.scale.set(1,0.3,1); g.add(sh); }
+  else if(k==='led'){ buildLed(); }
   else if(k==='brand'){ const c=new THREE.Group(); c.position.set(0,3.95,8.95); G.add(c); g=c;
     const gold=mat(0xe8b64a,{metalness:.9,roughness:.2}); c.add(mesh(cyl(0.34,0.3,0.14,16),gold,0,0,0));
     for(let i=0;i<5;i++){ const a=i/5*Math.PI*2; c.add(mesh(cone(0.07,0.24,6),gold,Math.cos(a)*0.28,0.18,Math.sin(a)*0.28)); c.add(mesh(sph(0.04,6,4),mat(0xc0392b,{metalness:.3,roughness:.2}),Math.cos(a)*0.28,0.32,Math.sin(a)*0.28)); } }

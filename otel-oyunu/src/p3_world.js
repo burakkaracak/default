@@ -722,6 +722,7 @@ function buildRoomVisual(id,pop){
   G.add(made,messy,flies,broken,tip,shade,glow,glow2);
   G.position.set(ri.x,0,ri.z); floorRoot(ri.f).add(G);
   R.group=G; R.parts={made,messy,flies,broken,tip,shade,glow,glow2,win};
+  if(t==='dlx') addTvGlow(G,R.parts);
   // colliders (local -> world)
   const lc=[[-1.5,1.5,-1.52,-1.38],[-1.5,-1.38,-1.4,1.4],[1.38,1.5,-1.4,1.4],[-1.5,-0.7,1.28,1.42],[0.7,1.5,1.28,1.42],
     [0.67,1.5,-1.4,-0.4],[-1.4,b.right,-1.4,0.72],[b.right+0.02,b.right+0.44,-1.4,-0.98],...cols];

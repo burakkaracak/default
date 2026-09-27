@@ -83,7 +83,7 @@ let lastStarsHud=null;
 function updateHUD(){
   const s=stars(), capped=rawStars()>s; $('stars').textContent='★'.repeat(s)+'☆'.repeat(5-s)+(capped?' 🔒':'');
   $('repBar').firstChild.style.width=(s===5||capped?100:(state.rep%20)/20*100)+'%';
-  if(lastStarsHud!=null&&s>lastStarsHud){ banner(`${'★'.repeat(s)}`,`Otelin ${s} yıldız oldu! Gelir x${STAR_MULT[s-1]}`); sfx('star'); refreshPads(); } lastStarsHud=s;
+  if(lastStarsHud!=null&&s>lastStarsHud){ cinematic(); fireworksShow(0,-4); banner(`${'★'.repeat(s)}`,`Otelin ${s} yıldız oldu! Gelir x${STAR_MULT[s-1]}`); sfx('star'); refreshPads(); } lastStarsHud=s;
   const h=hourNow(); $('clock').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor((h%1)*4)*15).padStart(2,'0');
   $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${state.wxEv&&state.wxEv.day===state.day?' '+WX_EV[state.wxEv.k].e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
@@ -567,7 +567,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt); updateGfx2(dt,gtime);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();
@@ -594,7 +594,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

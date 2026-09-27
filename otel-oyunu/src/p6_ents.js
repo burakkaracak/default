@@ -37,6 +37,7 @@ class Ent{
     this.c.mode=this.anim||(this.path&&!this.riding&&!this.elevWait||this.moving?'walk':'idle'); this.c.spd=this.speed/2.3;
     if(this.sqT>0){ this.sqT=Math.max(0,this.sqT-dt); const bs=this.c.bs||(this.c.bs=r.scale.x||1), u=1-this.sqT/0.4, a=Math.sin(u*Math.PI*2.5)*(1-u)*0.22;
       r.scale.set(bs*(1+a),bs*(1-a),bs*(1+a)); if(this.sqT===0) r.scale.setScalar(bs); }
+    if(this.c.face) setFace(this.c,faceFor(this));
     r.visible=floorVisible(this.y);
     if(r.visible) animChar(this.c,dt);
   }

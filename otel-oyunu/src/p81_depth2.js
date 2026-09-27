@@ -106,7 +106,6 @@ function renderPassSheet(){
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet;
   sheet.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>claimPass(+b.dataset.pass));
 }
-function fireworksShow(x,z){ for(let k=0;k<6;k++) setTimeout(()=>{ confettiAt(x+rnd(-4,4),rnd(6,9),z+rnd(-4,2),60); sfx('whoosh'); },k*350); }
 
 // ---------- trophy ledge (cups on the front window sill) ----------
 let trophyG=null, trophyN=-1;

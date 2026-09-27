@@ -53,6 +53,7 @@ function makeChar(o){
   const eyeM=mat(0x1a1a22,{roughness:.3}), hl=new THREE.MeshBasicMaterial({color:0xffffff});
   const eyes=[]; [-1,1].forEach(sd=>{ const e=mesh(sph(0.042,10,8),eyeM,0.09*sd,0.02,0.23); e.scale.set(0.85,1.15,0.6); head.add(e); eyes.push(e); head.add(mesh(sph(0.013,6,4),hl,0.09*sd+0.012,0.04,0.255));
     const bl=mesh(sph(0.04,8,6),mat(0xff9c9c,{roughness:1}),0.155*sd,-0.06,0.2); bl.scale.set(1,0.6,0.4); head.add(bl); });
+  const face=addFace(head);
   if(o.shades){ head.add(mesh(box(0.28,0.07,0.03),M.dark,0,0.03,0.245)); }
   if(o.hs!=='bald'){ const cap=mesh(hairCap,hair,0,0.01,-0.02); cap.rotation.x=-0.35; head.add(cap);
     if(o.hs==='long') head.add(mesh(rbox(0.46,0.36,0.12,.05),hair,0,-0.16,-0.19));
@@ -93,7 +94,7 @@ function makeChar(o){
   if(o.phone){ arms[0].add(mesh(box(0.08,0.14,0.015),M.dark,0,-0.33,0.07)); }
   if(o.partner&&!child){ child=makeChar({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['long','bun','short','curly','pony']),top:o.top,bottom:rand(BOTTOMS),scale:0.97}); child.root.position.set(-0.52,0,-0.05); root.add(child.root); }
   const s=o.scale||1; root.scale.setScalar(s);
-  return {root,body,head,legs,arms,hold,bag,child,dog,eyes,hunch:o.hunch?0.16:0,t:Math.random()*10,ph:Math.random()*10,blink:1+Math.random()*4,sm:null,mode:'idle',spd:1,items:[]};
+  return {root,body,head,legs,arms,hold,bag,child,dog,eyes,face,hunch:o.hunch?0.16:0,t:Math.random()*10,ph:Math.random()*10,blink:1+Math.random()*4,sm:null,mode:'idle',spd:1,items:[]};
 }
 function setHold(c,items){
   while(c.hold.children.length) c.hold.remove(c.hold.children[0]);

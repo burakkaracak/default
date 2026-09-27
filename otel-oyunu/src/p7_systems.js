@@ -299,7 +299,7 @@ function updateSpawner(dt){
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
   let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
-  if(isNight()) f*=0.3;
+  if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1);
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
   if(Math.random()<rivalPull()){ spawnPasser(); return; }

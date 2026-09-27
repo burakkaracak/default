@@ -142,7 +142,7 @@ function updateEvents(dt){
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; onGameEvent('event',1);
   changeRep(score>=0.9?3:score>=0.6?1:-2);
   banner(`${E.e} ${E.name} ${score>=0.9?'kusursuz geçti!':score>=0.6?'başladı':'aksak başladı'}`,`Hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada`);
-  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40);
+  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40); if(score>=0.6){ fireworksShow(0,-4); cinematic(); }
   for(let i=0;i<E.n;i++) setTimeout(()=>{ if(queue.length<10){ const g=spawnGuest(rand(E.types),rand([L.spawnL,L.spawnR]),true); g.evt=ev.k; } },i*900);
   state.event=null; markSave();
 }
