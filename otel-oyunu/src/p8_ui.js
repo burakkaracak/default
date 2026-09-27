@@ -88,7 +88,7 @@ function updateHUD(){
   $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${state.wxEv&&state.wxEv.day===state.day?' '+WX_EV[state.wxEv.k].e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
-  if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
+  if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:''); let gr=$('goalRew'); if(!gr){ gr=document.createElement('span'); gr.id='goalRew'; gr.className='rew'; $('goalText').after(gr); } gr.textContent=g.rew?'🎁 '+fmt(g.rew):''; gr.style.display=g.rew?'':'none';
     const gp=$('goalProg'); gp.style.display=g.prog!=null?'block':'none'; if(g.prog!=null) gp.firstChild.style.width=Math.round(clamp(g.prog,0,1)*100)+'%'; }
   else ge.classList.remove('show');
   // floors
@@ -129,13 +129,19 @@ function hint(text,sec=4){ const h=$('hint'); h.textContent=text; h.classList.ad
 // SHEETS & MODALS
 // =====================================================================
 const sheetWrap=$('sheetWrap'), sheet=$('sheet'), modalWrap=$('modalWrap'), modal=$('modal');
-let sheetMode=null, mgmtTab='staff', sheetRoom=null;
+let sheetMode=null, mgmtTab='staff', sheetRoom=null, hotelSub='gen';
 function openSheet(mode){ sheetMode=mode; sheet._h=null; sheetWrap.classList.add('show'); renderSheet(); }
 function closeSheet(){ sheetWrap.classList.remove('show'); sheetMode=null; sheetRoom=null; }
 let sheetTouch=0;
 sheetWrap.addEventListener('pointerdown',e=>{ sheetTouch=performance.now(); if(e.target===sheetWrap) closeSheet(); });
-function openModal(html,bind){ modal.innerHTML=html; modalWrap.classList.add('show'); if(bind) bind(modal); }
-function closeModal(){ modalWrap.classList.remove('show'); }
+// tek pencere kuralı: oyuncu tıklamadan (zamanlayıcıyla) gelen pencere, açık bir pencere varken sıraya girer
+let lastUserT=0; ['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,()=>{ lastUserT=performance.now(); },true));
+const modalQ=[];
+function openModal(html,bind){
+  if(modalWrap.classList.contains('show')&&performance.now()-lastUserT>700){ if(modalQ.length<6) modalQ.push([html,bind]); return; }
+  modal.innerHTML=html; modalWrap.classList.add('show'); if(bind) bind(modal); }
+function closeModal(){ modalWrap.classList.remove('show');
+  if(modalQ.length) setTimeout(()=>{ if(modalWrap.classList.contains('show')||!modalQ.length) return; const [h,b]=modalQ.shift(); modal.innerHTML=h; modalWrap.classList.add('show'); if(b) b(modal); },600); }
 modalWrap.addEventListener('pointerdown',e=>{ if(e.target===modalWrap) closeModal(); });
 const cm=()=>city().mult;
 function staffHireCost(k){ const s=state.staff[k], c=STAFF[k].cost[s.n]; return c==null?null:Math.round(c*cm()); }
@@ -174,7 +180,7 @@ function renderSheet(){
     h+=staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
-    for(const k in UPG){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
+    for(const k of upgOrder()){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
       if(U.g!==lastG){ lastG=U.g; h+=`<div class="ugh">${UPG_GROUPS[U.g]}</div>`; }
       const pct={charm:15,haggle:5,fame:15,lead:10,calm:12}[k];
       const val=k==='cap'?` · ${U.vals[lv]} eşya`:k==='magnet'?` · ${U.vals[lv].toFixed(1)} m`:pct&&lv?` · +%${pct*lv}`:'';
@@ -186,12 +192,19 @@ function renderSheet(){
       <div class="stat">Odalar<b>${nR}</b></div><div class="stat">Ağırlanan misafir<b>${fmt(state.served)}</b></div>
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
-      <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+flowHtml()+opsHtml()+legacyHtml()+invHtml()+luxHtml();
+      <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>`+flowHtml();
+    const H=hotelSub;
+    h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
+    if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
+    if(H==='eco') h+=depthHtml()+invHtml()+luxHtml();
+    else if(H==='evt') h+=eventsHtml()+partyHtml();
+    else if(H==='rule') h+=opsHtml();
+    else if(H==='city') h+=progressHtml(next)+legacyHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   sheet.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ mgmtTab=b.dataset.tab; sfx('click'); renderSheet(); });
+  sheet.querySelectorAll('[data-hsub]').forEach(b=>b.onclick=()=>{ hotelSub=b.dataset.hsub; sfx('click'); renderSheet(); sheet.scrollTop=0; });
   sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));
   sheet.querySelectorAll('[data-upg]').forEach(b=>b.onclick=()=>buyUpg(b.dataset.upg));
@@ -298,17 +311,14 @@ function renderRoomSheet(){
 }
 function renderQuestSheet(){
   const Q=state.quests; if(!Q){ closeSheet(); return; }
-  let h=`<h3>🎯 Günlük görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`;
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('quests')}<p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`+streakRowHtml();
   Q.list.forEach((q,i)=>{ const D=QDEF[q.k], p=q.have/q.n, prog=q.k==='earn'?`${fmt(q.have)} / ${fmt(q.n)} ₺`:`${q.have} / ${q.n}`;
     h+=`<div class="row${q.claimed?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${questText(q)}<small>${prog}</small><div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div></div>
       ${q.claimed?'<button class="btn" disabled>Alındı ✓</button>':q.done?`<button class="btn gold qclaim" data-claim="${i}">Al 🎁<br>+${fmt(q.rew)} ₺</button>`:`<button class="btn ghost" disabled>🎁 ${fmt(q.rew)} ₺</button>`}</div>`; });
-  h+=`<button class="btn gold wide" data-pass>🎖️ Ödül yolu ve haftalık görevler (${(state.pass&&state.pass.pts)||0} puan)</button>`;
-  h+=`<button class="btn ghost wide" data-achs>🏆 Başarımlar (${ACH.filter(a=>state.ach&&state.ach[a.id]).length}/${ACH.length})</button>`;
   h+=`<p class="note">${Q.bonus?'🎉 Bugünün bonusu alındı. Yarın yeni görevler gelecek!':'🎁 Üç görevi de bitirirsen ek para ve +3 ün kazanırsın.'}</p>`;
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
-  const ab=sheet.querySelector('[data-achs]'); if(ab) ab.onclick=()=>openSheet('ach');
-  const pb=sheet.querySelector('[data-pass]'); if(pb) pb.onclick=()=>openSheet('pass');
+  bindQTabs(sheet); const sk=sheet.querySelector('[data-streak]'); if(sk) sk.onclick=()=>{ claimStreak(); renderSheet(); };
   sheet.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{ claimQuest(+b.dataset.claim); renderSheet(); });
 }
 // =====================================================================

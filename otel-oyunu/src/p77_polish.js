@@ -112,7 +112,8 @@ function separateEnts(){
 }
 
 // ---------- contextual tips & help ----------
-function tipOnce(key,text,sec=5){ if(state.tips[key]) return false; state.tips[key]=true; hint(text,sec); logEvent('💡 '+text); markSave(); return true; }
+let lastTipAt=-1e9;
+function tipOnce(key,text,sec=5){ if(state.tips[key]) return false; if(performance.now()-lastTipAt<40000) return false; lastTipAt=performance.now(); state.tips[key]=true; hint(text,sec); logEvent('💡 '+text); markSave(); return true; }
 let tipClock=0;
 function updateTips(dt){
   if(state.tut<TUT.length||sheetMode||modalWrap.classList.contains('show')) return;

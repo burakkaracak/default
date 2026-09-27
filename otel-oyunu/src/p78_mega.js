@@ -84,12 +84,12 @@ function checkAch(dt){
 }
 function renderAchSheet(){
   const done=ACH.filter(a=>state.ach&&state.ach[a.id]).length;
-  let h=`<h3>🏆 Başarımlar <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub">${done}/${ACH.length} tamamlandı · her biri para ve deneyim verir</p>`;
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('ach')}<p class="sub">🏆 Başarımlar · ${done}/${ACH.length} tamamlandı · her biri para ve deneyim verir</p>`;
   const seen={};
   for(const a of ACH){ const ok=state.ach&&state.ach[a.id]; if(!ok&&seen[a.st]) continue; if(!ok) seen[a.st]=true;
     const v=Math.min(a.goal,achVal(a.st)), p=v/a.goal;
     h+=`<div class="row${ok?' qdone':''}"><div class="ic">${a.e}</div><div class="tx">${a.name}<small>${ok?'Tamamlandı ✓':`${fmt(v)} / ${fmt(a.goal)}`}</small>${ok?'':`<div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div>`}</div><div style="font-weight:800;color:var(--gold2);font-size:13px;white-space:nowrap">+${fmt(achReward(a))} ₺</div></div>`; }
-  if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet;
+  if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet; bindQTabs(sheet);
 }
 
 // ---------- offline earnings ----------

@@ -163,6 +163,13 @@
   @keyframes tin{from{transform:translateY(-8px);opacity:0}}
   #banner{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) scale(.5);opacity:0;pointer-events:none;text-align:center;font-weight:800;font-size:36px;line-height:1.05;color:var(--gold2);text-shadow:0 3px 0 #6b4a00,0 0 22px rgba(0,0,0,.55);transition:transform .45s cubic-bezier(.3,1.7,.5,1),opacity .3s;width:92vw;}
   #banner.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  .stabs{display:flex;gap:4px;overflow-x:auto;margin:-2px 0 10px;scrollbar-width:none}.stabs::-webkit-scrollbar{display:none}
+  .stabs button{flex:0 0 auto;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--cream);border-radius:999px;padding:5px 9px;font:700 12.5px inherit;font-family:inherit;cursor:pointer;position:relative}
+  .stabs button.on{background:var(--gold2);color:#3a2600;border-color:transparent}
+  .sdot{position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:50%;background:#ff5a5a;box-shadow:0 0 0 2px rgba(0,0,0,.25)}
+  .tabs button{position:relative}
+  #goalText{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  @media (max-width:440px){ #banner{top:46%;font-size:28px;max-width:calc(100vw - 32px)} #banner small{font-size:14px} #goal{max-width:calc(100vw - 150px);font-size:12px;padding:2px 8px 3px} #livePill{max-width:calc(100vw - 150px)} #livePill .lbl{display:none} }
   #banner small{display:block;font-size:17px;color:var(--cream);text-shadow:0 2px 0 rgba(0,0,0,.6);margin-top:4px;}
 
   /* ---------- sheets & modals ---------- */

@@ -125,7 +125,7 @@ function depthHtml(){
     h+=`<div class="ugh">📦 Tedarik</div><div class="row"><div class="ic">📦</div><div class="tx">Depo: 🧻 ${s.paper}/${c} · 🧺 ${s.towel}/${c}<small>${state.order?'🚚 Kamyon yolda…':'Stok bitince misafir isteklerini karşılayamazsın'}</small></div>
       <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-order ${state.order||state.money<orderCost()?'disabled':''}>Sipariş<br>${fmt(orderCost())} ₺</button>
       ${state.autoOrder?'<button class="btn" disabled>Oto ✓</button>':`<button class="btn gold" data-autoorder ${state.money<Math.round(600*cm())?'disabled':''}>Oto sipariş<br>${fmt(Math.round(600*cm()))} ₺</button>`}</div></div>`; }
-  h+=`<div class="ugh">🏦 Banka</div>`+(state.loan?`<div class="row"><div class="ic">🏦</div><div class="tx">Kalan borç ${fmt(state.loan.left)} ₺<small>Her sabah %3 faiz (${fmt(Math.round(state.loan.left*0.03))} ₺) · 3 gün eksi bakiyede kalırsan ün kaybedersin</small></div><button class="btn gold" data-repay ${state.money<1?'disabled':''}>Öde</button></div>`
+  if(state.loan||state.money<0) h+=`<div class="ugh">🏦 Banka</div>`+(state.loan?`<div class="row"><div class="ic">🏦</div><div class="tx">Kalan borç ${fmt(state.loan.left)} ₺<small>Her sabah %3 faiz (${fmt(Math.round(state.loan.left*0.03))} ₺) · 3 gün eksi bakiyede kalırsan ün kaybedersin</small></div><button class="btn gold" data-repay ${state.money<1?'disabled':''}>Öde</button></div>`
     :`<div class="row"><div class="ic">🏦</div><div class="tx">Kredi çek: ${fmt(loanOffer())} ₺<small>Hızlı büyümek için · günlük %3 faiz</small></div><button class="btn" data-loan>Çek</button></div>`);
   return h;
 }

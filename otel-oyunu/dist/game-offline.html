@@ -163,6 +163,13 @@
   @keyframes tin{from{transform:translateY(-8px);opacity:0}}
   #banner{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) scale(.5);opacity:0;pointer-events:none;text-align:center;font-weight:800;font-size:36px;line-height:1.05;color:var(--gold2);text-shadow:0 3px 0 #6b4a00,0 0 22px rgba(0,0,0,.55);transition:transform .45s cubic-bezier(.3,1.7,.5,1),opacity .3s;width:92vw;}
   #banner.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  .stabs{display:flex;gap:4px;overflow-x:auto;margin:-2px 0 10px;scrollbar-width:none}.stabs::-webkit-scrollbar{display:none}
+  .stabs button{flex:0 0 auto;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--cream);border-radius:999px;padding:5px 9px;font:700 12.5px inherit;font-family:inherit;cursor:pointer;position:relative}
+  .stabs button.on{background:var(--gold2);color:#3a2600;border-color:transparent}
+  .sdot{position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:50%;background:#ff5a5a;box-shadow:0 0 0 2px rgba(0,0,0,.25)}
+  .tabs button{position:relative}
+  #goalText{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  @media (max-width:440px){ #banner{top:46%;font-size:28px;max-width:calc(100vw - 32px)} #banner small{font-size:14px} #goal{max-width:calc(100vw - 150px);font-size:12px;padding:2px 8px 3px} #livePill{max-width:calc(100vw - 150px)} #livePill .lbl{display:none} }
   #banner small{display:block;font-size:17px;color:var(--cream);text-shadow:0 2px 0 rgba(0,0,0,.6);margin-top:4px;}
 
   /* ---------- sheets & modals ---------- */
@@ -328,7 +335,7 @@ const UPG={
   fame:  {g:2,name:'Şöhret',     e:'🌟',costs:[300,900,2200],desc:'Mutlu misafirler %15 daha çok ün kazandırır'},
   lead:  {g:3,name:'Liderlik',   e:'📣',costs:[500,1400,3200,6500],desc:'Tüm personel %10 daha hızlı çalışır'},
   calm:  {g:3,name:'Sakinlik',   e:'🧘',costs:[180,500,1200,2600],desc:'Sıradaki misafirler %12 daha sabırlı bekler'},
-  auto:  {g:2,name:'Kasa asistanı',e:'💼',vals:[0,25,10],costs:[2500,7000],desc:'Paraları ve bahşişleri kendiliğinden toplar (25 sn, sonra 10 sn\'de bir)'},
+  auto:  {g:0,name:'Süper mıknatıs',e:'🧲',vals:[0,25,10],costs:[2500,7000],desc:'Mıknatısın son aşaması: tüm paraları ve bahşişleri kendiliğinden toplar (25 sn, sonra 10 sn\'de bir)'},
 };
 const UPG_GROUPS=['🏃 Hareket','🛠️ İş becerileri','💰 Kazanç','👥 Yönetim'];
 const ITEMS={paper:{e:'🧻',name:'Tuvalet kâğıdı'},towel:{e:'🧺',name:'Havlu'},food:{e:'🍽️',name:'Oda servisi'},linen:{e:'🧦',name:'Kirli çarşaf'}};
@@ -432,7 +439,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:39, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:40, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -3601,7 +3608,8 @@ function separateEnts(){
 }
 
 // ---------- contextual tips & help ----------
-function tipOnce(key,text,sec=5){ if(state.tips[key]) return false; state.tips[key]=true; hint(text,sec); logEvent('💡 '+text); markSave(); return true; }
+let lastTipAt=-1e9;
+function tipOnce(key,text,sec=5){ if(state.tips[key]) return false; if(performance.now()-lastTipAt<40000) return false; lastTipAt=performance.now(); state.tips[key]=true; hint(text,sec); logEvent('💡 '+text); markSave(); return true; }
 let tipClock=0;
 function updateTips(dt){
   if(state.tut<TUT.length||sheetMode||modalWrap.classList.contains('show')) return;
@@ -3759,12 +3767,12 @@ function checkAch(dt){
 }
 function renderAchSheet(){
   const done=ACH.filter(a=>state.ach&&state.ach[a.id]).length;
-  let h=`<h3>🏆 Başarımlar <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub">${done}/${ACH.length} tamamlandı · her biri para ve deneyim verir</p>`;
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('ach')}<p class="sub">🏆 Başarımlar · ${done}/${ACH.length} tamamlandı · her biri para ve deneyim verir</p>`;
   const seen={};
   for(const a of ACH){ const ok=state.ach&&state.ach[a.id]; if(!ok&&seen[a.st]) continue; if(!ok) seen[a.st]=true;
     const v=Math.min(a.goal,achVal(a.st)), p=v/a.goal;
     h+=`<div class="row${ok?' qdone':''}"><div class="ic">${a.e}</div><div class="tx">${a.name}<small>${ok?'Tamamlandı ✓':`${fmt(v)} / ${fmt(a.goal)}`}</small>${ok?'':`<div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div>`}</div><div style="font-weight:800;color:var(--gold2);font-size:13px;white-space:nowrap">+${fmt(achReward(a))} ₺</div></div>`; }
-  if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet;
+  if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet; bindQTabs(sheet);
 }
 
 // ---------- offline earnings ----------
@@ -4241,7 +4249,7 @@ function depthHtml(){
     h+=`<div class="ugh">📦 Tedarik</div><div class="row"><div class="ic">📦</div><div class="tx">Depo: 🧻 ${s.paper}/${c} · 🧺 ${s.towel}/${c}<small>${state.order?'🚚 Kamyon yolda…':'Stok bitince misafir isteklerini karşılayamazsın'}</small></div>
       <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-order ${state.order||state.money<orderCost()?'disabled':''}>Sipariş<br>${fmt(orderCost())} ₺</button>
       ${state.autoOrder?'<button class="btn" disabled>Oto ✓</button>':`<button class="btn gold" data-autoorder ${state.money<Math.round(600*cm())?'disabled':''}>Oto sipariş<br>${fmt(Math.round(600*cm()))} ₺</button>`}</div></div>`; }
-  h+=`<div class="ugh">🏦 Banka</div>`+(state.loan?`<div class="row"><div class="ic">🏦</div><div class="tx">Kalan borç ${fmt(state.loan.left)} ₺<small>Her sabah %3 faiz (${fmt(Math.round(state.loan.left*0.03))} ₺) · 3 gün eksi bakiyede kalırsan ün kaybedersin</small></div><button class="btn gold" data-repay ${state.money<1?'disabled':''}>Öde</button></div>`
+  if(state.loan||state.money<0) h+=`<div class="ugh">🏦 Banka</div>`+(state.loan?`<div class="row"><div class="ic">🏦</div><div class="tx">Kalan borç ${fmt(state.loan.left)} ₺<small>Her sabah %3 faiz (${fmt(Math.round(state.loan.left*0.03))} ₺) · 3 gün eksi bakiyede kalırsan ün kaybedersin</small></div><button class="btn gold" data-repay ${state.money<1?'disabled':''}>Öde</button></div>`
     :`<div class="row"><div class="ic">🏦</div><div class="tx">Kredi çek: ${fmt(loanOffer())} ₺<small>Hızlı büyümek için · günlük %3 faiz</small></div><button class="btn" data-loan>Çek</button></div>`);
   return h;
 }
@@ -4363,14 +4371,14 @@ function claimPass(i){
 function unlockHat(v){ if(!CUST.hat.some(x=>x[0]===v)) CUST.hat.push([v,HAT_N[v]]); }
 function renderPassSheet(){
   ensureWeek(); const tier=passTier(), pts=(state.pass&&state.pass.pts)||0, got=(state.pass&&state.pass.got)||[];
-  let h=`<h3>🎖️ Ödül yolu ve haftalık görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub">${pts} puan · her 100 puan bir ödül · puanlar: günlük görev +20, haftalık +60, hedef +5, başarım +10</p>`;
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('pass')}<p class="sub">${pts} puan · her 100 puan bir ödül · puanlar: günlük görev +20, haftalık +60, hedef +5, başarım +10</p>`;
   if(state.week){ h+=`<div class="ugh">📆 Bu haftanın görevleri (${7-((state.day-1)%7)} gün kaldı) · her biri +${fmt(state.week.rew)} ₺</div>`;
     state.week.list.forEach(q=>{ const D=WDEF[q.k]; h+=`<div class="row${q.done?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${D.t(q.n)}<small>${q.k==='earn'?fmt(q.have)+' / '+fmt(q.n):q.have+' / '+q.n}</small><div class="qbar"><i style="width:${(q.have/q.n*100).toFixed(0)}%"></i></div></div>${q.done?'✅':''}</div>`; }); }
   h+=`<div class="ugh">🎖️ Ödüller</div>`;
   PASS.forEach((r,i)=>{ const own=got.includes(i), open=tier>i;
     h+=`<div class="row${own?' qdone':''}"><div class="ic">${i+1}</div><div class="tx">${passLabel(r)}<small>${(i+1)*100} puan</small>${!open?`<div class="qbar"><i style="width:${Math.min(100,Math.max(0,(pts-i*100)))}%"></i></div>`:''}</div>${own?'<button class="btn" disabled>Alındı</button>':`<button class="btn gold${open?' qclaim':''}" data-pass="${i}" ${open?'':'disabled'}>${open?'Al 🎁':'🔒'}</button>`}</div>`; });
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet;
-  sheet.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>claimPass(+b.dataset.pass));
+  sheet.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>claimPass(+b.dataset.pass)); bindQTabs(sheet);
 }
 
 // ---------- trophy ledge (cups on the front window sill) ----------
@@ -4818,11 +4826,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=39;
+const GAME_VER=40;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -5340,6 +5348,29 @@ function updateIncidents(dt){
 function incHtml(){ const I=state.live&&state.live.inc; return I?`<span style="color:#ff9d8f">⚠️ ${Math.ceil(I.t)} sn</span>`:''; }
 
 // =====================================================================
+// FAZ 2 · ARAYÜZ: Otel alt sekmeleri, tek Görevler ekranı (Bugün / Bu
+// hafta / Kalıcı), yükseltme sırası (süper mıknatıs), bildirim yerleşimi
+// =====================================================================
+
+// ---------- Yönetim › Otel alt sekmeleri ----------
+const HSUB=[['gen','📊 Genel'],['eco','💰 Ekonomi'],['evt','📅 Etkinlik'],['rule','📜 Kural'],['city','🗺️ Şehir']];
+function hsubDot(k){ return k==='evt'?!!state.offer:k==='city'?!!state.done:k==='eco'?(stars()>=4&&Object.keys(INV).some(i=>{ const c=invCost(i); return c!=null&&state.money>=c; })):false; }
+function subTabsHtml(){ return `<div class="stabs">${HSUB.map(([k,l])=>`<button data-hsub="${k}" class="${hotelSub===k?'on':''}">${l}${hsubDot(k)?'<i class="sdot"></i>':''}</button>`).join('')}</div>`; }
+
+// ---------- Sen sekmesi: süper mıknatıs mıknatısın hemen ardından, mıknatıs bitince açılır ----------
+function upgOrder(){ const ks=Object.keys(UPG).filter(k=>k!=='auto'), i=ks.indexOf('magnet');
+  if(state.up.auto>0||state.up.magnet>=UPG.magnet.costs.length) ks.splice(i+1,0,'auto'); return ks; }
+
+// ---------- tek Görevler ekranı ----------
+const QTABS=[['quests','📅 Bugün'],['pass','🎖️ Bu hafta'],['ach','🏆 Kalıcı']];
+function qTabDot(k){ if(k==='quests') return !!(state.quests&&state.quests.list.some(q=>q.done&&!q.claimed))||!!(state.streak&&!state.streak.got);
+  if(k==='pass') return passClaimable(); return false; }
+function qTabsHtml(cur){ return `<div class="tabs">${QTABS.map(([k,l])=>`<button data-qt="${k}" class="${k===cur?'on':''}">${l}${qTabDot(k)?'<i class="sdot"></i>':''}</button>`).join('')}</div>`; }
+function bindQTabs(root){ root.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ if(sheetMode===b.dataset.qt) return; sfx('click'); openSheet(b.dataset.qt); }); }
+function streakRowHtml(){ const S=state.streak; if(!S||!S.n) return '';
+  const r=streakRew(S.n-1); return `<div class="row"><div class="ic">🔥</div><div class="tx">Giriş serisi: ${S.n}. gün<small>${S.got?'Bugünün ödülü alındı · yarın: '+rewTxt(streakRew(S.n)):'Bugünün ödülü: '+rewTxt(r)}</small></div>${S.got?'<button class="btn" disabled>Alındı ✓</button>':'<button class="btn gold qclaim" data-streak>Al 🎁</button>'}</div>`; }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -5428,7 +5459,7 @@ function updateHUD(){
   $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${state.wxEv&&state.wxEv.day===state.day?' '+WX_EV[state.wxEv.k].e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
-  if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
+  if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:''); let gr=$('goalRew'); if(!gr){ gr=document.createElement('span'); gr.id='goalRew'; gr.className='rew'; $('goalText').after(gr); } gr.textContent=g.rew?'🎁 '+fmt(g.rew):''; gr.style.display=g.rew?'':'none';
     const gp=$('goalProg'); gp.style.display=g.prog!=null?'block':'none'; if(g.prog!=null) gp.firstChild.style.width=Math.round(clamp(g.prog,0,1)*100)+'%'; }
   else ge.classList.remove('show');
   // floors
@@ -5469,13 +5500,19 @@ function hint(text,sec=4){ const h=$('hint'); h.textContent=text; h.classList.ad
 // SHEETS & MODALS
 // =====================================================================
 const sheetWrap=$('sheetWrap'), sheet=$('sheet'), modalWrap=$('modalWrap'), modal=$('modal');
-let sheetMode=null, mgmtTab='staff', sheetRoom=null;
+let sheetMode=null, mgmtTab='staff', sheetRoom=null, hotelSub='gen';
 function openSheet(mode){ sheetMode=mode; sheet._h=null; sheetWrap.classList.add('show'); renderSheet(); }
 function closeSheet(){ sheetWrap.classList.remove('show'); sheetMode=null; sheetRoom=null; }
 let sheetTouch=0;
 sheetWrap.addEventListener('pointerdown',e=>{ sheetTouch=performance.now(); if(e.target===sheetWrap) closeSheet(); });
-function openModal(html,bind){ modal.innerHTML=html; modalWrap.classList.add('show'); if(bind) bind(modal); }
-function closeModal(){ modalWrap.classList.remove('show'); }
+// tek pencere kuralı: oyuncu tıklamadan (zamanlayıcıyla) gelen pencere, açık bir pencere varken sıraya girer
+let lastUserT=0; ['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,()=>{ lastUserT=performance.now(); },true));
+const modalQ=[];
+function openModal(html,bind){
+  if(modalWrap.classList.contains('show')&&performance.now()-lastUserT>700){ if(modalQ.length<6) modalQ.push([html,bind]); return; }
+  modal.innerHTML=html; modalWrap.classList.add('show'); if(bind) bind(modal); }
+function closeModal(){ modalWrap.classList.remove('show');
+  if(modalQ.length) setTimeout(()=>{ if(modalWrap.classList.contains('show')||!modalQ.length) return; const [h,b]=modalQ.shift(); modal.innerHTML=h; modalWrap.classList.add('show'); if(b) b(modal); },600); }
 modalWrap.addEventListener('pointerdown',e=>{ if(e.target===modalWrap) closeModal(); });
 const cm=()=>city().mult;
 function staffHireCost(k){ const s=state.staff[k], c=STAFF[k].cost[s.n]; return c==null?null:Math.round(c*cm()); }
@@ -5514,7 +5551,7 @@ function renderSheet(){
     h+=staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
-    for(const k in UPG){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
+    for(const k of upgOrder()){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
       if(U.g!==lastG){ lastG=U.g; h+=`<div class="ugh">${UPG_GROUPS[U.g]}</div>`; }
       const pct={charm:15,haggle:5,fame:15,lead:10,calm:12}[k];
       const val=k==='cap'?` · ${U.vals[lv]} eşya`:k==='magnet'?` · ${U.vals[lv].toFixed(1)} m`:pct&&lv?` · +%${pct*lv}`:'';
@@ -5526,12 +5563,19 @@ function renderSheet(){
       <div class="stat">Odalar<b>${nR}</b></div><div class="stat">Ağırlanan misafir<b>${fmt(state.served)}</b></div>
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
-      <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+flowHtml()+opsHtml()+legacyHtml()+invHtml()+luxHtml();
+      <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>`+flowHtml();
+    const H=hotelSub;
+    h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
+    if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
+    if(H==='eco') h+=depthHtml()+invHtml()+luxHtml();
+    else if(H==='evt') h+=eventsHtml()+partyHtml();
+    else if(H==='rule') h+=opsHtml();
+    else if(H==='city') h+=progressHtml(next)+legacyHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   sheet.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ mgmtTab=b.dataset.tab; sfx('click'); renderSheet(); });
+  sheet.querySelectorAll('[data-hsub]').forEach(b=>b.onclick=()=>{ hotelSub=b.dataset.hsub; sfx('click'); renderSheet(); sheet.scrollTop=0; });
   sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));
   sheet.querySelectorAll('[data-upg]').forEach(b=>b.onclick=()=>buyUpg(b.dataset.upg));
@@ -5638,17 +5682,14 @@ function renderRoomSheet(){
 }
 function renderQuestSheet(){
   const Q=state.quests; if(!Q){ closeSheet(); return; }
-  let h=`<h3>🎯 Günlük görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`;
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('quests')}<p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`+streakRowHtml();
   Q.list.forEach((q,i)=>{ const D=QDEF[q.k], p=q.have/q.n, prog=q.k==='earn'?`${fmt(q.have)} / ${fmt(q.n)} ₺`:`${q.have} / ${q.n}`;
     h+=`<div class="row${q.claimed?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${questText(q)}<small>${prog}</small><div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div></div>
       ${q.claimed?'<button class="btn" disabled>Alındı ✓</button>':q.done?`<button class="btn gold qclaim" data-claim="${i}">Al 🎁<br>+${fmt(q.rew)} ₺</button>`:`<button class="btn ghost" disabled>🎁 ${fmt(q.rew)} ₺</button>`}</div>`; });
-  h+=`<button class="btn gold wide" data-pass>🎖️ Ödül yolu ve haftalık görevler (${(state.pass&&state.pass.pts)||0} puan)</button>`;
-  h+=`<button class="btn ghost wide" data-achs>🏆 Başarımlar (${ACH.filter(a=>state.ach&&state.ach[a.id]).length}/${ACH.length})</button>`;
   h+=`<p class="note">${Q.bonus?'🎉 Bugünün bonusu alındı. Yarın yeni görevler gelecek!':'🎁 Üç görevi de bitirirsen ek para ve +3 ün kazanırsın.'}</p>`;
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
-  const ab=sheet.querySelector('[data-achs]'); if(ab) ab.onclick=()=>openSheet('ach');
-  const pb=sheet.querySelector('[data-pass]'); if(pb) pb.onclick=()=>openSheet('pass');
+  bindQTabs(sheet); const sk=sheet.querySelector('[data-streak]'); if(sk) sk.onclick=()=>{ claimStreak(); renderSheet(); };
   sheet.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{ claimQuest(+b.dataset.claim); renderSheet(); });
 }
 // =====================================================================
