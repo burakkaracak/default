@@ -136,7 +136,7 @@ const geoCache={}, matCache={};
 function mat(color,o={}){ const k=color+JSON.stringify(o,(key,v)=>v&&v.isTexture?v.uuid:v); return matCache[k]||(matCache[k]=new THREE.MeshStandardMaterial(Object.assign({color,roughness:.78,metalness:0},o))); }
 const TEX_ROUGH={marble:.2,tile:.3,poolTile:.18,wood:.5,woodDark:.42,woodLight:.52,corridor:.62,paving:.85,asphalt:.92,concrete:.9,stone:.85,rubber:.95,sand:.95};
 function tmat(name,rx,ry,o={}){ const m=tmat0(name,rx,ry,o); if(typeof themeTint==='function') themeTint(m); return m; }
-function tmat0(name,rx,ry,o={}){ return mat(0xffffff,Object.assign({map:tex(name,rx,ry)},TEX_ROUGH[name]!=null&&o.roughness==null?{roughness:TEX_ROUGH[name]}:{},o)); }
+function tmat0(name,rx,ry,o={}){ return mat(0xffffff,withNormal(name,rx,ry,Object.assign({map:tex(name,rx,ry)},TEX_ROUGH[name]!=null&&o.roughness==null?{roughness:TEX_ROUGH[name]}:{},o))); }
 function box(w,h,d){ const k=`b${w}_${h}_${d}`; return geoCache[k]||(geoCache[k]=new THREE.BoxGeometry(w,h,d)); }
 function cyl(rt,rb,h,s=16){ const k=`c${rt}_${rb}_${h}_${s}`; return geoCache[k]||(geoCache[k]=new THREE.CylinderGeometry(rt,rb,h,s)); }
 function sph(r,ws=16,hs=12){ const k=`s${r}_${ws}_${hs}`; return geoCache[k]||(geoCache[k]=new THREE.SphereGeometry(r,ws,hs)); }

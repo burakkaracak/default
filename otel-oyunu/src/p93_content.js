@@ -118,11 +118,11 @@ function buildFloorDeco(f){
     CORR.forEach(z=>{ g.add(mesh(box(12.6,0.014,0.9),cm1,0,0.03,z)); for(let x=-5.5;x<=5.5;x+=2.2) g.add(mesh(box(0.5,0.016,0.5),cm2,x,0.034,z)); });
     [-6.5,6.5].forEach(x=>CORR.forEach(z=>{ if(F.theme==='garden') bigPlant(g,x,z+0.55,0.5); else { const o=mesh(sph(0.16,10,8),cm2,x,1.7,z+0.55); g.add(o); } }));
     const sg=signPlane(`${T.e} ${T.n.toUpperCase()}`,1.8,0.34,{bg:'#'+T.c.toString(16).padStart(6,'0'),fg:'#fff',font:'800 56px "Baloo 2"',fit:true}); sg.position.set(0,2.35,BACK+0.12); g.add(sg); }
-  if(F.lounge){ const x=-5.6, z=CORR[0]-0.05, wood=tmat('woodDark',1,1), sm=mat(F.theme?FTHEME[F.theme].c:0x8a2f3a,{roughness:.9});
-    g.add(mesh(rbox(1.3,0.35,0.55,.1),sm,x,0.2,z-0.45,true)); g.add(mesh(rbox(1.3,0.45,0.14,.06),sm,x,0.45,z-0.68,true));
-    g.add(mesh(cyl(0.22,0.22,0.04,16),wood,x+1.0,0.5,z-0.4)); g.add(mesh(cyl(0.03,0.03,0.48,6),M.gold,x+1.0,0.25,z-0.4)); g.add(mesh(cyl(0.05,0.04,0.12,8),mat(0xe0574f),x+1.0,0.58,z-0.4));
-    const lp=mesh(cyl(0.1,0.14,0.2,12),M.lampOn,x-0.85,1.0,z-0.55); g.add(lp); g.add(mesh(cyl(0.02,0.02,0.9,6),M.gold,x-0.85,0.45,z-0.55));
-    addCols('lounge'+f,[[f,x-0.95,x+1.25,z-0.78,z-0.15]]); }
+  if(F.lounge){ const z=CORR[0], wood=tmat('woodDark',1,1), sm=mat(F.theme?FTHEME[F.theme].c:0x8a2f3a,{roughness:.9});   // koridor ucunda, duvara yaslı: oda kapılarını kapatmaz
+    g.add(mesh(rbox(0.55,0.35,1.3,.1),sm,-6.5,0.2,z,true)); g.add(mesh(rbox(0.14,0.45,1.3,.06),sm,-6.78,0.45,z,true));
+    g.add(mesh(cyl(0.2,0.2,0.04,16),wood,-6.52,0.5,z-0.95)); g.add(mesh(cyl(0.03,0.03,0.48,6),M.gold,-6.52,0.25,z-0.95)); g.add(mesh(cyl(0.05,0.04,0.12,8),mat(0xe0574f),-6.52,0.58,z-0.95));
+    g.add(mesh(cyl(0.1,0.14,0.2,12),M.lampOn,-6.7,1.0,z+0.85)); g.add(mesh(cyl(0.02,0.02,0.9,6),M.gold,-6.7,0.45,z+0.85));
+    addCols('lounge'+f,[[f,-6.88,-6.2,z-0.68,z+0.68],[f,-6.75,-6.28,z-1.18,z-0.72]]); }
 }
 function floorSat(f){ const F=(state.floors||{})[f]; return F?(F.theme?4:0)+(F.lounge?3:0):0; }
 function buyFloorTheme(f,k){ const c=floorThemeCost(f); const F=(state.floors||(state.floors={}))[f]||(state.floors[f]={}); if(F.theme===k||!spend(c)) return; F.theme=k; buildFloorDeco(f); sfx('build'); toast(`${FTHEME[k].e} ${f+1}. kat artık ${FTHEME[k].n}`); save(); renderSheet(); }

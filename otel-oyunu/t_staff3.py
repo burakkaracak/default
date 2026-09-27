@@ -10,9 +10,9 @@ with sync_playwright() as p:
     pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.goto('file://'+SP+'/test2.html'); pg.wait_for_timeout(800)
     pg.add_script_tag(path=SP+'/bot.js')
-    print(pg.evaluate("""(()=>{ state.tut=5; """+sys.argv[1]+"""
+    print(pg.evaluate("""(()=>{ state.tut=5; """+(sys.argv[1] if len(sys.argv)>1 else "ADMIN.allOpen();")+"""
       const out={}; const add=(k,m)=>{ out[k]=out[k]||{n:0,ex:[]}; out[k].n++; if(out[k].ex.length<4) out[k].ex.push(m); };
-      const jobT=new Map(); const days=+"""+sys.argv[2]+""";
+      const jobT=new Map(); const days=+"""+(sys.argv[2] if len(sys.argv)>2 else "2")+""";
       for(let s=0;s<days*DAY_SEC/0.05;s++){ if(s%3===0) botThink(); simStep(0.05);
         if(s%10) continue;
         for(const e of staffEnts){
