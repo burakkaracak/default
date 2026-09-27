@@ -88,7 +88,8 @@ function updateHUD(){
   $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
-  if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:''); }
+  if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
+    const gp=$('goalProg'); gp.style.display=g.prog!=null?'block':'none'; if(g.prog!=null) gp.firstChild.style.width=Math.round(clamp(g.prog,0,1)*100)+'%'; }
   else ge.classList.remove('show');
   // floors
   const n=floorsBuilt(), fl=$('floors');
@@ -486,7 +487,7 @@ function frame(now){
   if(!player) return;
   for(let k=0;k<gameSpeed;k++){
   updatePlayer(dt);
-  updatePlayerZones(dt); updatePads(dt); updateDesk(dt);
+  updatePlayerZones(dt); updatePads(dt); updateDesk(dt); if(chainFlash>0) chainFlash-=dt;
   updateGuests(dt); updateStaff(dt);
   for(const e of ents.slice()) if(e!==player) e.step(dt);
   updateSpawner(dt); updateBreakdowns(dt); updateTime(dt);

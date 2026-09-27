@@ -270,7 +270,7 @@ function questText(q){ return QDEF[q.k].t(q.n); }
 function questsReady(){ return !!state.quests&&state.quests.list.some(q=>q.done&&!q.claimed); }
 function questsOn(){ return state.tut>=TUT.length&&!!state.quests; }
 function qEv(k,v=1){
-  onGameEvent(k,v);
+  onGameEvent(k,v); chainEv(k,v);
   if(!questsOn()) return;
   for(const q of state.quests.list){ if(q.k!==k||q.done) continue;
     q.have=Math.min(q.n,q.have+v);
@@ -420,6 +420,7 @@ function goal(){
   if(s===3) return {icon:'💰',text:TUT[3].text,target:{x:L.piles.desk.x,y:0,z:L.piles.desk.z,f:0}};
   if(s===4){ const d=roomsWhere(id=>state.rooms[id].dirty)[0]; if(d){ const sp=roomSpots(d); return {icon:'🧹',text:TUT[4].text,target:{x:sp.stand.x,y:sp.stand.f*FH,z:sp.stand.z,f:sp.stand.f}}; }
     return {icon:'⏳',text:'Misafir odasında… bu arada parayı topla',target:null}; }
+  const chg=chainGoal(); if(chg) return chg;
   const av=PADS.filter(d=>padVis[d.id]);
   if(!av.length) return state.done?{icon:'🏆',text:'Otel tamamlandı! Yeni şehir seni bekliyor',target:null,done:true}:null;
   const open=av.filter(d=>!padLocked(d)).sort((a,b)=>(a.cost-(state.paid[a.id]||0))-(b.cost-(state.paid[b.id]||0)));
@@ -427,3 +428,46 @@ function goal(){
   const d=av[0], miss=rawStars()>=d.stars?starMissing(stars()+1):[]; return {icon:'⭐',text:miss.length?`${stars()+1}★ için: ${miss.join(', ')}`:`${d.label} için ${d.stars} yıldıza ulaş`,target:null};
 }
 function padTarget(id){ const d=PADMAP[id]; return {x:d.x,y:d.f*FH,z:d.z,f:d.f}; }
+
+// ---------- short goal chain: always one small rewarded objective on screen ----------
+const CHAIN_KEYS=['guest','clean','happy','earn','req','coffee','amen','fix','upg'];
+let chainFlash=0, chainFlashTxt='';
+function chainOn(){ return state.tut>=TUT.length&&!state.sandbox; }
+function openPads(){ return PADS.filter(d=>padVis[d.id]&&!padLocked(d)).sort((a,b)=>(a.cost-(state.paid[a.id]||0))-(b.cost-(state.paid[b.id]||0))); }
+function newChain(){
+  const n=state.chainN||0, rr=roomRateSum()*incomeMult(), op=openPads();
+  if(n%2===0&&op.length){ const d=op[0]; state.chain={k:'pad',pad:d.id,need:1,have:0,rew:r10(Math.max(40,Math.min(d.cost*0.12,rr*0.8+40)))}; }
+  else { const keys=CHAIN_KEYS.filter(k=>QDEF[k].ok()&&k!==(state.chainLast||'')), k=keys[Math.floor(Math.random()*keys.length)]||'guest';
+    const need=k==='earn'?r10(Math.max(120,rr*1.2)):k==='upg'||k==='fix'?1:clamp(2+Math.floor(n/5),2,7);
+    state.chain={k,need,have:0,rew:r10(Math.max(40,rr*0.35))}; state.chainLast=k; }
+  markSave();
+}
+function chainEv(k,v){ const c=state.chain; if(!chainOn()||!c||c.k!==k) return; c.have=Math.min(c.need,c.have+v); if(c.have>=c.need) chainDone(); else markSave(); }
+function chainDone(){
+  const c=state.chain; state.chain=null; state.chainN=(state.chainN||0)+1;
+  addMoney(c.rew,player.x,player.y+1.2,player.z,player.f,true); gainXP(8); sfx('sparkle'); confettiAt(player.x,player.y+1.8,player.z,30);
+  chainFlash=1.6; chainFlashTxt=`Hedef tamam! +${fmt(c.rew)} ₺`; markSave();
+}
+function chainTarget(k){
+  const room=fn=>{ const ids=roomsWhere(fn); if(!ids.length) return null; let best=null,bd=1e9;
+    for(const id of ids){ const sp=roomSpots(id).stand, d=(sp.f!==player.f?400:0)+d2(player.x,player.z,sp.x,sp.z); if(d<bd){ bd=d; best=sp; } }
+    return {x:best.x,y:best.f*FH,z:best.z,f:best.f}; };
+  if(k==='clean') return room(id=>state.rooms[id].dirty);
+  if(k==='fix') return room(id=>state.rooms[id].broken);
+  if(k==='req') return room(id=>!!RT(id).req);
+  if(k==='guest') return {x:L.serve.cx,y:0,z:L.serve.cz,f:0};
+  if(k==='earn'){ let bk=null; for(const p in state.piles) if(state.piles[p]>0&&(!bk||state.piles[p]>state.piles[bk])) bk=p;
+    if(bk){ const P=L.piles[bk]; return {x:P.x,y:P.f*FH,z:P.z,f:P.f}; } }
+  return null;
+}
+function chainGoal(){
+  if(!chainOn()) return null;
+  if(chainFlash>0) return {icon:'🎉',text:chainFlashTxt,target:null,done:true};
+  let c=state.chain; if(c&&c.k!=='pad'&&!QDEF[c.k]) c=state.chain=null;
+  if(c&&c.k==='pad'&&(built(c.pad)||!PADMAP[c.pad])){ if(built(c.pad)){ c.have=1; chainDone(); return chainGoal(); } c=state.chain=null; }
+  if(c&&c.k==='pad'&&!padVis[c.pad]) c=state.chain=null;
+  if(!c){ newChain(); c=state.chain; }
+  if(c.k==='pad'){ const d=PADMAP[c.pad]; return {icon:d.icon,text:d.label,price:Math.ceil(d.cost-(state.paid[d.id]||0)),target:padTarget(d.id),prog:(state.paid[d.id]||0)/d.cost,rew:c.rew}; }
+  const Q=QDEF[c.k], cnt=c.k==='earn'?`${fmt(c.have)}/${fmt(c.need)}`:`${c.have}/${c.need}`;
+  return {icon:Q.e,text:(c.k==='earn'?`${fmt(c.need)} ₺ kazan`:Q.t(c.need))+` <small>${cnt}</small>`,target:chainTarget(c.k),prog:c.have/c.need,rew:c.rew};
+}

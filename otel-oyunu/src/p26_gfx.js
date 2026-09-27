@@ -112,8 +112,8 @@ function buildComposer(){
   const rt=ms?new THREE.WebGLMultisampleRenderTarget(w,h,pars):new THREE.WebGLRenderTarget(w,h,pars); if(ms) rt.samples=4;
   composer=new THREE.EffectComposer(renderer,rt);
   composer.addPass(new THREE.RenderPass(scene,camera));
-  saoPass=new THREE.SAOPass(scene,camera,false,false,new THREE.Vector2(w/2,h/2));
-  Object.assign(saoPass.params,{saoBias:0.6,saoIntensity:0.04,saoScale:9,saoKernelRadius:40,saoMinResolution:0,saoBlur:true,saoBlurRadius:6,saoBlurStdDev:3.5,saoBlurDepthCutoff:0.008});
+  saoPass=new THREE.SAOPass(scene,camera,false,true,new THREE.Vector2(w/2,h/2));
+  Object.assign(saoPass.params,{saoBias:0.9,saoIntensity:0.04,saoScale:9,saoKernelRadius:40,saoMinResolution:0,saoBlur:true,saoBlurRadius:6,saoBlurStdDev:3.5,saoBlurDepthCutoff:0.008});
   composer.addPass(saoPass);
   bloomPass=new THREE.UnrealBloomPass(new THREE.Vector2(w/2,h/2),0.25,0.55,0.86); composer.addPass(bloomPass);
   gradePass=new THREE.ShaderPass(GradeShader); gradePass.uniforms.res.value.set(w,h); composer.addPass(gradePass);
