@@ -124,6 +124,14 @@ function animChar(c,dt){
     L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-0.5;
   } else if(m==='swim'){
     L[0].rotation.x=Math.sin(t*1.6)*0.5; L[1].rotation.x=-Math.sin(t*1.6)*0.5; A[0].rotation.x=-Math.PI+Math.sin(t)*1.2; A[1].rotation.x=-Math.PI-Math.sin(t)*1.2;
+  } else if(m==='kiyam'){
+    A[0].rotation.x=A[1].rotation.x=-0.95; A[0].rotation.z=0.75; A[1].rotation.z=-0.75;
+  } else if(m==='ruku'){
+    B.rotation.x=1.35; A[0].rotation.x=A[1].rotation.x=-1.15; A[0].rotation.z=0.12; A[1].rotation.z=-0.12;
+  } else if(m==='secde'){
+    B.position.y=0.02; B.rotation.x=1.65; L[0].rotation.x=L[1].rotation.x=1.55; A[0].rotation.x=A[1].rotation.x=-2.6; A[0].rotation.z=0.25; A[1].rotation.z=-0.25;
+  } else if(m==='kade'||m==='selamR'||m==='selamL'){
+    B.position.y=0.02; B.rotation.x=0.05; L[0].rotation.x=L[1].rotation.x=1.55; A[0].rotation.x=A[1].rotation.x=-0.55;
   } else if(m==='lie'){
     A[0].rotation.z=0.15; A[1].rotation.x=-2.3+Math.sin(t*0.7)*0.08; A[1].rotation.z=-0.25; B.scale.y=1+Math.sin(t*0.8)*0.015;
   } else if(m==='sitread'){
@@ -149,9 +157,9 @@ function animChar(c,dt){
   }
   if(carrying&&m!=='sleep'&&m!=='swim'){ A[0].rotation.set(-1.25,0,0.25); A[1].rotation.set(-1.25,0,-0.25); }
   // --- life: head look-around, walking lean, blinking, smooth pose transitions ---
-  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance'&&m!=='lie';
+  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance'&&m!=='lie'&&m!=='kiyam'&&m!=='ruku'&&m!=='secde'&&m!=='kade'&&m!=='selamR'&&m!=='selamL';
   c.ph+=dt; const look=idle?Math.sin(c.ph*0.45)*0.5*Math.max(0,Math.sin(c.ph*0.17+1)):0;
-  H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:m==='lie'?-0.35:m==='sitread'||m==='type'?0.3:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
+  H.rotation.y+=((m==='selamR'?-0.9:m==='selamL'?0.9:look)-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:m==='kiyam'?0.35:m==='ruku'?0.2:m==='kade'?0.3:m==='lie'?-0.35:m==='sitread'||m==='type'?0.3:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
   if(fast) B.rotation.x+=0.07;
   if(c.eyes){ c.blink-=dt; const sh=c.blink<0.12&&m!=='sleep'?0.12:m==='sleep'?0.1:1.15; c.eyes.forEach(e=>e.scale.y=sh); if(c.blink<0) c.blink=2.5+Math.random()*3.5; }
   const tgt=[L[0].rotation.x,L[1].rotation.x,A[0].rotation.x,A[1].rotation.x,A[0].rotation.z,A[1].rotation.z,B.position.y,B.rotation.x];

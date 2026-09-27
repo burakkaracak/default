@@ -3,12 +3,12 @@
 // COLLIDERS
 // =====================================================================
 const COLS={};                 // tag -> [[f,x0,x1,z0,z1],...]
-const colByFloor=[[],[],[],[]];
-const navDirty=[true,true,true,true];
+const colByFloor=[[],[],[],[],[]];
+const navDirty=[true,true,true,true,true];
 function rebuildColIndex(){ colByFloor.forEach(a=>a.length=0); for(const t in COLS) for(const c of COLS[t]) colByFloor[c[0]].push(c); }
 function addCols(tag,list){ if(COLS[tag]) COLS[tag].forEach(c=>navDirty[c[0]]=true); COLS[tag]=list; list.forEach(c=>navDirty[c[0]]=true); rebuildColIndex(); }
 function removeCols(tag){ if(!COLS[tag]) return; COLS[tag].forEach(c=>navDirty[c[0]]=true); delete COLS[tag]; rebuildColIndex(); }
-function walkRects(f){ return f===0?[[-17.3,17.3,BACK-0.12,12.75]]:[[-6.88,6.88,BACK+0.1,2.62],[4.92,6.28,2.45,4.12]]; }
+function walkRects(f){ return f===4?[[-6.88,6.88,-6.2,2.62],[4.92,6.28,2.45,4.12]]:f===0?[[-17.3,17.3,BACK-0.12,12.75]]:[[-6.88,6.88,BACK+0.1,2.62],[4.92,6.28,2.45,4.12]]; }
 function inWalk(f,x,z,m=0){ for(const r of walkRects(f)) if(x>=r[0]+m&&x<=r[1]-m&&z>=r[2]+m&&z<=r[3]-m) return true; return false; }
 function blockedAt(f,x,z,r){
   if(!inWalk(f,x,z,0.05)) return true;

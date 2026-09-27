@@ -95,7 +95,7 @@ function updateHUD(){
   const n=floorsBuilt(), fl=$('floors');
   const key=n+'|'+viewFloor+'|'+player.f+'|'+[0,1,2,3].map(f=>floorBusy(f)?1:0).join('');
   if(fl.dataset.k!==key){ fl.dataset.k=key; fl.innerHTML='';
-    if(n>1) for(let f=n-1;f>=0;f--){ const b=document.createElement('button'); b.textContent=f===ROOF?'Ç':(f+1)+'.K'; b.title=floorName(f); b.setAttribute('aria-label',floorName(f)+' bak'); if(f===viewFloor) b.classList.add('on'); if(f===player.f) b.classList.add('me');
+    if(n>1) for(let f=n-1;f>=0;f--){ const b=document.createElement('button'); b.textContent=f===4?'🕌':f===ROOF?'Ç':(f+1)+'.K'; b.title=floorName(f); b.setAttribute('aria-label',floorName(f)+' bak'); if(f===viewFloor) b.classList.add('on'); if(f===player.f) b.classList.add('me');
       if(floorBusy(f)&&f!==viewFloor){ const d=document.createElement('span'); d.className='dot'; b.appendChild(d); }
       b.onclick=()=>{ sfx('click'); peekFloor=f===player.f?null:f; }; fl.appendChild(b); } }
   // elevator
@@ -197,7 +197,7 @@ function renderSheet(){
     const H=hotelSub;
     h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
     if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
-    if(H==='gen') h+=tierHtml()+mgrHtml()+floorsHtml();
+    if(H==='gen') h+=tierHtml()+mgrHtml()+mescitHtml()+floorsHtml();
     if(H==='eco') h+=depthHtml()+invHtml()+luxHtml();
     else if(H==='evt') h+=eventsHtml()+partyHtml();
     else if(H==='rule') h+=opsHtml();
@@ -215,7 +215,7 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
-  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet);
+  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet); bindMescit(sheet);
   const spb=sheet.querySelector('[data-spbuy]'); if(spb) spb.onclick=buySpecial; const mgo=sheet.querySelector('[data-mgopen]'); if(mgo) mgo.onclick=openMgr;
   sheet.querySelectorAll('[data-fth]').forEach(b=>b.onclick=()=>{ const [f,k]=b.dataset.fth.split(':'); buyFloorTheme(+f,k); }); sheet.querySelectorAll('[data-flo]').forEach(b=>b.onclick=()=>buyLounge(+b.dataset.flo));
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
@@ -608,7 +608,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -634,7 +634,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

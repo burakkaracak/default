@@ -261,6 +261,9 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"function"==typeof define&&define.amd?define(["exports"],e):e((t="undefined"!=typeof globalThis?globalThis:t||self).adhan={})}(this,function(t){"use strict";function e(t,e,n){return(e=function(t){var e=function(t,e){if("object"!=typeof t||!t)return t;var n=t[Symbol.toPrimitive];if(void 0!==n){var r=n.call(t,e);if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===e?String:Number)(t)}(t,"string");return"symbol"==typeof e?e:e+""}(e))in t?Object.defineProperty(t,e,{value:n,enumerable:!0,configurable:!0,writable:!0}):t[e]=n,t}function n(t,e){var n=Object.keys(t);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(t);e&&(r=r.filter(function(e){return Object.getOwnPropertyDescriptor(t,e).enumerable})),n.push.apply(n,r)}return n}function r(t){for(var r=1;r<arguments.length;r++){var i=null!=arguments[r]?arguments[r]:{};r%2?n(Object(i),!0).forEach(function(n){e(t,n,i[n])}):Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(i)):n(Object(i)).forEach(function(e){Object.defineProperty(t,e,Object.getOwnPropertyDescriptor(i,e))})}return t}const i={Shafi:"shafi",Hanafi:"hanafi"};const a={MiddleOfTheNight:"middleofthenight",SeventhOfTheNight:"seventhofthenight",TwilightAngle:"twilightangle",recommended:t=>t.latitude>48?a.SeventhOfTheNight:a.MiddleOfTheNight};class s{constructor(t,e){this.latitude=t,this.longitude=e}}const o={Nearest:"nearest",Up:"up",None:"none"};function h(t,e){const n=t.getFullYear(),r=t.getMonth(),i=t.getDate()+e,a=t.getHours(),s=t.getMinutes(),o=t.getSeconds();return new Date(n,r,i,a,s,o)}function u(t,e){return l(t,60*e)}function l(t,e){return new Date(t.getTime()+1e3*e)}function c(t){let e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.Nearest;const n=t.getUTCSeconds();let r=n>=30?60-n:-1*n;return e===o.Up?r=60-n:e===o.None&&(r=0),l(t,r)}function d(t){return t%4==0&&(t%100!=0||t%400==0)}function g(t){let e=0;const n=[31,d(t.getFullYear())?29:28,31,30,31,30,31,31,30,31,30,31];for(let r=0;r<t.getMonth();r++)e+=n[r];return e+=t.getDate(),e}function m(t){return t instanceof Date&&!isNaN(t.valueOf())}function f(t){return t*Math.PI/180}function M(t){return 180*t/Math.PI}function p(t,e){return t-e*Math.floor(t/e)}function b(t){return p(t,360)}const w={General:"general",Ahmer:"ahmer",Abyad:"abyad"},A={meanSolarLongitude(t){const e=t;return b(280.4664567+36000.76983*e+3032e-7*Math.pow(e,2))},meanLunarLongitude:t=>b(218.3165+481267.8813*t),ascendingLunarNodeLongitude(t){const e=t;return b(125.04452-1934.136261*e+.0020708*Math.pow(e,2)+Math.pow(e,3)/45e4)},meanSolarAnomaly(t){const e=t;return b(357.52911+35999.05029*e-1537e-7*Math.pow(e,2))},solarEquationOfTheCenter(t,e){const n=t,r=f(e);return(1.914602-.004817*n-14e-6*Math.pow(n,2))*Math.sin(r)+(.019993-101e-6*n)*Math.sin(2*r)+289e-6*Math.sin(3*r)},apparentSolarLongitude(t,e){const n=t,r=125.04-1934.136*n;return b(e+A.solarEquationOfTheCenter(n,A.meanSolarAnomaly(n))-.00569-.00478*Math.sin(f(r)))},meanObliquityOfTheEcliptic(t){const e=t;return 23.439291-.013004167*e-1.639e-7*Math.pow(e,2)+5.036e-7*Math.pow(e,3)},apparentObliquityOfTheEcliptic(t,e){const n=125.04-1934.136*t;return e+.00256*Math.cos(f(n))},meanSiderealTime(t){const e=t;return b(280.46061837+360.98564736629*(36525*e+2451545-2451545)+387933e-9*Math.pow(e,2)-Math.pow(e,3)/3871e4)},nutationInLongitude(t,e,n,r){const i=e,a=n,s=r;return-17.2/3600*Math.sin(f(s))-1.32/3600*Math.sin(2*f(i))-.23/3600*Math.sin(2*f(a))+.21/3600*Math.sin(2*f(s))},nutationInObliquity(t,e,n,r){const i=e,a=n,s=r;return 9.2/3600*Math.cos(f(s))+.57/3600*Math.cos(2*f(i))+.1/3600*Math.cos(2*f(a))-.09/3600*Math.cos(2*f(s))},altitudeOfCelestialBody(t,e,n){const r=t,i=e,a=n,s=Math.sin(f(r))*Math.sin(f(i)),o=Math.cos(f(r))*Math.cos(f(i))*Math.cos(f(a));return M(Math.asin(s+o))},approximateTransit(t,e,n){const r=t,i=p((n+-1*r-e)/360,1),a=p((12-r/15)/24,1);return i-a>.5?i-1:a-i>.5?i+1:i},correctedTransit(t,e,n,r,i,a){const s=t,o=r,h=i,u=a,l=-1*e,c=b(n+360.985647*s),d=b(A.interpolateAngles(o,h,u,s));var g;return 24*(s+((g=c-l-d)>=-180&&g<=180?g:g-360*Math.round(g/360))/-360)},correctedHourAngle(t,e,n,r,i,a,s,o,h,u,l){const c=t,d=e,g=i,m=a,p=s,w=o,j=h,T=u,S=l,v=-1*n.longitude,y=Math.sin(f(d))-Math.sin(f(n.latitude))*Math.sin(f(j)),D=Math.cos(f(n.latitude))*Math.cos(f(j)),O=M(Math.acos(y/D)),N=r?c+O/360:c-O/360,P=b(g+360.985647*N),C=b(A.interpolateAngles(m,p,w,N)),L=A.interpolate(j,T,S,N),F=P-v-C;return 24*(N+(A.altitudeOfCelestialBody(n.latitude,L,F)-d)/(360*Math.cos(f(L))*Math.cos(f(n.latitude))*Math.sin(f(F))))},interpolate(t,e,n,r){const i=t-e,a=n-t;return t+r/2*(i+a+r*(a-i))},interpolateAngles(t,e,n,r){const i=b(t-e),a=b(n-t);return t+r/2*(i+a+r*(a-i))},julianDay(t,e,n){let r=arguments.length>3&&void 0!==arguments[3]?arguments[3]:0;const i=Math.trunc,a=i(e>2?t:t-1),s=i(e>2?e:e+12),o=n+r/24,h=i(a/100),u=i(2-h+i(h/4));return i(365.25*(a+4716))+i(30.6001*(s+1))+o+u-1524.5},julianCentury:t=>(t-2451545)/36525,seasonAdjustedMorningTwilight(t,e,n,r){const i=75+28.65/55*Math.abs(t),a=75+19.44/55*Math.abs(t),s=75+32.74/55*Math.abs(t),o=75+48.1/55*Math.abs(t),h=function(){const r=A.daysSinceSolstice(e,n,t);return r<91?i+(a-i)/91*r:r<137?a+(s-a)/46*(r-91):r<183?s+(o-s)/46*(r-137):r<229?o+(s-o)/46*(r-183):r<275?s+(a-s)/46*(r-229):a+(i-a)/91*(r-275)}();return l(r,Math.round(-60*h))},seasonAdjustedEveningTwilight(t,e,n,r,i){let a,s,o,h;i===w.Ahmer?(a=62+17.4/55*Math.abs(t),s=62-7.16/55*Math.abs(t),o=62+5.12/55*Math.abs(t),h=62+19.44/55*Math.abs(t)):i===w.Abyad?(a=75+25.6/55*Math.abs(t),s=75+7.16/55*Math.abs(t),o=75+36.84/55*Math.abs(t),h=75+1.488*Math.abs(t)):(a=75+25.6/55*Math.abs(t),s=75+2.05/55*Math.abs(t),o=75-9.21/55*Math.abs(t),h=75+6.14/55*Math.abs(t));const u=function(){const r=A.daysSinceSolstice(e,n,t);return r<91?a+(s-a)/91*r:r<137?s+(o-s)/46*(r-91):r<183?o+(h-o)/46*(r-137):r<229?h+(o-h)/46*(r-183):r<275?o+(s-o)/46*(r-229):s+(a-s)/91*(r-275)}();return l(r,Math.round(60*u))},daysSinceSolstice(t,e,n){let r;const i=d(e)?173:172,a=d(e)?366:365;return n>=0?(r=t+10,r>=a&&(r-=a)):(r=t-i,r<0&&(r+=a)),r}};class j{constructor(t){const e=A.julianCentury(t),n=A.meanSolarLongitude(e),r=A.meanLunarLongitude(e),i=A.ascendingLunarNodeLongitude(e),a=f(A.apparentSolarLongitude(e,n)),s=A.meanSiderealTime(e),o=A.nutationInLongitude(e,n,r,i),h=A.nutationInObliquity(e,n,r,i),u=A.meanObliquityOfTheEcliptic(e),l=f(A.apparentObliquityOfTheEcliptic(e,u));this.declination=M(Math.asin(Math.sin(l)*Math.sin(a))),this.rightAscension=b(M(Math.atan2(Math.cos(l)*Math.sin(a),Math.cos(a)))),this.apparentSiderealTime=s+3600*o*Math.cos(f(u+h))/3600}}class T{constructor(t,e){const n=A.julianDay(t.getFullYear(),t.getMonth()+1,t.getDate(),0);this.observer=e,this.solar=new j(n),this.prevSolar=new j(n-1),this.nextSolar=new j(n+1);const r=A.approximateTransit(e.longitude,this.solar.apparentSiderealTime,this.solar.rightAscension),i=-50/60;this.approxTransit=r,this.transit=A.correctedTransit(r,e.longitude,this.solar.apparentSiderealTime,this.solar.rightAscension,this.prevSolar.rightAscension,this.nextSolar.rightAscension),this.sunrise=A.correctedHourAngle(r,i,e,!1,this.solar.apparentSiderealTime,this.solar.rightAscension,this.prevSolar.rightAscension,this.nextSolar.rightAscension,this.solar.declination,this.prevSolar.declination,this.nextSolar.declination),this.sunset=A.correctedHourAngle(r,i,e,!0,this.solar.apparentSiderealTime,this.solar.rightAscension,this.prevSolar.rightAscension,this.nextSolar.rightAscension,this.solar.declination,this.prevSolar.declination,this.nextSolar.declination)}hourAngle(t,e){return A.correctedHourAngle(this.approxTransit,t,this.observer,e,this.solar.apparentSiderealTime,this.solar.rightAscension,this.prevSolar.rightAscension,this.nextSolar.rightAscension,this.solar.declination,this.prevSolar.declination,this.nextSolar.declination)}afternoon(t){const e=Math.abs(this.observer.latitude-this.solar.declination),n=t+Math.tan(f(e)),r=M(Math.atan(1/n));return this.hourAngle(r,!0)}}const S={AqrabBalad:"AqrabBalad",AqrabYaum:"AqrabYaum",Unresolved:"Unresolved"},v=t=>!isNaN(t.sunrise)&&!isNaN(t.sunset),y=function(t,e){let n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:1,r=arguments.length>3&&void 0!==arguments[3]?arguments[3]:1;if(n>Math.ceil(182.5))return null;const i=new Date(e.getTime());i.setDate(i.getDate()+r*n);const a=h(i,1),s=new T(i,t),o=new T(a,t);return v(s)&&v(o)?{date:e,tomorrow:a,coordinates:t,solarTime:s,tomorrowSolarTime:o}:y(t,e,n+(r>0?0:1),-r)},D=(t,e,n)=>{const i=new T(e,r(r({},t),{},{latitude:n})),a=h(e,1),o=new T(a,r(r({},t),{},{latitude:n}));return v(i)&&v(o)?{date:e,tomorrow:a,coordinates:new s(n,t.longitude),solarTime:i,tomorrowSolarTime:o}:Math.abs(n)>=65?D(t,e,n-.5*Math.sign(n)):null};class O{constructor(t){let n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:0,r=arguments.length>2&&void 0!==arguments[2]?arguments[2]:0,s=arguments.length>3&&void 0!==arguments[3]?arguments[3]:0,h=arguments.length>4&&void 0!==arguments[4]?arguments[4]:0;e(this,"madhab",i.Shafi),e(this,"highLatitudeRule",a.MiddleOfTheNight),e(this,"adjustments",{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}),e(this,"methodAdjustments",{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0}),e(this,"polarCircleResolution",S.Unresolved),e(this,"rounding",o.Nearest),e(this,"shafaq",w.General),this.method=t,this.fajrAngle=n,this.ishaAngle=r,this.ishaInterval=s,this.maghribAngle=h,null===this.method&&(this.method="Other")}nightPortions(){switch(this.highLatitudeRule){case a.MiddleOfTheNight:return{fajr:.5,isha:.5};case a.SeventhOfTheNight:return{fajr:1/7,isha:1/7};case a.TwilightAngle:return{fajr:this.fajrAngle/60,isha:this.ishaAngle/60};default:throw"Invalid high latitude rule found when attempting to compute night portions: ".concat(this.highLatitudeRule)}}}const N={MuslimWorldLeague(){const t=new O("MuslimWorldLeague",18,17);return t.methodAdjustments.dhuhr=1,t},Egyptian(){const t=new O("Egyptian",19.5,17.5);return t.methodAdjustments.dhuhr=1,t},Karachi(){const t=new O("Karachi",18,18);return t.methodAdjustments.dhuhr=1,t},UmmAlQura:()=>new O("UmmAlQura",18.5,0,90),Dubai(){const t=new O("Dubai",18.2,18.2);return t.methodAdjustments=r(r({},t.methodAdjustments),{},{sunrise:-3,dhuhr:3,asr:3,maghrib:3}),t},MoonsightingCommittee(){const t=new O("MoonsightingCommittee",18,18);return t.methodAdjustments=r(r({},t.methodAdjustments),{},{dhuhr:5,maghrib:3}),t},NorthAmerica(){const t=new O("NorthAmerica",15,15);return t.methodAdjustments.dhuhr=1,t},Kuwait:()=>new O("Kuwait",18,17.5),Qatar:()=>new O("Qatar",18,0,90),Singapore(){const t=new O("Singapore",20,18);return t.methodAdjustments.dhuhr=1,t.rounding=o.Up,t},Tehran:()=>new O("Tehran",17.7,14,0,4.5),Turkey(){const t=new O("Turkey",18,17);return t.methodAdjustments=r(r({},t.methodAdjustments),{},{sunrise:-7,dhuhr:5,asr:4,maghrib:7}),t},Other:()=>new O("Other",0,0)},P={Fajr:"fajr",Sunrise:"sunrise",Dhuhr:"dhuhr",Asr:"asr",Maghrib:"maghrib",Isha:"isha",None:"none"};class C{constructor(t){return this.hours=Math.floor(t),this.minutes=Math.floor(60*(t-this.hours)),this.seconds=Math.floor(60*(t-(this.hours+this.minutes/60))*60),this}utcDate(t,e,n){return new Date(Date.UTC(t,e,n,this.hours,this.minutes,this.seconds))}}class L{constructor(t,e,n){this.coordinates=t,this.date=e,this.calculationParameters=n;let r,a,s,o,d,f,M,p,b=new T(e,t);s=new C(b.transit).utcDate(e.getFullYear(),e.getMonth(),e.getDate()),a=new C(b.sunrise).utcDate(e.getFullYear(),e.getMonth(),e.getDate()),d=new C(b.sunset).utcDate(e.getFullYear(),e.getMonth(),e.getDate());const w=h(e,1);let j=new T(w,t);const v=n.polarCircleResolution;if((!m(a)||!m(d)||isNaN(j.sunrise))&&v!==S.Unresolved){const n=((t,e,n)=>{const r={date:e,tomorrow:h(e,1),coordinates:n,solarTime:new T(e,n),tomorrowSolarTime:new T(h(e,1),n)};switch(t){case S.AqrabYaum:return y(n,e)||r;case S.AqrabBalad:{const t=n.latitude;return D(n,e,t-.5*Math.sign(t))||r}default:return r}})(v,e,t);b=n.solarTime,j=n.tomorrowSolarTime;const r=[e.getFullYear(),e.getMonth(),e.getDate()];s=new C(b.transit).utcDate(...r),a=new C(b.sunrise).utcDate(...r),d=new C(b.sunset).utcDate(...r)}o=new C(b.afternoon(function(t){switch(t){case i.Shafi:return 1;case i.Hanafi:return 2;default:throw"Invalid Madhab"}}(n.madhab))).utcDate(e.getFullYear(),e.getMonth(),e.getDate());const O=new C(j.sunrise).utcDate(w.getFullYear(),w.getMonth(),w.getDate()),N=(Number(O)-Number(d))/1e3;r=new C(b.hourAngle(-1*n.fajrAngle,!1)).utcDate(e.getFullYear(),e.getMonth(),e.getDate()),"MoonsightingCommittee"===n.method&&t.latitude>=55&&(p=N/7,r=l(a,-p));const P=function(){if("MoonsightingCommittee"===n.method)return A.seasonAdjustedMorningTwilight(t.latitude,g(e),e.getFullYear(),a);{const t=n.nightPortions().fajr;return p=t*N,l(a,-p)}}();if((isNaN(r.getTime())||P>r)&&(r=P),n.ishaInterval>0)M=u(d,n.ishaInterval);else{M=new C(b.hourAngle(-1*n.ishaAngle,!0)).utcDate(e.getFullYear(),e.getMonth(),e.getDate()),"MoonsightingCommittee"===n.method&&t.latitude>=55&&(p=N/7,M=l(d,p));const r=function(){if("MoonsightingCommittee"===n.method)return A.seasonAdjustedEveningTwilight(t.latitude,g(e),e.getFullYear(),d,n.shafaq);{const t=n.nightPortions().isha;return p=t*N,l(d,p)}}();(isNaN(M.getTime())||r<M)&&(M=r)}if(f=d,n.maghribAngle){const t=new C(b.hourAngle(-1*n.maghribAngle,!0)).utcDate(e.getFullYear(),e.getMonth(),e.getDate());d<t&&M>t&&(f=t)}const L=(n.adjustments.fajr||0)+(n.methodAdjustments.fajr||0),F=(n.adjustments.sunrise||0)+(n.methodAdjustments.sunrise||0),q=(n.adjustments.dhuhr||0)+(n.methodAdjustments.dhuhr||0),Y=(n.adjustments.asr||0)+(n.methodAdjustments.asr||0),x=(n.adjustments.maghrib||0)+(n.methodAdjustments.maghrib||0),I=(n.adjustments.isha||0)+(n.methodAdjustments.isha||0);this.fajr=c(u(r,L),n.rounding),this.sunrise=c(u(a,F),n.rounding),this.dhuhr=c(u(s,q),n.rounding),this.asr=c(u(o,Y),n.rounding),this.sunset=c(d,n.rounding),this.maghrib=c(u(f,x),n.rounding),this.isha=c(u(M,I),n.rounding)}timeForPrayer(t){return t===P.Fajr?this.fajr:t===P.Sunrise?this.sunrise:t===P.Dhuhr?this.dhuhr:t===P.Asr?this.asr:t===P.Maghrib?this.maghrib:t===P.Isha?this.isha:null}currentPrayer(){let t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:new Date;return t>=this.isha?P.Isha:t>=this.maghrib?P.Maghrib:t>=this.asr?P.Asr:t>=this.dhuhr?P.Dhuhr:t>=this.sunrise?P.Sunrise:t>=this.fajr?P.Fajr:P.None}nextPrayer(){let t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:new Date;return t>=this.isha?P.None:t>=this.maghrib?P.Isha:t>=this.asr?P.Maghrib:t>=this.dhuhr?P.Asr:t>=this.sunrise?P.Dhuhr:t>=this.fajr?P.Sunrise:P.Fajr}}t.CalculationMethod=N,t.CalculationParameters=O,t.Coordinates=s,t.HighLatitudeRule=a,t.Madhab=i,t.PolarCircleResolution=S,t.Prayer=P,t.PrayerTimes=L,t.Qibla=function(t){const e=new s(21.4225241,39.8261818),n=Math.sin(f(e.longitude)-f(t.longitude)),r=Math.cos(f(t.latitude))*Math.tan(f(e.latitude)),i=Math.sin(f(t.latitude))*Math.cos(f(e.longitude)-f(t.longitude));return b(M(Math.atan2(n,r-i)))},t.Rounding=o,t.Shafaq=w,t.SunnahTimes=class{constructor(t){const e=h(t.date,1),n=(new L(t.coordinates,e,t.calculationParameters).fajr.getTime()-t.maghrib.getTime())/1e3;this.middleOfTheNight=c(l(t.maghrib,n/2)),this.lastThirdOfTheNight=c(l(t.maghrib,n*(2/3)))}}});
+//# sourceMappingURL=adhan.umd.min.js.map
+;
 'use strict';
 if(typeof THREE==='undefined'){ document.getElementById('loadErr').style.display='flex'; document.getElementById('boot').style.display='none'; throw new Error('three.js yüklenemedi'); }
 
@@ -419,6 +422,7 @@ function padDefs(){
   const c3=[3200,3450,3700,4000,4300,4650,5000,5350,5750,6150,6600,7100];
   ROOM_SEQ.forEach((l,k)=>{ room(2,l,c3[k],[prev]); prev='r'+roomId(2,l); });
   push({id:'roof',kind:'floor',floor:3,f:2,x:3.0,z:CORR[0],size:1.6,cost:16000,req:[prev],stars:5,icon:'🚁',label:'Çatı katı: bar, havuz, helikopter pisti'});
+  push({id:'mescit',kind:'floor',floor:4,f:3,x:1.8,z:0.9,size:1.6,cost:15000,req:['roof'],stars:5,icon:'🕌',label:'Mescit katı: imam, cemaat, İstanbul vakitlerinde ezan'});
   return P;
 }
 
@@ -437,7 +441,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:43, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:44, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -481,9 +485,9 @@ function built(id){ return !!state.built[id]; }
 function poolOpen(){ return built('pool')&&!(isWinter()&&state.weather==='snow')&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
 function restOpen(){ const h=hourNow(); return built('rest')&&h>=8&&h<22.5; }
 function gymOpen(){ const h=hourNow(); return built('gym')&&h>=7&&h<22; }
-function floorsBuilt(){ return built('roof')?4:built('f3')?3:built('f2')?2:1; }
+function floorsBuilt(){ return built('mescit')?5:built('roof')?4:built('f3')?3:built('f2')?2:1; }
 const ROOF=3;
-function floorName(f){ return f===ROOF?'Çatı':(f+1)+'. kat'; }
+function floorName(f){ return f===4?'Mescit':f===ROOF?'Çatı':(f+1)+'. kat'; }
 function roofOpen(){ const h=hourNow(); return built('roof')&&h>=10&&h<23.5&&state.weather!=='rain'&&state.weather!=='snow'&&!stormOn(); }
 
 // =====================================================================
@@ -1311,6 +1315,7 @@ function buildFeature(id,pop){
     case 'f2': buildUpperFloor(1); g=buildElevator(); break;
     case 'f3': buildUpperFloor(2); g=buildElevator(); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
+    case 'mescit': buildMescit(); g=buildElevator(); break;
   }
   if(g){ featureGroups[id]=g; if(pop) dropIn(g); }
 }
@@ -1698,12 +1703,12 @@ function applyRoomState(id){
 // COLLIDERS
 // =====================================================================
 const COLS={};                 // tag -> [[f,x0,x1,z0,z1],...]
-const colByFloor=[[],[],[],[]];
-const navDirty=[true,true,true,true];
+const colByFloor=[[],[],[],[],[]];
+const navDirty=[true,true,true,true,true];
 function rebuildColIndex(){ colByFloor.forEach(a=>a.length=0); for(const t in COLS) for(const c of COLS[t]) colByFloor[c[0]].push(c); }
 function addCols(tag,list){ if(COLS[tag]) COLS[tag].forEach(c=>navDirty[c[0]]=true); COLS[tag]=list; list.forEach(c=>navDirty[c[0]]=true); rebuildColIndex(); }
 function removeCols(tag){ if(!COLS[tag]) return; COLS[tag].forEach(c=>navDirty[c[0]]=true); delete COLS[tag]; rebuildColIndex(); }
-function walkRects(f){ return f===0?[[-17.3,17.3,BACK-0.12,12.75]]:[[-6.88,6.88,BACK+0.1,2.62],[4.92,6.28,2.45,4.12]]; }
+function walkRects(f){ return f===4?[[-6.88,6.88,-6.2,2.62],[4.92,6.28,2.45,4.12]]:f===0?[[-17.3,17.3,BACK-0.12,12.75]]:[[-6.88,6.88,BACK+0.1,2.62],[4.92,6.28,2.45,4.12]]; }
 function inWalk(f,x,z,m=0){ for(const r of walkRects(f)) if(x>=r[0]+m&&x<=r[1]-m&&z>=r[2]+m&&z<=r[3]-m) return true; return false; }
 function blockedAt(f,x,z,r){
   if(!inWalk(f,x,z,0.05)) return true;
@@ -1933,6 +1938,14 @@ function animChar(c,dt){
     L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-0.5;
   } else if(m==='swim'){
     L[0].rotation.x=Math.sin(t*1.6)*0.5; L[1].rotation.x=-Math.sin(t*1.6)*0.5; A[0].rotation.x=-Math.PI+Math.sin(t)*1.2; A[1].rotation.x=-Math.PI-Math.sin(t)*1.2;
+  } else if(m==='kiyam'){
+    A[0].rotation.x=A[1].rotation.x=-0.95; A[0].rotation.z=0.75; A[1].rotation.z=-0.75;
+  } else if(m==='ruku'){
+    B.rotation.x=1.35; A[0].rotation.x=A[1].rotation.x=-1.15; A[0].rotation.z=0.12; A[1].rotation.z=-0.12;
+  } else if(m==='secde'){
+    B.position.y=0.02; B.rotation.x=1.65; L[0].rotation.x=L[1].rotation.x=1.55; A[0].rotation.x=A[1].rotation.x=-2.6; A[0].rotation.z=0.25; A[1].rotation.z=-0.25;
+  } else if(m==='kade'||m==='selamR'||m==='selamL'){
+    B.position.y=0.02; B.rotation.x=0.05; L[0].rotation.x=L[1].rotation.x=1.55; A[0].rotation.x=A[1].rotation.x=-0.55;
   } else if(m==='lie'){
     A[0].rotation.z=0.15; A[1].rotation.x=-2.3+Math.sin(t*0.7)*0.08; A[1].rotation.z=-0.25; B.scale.y=1+Math.sin(t*0.8)*0.015;
   } else if(m==='sitread'){
@@ -1958,9 +1971,9 @@ function animChar(c,dt){
   }
   if(carrying&&m!=='sleep'&&m!=='swim'){ A[0].rotation.set(-1.25,0,0.25); A[1].rotation.set(-1.25,0,-0.25); }
   // --- life: head look-around, walking lean, blinking, smooth pose transitions ---
-  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance'&&m!=='lie';
+  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance'&&m!=='lie'&&m!=='kiyam'&&m!=='ruku'&&m!=='secde'&&m!=='kade'&&m!=='selamR'&&m!=='selamL';
   c.ph+=dt; const look=idle?Math.sin(c.ph*0.45)*0.5*Math.max(0,Math.sin(c.ph*0.17+1)):0;
-  H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:m==='lie'?-0.35:m==='sitread'||m==='type'?0.3:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
+  H.rotation.y+=((m==='selamR'?-0.9:m==='selamL'?0.9:look)-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:m==='kiyam'?0.35:m==='ruku'?0.2:m==='kade'?0.3:m==='lie'?-0.35:m==='sitread'||m==='type'?0.3:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
   if(fast) B.rotation.x+=0.07;
   if(c.eyes){ c.blink-=dt; const sh=c.blink<0.12&&m!=='sleep'?0.12:m==='sleep'?0.1:1.15; c.eyes.forEach(e=>e.scale.y=sh); if(c.blink<0) c.blink=2.5+Math.random()*3.5; }
   const tgt=[L[0].rotation.x,L[1].rotation.x,A[0].rotation.x,A[1].rotation.x,A[0].rotation.z,A[1].rotation.z,B.position.y,B.rotation.x];
@@ -4833,11 +4846,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=43;
+const GAME_VER=44;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -5697,6 +5710,200 @@ function contentDayEnd(t){ leagueDay(t.perf); checkTier(); const li=loungeIncome
 function updateContent(dt,t){ updateSpecial(dt); if(tierDeco&&tierDeco.userData.gem) tierDeco.userData.gem.rotation.y=t*1.2; }
 
 // =====================================================================
+// MESCİT KATI: çatının üstünde en manzaralı kat. Mihrap, minber, kürsü,
+// çini, mermer sütunlar, kandil avizesi, saf çizgili halı, kubbe (içeriden),
+// minare. İstanbul vakitlerine göre (Diyanet yöntemi, adhan-js) ezan,
+// imam namaz kıldırır, cemaat gelir; Cuma öğlesi kalabalık + hutbe.
+// =====================================================================
+const MF=4, MZ0=-6.35, MZ1=2.62;               // mescit katı ve ön/arka sınırı
+const EZAN_SRC=window.__EZAN||'ezan.mp3';
+function mescitOn(){ return built('mescit'); }
+
+// ---------- namaz vakitleri (İstanbul, Diyanet) ----------
+const IST={lat:41.0082,lng:28.9784};
+const VAKIT=[['fajr','Sabah',2],['dhuhr','Öğle',4],['asr','İkindi',4],['maghrib','Akşam',3],['isha','Yatsı',4]];
+let vakitCache={key:null,list:null};
+function istDate(d){ const s=d.toLocaleDateString('en-CA',{timeZone:'Europe/Istanbul'}); return s; }         // YYYY-MM-DD (İstanbul)
+function istWeekday(d){ return new Date(d.toLocaleString('en-US',{timeZone:'Europe/Istanbul'})).getDay(); }   // 5 = Cuma
+function istHM(d){ return d.toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'}); }
+function vakitler(now){
+  now=now||new Date(); const key=istDate(now); if(vakitCache.key===key) return vakitCache.list;
+  let list=null;
+  try{ if(window.adhan){ const [y,m,dd]=key.split('-').map(Number), day=new Date(Date.UTC(y,m-1,dd,9));
+      const pt=new adhan.PrayerTimes(new adhan.Coordinates(IST.lat,IST.lng),day,adhan.CalculationMethod.Turkey());
+      list=VAKIT.map(([k,n,r])=>({k,n,r,t:pt[k].getTime()})); } }catch(e){ list=null; }
+  vakitCache={key,list}; return list;
+}
+function nextVakit(now){ now=now||new Date(); const L=vakitler(now); if(!L) return null; const n=L.find(v=>v.t>now.getTime()); if(n) return n;
+  const L2=vakitler(new Date(now.getTime()+864e5)); return L2?L2[0]:null; }
+
+// ---------- ezan sesi ----------
+let ezanEl=null, ezanOn=false;
+function ezanVol(){ const V=state.vol||{sfx:.55}; return state.sound===false||state.ezan==='mute'?0:clamp((V.sfx+0.25)*(player.f===MF?1:0.6),0,1); }
+function playEzan(){
+  if(state.ezan==='off') return;
+  try{ if(!ezanEl){ ezanEl=new Audio(EZAN_SRC); ezanEl.preload='auto'; ezanEl.addEventListener('ended',()=>{ ezanOn=false; }); ezanEl.addEventListener('error',()=>{ ezanOn=false; }); }
+    ezanEl.currentTime=0; ezanEl.volume=ezanVol(); const p=ezanEl.play(); ezanOn=true; if(p&&p.catch) p.catch(()=>{ ezanOn=false; }); }catch(e){ ezanOn=false; }
+}
+function stopEzan(){ if(ezanEl){ try{ ezanEl.pause(); }catch(e){} } ezanOn=false; }
+
+// ---------- görsel: mescit katı ----------
+function tileTex(){ // lale motifli çini
+  const cv=document.createElement('canvas'); cv.width=cv.height=128; const x=cv.getContext('2d');
+  x.fillStyle='#f4f7fb'; x.fillRect(0,0,128,128); x.strokeStyle='#1f5aa6'; x.lineWidth=3; x.strokeRect(2,2,124,124);
+  x.fillStyle='#1f5aa6'; [[0,0],[128,0],[0,128],[128,128]].forEach(([a,b])=>{ x.beginPath(); x.arc(a,b,26,0,7); x.fill(); });
+  x.fillStyle='#2e9bb5'; x.beginPath(); x.moveTo(64,34); x.bezierCurveTo(44,50,50,78,64,84); x.bezierCurveTo(78,78,84,50,64,34); x.fill();
+  x.fillStyle='#c62f3a'; x.beginPath(); x.moveTo(64,40); x.bezierCurveTo(56,52,58,70,64,74); x.bezierCurveTo(70,70,72,52,64,40); x.fill();
+  x.strokeStyle='#2e7d4f'; x.lineWidth=4; x.beginPath(); x.moveTo(64,84); x.lineTo(64,108); x.stroke(); x.beginPath(); x.moveTo(64,100); x.quadraticCurveTo(46,92,42,76); x.stroke(); x.beginPath(); x.moveTo(64,100); x.quadraticCurveTo(82,92,86,76); x.stroke();
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.encoding=THREE.sRGBEncoding; return t; }
+function carpetTex(){ // saf çizgili cami halısı: her sırada kemerli seccade motifi
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=128; const x=cv.getContext('2d');
+  x.fillStyle='#8e1b2a'; x.fillRect(0,0,256,128);
+  for(let i=0;i<4;i++){ const cx=32+i*64; x.fillStyle='#a8283a'; x.fillRect(cx-28,10,56,108); x.fillStyle='#6d1320';
+    x.beginPath(); x.moveTo(cx-22,118); x.lineTo(cx-22,44); x.quadraticCurveTo(cx,6,cx+22,44); x.lineTo(cx+22,118); x.fill();
+    x.strokeStyle='#e0b85a'; x.lineWidth=3; x.stroke(); x.fillStyle='#e0b85a'; x.beginPath(); x.arc(cx,70,6,0,7); x.fill(); }
+  x.fillStyle='#e0b85a'; x.fillRect(0,0,256,4); x.fillRect(0,124,256,4);
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.encoding=THREE.sRGBEncoding; t.anisotropy=4; return t; }
+function hatPlate(txt,bg){ const cv=document.createElement('canvas'); cv.width=cv.height=256; const x=cv.getContext('2d');
+  x.fillStyle='#caa24a'; x.beginPath(); x.arc(128,128,126,0,7); x.fill(); x.fillStyle=bg; x.beginPath(); x.arc(128,128,112,0,7); x.fill();
+  x.fillStyle='#f2d48a'; x.font='bold 96px "Amiri","Scheherazade New","Noto Naskh Arabic","Times New Roman",serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(txt,128,122);
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; return new THREE.Mesh(new THREE.CircleGeometry(0.55,40),new THREE.MeshBasicMaterial({map:t,transparent:true})); }
+let mescitG=null, mescitDome=null, minaretG=null, mKandil=[];
+function buildMescit(){
+  const G=floorRoot(MF); if(G.userData.shell) return; G.userData.shell=true; const S=new THREE.Group();
+  const D=MZ1-MZ0, C=(MZ0+MZ1)/2, marble=tmat('marble',6,4), gold=M.gold, white=mat(0xf6f1e6,{roughness:.35}), tile=new THREE.MeshStandardMaterial({map:tileTex(),roughness:.3});
+  tile.map.repeat.set(10,1.2);
+  // döşeme + halı
+  S.add(mesh(box(13.96,0.4,D),marble,0,-0.2,C));
+  const cp=carpetTex(); cp.repeat.set(6,6); const carpet=mesh(plane(12.4,7.4),new THREE.MeshStandardMaterial({map:cp,roughness:.95}),0,0.012,-2.3); carpet.rotation.x=-Math.PI/2; S.add(carpet);
+  S.add(mesh(box(12.6,0.02,0.12),gold,0,0.02,1.42)); S.add(mesh(box(12.6,0.02,0.12),gold,0,0.02,-6.02));
+  // arka (kıble) duvarı: çini bant + mihrap
+  S.add(mesh(box(13.96,3.4,0.2),white,0,1.7,MZ0-0.1,true));
+  S.add(mesh(box(13.96,0.9,0.03),tile,0,1.05,MZ0+0.01));
+  S.add(mesh(box(14.1,0.12,0.26),gold,0,3.45,MZ0-0.08)); S.add(mesh(box(14.1,0.06,0.06),gold,0,0.62,MZ0+0.03)); S.add(mesh(box(14.1,0.06,0.06),gold,0,1.52,MZ0+0.03));
+  const mh=new THREE.Group(); mh.position.set(0,0,MZ0+0.05); S.add(mh);
+  mh.add(mesh(box(1.7,2.7,0.12),mat(0x1f4f8a,{roughness:.4}),0,1.35,0.02)); mh.add(mesh(box(1.2,2.1,0.1),mat(0x0f2f5a,{roughness:.5}),0,1.05,0.06));
+  const arc=mesh(new THREE.TorusGeometry(0.62,0.07,8,24,Math.PI),gold,0,2.1,0.11); mh.add(arc); [-0.62,0.62].forEach(x=>mh.add(mesh(box(0.14,2.1,0.1),gold,x,1.05,0.11)));
+  const mt=new THREE.MeshStandardMaterial({map:tileTex(),roughness:.3}); mt.map.repeat.set(2,3); mh.add(mesh(box(1.0,1.7,0.02),mt,0,0.95,0.12));
+  mh.add(mesh(sph(0.09,10,8),gold,0,2.85,0.1)); mh.add(mesh(box(2.0,0.14,0.2),gold,0,2.85,0.05));
+  // hat levhaları
+  [[-3.2,'الله','#1f5a3a'],[3.2,'محمد','#1f5a3a']].forEach(([x,t,bg])=>{ const p=hatPlate(t,bg); p.position.set(x,2.35,MZ0+0.02); S.add(p); });
+  // minber (sağda) ve kürsü (solda)
+  const mb=new THREE.Group(); mb.position.set(1.55,0,MZ0+0.9); S.add(mb); const wd=tmat('woodDark',1,1);
+  for(let i=0;i<6;i++) mb.add(mesh(box(0.7,0.25*(i+1),0.3),white,0,0.125*(i+1),1.3-i*0.3,true));
+  [-0.37,0.37].forEach(x=>{ const r=mesh(box(0.05,0.9,1.9),gold,x,1.35,0.55); r.rotation.x=-0.6; mb.add(r); });
+  mb.add(mesh(box(0.8,2.2,0.1),white,0,1.1,-0.35)); mb.add(mesh(cone(0.42,1.1,8),mat(0x2c6e8f,{metalness:.3,roughness:.4}),0,2.35,-0.1)); mb.add(mesh(sph(0.07,8,6),gold,0,2.95,-0.1));
+  const kr=new THREE.Group(); kr.position.set(-1.9,0,MZ0+0.8); S.add(kr); kr.add(mesh(rbox(0.9,0.7,0.8,.05),wd,0,0.35,0,true)); kr.add(mesh(box(0.95,0.05,0.85),gold,0,0.72,0)); const rh=mesh(box(0.5,0.04,0.35),wd,0,0.95,0.1); rh.rotation.x=-0.5; kr.add(rh);
+  // yan duvarlar: alt mermer + kemerli camlar
+  [-1,1].forEach(sd=>{ const x=sd*6.98; S.add(mesh(box(0.2,1.1,D),white,x,0.55,C,true)); S.add(mesh(box(0.24,0.08,D),gold,x,1.12,C));
+    for(let z=MZ0+1.1;z<MZ1-0.6;z+=1.55){ const gl=mesh(box(0.05,1.3,0.9),M.glass,x,1.8,z); gl.castShadow=false; S.add(gl); const a=mesh(new THREE.TorusGeometry(0.45,0.04,6,14,Math.PI),gold,x,2.45,z); a.rotation.y=Math.PI/2; S.add(a); } });
+  // ön korkuluk (manzara)
+  [[-6.98,4.8],[6.35,6.98]].forEach(([a,b])=>{ S.add(mesh(box(b-a,0.5,0.14),white,(a+b)/2,0.25,MZ1-0.04,true)); const gl=mesh(box(b-a,0.6,0.04),M.glass,(a+b)/2,0.8,MZ1-0.04); gl.castShadow=false; S.add(gl); S.add(mesh(box(b-a,0.05,0.16),gold,(a+b)/2,1.12,MZ1-0.04)); });
+  // mermer sütunlar
+  [[-5.4,-4.9],[5.4,-4.9],[-5.4,0.6],[5.4,0.6]].forEach(([x,z])=>{ S.add(mesh(cyl(0.2,0.24,3.3,16),tmat('marble',1,2),x,1.65,z,true)); S.add(mesh(cyl(0.3,0.3,0.14,16),gold,x,3.3,z)); S.add(mesh(cyl(0.3,0.26,0.14,16),gold,x,0.07,z)); });
+  // ayakkabılık + abdest musluğu
+  S.add(mesh(rbox(1.3,0.8,0.35,.03),wd,3.7,0.4,2.25,true)); for(let i=0;i<3;i++) S.add(mesh(box(1.25,0.02,0.3),gold,3.7,0.2+i*0.25,2.28));
+  S.add(mesh(rbox(1.6,0.55,0.5,.05),tmat('marble',1,1),-5.8,0.28,2.05,true)); for(let i=0;i<4;i++){ const t=mesh(cyl(0.025,0.025,0.18,6),gold,-6.4+i*0.4,0.75,1.95); t.rotation.x=Math.PI/2; S.add(t); }
+  const sg=signPlane('🕌 MESCİT',1.8,0.4,{bg:'#1f5a3a',fg:'#f2d48a',font:'800 64px "Baloo 2"'}); sg.position.set(0,3.05,MZ0+0.02); S.add(sg);
+  G.add(bake(S));
+  // kandil avizesi
+  const ch=new THREE.Group(); ch.position.set(0,2.9,-2.4); G.add(ch); mKandil=[];
+  const r1=mesh(new THREE.TorusGeometry(2.2,0.05,8,48),gold,0,0,0); r1.rotation.x=Math.PI/2; ch.add(r1);
+  const r2=mesh(new THREE.TorusGeometry(1.2,0.04,8,40),gold,0,0.1,0); r2.rotation.x=Math.PI/2; ch.add(r2);
+  for(let i=0;i<24;i++){ const a=i/24*Math.PI*2, r=i%2?2.2:1.2, k=mesh(sph(0.07,8,6),new THREE.MeshBasicMaterial({color:0xffe6a0}),Math.cos(a)*r,-0.08,Math.sin(a)*r); ch.add(k); mKandil.push(k); }
+  for(let i=0;i<4;i++){ const a=i/4*Math.PI*2; const c=mesh(cyl(0.012,0.012,1.2,4),gold,Math.cos(a)*2.2*0.5,0.6,Math.sin(a)*2.2*0.5); c.rotation.z=Math.cos(a)*0.9; c.rotation.x=-Math.sin(a)*0.9; ch.add(c); }
+  ch.add(glowDecal(3.2,0,-2.9,0.03)); // ışık halesi yerde
+  // kubbe (sadece içeriden, birinci şahısta görünür)
+  const dm=new THREE.MeshStandardMaterial({map:tileTex(),roughness:.5,side:THREE.BackSide}); dm.map.repeat.set(16,6);
+  mescitDome=mesh(new THREE.SphereGeometry(6.6,40,20,0,Math.PI*2,0,Math.PI/2),dm,0,3.4,-1.9); mescitDome.scale.y=0.55; mescitDome.visible=false; G.add(mescitDome);
+  addCols('mescit',[[MF,-6.98,6.98,MZ0-0.2,MZ0+0.05],[MF,-7.1,-6.88,MZ0,MZ1],[MF,6.88,7.1,MZ0,MZ1],[MF,-6.98,4.8,MZ1-0.12,MZ1+0.1],[MF,6.35,6.98,MZ1-0.12,MZ1+0.1],
+    [MF,1.15,1.95,MZ0,MZ0+2.3],[MF,-2.4,-1.4,MZ0+0.35,MZ0+1.25],[MF,3.0,4.4,2.05,2.45],[MF,-6.6,-5.0,1.8,2.35],
+    ...[[-5.4,-4.9],[5.4,-4.9],[-5.4,0.6],[5.4,0.6]].map(([x,z])=>[MF,x-0.28,x+0.28,z-0.28,z+0.28])]);
+  buildMinaret(); mescitG=G;
+}
+function buildMinaret(){ // arka sol köşede yerden yükselen minare: her katta görünür
+  if(minaretG) return; const g=new THREE.Group(); g.position.set(-7.55,0,-11.95); world.add(g); minaretG=g;
+  const w=mat(0xf1ece2,{roughness:.5}), lead=mat(0x6f7d8c,{metalness:.5,roughness:.35});
+  g.add(mesh(cyl(0.62,0.7,1.2,12),w,0,0.6,0,true)); g.add(mesh(cyl(0.42,0.48,16,12),w,0,8.6,0,true));
+  [9.5,13.8].forEach(y=>{ g.add(mesh(cyl(0.62,0.42,0.35,12),w,0,y,0,true)); const rg=mesh(new THREE.TorusGeometry(0.62,0.04,6,20),M.gold,0,y+0.45,0); rg.rotation.x=Math.PI/2; g.add(rg); });
+  g.add(mesh(cyl(0.36,0.4,2.6,12),w,0,15.6,0,true)); g.add(mesh(cone(0.44,3.2,12),lead,0,18.5,0,true));
+  g.add(mesh(cyl(0.03,0.03,0.9,6),M.gold,0,20.4,0)); const cr=mesh(new THREE.TorusGeometry(0.2,0.045,8,20,Math.PI*1.4),M.gold,0,21.0,0); cr.rotation.z=Math.PI*0.8; g.add(cr);
+}
+
+// ---------- imam ve cemaat ----------
+const IMAM_LOOK=()=>({skin:0xe7bf94,hair:0x2a1f18,hs:'short',beard:true,top:0x1f2330,bottom:0x1f2330});
+function addSarik(c){ const h=c.head; h.add(mesh(cyl(0.22,0.24,0.16,16),M.white,0,0.2,0)); const t=mesh(new THREE.TorusGeometry(0.22,0.07,8,20),mat(0xf7f3ea),0,0.17,0); t.rotation.x=Math.PI/2; h.add(t); }
+function addTakke(c){ c.head.add(mesh(new THREE.SphereGeometry(0.2,14,8,0,Math.PI*2,0,Math.PI/2.6),M.white,0,0.14,-0.02)); }
+let imam=null, cemaat=[], namaz=null;
+function npcAt(G,look,x,z,rot){ const c=makeChar(look); c.root.position.set(x,0,z); c.root.rotation.y=rot; c.mode='idle'; G.add(c.root); c.root.traverse(o=>o.castShadow=false); return c; }
+function ensureImam(){ if(imam||!mescitG) return; imam=npcAt(mescitG,IMAM_LOOK(),-1.9,MZ0+1.55,Math.PI); addSarik(imam); imam.mode='kade'; imam.home={x:-1.9,z:MZ0+1.55}; imam.root.position.y=0; }
+const SAF_Z=[-4.75,-3.85,-2.95,-2.05,-1.15,-0.25];
+function safSpots(n){ const out=[]; for(const z of SAF_Z){ for(let k=0;k<12&&out.length<n;k++){ const x=(k%2?1:-1)*Math.ceil(k/2)*0.72+(k?0:0); out.push({x:clamp(x,-4.6,4.6),z}); } if(out.length>=n) break; } return out; }
+function gatherCemaat(n,cuma){
+  if(!mescitG) return; dismissCemaat(true); const sp=safSpots(n), types=['elderly','business','tourist','student','family','athlete','couple','vip'];
+  sp.forEach((s,i)=>{ const look=LOOKS.guest(rand(types)); look.child=false; look.dog=null; look.pack=false; look.bag=null; look.phone=false; look.partner=false; look.cane=false; look.brief=false; const c=npcAt(mescitG,look,5.6,2.2,Math.PI); if(Math.random()<0.6) addTakke(c);
+    c.walk={x:s.x,z:s.z,t:i*0.35}; c.mode='idle'; cemaat.push(c); });
+}
+function dismissCemaat(now){ cemaat.forEach(c=>{ if(now) mescitG.remove(c.root); else c.leave={t:rnd(0,3)}; }); if(now) cemaat=[]; }
+// namaz akışı: kıyam, rükû, kavme, secde, celse, secde … son oturuş, selam
+function namazSeq(rekat){ const s=[]; for(let r=1;r<=rekat;r++){ s.push(['kiyam',r===1?7:5],['ruku',3],['kiyam',1.6],['secde',2.6],['kade',1.4],['secde',2.6]); if(r===2&&rekat>2) s.push(['kade',4]); } s.push(['kade',6],['selamR',1.6],['selamL',1.6],['kade',2]); return s; }
+function startNamaz(v,cuma){ namaz={v,cuma,seq:namazSeq(v.r),i:0,t:0,hutbe:cuma?22:0}; ensureImam(); imam.root.position.set(0,0,MZ0+0.95); imam.root.rotation.y=Math.PI; imam.mode=cuma?'talk':'kiyam';
+  if(cuma){ imam.root.position.set(1.55,1.52,MZ0+1.05); imam.root.rotation.y=0; toast('🕌 Cuma hutbesi başladı'); } }
+function namazMode(){ if(!namaz) return null; if(namaz.hutbe>0) return 'otur'; const st=namaz.seq[namaz.i]; return st?st[0]:null; }
+
+// ---------- akış ----------
+let mescitT=0, lastVakitKey=null, mState={phase:'idle'};
+function updateMescit(dt){
+  if(!mescitOn()) return; if(!mescitG) buildMescit(); ensureImam();
+  const inside=player.f===MF, t=performance.now()/1000;
+  if(mescitDome) mescitDome.visible=fpMode&&inside;
+  mKandil.forEach((k,i)=>k.scale.setScalar(0.85+0.2*Math.abs(Math.sin(t*1.5+i))));
+  if(ezanEl&&ezanOn) ezanEl.volume=ezanVol();
+  // vakit kontrolü (gerçek İstanbul saati)
+  mescitT-=dt; if(mescitT<=0){ mescitT=5; const now=new Date(), L=vakitler(now);
+    if(L){ const cur=L.find(v=>now.getTime()>=v.t&&now.getTime()-v.t<90000); const key=cur&&istDate(now)+cur.k;
+      if(cur&&key!==lastVakitKey&&state.lastVakit!==key){ lastVakitKey=key; state.lastVakit=key; triggerVakit(cur,false); } } }
+  // hazırlık → namaz → dağılma
+  if(mState.phase==='ezan'){ mState.t-=dt; if(mState.t<=0){ mState.phase='namaz'; startNamaz(mState.v,mState.cuma); } }
+  if(namaz){ if(namaz.hutbe>0){ namaz.hutbe-=dt; if(namaz.hutbe<=0){ imam.root.position.set(0,0,MZ0+0.95); imam.root.rotation.y=Math.PI; } }
+    else { namaz.t+=dt; const st=namaz.seq[namaz.i]; if(st&&namaz.t>=st[1]){ namaz.t=0; namaz.i++; if(namaz.i===namaz.seq.length-4&&inside) sfx('bell'); }
+      if(namaz.i>=namaz.seq.length){ namaz=null; mState.phase='idle'; dismissCemaat(false); imam.mode='kade'; imam.root.position.set(imam.home.x,0,imam.home.z); imam.root.rotation.y=Math.PI;
+        if(inside) toast('🤲 Namaz kılındı · Allah kabul etsin'); state.stats.cemaat=(state.stats.cemaat||0)+1; } } }
+  // imam pozu
+  const nm=namazMode(); if(imam){ if(nm&&nm!=='otur') imam.mode=nm; else if(namaz&&namaz.hutbe>0) imam.mode='talk'; animChar(imam,dt); }
+  // cemaat: yürüyüş, namaz pozu, ayrılış
+  for(let i=cemaat.length-1;i>=0;i--){ const c=cemaat[i], r=c.root;
+    if(c.leave){ c.leave.t-=dt; if(c.leave.t<=0){ const dx=5.6-r.position.x, dz=2.3-r.position.z, d=Math.hypot(dx,dz); if(d<0.2){ mescitG.remove(r); cemaat.splice(i,1); continue; }
+        r.position.x+=dx/d*Math.min(d,dt*1.6); r.position.z+=dz/d*Math.min(d,dt*1.6); r.rotation.y=Math.atan2(dx,dz); c.mode='walk'; } else c.mode='idle'; }
+    else if(c.walk){ c.walk.t-=dt; if(c.walk.t<=0){ const dx=c.walk.x-r.position.x, dz=c.walk.z-r.position.z, d=Math.hypot(dx,dz);
+        if(d<0.05){ c.walk=null; r.rotation.y=Math.PI; } else { r.position.x+=dx/d*Math.min(d,dt*1.6); r.position.z+=dz/d*Math.min(d,dt*1.6); r.rotation.y=Math.atan2(dx,dz); c.mode='walk'; } } }
+    else { r.rotation.y=Math.PI; c.mode=nm&&nm!=='otur'?nm:namaz&&namaz.hutbe>0?'kade':'kiyamIdle'; }
+    c.spd=0.8; if(mescitG.visible) animChar(c,dt); }
+}
+function triggerVakit(v,test){
+  if(!mescitOn()) return; const cuma=v.k==='dhuhr'&&istWeekday(new Date())===5;
+  const n=cuma?rint(20,26):rint(5,10); gatherCemaat(n,cuma); mState={phase:'ezan',t:test?20:(ezanEl&&ezanEl.duration>30?Math.min(ezanEl.duration,215):60)+10,v,cuma};
+  playEzan(); if(ezanEl&&!test&&ezanEl.duration>30) mState.t=ezanEl.duration+8;
+  banner(`🕌 ${v.n} ezanı${cuma?' · Cuma':''}`,cuma?'Cuma namazı: cemaat kalabalık, önce hutbe':'Cemaat mescide geliyor');
+}
+// ---------- yönetim satırı ----------
+function mescitHtml(){
+  if(!mescitOn()) return `<div class="ugh">🕌 Mescit</div><p class="note">Çatı katı açıldıktan sonra çatıdaki yeşil alandan mescit katı kurulur (otelin en üst, en manzaralı katı).</p>`;
+  const nv=nextVakit(); const L=vakitler();
+  return `<div class="ugh">🕌 Mescit · İstanbul vakitleri (Diyanet)</div>
+    <div class="row"><div class="ic">🕌</div><div class="tx">${L?L.map(v=>`${v.n} ${istHM(new Date(v.t))}`).join(' · '):'Vakitler hesaplanamadı'}<small>${nv?`Sıradaki: ${nv.n} ${istHM(new Date(nv.t))}`:''}${namaz?' · şu an namaz kılınıyor':''}</small></div></div>
+    <div style="display:flex;gap:6px;margin:-4px 0 10px">${[['on','🔊 Ezan açık'],['mute','🔇 Sessiz'],['off','⛔ Kapalı']].map(([k,l])=>`<button class="btn ${(state.ezan||'on')===k?'gold':'ghost'}" data-ezan="${k}" style="flex:1">${l}</button>`).join('')}</div>
+    <div style="display:flex;gap:6px;margin:-4px 0 10px"><button class="btn wide" data-ezanplay>▶️ Ezanı dinle</button><button class="btn wide" data-mgo>🛗 Mescide çık</button></div>
+    <p class="note" style="font-size:11px">Ezan kaydı: Mescid-i Nebevî, açık kaynak al-azan uygulamasından (github.com/meypod/al-azan, AGPL-3.0). Vakit hesabı: adhan-js (MIT).</p>`;
+}
+function bindMescit(root){
+  root.querySelectorAll('[data-ezan]').forEach(b=>b.onclick=()=>{ state.ezan=b.dataset.ezan; if(state.ezan==='off') stopEzan(); sfx('click'); markSave(); renderSheet(); });
+  const p=root.querySelector('[data-ezanplay]'); if(p) p.onclick=()=>{ if(ezanOn) stopEzan(); else { const s=state.ezan; state.ezan='on'; playEzan(); state.ezan=s; } };
+  const g=root.querySelector('[data-mgo]'); if(g) g.onclick=()=>{ closeSheet(); peekFloor=null; player.goTo(MF,0,-0.5); };
+}
+function bootMescit(){ if(mescitOn()) buildMescit(); }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -5792,7 +5999,7 @@ function updateHUD(){
   const n=floorsBuilt(), fl=$('floors');
   const key=n+'|'+viewFloor+'|'+player.f+'|'+[0,1,2,3].map(f=>floorBusy(f)?1:0).join('');
   if(fl.dataset.k!==key){ fl.dataset.k=key; fl.innerHTML='';
-    if(n>1) for(let f=n-1;f>=0;f--){ const b=document.createElement('button'); b.textContent=f===ROOF?'Ç':(f+1)+'.K'; b.title=floorName(f); b.setAttribute('aria-label',floorName(f)+' bak'); if(f===viewFloor) b.classList.add('on'); if(f===player.f) b.classList.add('me');
+    if(n>1) for(let f=n-1;f>=0;f--){ const b=document.createElement('button'); b.textContent=f===4?'🕌':f===ROOF?'Ç':(f+1)+'.K'; b.title=floorName(f); b.setAttribute('aria-label',floorName(f)+' bak'); if(f===viewFloor) b.classList.add('on'); if(f===player.f) b.classList.add('me');
       if(floorBusy(f)&&f!==viewFloor){ const d=document.createElement('span'); d.className='dot'; b.appendChild(d); }
       b.onclick=()=>{ sfx('click'); peekFloor=f===player.f?null:f; }; fl.appendChild(b); } }
   // elevator
@@ -5894,7 +6101,7 @@ function renderSheet(){
     const H=hotelSub;
     h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
     if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
-    if(H==='gen') h+=tierHtml()+mgrHtml()+floorsHtml();
+    if(H==='gen') h+=tierHtml()+mgrHtml()+mescitHtml()+floorsHtml();
     if(H==='eco') h+=depthHtml()+invHtml()+luxHtml();
     else if(H==='evt') h+=eventsHtml()+partyHtml();
     else if(H==='rule') h+=opsHtml();
@@ -5912,7 +6119,7 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
-  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet);
+  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet); bindMescit(sheet);
   const spb=sheet.querySelector('[data-spbuy]'); if(spb) spb.onclick=buySpecial; const mgo=sheet.querySelector('[data-mgopen]'); if(mgo) mgo.onclick=openMgr;
   sheet.querySelectorAll('[data-fth]').forEach(b=>b.onclick=()=>{ const [f,k]=b.dataset.fth.split(':'); buyFloorTheme(+f,k); }); sheet.querySelectorAll('[data-flo]').forEach(b=>b.onclick=()=>buyLounge(+b.dataset.flo));
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
@@ -6305,7 +6512,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -6331,7 +6538,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);
