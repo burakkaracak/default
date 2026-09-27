@@ -38,7 +38,7 @@ class Ent{
     if(this.sqT>0){ this.sqT=Math.max(0,this.sqT-dt); const bs=this.c.bs||(this.c.bs=r.scale.x||1), u=1-this.sqT/0.4, a=Math.sin(u*Math.PI*2.5)*(1-u)*0.22;
       r.scale.set(bs*(1+a),bs*(1-a),bs*(1+a)); if(this.sqT===0) r.scale.setScalar(bs); }
     if(this.c.face) setFace(this.c,faceFor(this));
-    r.visible=floorVisible(this.y);
+    r.visible=floorVisible(this.y)&&!this.hidden;
     if(r.visible) animChar(this.c,dt);
   }
   pose(p){ this.x=p.px; this.z=p.pz; this.yOff=p.py||0; this.rx=p.rx||0; this.tRot=this.rot=p.rot||0; this.anim=p.pose; }
@@ -135,7 +135,7 @@ function guestLeave(g){
   if(!g.goTo(0,ex.x,ex.z,()=>g.remove())) g.remove();
 }
 function checkout(g){
-  const id=g.room, s=state.rooms[id], R=RT(id);
+  standUp(g); const id=g.room, s=state.rooms[id], R=RT(id);
   const mood=g.sat>=68?'happy':g.sat>=42?'neutral':'unhappy', mult=g.T.rep||1;
   const tip=mood==='unhappy'?0:Math.round(roomRate(id)*0.45*(g.sat/70)*g.T.tip*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
   if(tip>0){ s.tip+=tip; state.today.tips+=tip; }
@@ -171,7 +171,7 @@ function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
   let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
-  const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
+  standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
   return true;
 }
@@ -211,7 +211,7 @@ function updateGuests(dt){
       g.stay-=dt;
       if(s.broken) g.sat=Math.max(0,g.sat-dt*0.25);
       if(state.crisis&&(state.crisis.type==='power'||state.crisis.type==='flood'&&state.crisis.f===g.f)) g.sat=Math.max(0,g.sat-dt*0.18);
-      if(night&&!g.asleep){ const sp=roomSpots(g.room); g.asleep=true; g.pose({px:sp.bed.x,pz:sp.bed.z,py:0.5,rx:-Math.PI/2,rot:0,pose:'sleep'}); }
+      if(night&&!g.asleep){ const sp=roomSpots(g.room); g.asleep=true; g.act=null; g.pose({px:sp.bed.x,pz:sp.bed.z,py:0.5,rx:-Math.PI/2,rot:0,pose:'sleep'}); }
       else if(!night&&g.asleep){ const sp=roomSpots(g.room); g.asleep=false; g.unpose(); g.x=sp.stand.x; g.z=sp.stand.z; g.tRot=Math.PI*0.5; }
       if(!g.asleep){
         if(built('depo')&&!R.req){ g.reqT-=dt*g.T.req; if(g.reqT<=0){ g.reqT=rnd(22,40); if(Math.random()<.75) makeRequest(g); } }
@@ -280,8 +280,8 @@ function updateStaff(dt){
   }
 }
 function goRoom(e,id){
-  const sp=roomSpots(id);
-  const ok=e.goTo(sp.stand.f,sp.stand.x+rnd(-0.1,0.1),sp.stand.z+rnd(-0.1,0.2),()=>arriveRoom(e,id));
+  const sp=roomSpots(id), atDoor=e.job&&e.job.type==='carry'&&!!RT(id).guest, T=atDoor?{f:sp.door.f,x:sp.door.x,z:sp.door.z-0.2}:sp.stand;
+  const ok=e.goTo(T.f,T.x+rnd(-0.1,0.1),T.z+rnd(-0.1,0.2),()=>arriveRoom(e,id));
   if(!ok) finishJob(e);
 }
 function arriveRoom(e,id){

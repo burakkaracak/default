@@ -115,7 +115,7 @@ function betterRoomFor(g){
 }
 function upsellFee(g,nid){ const n=Math.max(1,Math.ceil(g.stay/NIGHT_SEC)); return Math.max(r10(roomRate(g.room)*0.5*incomeMult()),Math.round((roomRate(nid)-roomRate(g.room))*n*incomeMult()*1.1)); }
 function moveGuest(g,nid){
-  const oid=g.room, OR=RT(oid); OR.guest=null; OR.req=null; state.rooms[oid].dirty=true; applyRoomState(oid);
+  standUp(g); const oid=g.room, OR=RT(oid); OR.guest=null; OR.req=null; state.rooms[oid].dirty=true; applyRoomState(oid);
   const NR=RT(nid); NR.guest=g; g.room=nid; g.inRoom=false; g.unpose(); g.asleep=false; g.lastRoomT=ROOM_T[state.rooms[nid].type].name; applyRoomState(nid);
   g.state='toRoom'; const sp=roomSpots(nid); if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
 }

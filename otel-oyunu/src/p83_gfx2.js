@@ -84,7 +84,7 @@ function addTvGlow(G,parts){ const m=new THREE.MeshBasicMaterial({map:tex('glow'
   const p=mesh(plane(1.6,1.6),m,0.95,0.06,0); p.rotation.x=-Math.PI/2; G.add(p); parts.tv=p; }
 function updateTvGlow(t){
   for(const k in state.rooms){ const R=RT(+k), P=R.parts; if(!P||!P.tv) continue;
-    const g=R.guest, on=g&&g.inRoom&&!g.asleep&&nightF>0.15&&!powerOut(); P.tv.visible=!!on;
+    const g=R.guest, on=g&&g.inRoom&&!g.asleep&&(P.tvOn||nightF>0.15&&!g.act)&&!powerOut(); P.tv.visible=!!on;
     if(on) P.tv.material.opacity=0.35+0.25*Math.abs(Math.sin(t*7+(+k)))*Math.abs(Math.sin(t*2.3+(+k)*0.7)); }
 }
 

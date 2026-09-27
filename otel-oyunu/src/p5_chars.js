@@ -124,6 +124,12 @@ function animChar(c,dt){
     L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-0.5;
   } else if(m==='swim'){
     L[0].rotation.x=Math.sin(t*1.6)*0.5; L[1].rotation.x=-Math.sin(t*1.6)*0.5; A[0].rotation.x=-Math.PI+Math.sin(t)*1.2; A[1].rotation.x=-Math.PI-Math.sin(t)*1.2;
+  } else if(m==='lie'){
+    A[0].rotation.z=0.15; A[1].rotation.x=-2.3+Math.sin(t*0.7)*0.08; A[1].rotation.z=-0.25; B.scale.y=1+Math.sin(t*0.8)*0.015;
+  } else if(m==='sitread'){
+    L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-1.05; A[0].rotation.z=-0.25; A[1].rotation.z=0.25; B.rotation.x=0.12;
+  } else if(m==='type'){
+    L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=-1.2+Math.sin(t*9)*0.12; A[1].rotation.x=-1.2+Math.cos(t*9)*0.12; B.rotation.x=0.1;
   } else if(m==='sleep'){
     A[0].rotation.z=0.15; A[1].rotation.z=-0.15; B.scale.y=1+Math.sin(t*0.8)*0.02;
   } else if(m==='dance'){
@@ -143,16 +149,16 @@ function animChar(c,dt){
   }
   if(carrying&&m!=='sleep'&&m!=='swim'){ A[0].rotation.set(-1.25,0,0.25); A[1].rotation.set(-1.25,0,-0.25); }
   // --- life: head look-around, walking lean, blinking, smooth pose transitions ---
-  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance';
+  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance'&&m!=='lie';
   c.ph+=dt; const look=idle?Math.sin(c.ph*0.45)*0.5*Math.max(0,Math.sin(c.ph*0.17+1)):0;
-  H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
+  H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:m==='lie'?-0.35:m==='sitread'||m==='type'?0.3:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
   if(fast) B.rotation.x+=0.07;
   if(c.eyes){ c.blink-=dt; const sh=c.blink<0.12&&m!=='sleep'?0.12:m==='sleep'?0.1:1.15; c.eyes.forEach(e=>e.scale.y=sh); if(c.blink<0) c.blink=2.5+Math.random()*3.5; }
   const tgt=[L[0].rotation.x,L[1].rotation.x,A[0].rotation.x,A[1].rotation.x,A[0].rotation.z,A[1].rotation.z,B.position.y,B.rotation.x];
   if(c.sm){ const k=Math.min(1,dt*16); for(let i=0;i<8;i++) c.sm[i]+=(tgt[i]-c.sm[i])*k; } else c.sm=tgt.slice();
   const S=c.sm; L[0].rotation.x=S[0]; L[1].rotation.x=S[1]; A[0].rotation.x=S[2]; A[1].rotation.x=S[3]; A[0].rotation.z=S[4]; A[1].rotation.z=S[5]; B.position.y=S[6]; B.rotation.x=S[7]+(c.hunch||0);
-  if(c.child){ c.child.mode=m==='walk'?'walk':'idle'; c.child.spd=c.spd; animChar(c.child,dt); c.child.root.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'); }
-  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'; c.dog.visible=!hide; c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
+  if(c.child){ c.child.mode=m==='walk'?'walk':'idle'; c.child.spd=c.spd; animChar(c.child,dt); c.child.root.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'); }
+  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'; c.dog.visible=!hide; c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
     c.dog.userData.tail.rotation.y=Math.sin(c.ph*(fast?14:6))*0.6; }
-  if(c.bag&&!c.child&&c.bag.parent===c.root) c.bag.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run');
+  if(c.bag&&!c.child&&c.bag.parent===c.root) c.bag.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type');
 }

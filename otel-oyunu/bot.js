@@ -1,5 +1,5 @@
 window.simStep=(dt)=>{ updatePlayer(dt); updatePlayerZones(dt); updatePads(dt); updateDesk(dt); updateGuests(dt); updateStaff(dt);
-  for(const e of ents.slice()) if(e!==player) e.step(dt); updateBus(dt,0); cafeWork=Math.max(0,cafeWork-dt); updateSpawner(dt); updateBreakdowns(dt); updateMega2(dt); updateDepth(dt); updateOps(dt); updateLive(dt,gtime); updateAmenLife(dt); updateFlow(dt); updateTime(dt);
+  for(const e of ents.slice()) if(e!==player) e.step(dt); updateBus(dt,0); cafeWork=Math.max(0,cafeWork-dt); updateSpawner(dt); updateBreakdowns(dt); updateMega2(dt); updateDepth(dt); updateOps(dt); updateLive(dt,gtime); updateAmenLife(dt); updateFlow(dt); updateReal(dt); updateTime(dt);
   viewFloor=player.f; };
 window.botBuy=()=>{ state.stayPol='yes'; if(stars()>=4) for(const k in INV){ const c=invCost(k); if(c!=null&&state.money>c*2.5){ buyInv(k); break; } }
   if(state.quests) state.quests.list.forEach((q,i)=>{ if(q.done&&!q.claimed) claimQuest(i); });
@@ -13,7 +13,7 @@ window.botBuy=()=>{ state.stayPol='yes'; if(stars()>=4) for(const k in INV){ con
 };
 window.botTarget=()=>{
   const p=player, items=p.c.items;
-  for(const k in state.rooms){ const R=RT(+k); if(R.req&&items.includes(R.req.item)){ const sp=roomSpots(+k); return sp.stand; } }
+  for(const k in state.rooms){ const R=RT(+k); if(R.req&&items.includes(R.req.item)){ return roomReach(+k); } }
   if(state.crisis&&state.crisis.type!=='flu') return {x:state.crisis.x,z:state.crisis.z,f:state.crisis.f};
   if(state.mess) return {x:state.mess.x,z:state.mess.z,f:0};
   const head=queue[0], rec=state.staff.rec.n>0;
@@ -26,7 +26,7 @@ window.botTarget=()=>{
   const reqs=roomsWhere(id=>RT(id).req&&!RT(id).req.by);
   if(reqs.length&&items.length<capacity()){ const it=RT(reqs[0]).req.item; if(it==='food') return {x:L.pass.x,z:L.pass.z,f:0}; return Object.assign({f:0},L.shelf[it]); }
   if(items.length&&!reqs.length) setHold(p.c,[]);
-  const tips=roomsWhere(id=>state.rooms[id].tip>0); if(tips.length) return roomSpots(nearestRoom(p,tips)).ns;
+  const tips=roomsWhere(id=>state.rooms[id].tip>0); if(tips.length){ const id=nearestRoom(p,tips), ri=roomInfo(id); return {x:ri.x+TIP_X,z:ri.z+TIP_Z+0.3,f:ri.f}; }
   for(const k in L.piles) if(state.piles[k]>0) return L.piles[k];
   return {x:L.serve.cx,z:L.serve.cz,f:0};
 };

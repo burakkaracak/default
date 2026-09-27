@@ -486,7 +486,7 @@ function onTap(sx,sy){
   if(hits.length){ let o=hits[0].object; while(o&&o.userData.roomId===undefined) o=o.parent;
     if(o){ const id=o.userData.roomId, s=state.rooms[id], R=RT(id);
       const act=s.dirty||s.broken||s.tip>0||(R.req&&player.c.items.includes(R.req.item));
-      if(act){ const sp=roomSpots(id); walkTo(sp.stand.f,sp.stand.x,sp.stand.z); } else { sheetRoom=id; openSheet('room'); sfx('click'); }
+      if(act){ const sp=roomReach(id); walkTo(sp.f,sp.x,sp.z); } else { sheetRoom=id; openSheet('room'); sfx('click'); }
       return; } }
   const o=ray.ray.origin, d=ray.ray.direction, py=viewFloor*FH;
   if(Math.abs(d.y)<1e-4) return; const t=(py-o.y)/d.y; if(t<0) return;
@@ -602,7 +602,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });

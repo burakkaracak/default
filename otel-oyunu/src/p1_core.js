@@ -174,7 +174,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:40, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:41, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -280,6 +280,8 @@ function sfx(name,p){
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
       tone(1319*m+Math.random()*30,.09,'triangle',.05); tone(1976*m,.26,'sine',.05,.055); break; }
+    case 'doorC': tone(95,.16,'sine',.1,0,null,60); noiseBurst(.08,.05,900); break;
+    case 'doorO': noiseBurst(.12,.025,1400); tone(520,.06,'triangle',.015,.02); break;
     case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
     case 'pick':  tone(660,.08,'triangle',.08,0,null,990); break;
     case 'drop':  tone(990,.1,'triangle',.08,0,null,520); break;

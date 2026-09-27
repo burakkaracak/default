@@ -461,7 +461,7 @@ function chainDone(){
 }
 function chainTarget(k){
   const room=fn=>{ const ids=roomsWhere(fn); if(!ids.length) return null; let best=null,bd=1e9;
-    for(const id of ids){ const sp=roomSpots(id).stand, d=(sp.f!==player.f?400:0)+d2(player.x,player.z,sp.x,sp.z); if(d<bd){ bd=d; best=sp; } }
+    for(const id of ids){ const sp=roomReach(id), d=(sp.f!==player.f?400:0)+d2(player.x,player.z,sp.x,sp.z); if(d<bd){ bd=d; best=sp; } }
     return {x:best.x,y:best.f*FH,z:best.z,f:best.f}; };
   if(k==='clean') return room(id=>state.rooms[id].dirty);
   if(k==='fix') return room(id=>state.rooms[id].broken);

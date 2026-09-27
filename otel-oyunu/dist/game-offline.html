@@ -439,7 +439,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:40, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:41, rules:{dog:true,booze:true}, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -545,6 +545,8 @@ function sfx(name,p){
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
       tone(1319*m+Math.random()*30,.09,'triangle',.05); tone(1976*m,.26,'sine',.05,.055); break; }
+    case 'doorC': tone(95,.16,'sine',.1,0,null,60); noiseBurst(.08,.05,900); break;
+    case 'doorO': noiseBurst(.12,.025,1400); tone(520,.06,'triangle',.015,.02); break;
     case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
     case 'pick':  tone(660,.08,'triangle',.08,0,null,990); break;
     case 'drop':  tone(990,.1,'triangle',.08,0,null,520); break;
@@ -1933,6 +1935,12 @@ function animChar(c,dt){
     L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-0.5;
   } else if(m==='swim'){
     L[0].rotation.x=Math.sin(t*1.6)*0.5; L[1].rotation.x=-Math.sin(t*1.6)*0.5; A[0].rotation.x=-Math.PI+Math.sin(t)*1.2; A[1].rotation.x=-Math.PI-Math.sin(t)*1.2;
+  } else if(m==='lie'){
+    A[0].rotation.z=0.15; A[1].rotation.x=-2.3+Math.sin(t*0.7)*0.08; A[1].rotation.z=-0.25; B.scale.y=1+Math.sin(t*0.8)*0.015;
+  } else if(m==='sitread'){
+    L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-1.05; A[0].rotation.z=-0.25; A[1].rotation.z=0.25; B.rotation.x=0.12;
+  } else if(m==='type'){
+    L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=-1.2+Math.sin(t*9)*0.12; A[1].rotation.x=-1.2+Math.cos(t*9)*0.12; B.rotation.x=0.1;
   } else if(m==='sleep'){
     A[0].rotation.z=0.15; A[1].rotation.z=-0.15; B.scale.y=1+Math.sin(t*0.8)*0.02;
   } else if(m==='dance'){
@@ -1952,18 +1960,18 @@ function animChar(c,dt){
   }
   if(carrying&&m!=='sleep'&&m!=='swim'){ A[0].rotation.set(-1.25,0,0.25); A[1].rotation.set(-1.25,0,-0.25); }
   // --- life: head look-around, walking lean, blinking, smooth pose transitions ---
-  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance';
+  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance'&&m!=='lie';
   c.ph+=dt; const look=idle?Math.sin(c.ph*0.45)*0.5*Math.max(0,Math.sin(c.ph*0.17+1)):0;
-  H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
+  H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:m==='lie'?-0.35:m==='sitread'||m==='type'?0.3:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
   if(fast) B.rotation.x+=0.07;
   if(c.eyes){ c.blink-=dt; const sh=c.blink<0.12&&m!=='sleep'?0.12:m==='sleep'?0.1:1.15; c.eyes.forEach(e=>e.scale.y=sh); if(c.blink<0) c.blink=2.5+Math.random()*3.5; }
   const tgt=[L[0].rotation.x,L[1].rotation.x,A[0].rotation.x,A[1].rotation.x,A[0].rotation.z,A[1].rotation.z,B.position.y,B.rotation.x];
   if(c.sm){ const k=Math.min(1,dt*16); for(let i=0;i<8;i++) c.sm[i]+=(tgt[i]-c.sm[i])*k; } else c.sm=tgt.slice();
   const S=c.sm; L[0].rotation.x=S[0]; L[1].rotation.x=S[1]; A[0].rotation.x=S[2]; A[1].rotation.x=S[3]; A[0].rotation.z=S[4]; A[1].rotation.z=S[5]; B.position.y=S[6]; B.rotation.x=S[7]+(c.hunch||0);
-  if(c.child){ c.child.mode=m==='walk'?'walk':'idle'; c.child.spd=c.spd; animChar(c.child,dt); c.child.root.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'); }
-  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'; c.dog.visible=!hide; c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
+  if(c.child){ c.child.mode=m==='walk'?'walk':'idle'; c.child.spd=c.spd; animChar(c.child,dt); c.child.root.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'); }
+  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type'; c.dog.visible=!hide; c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
     c.dog.userData.tail.rotation.y=Math.sin(c.ph*(fast?14:6))*0.6; }
-  if(c.bag&&!c.child&&c.bag.parent===c.root) c.bag.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run');
+  if(c.bag&&!c.child&&c.bag.parent===c.root) c.bag.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'||m==='lie'||m==='sitread'||m==='type');
 }
 
 // =====================================================================
@@ -2005,7 +2013,7 @@ class Ent{
     if(this.sqT>0){ this.sqT=Math.max(0,this.sqT-dt); const bs=this.c.bs||(this.c.bs=r.scale.x||1), u=1-this.sqT/0.4, a=Math.sin(u*Math.PI*2.5)*(1-u)*0.22;
       r.scale.set(bs*(1+a),bs*(1-a),bs*(1+a)); if(this.sqT===0) r.scale.setScalar(bs); }
     if(this.c.face) setFace(this.c,faceFor(this));
-    r.visible=floorVisible(this.y);
+    r.visible=floorVisible(this.y)&&!this.hidden;
     if(r.visible) animChar(this.c,dt);
   }
   pose(p){ this.x=p.px; this.z=p.pz; this.yOff=p.py||0; this.rx=p.rx||0; this.tRot=this.rot=p.rot||0; this.anim=p.pose; }
@@ -2102,7 +2110,7 @@ function guestLeave(g){
   if(!g.goTo(0,ex.x,ex.z,()=>g.remove())) g.remove();
 }
 function checkout(g){
-  const id=g.room, s=state.rooms[id], R=RT(id);
+  standUp(g); const id=g.room, s=state.rooms[id], R=RT(id);
   const mood=g.sat>=68?'happy':g.sat>=42?'neutral':'unhappy', mult=g.T.rep||1;
   const tip=mood==='unhappy'?0:Math.round(roomRate(id)*0.45*(g.sat/70)*g.T.tip*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
   if(tip>0){ s.tip+=tip; state.today.tips+=tip; }
@@ -2138,7 +2146,7 @@ function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
   let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
-  const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
+  standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
   return true;
 }
@@ -2178,7 +2186,7 @@ function updateGuests(dt){
       g.stay-=dt;
       if(s.broken) g.sat=Math.max(0,g.sat-dt*0.25);
       if(state.crisis&&(state.crisis.type==='power'||state.crisis.type==='flood'&&state.crisis.f===g.f)) g.sat=Math.max(0,g.sat-dt*0.18);
-      if(night&&!g.asleep){ const sp=roomSpots(g.room); g.asleep=true; g.pose({px:sp.bed.x,pz:sp.bed.z,py:0.5,rx:-Math.PI/2,rot:0,pose:'sleep'}); }
+      if(night&&!g.asleep){ const sp=roomSpots(g.room); g.asleep=true; g.act=null; g.pose({px:sp.bed.x,pz:sp.bed.z,py:0.5,rx:-Math.PI/2,rot:0,pose:'sleep'}); }
       else if(!night&&g.asleep){ const sp=roomSpots(g.room); g.asleep=false; g.unpose(); g.x=sp.stand.x; g.z=sp.stand.z; g.tRot=Math.PI*0.5; }
       if(!g.asleep){
         if(built('depo')&&!R.req){ g.reqT-=dt*g.T.req; if(g.reqT<=0){ g.reqT=rnd(22,40); if(Math.random()<.75) makeRequest(g); } }
@@ -2247,8 +2255,8 @@ function updateStaff(dt){
   }
 }
 function goRoom(e,id){
-  const sp=roomSpots(id);
-  const ok=e.goTo(sp.stand.f,sp.stand.x+rnd(-0.1,0.1),sp.stand.z+rnd(-0.1,0.2),()=>arriveRoom(e,id));
+  const sp=roomSpots(id), atDoor=e.job&&e.job.type==='carry'&&!!RT(id).guest, T=atDoor?{f:sp.door.f,x:sp.door.x,z:sp.door.z-0.2}:sp.stand;
+  const ok=e.goTo(T.f,T.x+rnd(-0.1,0.1),T.z+rnd(-0.1,0.2),()=>arriveRoom(e,id));
   if(!ok) finishJob(e);
 }
 function arriveRoom(e,id){
@@ -2724,7 +2732,7 @@ function chainDone(){
 }
 function chainTarget(k){
   const room=fn=>{ const ids=roomsWhere(fn); if(!ids.length) return null; let best=null,bd=1e9;
-    for(const id of ids){ const sp=roomSpots(id).stand, d=(sp.f!==player.f?400:0)+d2(player.x,player.z,sp.x,sp.z); if(d<bd){ bd=d; best=sp; } }
+    for(const id of ids){ const sp=roomReach(id), d=(sp.f!==player.f?400:0)+d2(player.x,player.z,sp.x,sp.z); if(d<bd){ bd=d; best=sp; } }
     return {x:best.x,y:best.f*FH,z:best.z,f:best.f}; };
   if(k==='clean') return room(id=>state.rooms[id].dirty);
   if(k==='fix') return room(id=>state.rooms[id].broken);
@@ -4625,7 +4633,7 @@ function addTvGlow(G,parts){ const m=new THREE.MeshBasicMaterial({map:tex('glow'
   const p=mesh(plane(1.6,1.6),m,0.95,0.06,0); p.rotation.x=-Math.PI/2; G.add(p); parts.tv=p; }
 function updateTvGlow(t){
   for(const k in state.rooms){ const R=RT(+k), P=R.parts; if(!P||!P.tv) continue;
-    const g=R.guest, on=g&&g.inRoom&&!g.asleep&&nightF>0.15&&!powerOut(); P.tv.visible=!!on;
+    const g=R.guest, on=g&&g.inRoom&&!g.asleep&&(P.tvOn||nightF>0.15&&!g.act)&&!powerOut(); P.tv.visible=!!on;
     if(on) P.tv.material.opacity=0.35+0.25*Math.abs(Math.sin(t*7+(+k)))*Math.abs(Math.sin(t*2.3+(+k)*0.7)); }
 }
 
@@ -4826,11 +4834,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=40;
+const GAME_VER=41;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -4999,7 +5007,7 @@ function betterRoomFor(g){
 }
 function upsellFee(g,nid){ const n=Math.max(1,Math.ceil(g.stay/NIGHT_SEC)); return Math.max(r10(roomRate(g.room)*0.5*incomeMult()),Math.round((roomRate(nid)-roomRate(g.room))*n*incomeMult()*1.1)); }
 function moveGuest(g,nid){
-  const oid=g.room, OR=RT(oid); OR.guest=null; OR.req=null; state.rooms[oid].dirty=true; applyRoomState(oid);
+  standUp(g); const oid=g.room, OR=RT(oid); OR.guest=null; OR.req=null; state.rooms[oid].dirty=true; applyRoomState(oid);
   const NR=RT(nid); NR.guest=g; g.room=nid; g.inRoom=false; g.unpose(); g.asleep=false; g.lastRoomT=ROOM_T[state.rooms[nid].type].name; applyRoomState(nid);
   g.state='toRoom'; const sp=roomSpots(nid); if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
 }
@@ -5369,6 +5377,79 @@ function qTabsHtml(cur){ return `<div class="tabs">${QTABS.map(([k,l])=>`<button
 function bindQTabs(root){ root.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ if(sheetMode===b.dataset.qt) return; sfx('click'); openSheet(b.dataset.qt); }); }
 function streakRowHtml(){ const S=state.streak; if(!S||!S.n) return '';
   const r=streakRew(S.n-1); return `<div class="row"><div class="ic">🔥</div><div class="tx">Giriş serisi: ${S.n}. gün<small>${S.got?'Bugünün ödülü alındı · yarın: '+rewTxt(streakRew(S.n)):'Bugünün ödülü: '+rewTxt(r)}</small></div>${S.got?'<button class="btn" disabled>Alındı ✓</button>':'<button class="btn gold qclaim" data-streak>Al 🎁</button>'}</div>`; }
+
+// =====================================================================
+// GERÇEKÇİLİK: dolu odanın kapısı kapalı (geçilmez), misafir odada
+// uyanıkken bir şeyle uğraşır (uzanır, TV, okur, çalışır, banyo, pencere)
+// =====================================================================
+
+// ---------- kapılar ----------
+// dolu odada hedef: kapının önü (içeri girilmez), boş odada: oda içi
+function roomReach(id){ const sp=roomSpots(id); return RT(id).guest&&!state.rooms[id].broken?{x:sp.door.x,z:roomInfo(id).z+RD/2+0.45,f:sp.door.f}:sp.stand; }
+function doorWant(id){ const R=RT(id), s=state.rooms[id], g=R.guest; return !!(g&&g.inRoom&&g.state==='room'&&!s.broken); }
+function someoneInDoor(id){
+  const ri=roomInfo(id), hd=RD/2, near=e=>e&&e.f===ri.f&&Math.abs(e.x-ri.x)<1.5&&e.z>ri.z-hd-0.1&&e.z<ri.z+hd+0.35;
+  if(near(player)) return true; for(const e of staffEnts) if(near(e)) return true;
+  const own=RT(id).guest; for(const g of guests) if(g!==own&&near(g)) return true; return false;
+}
+function makeDoor(R){
+  const hd=RD/2, wood=tmat('woodDark',1,1), mk=sd=>{ const pv=new THREE.Group(); pv.position.set(sd*0.7,0,hd-0.06);
+    const pan=mesh(rbox(0.68,0.5,0.05,.02),wood,-sd*0.35,0.27,0,true); pv.add(pan); pv.add(mesh(box(0.5,0.03,0.055),M.gold,-sd*0.35,0.46,0)); pv.add(mesh(sph(0.03,8,6),M.gold,-sd*0.62,0.3,0.04)); R.group.add(pv); return pv; };
+  R.parts.door=[mk(-1),mk(1)]; R.parts.doorA=R.doorClosed?0:1; R.parts.doorG=R.group;
+}
+function setDoorCol(id,closed){ const ri=roomInfo(id), hd=RD/2; if(closed) addCols('door'+id,[[ri.f,ri.x-0.72,ri.x+0.72,ri.z+hd-0.14,ri.z+hd+0.02]]); else removeCols('door'+id); }
+function updateDoors(dt){
+  for(const k in state.rooms){ const id=+k, R=RT(id); if(!R.group||!R.parts) continue;
+    if(!R.parts.door||R.parts.doorG!==R.group){ makeDoor(R); }
+    let want=doorWant(id);
+    if(want&&!R.doorClosed&&someoneInDoor(id)) want=false;          // içeride/kapıda biri varken kapatma
+    if(want!==!!R.doorClosed){ R.doorClosed=want; setDoorCol(id,want); if(Sound.ctx&&state.sound!==false&&player.f===roomInfo(id).f&&d2(player.x,player.z,roomInfo(id).x,roomInfo(id).z)<64) sfx(want?'doorC':'doorO'); }
+    const P=R.parts, tgt=R.doorClosed?0:1; P.doorA+=(tgt-P.doorA)*Math.min(1,dt*7);
+    const a=P.doorA*Math.PI*0.5; P.door[0].rotation.y=a; P.door[1].rotation.y=-a;
+  }
+}
+
+// ---------- odada aktiviteler ----------
+// yerel koordinatlar (oda merkezine göre), sit pozlarında py oturma yüksekliği
+function actSpots(id){
+  const t=state.rooms[id].type, b=bedGeom(t), hd=RD/2, L=[];
+  L.push({k:'lie',w:3,px:b.bx,pz:0.2,py:0.5,rx:-Math.PI/2,rot:0,pose:'lie',e:['📱','🎧','😌']});
+  L.push({k:'bedsit',w:2,px:b.right-0.14,pz:-0.15,py:0.12,rot:Math.PI/2,pose:t==='dlx'?'sit':'sitread',e:t==='dlx'?['📺','🍿','😂']:['📖','📱','🗺️'],tv:t==='dlx'});
+  if(t==='eco') L.push({k:'chair',w:3,px:0.96,pz:0.8,py:0.12,rot:Math.PI,pose:'type',e:['💻','✍️','☕']});
+  if(t==='dlx') L.push({k:'arm',w:3,px:1.0,pz:0.82,py:0.02,rot:-0.7,pose:'sitread',e:['📖','☕','📰']});
+  if(t==='suite') L.push({k:'sofa',w:3,px:1.16,pz:0.55,py:0.03,rot:-Math.PI/2,pose:'sitread',e:['🍷','📖','🎶']});
+  L.push({k:'window',w:1,px:0.25,pz:-hd+0.62,py:0,rot:Math.PI,pose:null,e:['🌇','📸']});
+  L.push({k:'bath',w:1,px:1.06,pz:-0.98,py:0,rot:0,pose:null,e:['🚿','🛁','🪥'],hide:true});
+  return L;
+}
+const ACT_PREF={business:'chair',family:'bedsit',couple:'lie',student:'lie',elderly:'arm',vip:'sofa',influencer:'window',athlete:'bath',grumpy:'bedsit'};
+function pickAct(g){ const L=actSpots(g.room), pref=ACT_PREF[g.type]; let tot=0; L.forEach(a=>{ a.ww=a.w*(a.k===pref?2.5:1)*(a.k===g.lastAct?0.3:1); tot+=a.ww; });
+  let r=Math.random()*tot; for(const a of L){ r-=a.ww; if(r<=0) return a; } return L[0]; }
+function standUp(g){
+  if(g.room==null) return; const Rd=RT(g.room); if(Rd.doorClosed){ Rd.doorClosed=false; setDoorCol(g.room,false); }
+  if(!g.act&&!g.asleep) return;
+  const sp=roomSpots(g.room); g.unpose(); g.act=null; g.asleep=false; g.x=sp.stand.x; g.z=sp.stand.z; g.hidden=false;
+  const R=RT(g.room); if(R.parts&&R.parts.tvOn!=null) R.parts.tvOn=false;
+}
+function doAct(g,a){
+  const ri=roomInfo(g.room); g.act=a; g.lastAct=a.k; g.actT=rnd(12,22);
+  if(a.pose) g.pose({px:ri.x+a.px,pz:ri.z+a.pz,py:a.py,rx:a.rx||0,rot:a.rot,pose:a.pose});
+  else { g.unpose(); g.x=ri.x+a.px; g.z=ri.z+a.pz; g.tRot=g.rot=a.rot; }
+  const R=RT(g.room); if(R.parts) R.parts.tvOn=!!a.tv;
+}
+function updateRoomLife(dt){
+  for(const g of guests){
+    if(g.state!=='room'||!g.inRoom||g.room==null){ if(g.act&&g.state!=='room'){ g.act=null; } g.hidden=false; continue; }
+    if(g.asleep){ g.act=null; g.hidden=false; continue; }
+    g.actT=(g.actT==null?rnd(0.5,2):g.actT)-dt;
+    if(!g.act&&g.actT<=0) doAct(g,pickAct(g));
+    else if(g.act&&g.actT<=0){ if(Math.random()<0.25){ standUp(g); g.actT=rnd(2,4); } else doAct(g,pickAct(g)); }
+    g.hidden=!!(g.act&&g.act.hide);
+    if(g.act){
+      g.actFx=(g.actFx||rnd(3,6))-dt; if(g.actFx<=0){ g.actFx=rnd(5,9); if(!g.act.hide||Math.random()<0.5) fxEmoji(g.x,g.y+1.9,g.z,g.f,rand(g.act.e)); } }
+  }
+}
+function updateReal(dt){ updateDoors(dt); updateRoomLife(dt); }
 
 // =====================================================================
 // WORLD-PINNED TAGS (DOM)
@@ -5857,7 +5938,7 @@ function onTap(sx,sy){
   if(hits.length){ let o=hits[0].object; while(o&&o.userData.roomId===undefined) o=o.parent;
     if(o){ const id=o.userData.roomId, s=state.rooms[id], R=RT(id);
       const act=s.dirty||s.broken||s.tip>0||(R.req&&player.c.items.includes(R.req.item));
-      if(act){ const sp=roomSpots(id); walkTo(sp.stand.f,sp.stand.x,sp.stand.z); } else { sheetRoom=id; openSheet('room'); sfx('click'); }
+      if(act){ const sp=roomReach(id); walkTo(sp.f,sp.x,sp.z); } else { sheetRoom=id; openSheet('room'); sfx('click'); }
       return; } }
   const o=ray.ray.origin, d=ray.ray.direction, py=viewFloor*FH;
   if(Math.abs(d.y)<1e-4) return; const t=(py-o.y)/d.y; if(t<0) return;
@@ -5973,7 +6054,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
