@@ -129,9 +129,9 @@ function updateHeli(dt,t){
 let fpMode=false, fpYaw=0, fpBob=0;
 function toggleFP(on){
   fpMode=on==null?!fpMode:on; fpYaw=player?player.rot:0;
-  camera.near=fpMode?0.06:0.5; camera.fov=fpMode?72:(VW<VH?40:33); camera.updateProjectionMatrix();
+  camera.near=fpMode?0.06:0.5; camera.fov=fpMode?fpFov():(VW<VH?40:33); camera.updateProjectionMatrix(); fpPitch=-0.12; fpLookUi(); fpLightSync();
   $('fpBtn').classList.toggle('on',fpMode); peekFloor=null; sfx('click');
-  if(fpMode) hint(IS_TOUCH?'Birinci şahıs: joystick ileri/geri yürür, sağa-sola çevirir':'Birinci şahıs: W/S yürü · A/D dön · V ile çık',4.5);
+  if(fpMode) hint(IS_TOUCH?'Birinci şahıs: joystick ileri/geri yürür, sağa-sola çevirir · sağdaki oklarla yukarı/aşağı bak':'Birinci şahıs: W/S yürü · A/D dön · R/C veya fare tekerleği ile yukarı/aşağı bak · V ile çık',4.5);
 }
 function fpRawInput(){
   let sx=joy.dx, sy=joy.dy;
@@ -149,10 +149,10 @@ function updatePlayerFP(dt){
   state.player.x=p.x; state.player.z=p.z; state.player.f=p.f;
 }
 function updateCameraFP(dt){
-  const p=player, eye=p.y+1.36+Math.sin(fpBob)*0.025*(p.moving||p.path?1:0);
+  const p=player, eye=p.y+1.5+Math.sin(fpBob)*0.025*(p.moving||p.path?1:0); fpLookInput(dt||0.016);
   let sx=0, sz=0; if(shake>0) shake=Math.max(0,shake-(dt||0.016)*3);
   camera.position.set(p.x+Math.sin(fpYaw)*0.12+sx,eye,p.z+Math.cos(fpYaw)*0.12+sz);
-  camera.lookAt(p.x+Math.sin(fpYaw)*5,eye-0.55,p.z+Math.cos(fpYaw)*5);
+  const cp=Math.cos(fpPitch); camera.lookAt(p.x+Math.sin(fpYaw)*5*cp,eye+Math.sin(fpPitch)*5,p.z+Math.cos(fpYaw)*5*cp); fpLightSync();
   cam.tx=p.x; cam.ty=p.y; cam.tz=p.z-0.8;
 }
 

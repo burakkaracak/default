@@ -311,14 +311,14 @@ function renderRoomSheet(){
 }
 function renderQuestSheet(){
   const Q=state.quests; if(!Q){ closeSheet(); return; }
-  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('quests')}<p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`+streakRowHtml();
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('quests')}<p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`+claimAllBtn(questClaimables().length+(state.streak&&!state.streak.got?1:0),'data-qall')+streakRowHtml();
   Q.list.forEach((q,i)=>{ const D=QDEF[q.k], p=q.have/q.n, prog=q.k==='earn'?`${fmt(q.have)} / ${fmt(q.n)} ₺`:`${q.have} / ${q.n}`;
     h+=`<div class="row${q.claimed?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${questText(q)}<small>${prog}</small><div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div></div>
       ${q.claimed?'<button class="btn" disabled>Alındı ✓</button>':q.done?`<button class="btn gold qclaim" data-claim="${i}">Al 🎁<br>+${fmt(q.rew)} ₺</button>`:`<button class="btn ghost" disabled>🎁 ${fmt(q.rew)} ₺</button>`}</div>`; });
   h+=`<p class="note">${Q.bonus?'🎉 Bugünün bonusu alındı. Yarın yeni görevler gelecek!':'🎁 Üç görevi de bitirirsen ek para ve +3 ün kazanırsın.'}</p>`;
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
-  bindQTabs(sheet); const sk=sheet.querySelector('[data-streak]'); if(sk) sk.onclick=()=>{ claimStreak(); renderSheet(); };
+  bindQTabs(sheet); const qa=sheet.querySelector('[data-qall]'); if(qa) qa.onclick=()=>{ qa.disabled=true; claimAllQuests(); }; const sk=sheet.querySelector('[data-streak]'); if(sk) sk.onclick=()=>{ claimStreak(); renderSheet(); };
   sheet.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{ claimQuest(+b.dataset.claim); renderSheet(); });
 }
 // =====================================================================
@@ -453,6 +453,7 @@ cvs.addEventListener('pointerdown',e=>{
 });
 cvs.addEventListener('pointermove',e=>{
   const p=ptrs.get(e.pointerId); if(!p) return; p.x=e.clientX; p.y=e.clientY;
+  if(ptrs.size>=2&&fpMode){ const [a,b]=[...ptrs.values()], my=(a.y+b.y)/2; if(fpMidY!=null) fpPitch=clamp(fpPitch+(fpMidY-my)*0.006,FP_PMIN,FP_PMAX); fpMidY=my; return; }
   if(ptrs.size>=2){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); if(pinch0>0){ cam.dist=clamp(pinchDist0*pinch0/d,10,34); let da=Math.atan2(b.y-a.y,b.x-a.x)-pinchAng0; while(da>Math.PI) da-=2*Math.PI; while(da<-Math.PI) da+=2*Math.PI; if(!fpMode) cam.yaw=clamp(pinchYaw0-da,CAM_YAW[0],CAM_YAW[1]); } return; }
   const dx=p.x-p.sx, dy=p.y-p.sy;
   if(!joy.on&&Math.hypot(dx,dy)>12){ joy.on=true; joy.id=e.pointerId; joy.sx=p.sx; joy.sy=p.sy; joyEl.style.left=p.sx+'px'; joyEl.style.top=p.sy+'px'; joyEl.classList.add('show'); }
@@ -466,7 +467,8 @@ function ptrUp(e){
 }
 function joyEnd(){ joy.on=false; joy.id=null; joy.dx=joy.dy=0; joyEl.classList.remove('show'); knob.style.transform=''; }
 cvs.addEventListener('pointerup',ptrUp); cvs.addEventListener('pointercancel',ptrUp);
-cvs.addEventListener('wheel',e=>{ e.preventDefault(); cam.dist=clamp(cam.dist*(1+e.deltaY*0.001),10,34); },{passive:false});
+let fpMidY=null; window.addEventListener('pointerup',()=>{ fpMidY=null; }); window.addEventListener('pointercancel',()=>{ fpMidY=null; });
+cvs.addEventListener('wheel',e=>{ e.preventDefault(); if(fpMode){ fpPitch=clamp(fpPitch-e.deltaY*0.0016,FP_PMIN,FP_PMAX); return; } cam.dist=clamp(cam.dist*(1+e.deltaY*0.001),10,34); },{passive:false});
 function inputVec(){
   let sx=joy.dx, sy=joy.dy;
   if(keys.w||keys.arrowup) sy-=1; if(keys.s||keys.arrowdown) sy+=1; if(keys.a||keys.arrowleft) sx-=1; if(keys.d||keys.arrowright) sx+=1;
@@ -516,7 +518,7 @@ function updateCamera(dt){
   const D=cam.dist+camZoomDyn; camera.position.set(cam.tx+Math.sin(cam.yaw)*cp*D+sx,cam.ty+sp*D,cam.tz+Math.cos(cam.yaw)*cp*D+sz);
   camera.lookAt(cam.tx,cam.ty+0.6,cam.tz);
 }
-function resize(){ VW=window.innerWidth; VH=window.innerHeight; renderer.setSize(VW,VH,false); camera.aspect=VW/VH; camera.fov=fpMode?72:VW<VH?40:33; camera.updateProjectionMatrix(); resizeComposer(); }
+function resize(){ VW=window.innerWidth; VH=window.innerHeight; renderer.setSize(VW,VH,false); camera.aspect=VW/VH; camera.fov=fpMode?fpFov():VW<VH?40:33; camera.updateProjectionMatrix(); resizeComposer(); }
 window.addEventListener('resize',resize);
 
 // =====================================================================

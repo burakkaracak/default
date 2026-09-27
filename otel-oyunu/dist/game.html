@@ -3162,9 +3162,9 @@ function updateHeli(dt,t){
 let fpMode=false, fpYaw=0, fpBob=0;
 function toggleFP(on){
   fpMode=on==null?!fpMode:on; fpYaw=player?player.rot:0;
-  camera.near=fpMode?0.06:0.5; camera.fov=fpMode?72:(VW<VH?40:33); camera.updateProjectionMatrix();
+  camera.near=fpMode?0.06:0.5; camera.fov=fpMode?fpFov():(VW<VH?40:33); camera.updateProjectionMatrix(); fpPitch=-0.12; fpLookUi(); fpLightSync();
   $('fpBtn').classList.toggle('on',fpMode); peekFloor=null; sfx('click');
-  if(fpMode) hint(IS_TOUCH?'Birinci şahıs: joystick ileri/geri yürür, sağa-sola çevirir':'Birinci şahıs: W/S yürü · A/D dön · V ile çık',4.5);
+  if(fpMode) hint(IS_TOUCH?'Birinci şahıs: joystick ileri/geri yürür, sağa-sola çevirir · sağdaki oklarla yukarı/aşağı bak':'Birinci şahıs: W/S yürü · A/D dön · R/C veya fare tekerleği ile yukarı/aşağı bak · V ile çık',4.5);
 }
 function fpRawInput(){
   let sx=joy.dx, sy=joy.dy;
@@ -3182,10 +3182,10 @@ function updatePlayerFP(dt){
   state.player.x=p.x; state.player.z=p.z; state.player.f=p.f;
 }
 function updateCameraFP(dt){
-  const p=player, eye=p.y+1.36+Math.sin(fpBob)*0.025*(p.moving||p.path?1:0);
+  const p=player, eye=p.y+1.5+Math.sin(fpBob)*0.025*(p.moving||p.path?1:0); fpLookInput(dt||0.016);
   let sx=0, sz=0; if(shake>0) shake=Math.max(0,shake-(dt||0.016)*3);
   camera.position.set(p.x+Math.sin(fpYaw)*0.12+sx,eye,p.z+Math.cos(fpYaw)*0.12+sz);
-  camera.lookAt(p.x+Math.sin(fpYaw)*5,eye-0.55,p.z+Math.cos(fpYaw)*5);
+  const cp=Math.cos(fpPitch); camera.lookAt(p.x+Math.sin(fpYaw)*5*cp,eye+Math.sin(fpPitch)*5,p.z+Math.cos(fpYaw)*5*cp); fpLightSync();
   cam.tx=p.x; cam.ty=p.y; cam.tz=p.z-0.8;
 }
 
@@ -4376,11 +4376,11 @@ function renderPassSheet(){
   let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('pass')}<p class="sub">${pts} puan · her 100 puan bir ödül · puanlar: günlük görev +20, haftalık +60, hedef +5, başarım +10</p>`;
   if(state.week){ h+=`<div class="ugh">📆 Bu haftanın görevleri (${7-((state.day-1)%7)} gün kaldı) · her biri +${fmt(state.week.rew)} ₺</div>`;
     state.week.list.forEach(q=>{ const D=WDEF[q.k]; h+=`<div class="row${q.done?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${D.t(q.n)}<small>${q.k==='earn'?fmt(q.have)+' / '+fmt(q.n):q.have+' / '+q.n}</small><div class="qbar"><i style="width:${(q.have/q.n*100).toFixed(0)}%"></i></div></div>${q.done?'✅':''}</div>`; }); }
-  h+=`<div class="ugh">🎖️ Ödüller</div>`;
+  h+=`<div class="ugh">🎖️ Ödüller</div>`+claimAllBtn(passClaimables().length,'data-pall');
   PASS.forEach((r,i)=>{ const own=got.includes(i), open=tier>i;
     h+=`<div class="row${own?' qdone':''}"><div class="ic">${i+1}</div><div class="tx">${passLabel(r)}<small>${(i+1)*100} puan</small>${!open?`<div class="qbar"><i style="width:${Math.min(100,Math.max(0,(pts-i*100)))}%"></i></div>`:''}</div>${own?'<button class="btn" disabled>Alındı</button>':`<button class="btn gold${open?' qclaim':''}" data-pass="${i}" ${open?'':'disabled'}>${open?'Al 🎁':'🔒'}</button>`}</div>`; });
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h; sheet.querySelector('[data-close]').onclick=closeSheet;
-  sheet.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>claimPass(+b.dataset.pass)); bindQTabs(sheet);
+  sheet.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>claimPass(+b.dataset.pass)); bindQTabs(sheet); const pa=sheet.querySelector('[data-pall]'); if(pa) pa.onclick=()=>{ pa.disabled=true; claimAllPass(); };
 }
 
 // ---------- trophy ledge (cups on the front window sill) ----------
@@ -5446,6 +5446,44 @@ function updateRoomLife(dt){
 function updateReal(dt){ updateDoors(dt); updateRoomLife(dt); }
 
 // =====================================================================
+// GÖRÜŞ: birinci şahısta yukarı/aşağı bakma, daha doğal göz yüksekliği ve
+// görüş açısı, iç mekân dolgu ışığı · ödüllerde "Tümünü al"
+// =====================================================================
+
+// ---------- birinci şahıs bakış ----------
+let fpPitch=-0.12, fpLookHold=0, fpLight=null, fpLookEl=null;
+const FP_PMIN=-1.05, FP_PMAX=0.85;
+function fpFov(){ return VW>VH?62:74; }
+function fpLookInput(dt){
+  let d=fpLookHold; if(keys.r||keys.pageup) d+=1; if(keys.c||keys.pagedown) d-=1;
+  if(d) fpPitch=clamp(fpPitch+d*1.4*dt,FP_PMIN,FP_PMAX);
+}
+function fpLookUi(){
+  if(!fpLookEl){
+    const st=document.createElement('style'); st.textContent=`#fpLook{position:absolute;right:calc(12px + env(safe-area-inset-right));bottom:calc(20px + env(safe-area-inset-bottom));display:none;flex-direction:column;gap:8px;z-index:12}#fpLook.show{display:flex}#fpLook button{width:48px;height:48px;border-radius:50%;border:2px solid var(--gold,#e0a93a);background:var(--panel,rgba(22,26,40,.9));color:#fff;font-size:20px;font-weight:800;touch-action:none}`;
+    document.head.appendChild(st); fpLookEl=document.createElement('div'); fpLookEl.id='fpLook';
+    fpLookEl.innerHTML='<button data-l="1" aria-label="Yukarı bak">⤒</button><button data-l="0" aria-label="Düz bak">⊙</button><button data-l="-1" aria-label="Aşağı bak">⤓</button>';
+    (document.getElementById('hud')||document.body).appendChild(fpLookEl);
+    fpLookEl.querySelectorAll('button').forEach(b=>{ const v=+b.dataset.l;
+      b.addEventListener('pointerdown',e=>{ e.stopPropagation(); e.preventDefault(); if(v===0){ fpPitch=-0.12; sfx('click'); } else fpLookHold=v; });
+      ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{ fpLookHold=0; })); });
+  }
+  fpLookEl.classList.toggle('show',fpMode);
+}
+function fpLightSync(){
+  if(!fpLight){ fpLight=new THREE.PointLight(0xfff1dc,0,9,2); scene.add(fpLight); }
+  fpLight.intensity=fpMode?0.9:0;
+  if(fpMode) fpLight.position.copy(camera.position);
+}
+
+// ---------- ödüller: tümünü al ----------
+function questClaimables(){ const Q=state.quests; return Q?Q.list.map((q,i)=>q.done&&!q.claimed?i:-1).filter(i=>i>=0):[]; }
+function passClaimables(){ const P=state.pass, t=passTier(), out=[]; if(!P) return out; for(let i=0;i<Math.min(t,PASS.length);i++) if(!P.got.includes(i)) out.push(i); return out; }
+function claimAllQuests(){ const L=questClaimables(); if(state.streak&&!state.streak.got) claimStreak(); L.forEach((i,k)=>setTimeout(()=>{ claimQuest(i); if(sheetMode==='quests') renderSheet(); },k*260)); }
+function claimAllPass(){ passClaimables().forEach((i,k)=>setTimeout(()=>{ claimPass(i); if(sheetMode==='pass') renderSheet(); },k*260)); }
+function claimAllBtn(n,attr){ return n>=2?`<button class="btn gold wide qclaim" ${attr} style="margin:0 0 10px">🎁 Tümünü al (${n})</button>`:''; }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -5757,14 +5795,14 @@ function renderRoomSheet(){
 }
 function renderQuestSheet(){
   const Q=state.quests; if(!Q){ closeSheet(); return; }
-  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('quests')}<p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`+streakRowHtml();
+  let h=`<h3>🎯 Görevler <button class="xbtn" data-close aria-label="Kapat">✖</button></h3>${qTabsHtml('quests')}<p class="sub">${Q.day}. gün · her sabah yenilenir · hepsini bitirene bonus ve ün</p>`+claimAllBtn(questClaimables().length+(state.streak&&!state.streak.got?1:0),'data-qall')+streakRowHtml();
   Q.list.forEach((q,i)=>{ const D=QDEF[q.k], p=q.have/q.n, prog=q.k==='earn'?`${fmt(q.have)} / ${fmt(q.n)} ₺`:`${q.have} / ${q.n}`;
     h+=`<div class="row${q.claimed?' qdone':''}"><div class="ic">${D.e}</div><div class="tx">${questText(q)}<small>${prog}</small><div class="qbar"><i style="width:${(p*100).toFixed(0)}%"></i></div></div>
       ${q.claimed?'<button class="btn" disabled>Alındı ✓</button>':q.done?`<button class="btn gold qclaim" data-claim="${i}">Al 🎁<br>+${fmt(q.rew)} ₺</button>`:`<button class="btn ghost" disabled>🎁 ${fmt(q.rew)} ₺</button>`}</div>`; });
   h+=`<p class="note">${Q.bonus?'🎉 Bugünün bonusu alındı. Yarın yeni görevler gelecek!':'🎁 Üç görevi de bitirirsen ek para ve +3 ün kazanırsın.'}</p>`;
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
-  bindQTabs(sheet); const sk=sheet.querySelector('[data-streak]'); if(sk) sk.onclick=()=>{ claimStreak(); renderSheet(); };
+  bindQTabs(sheet); const qa=sheet.querySelector('[data-qall]'); if(qa) qa.onclick=()=>{ qa.disabled=true; claimAllQuests(); }; const sk=sheet.querySelector('[data-streak]'); if(sk) sk.onclick=()=>{ claimStreak(); renderSheet(); };
   sheet.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{ claimQuest(+b.dataset.claim); renderSheet(); });
 }
 // =====================================================================
@@ -5899,6 +5937,7 @@ cvs.addEventListener('pointerdown',e=>{
 });
 cvs.addEventListener('pointermove',e=>{
   const p=ptrs.get(e.pointerId); if(!p) return; p.x=e.clientX; p.y=e.clientY;
+  if(ptrs.size>=2&&fpMode){ const [a,b]=[...ptrs.values()], my=(a.y+b.y)/2; if(fpMidY!=null) fpPitch=clamp(fpPitch+(fpMidY-my)*0.006,FP_PMIN,FP_PMAX); fpMidY=my; return; }
   if(ptrs.size>=2){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); if(pinch0>0){ cam.dist=clamp(pinchDist0*pinch0/d,10,34); let da=Math.atan2(b.y-a.y,b.x-a.x)-pinchAng0; while(da>Math.PI) da-=2*Math.PI; while(da<-Math.PI) da+=2*Math.PI; if(!fpMode) cam.yaw=clamp(pinchYaw0-da,CAM_YAW[0],CAM_YAW[1]); } return; }
   const dx=p.x-p.sx, dy=p.y-p.sy;
   if(!joy.on&&Math.hypot(dx,dy)>12){ joy.on=true; joy.id=e.pointerId; joy.sx=p.sx; joy.sy=p.sy; joyEl.style.left=p.sx+'px'; joyEl.style.top=p.sy+'px'; joyEl.classList.add('show'); }
@@ -5912,7 +5951,8 @@ function ptrUp(e){
 }
 function joyEnd(){ joy.on=false; joy.id=null; joy.dx=joy.dy=0; joyEl.classList.remove('show'); knob.style.transform=''; }
 cvs.addEventListener('pointerup',ptrUp); cvs.addEventListener('pointercancel',ptrUp);
-cvs.addEventListener('wheel',e=>{ e.preventDefault(); cam.dist=clamp(cam.dist*(1+e.deltaY*0.001),10,34); },{passive:false});
+let fpMidY=null; window.addEventListener('pointerup',()=>{ fpMidY=null; }); window.addEventListener('pointercancel',()=>{ fpMidY=null; });
+cvs.addEventListener('wheel',e=>{ e.preventDefault(); if(fpMode){ fpPitch=clamp(fpPitch-e.deltaY*0.0016,FP_PMIN,FP_PMAX); return; } cam.dist=clamp(cam.dist*(1+e.deltaY*0.001),10,34); },{passive:false});
 function inputVec(){
   let sx=joy.dx, sy=joy.dy;
   if(keys.w||keys.arrowup) sy-=1; if(keys.s||keys.arrowdown) sy+=1; if(keys.a||keys.arrowleft) sx-=1; if(keys.d||keys.arrowright) sx+=1;
@@ -5962,7 +6002,7 @@ function updateCamera(dt){
   const D=cam.dist+camZoomDyn; camera.position.set(cam.tx+Math.sin(cam.yaw)*cp*D+sx,cam.ty+sp*D,cam.tz+Math.cos(cam.yaw)*cp*D+sz);
   camera.lookAt(cam.tx,cam.ty+0.6,cam.tz);
 }
-function resize(){ VW=window.innerWidth; VH=window.innerHeight; renderer.setSize(VW,VH,false); camera.aspect=VW/VH; camera.fov=fpMode?72:VW<VH?40:33; camera.updateProjectionMatrix(); resizeComposer(); }
+function resize(){ VW=window.innerWidth; VH=window.innerHeight; renderer.setSize(VW,VH,false); camera.aspect=VW/VH; camera.fov=fpMode?fpFov():VW<VH?40:33; camera.updateProjectionMatrix(); resizeComposer(); }
 window.addEventListener('resize',resize);
 
 // =====================================================================
