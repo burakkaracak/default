@@ -798,11 +798,11 @@ function buildCloudShadows(){
   for(let k=0;k<26;k++){ const cx=Math.random()*256, cy=Math.random()*256, r=18+Math.random()*46;
     for(const [dx,dy] of [[0,0],[256,0],[-256,0],[0,256],[0,-256]]){ const gr=x.createRadialGradient(cx+dx,cy+dy,0,cx+dx,cy+dy,r); gr.addColorStop(0,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle=gr; x.beginPath(); x.arc(cx+dx,cy+dy,r,0,7); x.fill(); } }
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping;
-  cloudMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,
+  cloudMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4,
     uniforms:{map:{value:t},off:{value:new THREE.Vector2()},amt:{value:0},box:{value:new THREE.Vector4(-7.15,7.15,BACK-0.1,7.65)}},
     vertexShader:'varying vec2 vW; void main(){ vec4 w=modelMatrix*vec4(position,1.); vW=w.xz; gl_Position=projectionMatrix*viewMatrix*w; }',
     fragmentShader:'uniform sampler2D map; uniform vec2 off; uniform float amt; uniform vec4 box; varying vec2 vW; void main(){ if(vW.x>box.x&&vW.x<box.y&&vW.y>box.z&&vW.y<box.w) discard; float a=texture2D(map,vW*0.012+off).r; a=smoothstep(0.12,0.6,a); gl_FragColor=vec4(0.05,0.07,0.12,a*amt); }'});
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(200,200),cloudMat); m.rotation.x=-Math.PI/2; m.position.y=0.06; m.renderOrder=3; outdoor.add(m);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(200,200),cloudMat); m.rotation.x=-Math.PI/2; m.position.y=0.085; m.renderOrder=3; outdoor.add(m);   // kaldırım üstü 0.06: aynı yükseklik z-fighting (titreme) yapıyordu
 }
 function updateClouds(t,dayF){
   if(!cloudMat) return;
@@ -976,7 +976,7 @@ function lampPost(parent,x,z){
   parent.add(mesh(cyl(0.05,0.08,2.9,8),M.dark,x,1.45,z,true));
   parent.add(mesh(cyl(0.16,0.16,0.08,10),M.dark,x,2.95,z));
   parent.add(mesh(sph(0.15,12,8),M.lampOn,x,2.8,z));
-  const g=glowDecal(1.7,x,z,0.06); parent.add(g); streetGlows.push(g);
+  const g=glowDecal(1.7,x,z,0.085); parent.add(g); streetGlows.push(g);
 }
 function stanchion(parent,x,z){ parent.add(mesh(cyl(0.035,0.035,0.9,8),M.gold,x,0.45,z,true)); parent.add(mesh(sph(0.06,8,6),M.gold,x,0.93,z)); parent.add(mesh(cyl(0.14,0.16,0.04,12),M.gold,x,0.02,z)); }
 

@@ -72,7 +72,7 @@ function lampPost(parent,x,z){
   parent.add(mesh(cyl(0.05,0.08,2.9,8),M.dark,x,1.45,z,true));
   parent.add(mesh(cyl(0.16,0.16,0.08,10),M.dark,x,2.95,z));
   parent.add(mesh(sph(0.15,12,8),M.lampOn,x,2.8,z));
-  const g=glowDecal(1.7,x,z,0.06); parent.add(g); streetGlows.push(g);
+  const g=glowDecal(1.7,x,z,0.085); parent.add(g); streetGlows.push(g);
 }
 function stanchion(parent,x,z){ parent.add(mesh(cyl(0.035,0.035,0.9,8),M.gold,x,0.45,z,true)); parent.add(mesh(sph(0.06,8,6),M.gold,x,0.93,z)); parent.add(mesh(cyl(0.14,0.16,0.04,12),M.gold,x,0.02,z)); }
 
