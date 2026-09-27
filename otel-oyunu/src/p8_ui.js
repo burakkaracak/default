@@ -357,8 +357,9 @@ function showReport(day,t,repNow){
     <div class="kv tot${net<0?' neg':''}"><span>Net</span><b>${net<0?'−':''}${fmt(Math.abs(net))} ₺</b></div>
     <div class="grid2" style="margin-top:10px"><div class="stat">Misafir<b>${t.guests}</b></div><div class="stat">Mutlu / mutsuz<b>😄 ${t.happy} · 😠 ${t.unhappy}</b></div>
     <div class="stat">Bekleyip giden<b>${t.left}</b></div><div class="stat">Ün değişimi<b>${dr==null?'—':(dr>=0?'+':'')+dr}</b></div></div>
-    <button class="btn wide" id="repOk">Devam</button>`,m=>{ m.querySelector('#repOk').onclick=closeModal; });
-  setTimeout(()=>{ if(modal.querySelector('#repOk')) closeModal(); },9000);
+    <h4 style="margin:10px 0 4px">💬 Misafir yorumları</h4><div id="revBox"></div>
+    <button class="btn wide" id="repOk">Devam</button>`,m=>{ m.querySelector('#repOk').onclick=closeModal; fillReviews(m.querySelector('#revBox')); });
+  setTimeout(()=>{ if(modal.querySelector('#repOk')) closeModal(); },16000);
 }
 function openSettings(){
   const V=state.vol||{sfx:.55,music:.45};

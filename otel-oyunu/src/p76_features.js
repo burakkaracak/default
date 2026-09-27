@@ -229,7 +229,7 @@ Durumun: ${where} Genel olarak ${moodW} (memnuniyet %${Math.round(g.sat)}).
 Konuştuğun kişi otelin müdürü.${hist?`\nŞimdiye kadarki konuşma:\n${hist}`:''}
 Müdürün yeni mesajı: "${msg.slice(0,300)}"
 Yanıtını SADECE şu JSON olarak ver, başka hiçbir şey yazma:
-{"reply":"misafirin cevabı","mood":tam sayı -8 ile 8 arası (müdürün bu mesajı seni ne kadar memnun etti; kaba ise eksi, ilgili ve çözüm odaklı ise artı)}`;
+{"reply":"misafirin cevabı","mood":tam sayı -8 ile 8 arası (müdürün bu mesajı seni ne kadar memnun etti; kaba ise eksi, ilgili ve çözüm odaklı ise artı),"ikram":true/false (müdür bu mesajda sana ücretsiz bir ikram, hediye ya da indirim teklif etti ve sen kabul ettiysen true),"bahsis":true/false (yalnızca çok etkilendiysen ve memnuniyetin yüksekse, müdüre kendiliğinden bahşiş bırakmak istiyorsan true; nadir olsun)}`;
 }
 function cannedReply(g,msg){
   const m=msg.toLocaleLowerCase('tr-TR'), good=/(hoş ?geldin|nasıl|yardım|özür|indirim|ikram|hediye|teşekkür|rica|hemen|çözeceğ|memnun)/.test(m), bad=/(salak|aptal|git|sus|defol|umurumda)/.test(m);
@@ -238,7 +238,7 @@ function cannedReply(g,msg){
     :low?['İyi niyetiniz için teşekkürler ama beklediğim hizmeti alamadım.','Umarım durum bir an önce düzelir, biraz sabrım kaldı.']
     :hi?['Harika bir otel! Her şey çok güzel, teşekkür ederim.','Burada kendimi evimde gibi hissediyorum, eline sağlık!']
     :['Fena değil, idare eder. Biraz daha ilgi hoş olurdu.','Teşekkürler, şimdilik her şey yolunda gibi.'];
-  return {reply:rand(lines),mood:bad?-6:good?(low?3:4):1};
+  return {reply:rand(lines),mood:bad?-6:good?(low?3:4):1,ikram:!bad&&/(ikram|hediye|indirim|bedava|ücretsiz)/.test(m),bahsis:false};
 }
 function openChat(g){
   if(!g||!guests.includes(g)) return;
@@ -250,10 +250,10 @@ function renderChatSheet(){
   const key='chat:'+g.name+':'+g.chat.length+':'+chatBusy;
   if(sheet._h!==key){
     sheet._h=key;
-    const msgs=g.chat.map(m=>`<div class="cb ${m.who}">${escH(m.text)}</div>`).join('')+(chatBusy?'<div class="cb them typing">yazıyor…</div>':'');
+    const msgs=g.chat.map(m=>`<div class="cb ${m.who}">${escH(m.text)}${m.d?`<small class="dd ${m.d>0?'up':'dn'}">${m.d>0?'+':''}${m.d} memnuniyet</small>`:''}${(m.notes||[]).map(n=>`<small class="dd up">${escH(n)}</small>`).join('')}</div>`).join('')+(chatBusy?'<div class="cb them typing">yazıyor…</div>':'');
     const chips=['Hoş geldiniz! Nasılsınız?','Bir isteğiniz var mı?','Odanız nasıl?','Size bir ikram yapalım 🎁'];
     sheet.innerHTML=`<h3><span id="chHead"></span><button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub" id="chSub"></p>
-      <div class="chat" id="chLog">${msgs||'<div class="note">Misafire bir şey söyle. Cevabı ve ruh hâli söylediklerine göre değişir.</div>'}</div>
+      <div class="chat" id="chLog">${msgs||'<div class="note">Misafire bir şey söyle. Cevabı ve memnuniyeti söylediklerine göre değişir; ikram teklif edebilirsin, çok memnun kalan bahşiş bırakabilir.</div>'}</div>
       <div class="agrid" style="margin:8px 0">${chips.map(c=>`<button class="btn ghost abtn" data-chip="${escH(c)}" ${chatBusy?'disabled':''}>${escH(c)}</button>`).join('')}</div>
       <div class="agrid"><input id="chIn" class="tin" maxlength="200" placeholder="Mesajını yaz…" ${chatBusy?'disabled':''}><button class="btn gold" id="chSend" ${chatBusy?'disabled':''}>Gönder</button></div>
       <p class="note" id="chAi"></p>`;
@@ -276,7 +276,7 @@ async function sendChat(text){
   if(sampleFn&&aiState==='ready'){
     chatCtl=new AbortController();
     try{ const r=await sampleFn.json(buildChatPrompt(g,text),{modelTier:'quick',cache:false,signal:chatCtl.signal});
-      if(r&&typeof r.reply==='string'&&r.reply.trim()) res={reply:r.reply.trim().slice(0,400),mood:clamp(Math.round(+r.mood||0),-8,8)};
+      if(r&&typeof r.reply==='string'&&r.reply.trim()) res={reply:r.reply.trim().slice(0,400),mood:clamp(Math.round(+r.mood||0),-8,8),ikram:r.ikram===true,bahsis:r.bahsis===true};
     }catch(e){ const c=e&&e.code;
       if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared'||c==='capability_disabled'||c==='capability_removed') aiState='off';
       else if(c==='rate_limited'){ res={reply:'(Misafir şu an biraz meşgul, birazdan tekrar dene.)',mood:0}; }
@@ -288,9 +288,42 @@ async function sendChat(text){
   const d=res.mood>0?Math.min(res.mood,room):Math.max(res.mood,room);
   g.chatGain+=d; g.sat=clamp(g.sat+d,0,100);
   if(g.state==='queue') g.pat=Math.min(g.patMax,g.pat+Math.max(0,d)*1.5);
-  g.chat.push({who:'them',text:res.reply}); chatBusy=false;
+  g.chatted=true; const rr=g.room!=null?roomRate(g.room):roomRateSum()/Math.max(1,nRoomsNow()), notes=[];
+  if(res.ikram&&!g.gifted){ g.gifted=true; const c=Math.max(5,Math.round(rr*0.2*incomeMult())); state.money-=c; g.sat=clamp(g.sat+6,0,100); if(g.state==='queue') g.pat=Math.min(g.patMax,g.pat+8);
+    fxText(g.x,g.y+1.6,g.z,g.f,'−'+fmt(c),true); fxEmoji(g.x,g.y+2.4,g.z,g.f,'🎁'); notes.push(`🎁 ikram −${fmt(c)} ₺ · memnuniyet +6`); }
+  if(res.bahsis&&!g.chatTip&&g.sat>=70&&d>=4){ g.chatTip=true; const t=Math.max(5,Math.round(rr*0.35*incomeMult())); addMoney(t,g.x,g.y+1.2,g.z,g.f); state.today.tips+=t; notes.push(`💵 bahşiş bıraktı +${fmt(t)} ₺`); }
+  g.chat.push({who:'them',text:res.reply,d,notes}); chatBusy=false;
   fxEmoji(g.x,g.y+2.2,g.z,g.f,d>=4?'😊':d<=-4?'😠':'💬'); sfx(d>=4?'sparkle':d<=-4?'fail':'req');
   renderSheet();
+}
+// ---------- gün sonu misafir yorumları ----------
+let dayGuests=[];
+function noteGuestDay(g,mood,left){ if(g.type==='insp') return;
+  dayGuests.push({name:g.name,type:g.T.name,e:g.T.e,sat:Math.round(g.sat),left:!!left,room:g.lastRoomT||'',waited:Math.round(g.waited||0),chatted:!!g.chatted,gifted:!!g.gifted,persona:PERSONA[g.type]||PERSONA.tourist});
+  if(dayGuests.length>40) dayGuests.shift(); }
+function reviewStars(x){ return x.left?1:x.sat>=85?5:x.sat>=68?4:x.sat>=50?3:x.sat>=35?2:1; }
+function pickReviewGuests(){ if(!dayGuests.length) return []; const L=dayGuests.slice().sort((a,b)=>a.sat-b.sat), out=[L[L.length-1]];
+  if(L.length>1) out.push(L[0]); if(L.length>2){ const mid=L[1+Math.floor(Math.random()*(L.length-2))]; out.splice(1,0,mid); } return out; }
+function cannedReview(x,st){ const n=x.name.split(' ')[0];
+  const T={5:['Harika bir deneyimdi, kesinlikle tekrar geleceğim!','Personel çok ilgiliydi, oda tertemizdi. Tavsiye ederim.'],4:['Güzel bir konaklamaydı, birkaç küçük eksik dışında memnun kaldım.','Oda rahattı, fiyatına göre gayet iyi.'],
+    3:['İdare eder. Biraz daha özen gösterilebilir.','Ne iyi ne kötü; beklediğim kadar.'],2:['Beklediğimin altında kaldı, oda ve hizmet vasattı.','Çok bekledim, pek memnun kalmadım.'],1:[x.left?'Resepsiyonda o kadar bekledim ki sonunda çıkıp gittim.':'Kötü bir deneyimdi, tavsiye etmem.','Hiç memnun kalmadım.']}[st];
+  return rand(T)+(x.gifted&&st>=3?' Müdürün ikramı çok hoştu.':'')+(x.chatted&&st>=4?' Müdür bizzat ilgilendi!':''); }
+function buildReviewPrompt(list){
+  return `Bir otel işletme oyununda gün sonunda misafirlerin bıraktığı kısa internet yorumlarını yazıyorsun. Türkçe, doğal, samimi, her biri en fazla 2 kısa cümle. Emoji en fazla 1. Uygunsuz içerik yok. Verilen yıldız sayısına uygun ton kullan.
+Otel: "${hotelName()}", ${city().name}, ${stars()} yıldızlı.
+Misafirler:
+${list.map((x,i)=>`${i}. ${x.name} (${x.type}; ${x.persona}). Yorum yıldızı: ${reviewStars(x)}/5. ${x.left?'Sırada çok bekleyip odaya girmeden gitti.':`Kaldığı oda: ${x.room||'standart'}. Memnuniyet %${x.sat}.`} ${x.waited>12?'Resepsiyonda uzun bekledi.':'Resepsiyonda fazla beklemedi.'}${x.chatted?' Müdür onunla sohbet etti.':''}${x.gifted?' Müdür ikram yaptı.':''}`).join('\n')}
+SADECE şu JSON'u ver: {"reviews":[{"i":misafir numarası,"text":"yorum"}]}`; }
+async function fillReviews(box){
+  const list=pickReviewGuests(); dayGuests=[]; if(!list.length){ box.innerHTML='<p class="note">Bugün ayrılan misafir yok.</p>'; return; }
+  const out=list.map(x=>({x,st:reviewStars(x),text:null}));
+  const draw=()=>{ box.innerHTML=out.map(o=>`<div class="rev"><div class="rh">${o.x.e} <b>${escH(o.x.name)}</b> <span class="rs">${'★'.repeat(o.st)}${'☆'.repeat(5-o.st)}</span></div><div class="rt">${o.text?escH(o.text):'<i>yazıyor…</i>'}</div></div>`).join(''); };
+  draw();
+  if(sampleFn&&aiState==='ready'){ try{ const r=await sampleFn.json(buildReviewPrompt(list),{modelTier:'quick',cache:false});
+      (r&&Array.isArray(r.reviews)?r.reviews:[]).forEach(v=>{ const o=out[+v.i]; if(o&&typeof v.text==='string'&&v.text.trim()) o.text=v.text.trim().slice(0,240); }); }catch(e){} }
+  out.forEach(o=>{ if(!o.text) o.text=cannedReview(o.x,o.st); }); draw();
+  let dr=0; out.forEach(o=>{ dr+=o.st===5?0.5:o.st<=2?-0.5:0; }); if(dr) changeRep(dr);
+  state.reviews=(state.reviews||[]).concat(out.map(o=>({n:o.x.name,e:o.x.e,s:o.st,t:o.text,d:state.day-1}))).slice(-15); markSave();
 }
 function pickGuestAt(sx,sy){
   const list=guests.filter(g=>g.c.root.visible&&g.state!=='leave'), roots=list.map(g=>g.c.root);

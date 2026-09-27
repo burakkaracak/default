@@ -104,7 +104,7 @@ function roomRate(id){ const s=state.rooms[id]; return ROOM_T[s.type].rate*(1+0.
 function checkIn(g,id){
   const s=state.rooms[id], R=RT(id), T=ROOM_T[s.type];
   R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
-  const d=T.lvl-g.T.want, waited=g.patMax-g.pat;
+  const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
   g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)+(stars()-3)*3-Math.min(14,Math.max(0,waited-10)*0.35)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
   const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
@@ -138,6 +138,7 @@ function checkout(g){
   if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
+  noteGuestDay(g,mood,false);
   applyRoomState(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
@@ -150,7 +151,7 @@ function angryLeave(g){
   const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); }
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
   if(g.type==='insp'){ inspectorVerdict(g,'left'); } else changeRep(-3*(g.T.rep||1)); state.today.left++;
-  fxEmoji(g.x,2.2,g.z,0,'😤'); sfx('fail'); toast(`${g.T.e} ${g.name} beklemekten sıkılıp gitti`,'bad');
+  noteGuestDay(g,'unhappy',true); fxEmoji(g.x,2.2,g.z,0,'😤'); sfx('fail'); toast(`${g.T.e} ${g.name} beklemekten sıkılıp gitti`,'bad');
   guestLeave(g);
 }
 // ---------- amenity seats ----------
