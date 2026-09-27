@@ -150,11 +150,11 @@ function padDefs(){
   push({id:'f2',kind:'floor',floor:1,f:0,x:L.elev.x,z:L.elev.z,size:1.3,cost:4200,req:['gym'],stars:3,icon:'🛗',label:'2. kat + asansör'});
   let prev='f2';
   const c2=[1200,1300,1420,1540,1680,1820,1970,2130,2300,2480,2680,2900];
-  ROOM_SEQ.forEach((l,k)=>{ room(1,l,c2[k],[prev]); prev='r'+roomId(1,l); });
+  ROOM_SEQ.forEach((l,k)=>{ if(!cityHasSlot(1,l)) return; room(1,l,c2[k],[prev]); prev='r'+roomId(1,l); });
   push({id:'f3',kind:'floor',floor:2,f:1,x:3.0,z:1.9,size:1.6,cost:11000,req:[prev],stars:4,icon:'🛗',label:'3. kat'});
   prev='f3';
   const c3=[3200,3450,3700,4000,4300,4650,5000,5350,5750,6150,6600,7100];
-  ROOM_SEQ.forEach((l,k)=>{ room(2,l,c3[k],[prev]); prev='r'+roomId(2,l); });
+  ROOM_SEQ.forEach((l,k)=>{ if(!cityHasSlot(2,l)) return; room(2,l,c3[k],[prev]); prev='r'+roomId(2,l); });
   push({id:'roof',kind:'floor',floor:3,f:2,x:3.0,z:CORR[0],size:1.6,cost:16000,req:[prev],stars:5,icon:'🚁',label:'Çatı katı: bar, havuz, helikopter pisti'});
   push({id:'mescit',kind:'floor',floor:4,f:3,x:1.8,z:0.9,size:1.6,cost:15000,req:['roof'],stars:5,icon:'🕌',label:'Mescit katı: imam, cemaat, İstanbul vakitlerinde ezan'});
   return P;
