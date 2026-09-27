@@ -696,6 +696,7 @@ function buildRoomVisual(id,pop){
   if(s.decor.bar){ S.add(mesh(rbox(0.3,0.46,0.32,.03),mat(0x2b2f36,{metalness:.3,roughness:.4}),-0.88,0.23,1.02,true)); S.add(mesh(box(0.02,0.2,0.02),M.gold,-0.75,0.3,1.19)); S.add(mesh(box(0.18,0.05,0.01),mat(0x7fffd4,{emissive:0x33ccaa,emissiveIntensity:.8}),-0.88,0.4,1.185)); cols.push([-1.04,-0.72,0.86,1.2]); }
   if(s.decor.aroma) [0,1,2].forEach(k=>{ S.add(mesh(cyl(0.025,0.025,0.07+k*0.02,8),mat(0xfff3d0),nsx+0.08-k*0.06,0.46+k*0.01,-1.08)); S.add(mesh(sph(0.012,6,4),M.lampOn,nsx+0.08-k*0.06,0.51+k*0.02,-1.08)); });
   if(s.decor.welcome){ S.add(mesh(cyl(0.035,0.04,0.26,8),mat(0x2e5e3e,{roughness:.2,metalness:.2}),b.bx+0.25,0.66,0.55)); S.add(mesh(rbox(0.3,0.05,0.22,.02),mat(0xe8c77a),b.bx-0.1,0.55,0.55)); }
+  buildFurn(S,s,cols);
   if(s.theme&&RTHEMES[s.theme]){ const em=signPlane(RTHEMES[s.theme].e,0.34,0.34,{w:128,h:128,font:'90px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'}); em.position.set(1.15,1.95,-hd+0.03); S.add(em); }
   // number plate
   const pl=mesh(plane(0.36,0.18),new THREE.MeshBasicMaterial({map:textTex(String(id),{w:128,h:64,bg:'#e0a93a',fg:'#2a1c00',r:10,font:'800 44px "Baloo 2"'})}),-1.0,0.22,hd+0.005); S.add(pl);

@@ -102,7 +102,7 @@ function pickRoom(g){
   rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2-(g.pref&&state.rooms[id].theme===g.pref?2.5:0); if(sc<bs){ bs=sc; best=id; } });
   return best;
 }
-function decorSat(s){ let v=0; for(const k in s.decor) if(s.decor[k]) v+=DECOR[k].sat; return v; }
+function decorSat(s){ let v=designSat(s); for(const k in s.decor) if(s.decor[k]) v+=DECOR[k].sat; return v; }
 function roomRate(id){ const s=state.rooms[id]; return ROOM_T[s.type].rate*(1+0.3*roomInfo(id).f)*(state.lux&&state.lux.brand?1.1:1); }
 function checkIn(g,id){
   const s=state.rooms[id], R=RT(id), T=ROOM_T[s.type];

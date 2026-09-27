@@ -274,13 +274,14 @@ function renderRoomSheet(){
   else h+=`<p class="note">${s.dirty?'🧹 Temizlik bekliyor':s.broken?'🔧 Tamir bekliyor':'Boş · misafir bekliyor'}</p>`;
   if(up!=null){ const nx=ROOM_T[ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]], ok=!g&&!s.dirty&&!s.broken;
     h+=`<div class="row"><div class="ic">⬆️</div><div class="tx">${nx.name} odaya yükselt<small>Gecelik ${fmt(roomRate(id)*incomeMult())} → ${fmt(nx.rate*(1+0.3*ri.f)*incomeMult())} ₺ · daha seçkin misafirler${ok?'':' · oda boş ve temiz olmalı'}</small></div><button class="btn gold" data-up ${!ok||state.money<up?'disabled':''}>${fmt(up)} ₺</button></div>`; }
-  h+=roomThemeHtml(id);
+  h+=roomThemeHtml(id)+`<button class="btn wide" data-design style="margin:-2px 0 10px">🛋️ Odayı tasarla (${(s.furn||[]).length}/4 eşya · +${designSat(s)} memnuniyet)</button>`;
   for(const k in DECOR){ const D=DECOR[k], c=decorCost(k), has=s.decor[k];
     h+=`<div class="row"><div class="ic">${D.e}</div><div class="tx">${D.name}<small>Memnuniyet +${D.sat}${D.income?` · gecelik +${D.income} ₺`:''}</small></div>${has?'<button class="btn" disabled>Var ✓</button>':`<button class="btn" data-dec="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   const tk=sheet.querySelector('[data-talk]'); if(tk) tk.onclick=()=>openChat(R.guest);
   const ub=sheet.querySelector('[data-up]'); if(ub) ub.onclick=()=>{ const c=roomUpCost(id); if(R.guest||s.dirty||s.broken||!spend(c)) return; s.type=ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]; qEv('upg'); buildRoomVisual(id,true); confettiAt(ri.x,ri.f*FH+1,ri.z,40); sfx('build'); save(); renderSheet(); };
+  const dz=sheet.querySelector('[data-design]'); if(dz) dz.onclick=()=>{ sfx('click'); openDesigner(id); };
   sheet.querySelectorAll('[data-rth]').forEach(b=>b.onclick=()=>{ setRoomTheme(id,b.dataset.rth); renderSheet(); });
   sheet.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{ const k=b.dataset.dec, c=decorCost(k); if(s.decor[k]||!spend(c)) return; s.decor[k]=true; qEv('upg'); if(R.guest) R.guest.sat=clamp(R.guest.sat+DECOR[k].sat,0,100); buildRoomVisual(id,true); sfx('build'); save(); renderSheet(); });
 }
@@ -367,8 +368,8 @@ function showReport(day,t,repNow){
     <div class="kv tot${net<0?' neg':''}"><span>Net</span><b>${net<0?'−':''}${fmt(Math.abs(net))} ₺</b></div>
     <div class="grid2" style="margin-top:10px"><div class="stat">Misafir<b>${t.guests}</b></div><div class="stat">Mutlu / mutsuz<b>😄 ${t.happy} · 😠 ${t.unhappy}</b></div>
     <div class="stat">Bekleyip giden<b>${t.left}</b></div><div class="stat">Ün değişimi<b>${dr==null?'—':(dr>=0?'+':'')+dr}</b></div></div>
-    <h4 style="margin:10px 0 4px">💬 Misafir yorumları</h4><div id="revBox"></div>
-    <button class="btn wide" id="repOk">Devam</button>`,m=>{ m.querySelector('#repOk').onclick=closeModal; fillReviews(m.querySelector('#revBox')); });
+    <div id="newsBox" style="margin-top:10px"></div><h4 style="margin:10px 0 4px">💬 Misafir yorumları</h4><div id="revBox"></div>
+    <button class="btn wide" id="repOk">Devam</button>`,m=>{ m.querySelector('#repOk').onclick=closeModal; fillReviews(m.querySelector('#revBox')); fillNews(m.querySelector('#newsBox'),day,t,dr); });
   setTimeout(()=>{ if(modal.querySelector('#repOk')) closeModal(); },16000);
 }
 function openSettings(){
@@ -378,12 +379,14 @@ function openSettings(){
     <div class="row"><div class="ic">🎵</div><div class="tx">Müzik</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.music*100)}" id="vMus" aria-label="Müzik ses seviyesi"></div></div>
     <div class="row" style="flex-wrap:wrap"><div class="ic">🖼️</div><div class="tx">Grafik kalitesi<small>${state.gfxAuto!==false?'Otomatik: oyun yavaşlarsa kaliteyi düşürür':'Elle seçildi'}</small></div><div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${[['low','Düşük'],['mid','Orta'],['high','Yüksek']].map(([k,l])=>`<button class="btn ${gfxLevel()===k?'':'ghost'}" style="padding:4px 8px;min-height:34px" data-gfx="${k}">${l}</button>`).join('')}<button class="btn ${state.gfxAuto!==false?'':'ghost'}" style="padding:4px 8px;min-height:34px" id="gAuto">Oto</button></div></div>
     ${(document.fullscreenEnabled||document.webkitFullscreenEnabled)?`<button class="btn wide" id="sFs">⛶ Tam ekran ${fsEl()?'kapat':'aç'}</button>`:''}
+    ${cloudHtml()}
     <button class="btn wide" id="sHelp">📖 Nasıl oynanır</button>
     <button class="btn wide" id="sCustom">🎨 Otelim ve karakterim</button>
     <div style="display:flex;gap:6px"><button class="btn ghost wide" id="sExp">💾 Kaydı indir</button><button class="btn ghost wide" id="sImp">📂 Kayıt yükle</button></div>
     <button class="btn gold wide" id="sAdmin">🛠️ Admin paneli</button>
     <button class="btn red wide" id="sReset">İlerlemeyi sıfırla</button>`,m=>{
     const vs=m.querySelector('#vSfx'), vm=m.querySelector('#vMus'), fb=m.querySelector('#sFs');
+    bindCloud(m);
     if(fb) fb.onclick=()=>{ sfx('click'); closeModal(); toggleFullscreen(); };
     vs.oninput=()=>{ state.vol=Object.assign({},state.vol,{sfx:vs.value/100}); state.sound=vs.value>0; audioInit(); applyAudioPrefs(); };
     vm.oninput=()=>{ state.vol=Object.assign({},state.vol,{music:vm.value/100}); state.music=vm.value>0; audioInit(); applyAudioPrefs(); };
@@ -453,6 +456,7 @@ let tapMarker=null;
 function onTap(sx,sy){
   const r=cvs.getBoundingClientRect(); ndc.set(((sx-r.left)/r.width)*2-1,-((sy-r.top)/r.height)*2+1); ray.setFromCamera(ndc,camera);
   const gg=pickGuestAt(); if(gg){ openChat(gg); sfx('click'); return; }
+  const se=pickStaffAt(); if(se){ openStaffChat(se); sfx('click'); return; }
   const groups=[]; for(const k in state.rooms){ const R=RT(+k); if(R.group&&roomInfo(+k).f===viewFloor) groups.push(R.group); }
   const hits=ray.intersectObjects(groups,true);
   if(hits.length){ let o=hits[0].object; while(o&&o.userData.roomId===undefined) o=o.parent;
@@ -567,7 +571,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt); updateGfx2(dt,gtime);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed); updateDepth(dt*gameSpeed); updateDepth2(dt*gameSpeed); updateEvents3(dt*gameSpeed); updateFixGame(dt); updateGfx2(dt,gtime); updateCloud(dt);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();
