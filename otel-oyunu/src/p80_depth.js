@@ -6,7 +6,7 @@
 
 // ---------- price policy ----------
 const PRICES=[0.8,0.9,1,1.2,1.5];
-function priceMult(){ return (state.price||1)*mgrPrice(); }
+function priceMult(){ return (state.price||1)*mgrPrice()*priceWarMul(); }
 function priceDemand(){ const p=priceMult(); return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3*(1-0.5*skillLv('m4'))); }
 function priceSat(){ const p=priceMult(); return p<1?(1-p)*30:-(p-1)*25; }
 function priceTypeW(k){ const p=priceMult();
@@ -20,19 +20,20 @@ const RIVAL_NAMES=['Gri Kule Otel','Ekonomik Palas','Neon Suites','Beton Rezidan
 let rivalVis=null;
 function rivalOn(){ return !!state.rival&&!state.rival.bought; }
 function rivalPull(){ const r=state.rival; if(!rivalOn()) return 0;
-  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0),0,0.42)*(1-0.3*skillLv('m3')); }
+  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0),0,0.42)*(1-0.3*skillLv('m3'))*priceWarPull(); }
 function rivalBuyCost(){ const r=state.rival; return r?Math.round(22000*cm()*(r.q/60)):0; }
 function buildRival(){
   if(rivalVis){ rivalVis.parent.remove(rivalVis); rivalVis=null; } const r=state.rival; if(!r) return;
   const g=new THREE.Group(); g.position.set(-26.5,0,6); g.rotation.y=-3*Math.PI/4; outdoor.add(g); rivalVis=g;   /* otelin solunda, otele bakar */ const S=new THREE.Group();
   const body=mat(r.bought?0xf2e6d2:0x5d6776), trim=r.bought?M.trim:mat(0x4b5563), glass=mat(0x9fb8cc,{metalness:.4,roughness:.15,emissive:0x223344,emissiveIntensity:.3});
-  S.add(mesh(box(12,7.5,6),body,0,3.75,0,true)); S.add(mesh(box(12.3,0.3,6.3),trim,0,7.6,0,true));
-  for(let f=0;f<3;f++){ for(let i=0;i<6;i++){ if(!(f===0&&(i===2||i===3))) S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,-3.02)); S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,3.02)); }
+  const nF=rivalFloors(), H=nF*2.2+0.9; g.userData.nf=nF;
+  S.add(mesh(box(12,H,6),body,0,H/2,0,true)); S.add(mesh(box(12.3,0.3,6.3),trim,0,H+0.1,0,true));
+  for(let f=0;f<nF;f++){ for(let i=0;i<6;i++){ if(!(f===0&&(i===2||i===3))) S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,-3.02)); S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,3.02)); }
     for(let i=0;i<3;i++){ S.add(mesh(box(0.05,1.1,1.2),glass,-6.02,1.6+f*2.2,-1.8+i*1.8)); S.add(mesh(box(0.05,1.1,1.2),glass,6.02,1.6+f*2.2,-1.8+i*1.8)); } }
   S.add(mesh(box(2.2,2.2,0.08),mat(0x2b2f36),0,1.1,-3.02)); S.add(mesh(box(3.2,0.12,1.2),trim,0,2.45,-3.5));
   g.add(bake(S));
   const sign=signPlane(r.bought?`${hotelName()} Annex`:r.name,5,0.8,{fg:r.bought?'#ffd76a':'#e8eef5',stroke:'#1f2733',strokeW:8,font:'800 90px "Baloo 2"',fit:true});
-  sign.position.set(0,6.6,-3.08); sign.rotation.y=Math.PI; g.add(sign);
+  sign.position.set(0,H-0.9,-3.08); sign.rotation.y=Math.PI; g.add(sign);
 }
 function rivalDayEnd(){
   if(!state.rival&&state.tut>=TUT.length&&!state.sandbox&&state.day>=(state.prestige?3:6)&&nRoomsNow()>=6){
@@ -52,8 +53,8 @@ function spawnPasser(){
 
 // ---------- supplies & delivery truck ----------
 function stockCap(){ return 40+20*skillLv('o3'); }
-function stockHas(it){ return it==='food'||!state.stock||(state.stock[it]||0)>0; }
-function useStock(it){ if(it==='food'||!state.stock) return; state.stock[it]=Math.max(0,(state.stock[it]||0)-1);
+function stockHas(it){ if(it==='food') return kitchenReady(); return !state.stock||(state.stock[it]||0)>0; }
+function useStock(it){ if(it==='food'){ kitchenTake(); return; } if(!state.stock) return; state.stock[it]=Math.max(0,(state.stock[it]||0)-1);
   if(state.stock[it]===0){ toast(`📦 Depoda ${ITEMS[it].name.toLowerCase()} bitti! Yönetim › Otel'den sipariş ver`,'bad'); } }
 function orderCost(){ return Math.round(70*cm()); }
 let truck=null;
@@ -92,7 +93,7 @@ function noteLoyal(g){
 function tryLoyalSpawn(){
   const Lq=state.loyal; if(!Lq||!Lq.length||Math.random()>0.12) return false;
   const x=Lq.splice(Math.floor(Math.random()*Lq.length),1)[0];
-  const g=spawnGuest(x.t); g.name=x.n; g.loyal=true; g.patMax=g.pat=g.patMax*1.3;
+  const g=spawnGuest(x.t); g.name=x.n; g.loyal=true; g.memory=x; g.patMax=g.pat=g.patMax*1.3;
   setTimeout(()=>{ if(queue.length<9){ const f=spawnGuest(x.t); f.loyal=true; } },900);
   toast(`💌 Sadık misafirin ${x.n} bir arkadaşıyla geri geldi!`); sfx('sparkle'); onGameEvent('loyal',1); markSave(); return true;
 }

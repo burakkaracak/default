@@ -144,7 +144,7 @@ function updatePlayerZones(dt){
   for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
     if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36&&stockHas(it)&&canPick(it)){ useStock(it); addItem(it); pickT=0.5; tutEvent('pick'); break; } } }
-    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')){ addItem('food'); pickT=0.5; }
+    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')&&kitchenReady()){ kitchenTake(); addItem('food'); pickT=0.5; }
   }
   if(floorsBuilt()>1&&d2(p.x,p.z,L.elev.x,L.elev.z)<0.3&&!p.moving&&!p.path) elevHere=true;
 }
@@ -181,7 +181,7 @@ function updateDesk(dt){
 // =====================================================================
 function updateTime(dt){ state.t+=dt/DAY_SEC; if(state.t>=1){ state.t-=1; endDay(); } }
 function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
-function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*(1-0.12*skillLv('o4')); }
+function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*nightWageMul()*(1-0.12*skillLv('o4')); }
 function wagesToday(){ let w=crewPremium(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
   repDrift(state.today); const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
@@ -190,7 +190,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(); worldDayEnd(rep);
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
@@ -298,7 +298,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*mgrDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*mgrDemand()*worldDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
   if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1)*mgrNight();
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3)*flowSpawnMul();
   if(queue.length>=Math.min(6,nRooms+1)) return;

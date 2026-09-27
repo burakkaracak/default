@@ -1,7 +1,7 @@
 window.simStep=(dt)=>{ updatePlayer(dt); updatePlayerZones(dt); updatePads(dt); updateDesk(dt); updateGuests(dt); updateStaff(dt);
-  for(const e of ents.slice()) if(e!==player) e.step(dt); updateBus(dt,0); cafeWork=Math.max(0,cafeWork-dt); updateSpawner(dt); updateBreakdowns(dt); updateMega2(dt); updateDepth(dt); updateOps(dt); updateLive(dt,gtime); updateAmenLife(dt); updateFlow(dt); updateReal(dt); updateTime(dt);
+  for(const e of ents.slice()) if(e!==player) e.step(dt); updateBus(dt,0); cafeWork=Math.max(0,cafeWork-dt); updateSpawner(dt); updateBreakdowns(dt); updateMega2(dt); updateDepth(dt); updateOps(dt); updateLive(dt,gtime); updateAmenLife(dt); updateFlow(dt); updateReal(dt); updateOps2(dt); updateTime(dt);
   viewFloor=player.f; };
-window.botBuy=()=>{ state.stayPol='yes';
+window.botBuy=()=>{ state.stayPol='yes'; state.obIx=1; if(morale()<35&&state.money>bonusCost()*3) giveBonus(); if(built('staff')&&state.day>8) state.nightShift=true;
   // yeni sistemler: seri, albüm, ödül yolu, müdür kartı, etkinlik teklifi, şehir tesisi, kat teması, MAX alım
   if(state.streak&&!state.streak.got) claimStreak();
   albClaimables().forEach(([k])=>claimAlb(k)); passClaimables().forEach(i=>claimPass(i));

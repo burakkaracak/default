@@ -442,7 +442,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:46, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:46, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, news:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -469,7 +469,7 @@ function nRoomsAll(){ return Object.keys(state.rooms).length; }
 const STAR_REQ={
   3:[['8 oda',()=>nRoomsAll()>=8],['2 Deluxe oda',()=>roomsOfType('dlx')+roomsOfType('suite')>=2]],
   4:[['Restoran ve havuz',()=>built('rest')&&built('pool')],['16 oda',()=>nRoomsAll()>=16],['2 Suit oda',()=>roomsOfType('suite')>=2]],
-  5:[['Havuz, spor salonu ve spa',()=>built('pool')&&built('gym')&&built('spa')],['28 oda',()=>nRoomsAll()>=28],['6 Suit oda',()=>roomsOfType('suite')>=6]]};
+  5:[['Havuz, spor salonu ve spa',()=>built('pool')&&built('gym')&&built('spa')],['28 oda',()=>nRoomsAll()>=28],['8 Suit oda',()=>roomsOfType('suite')>=8]]};
 function starCap(){ let c=2; for(let s=3;s<=5;s++){ if(STAR_REQ[s].every(r=>r[1]())) c=s; else break; } return c; }
 function stars(){ return Math.min(rawStars(),starCap()); }
 function starMissing(s){ return (STAR_REQ[s]||[]).filter(r=>!r[1]()).map(r=>r[0]); }
@@ -2124,7 +2124,7 @@ function reflowQueue(){ queue.forEach((g,k)=>{ const p=qPos(k); g.qk=k; g.goTo(0
 function pickType(){
   const st=stars(), opts=Object.keys(GTYPES).filter(k=>GTYPES[k].stars<=st);
   let maxLv=0; for(const k in state.rooms) maxLv=Math.max(maxLv,ROOM_T[state.rooms[k].type].lvl);
-  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1)*festTypeW(k);
+  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1)*festTypeW(k)*worldTypeW(k);
   let tot=0; opts.forEach(k=>tot+=w(k)); let r=Math.random()*tot;
   for(const k of opts){ r-=w(k); if(r<=0) return k; } return 'tourist';
 }
@@ -2143,7 +2143,7 @@ function spawnGuest(type,from,tour,fl){
 }
 function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ const s=state.rooms[id],R=RT(id); return !s.dirty&&!s.broken&&!s.hold&&!R.guest&&R.group; }); }
 function pickRoom(g){
-  const rs=readyRooms(); if(!rs.length) return null;
+  const rs=readyRooms(); if(!rs.length) return null; const mp=memoryPick(g,rs); if(mp) return mp;
   let best=null, bs=1e9;
   rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2-(g.pref&&state.rooms[id].theme===g.pref?2.5:0); if(sc<bs){ bs=sc; best=id; } });
   return best;
@@ -2152,7 +2152,7 @@ function decorSat(s){ let v=designSat(s); for(const k in s.decor) if(s.decor[k])
 function roomRate(id){ const s=state.rooms[id]; return invRate(id)*ROOM_T[s.type].rate*(1+0.3*roomInfo(id).f)*(state.lux&&state.lux.brand?1.1:1); }
 function checkIn(g,id){
   const s=state.rooms[id], R=RT(id), T=ROOM_T[s.type];
-  R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
+  R.guest=g; g.room=id; g.lastRoomId=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
   const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
   g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)-expectPen()-Math.min(16,Math.max(0,waited-waitGrace())*(0.35+0.08*(stars()-1)))+viewSat(g,id)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
   const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle)*priceMult()*(g.loyal?1.2:1));
@@ -2167,7 +2167,7 @@ function checkIn(g,id){
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
   g.state='toRoom'; const sp=roomSpots(id);
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
-  g.sat=clamp(g.sat+floorSat(roomInfo(id).f)+nookSat(roomInfo(id).f),5,100); albumNoteGuest(g);
+  g.sat=clamp(g.sat+floorSat(roomInfo(id).f)+nookSat(roomInfo(id).f)+memorySat(g,id)+shopMorning(g),5,100); albumNoteGuest(g);
   tutEvent('checkin'); qEv('guest'); markSave();
 }
 function enterRoom(g){
@@ -2190,7 +2190,7 @@ function checkout(g){
   if(mood==='happy'){ changeRep(0.75*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
-  noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
+  noteGuestDay(g,mood,false); noteLoyal(g); rememberGuest(g); shopCheckout(g,mood); if(g.story) storyCheckout(g,id,mood);
   applyRoomState(id); pendingUpgrade(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
@@ -2202,7 +2202,7 @@ function millionReveal(g,id,mood){
 function angryLeave(g){
   const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); }
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
-  if(g.type==='insp'){ inspectorVerdict(g,'left'); } else changeRep(-3*(g.T.rep||1)); state.today.left++;
+  bookedLeft(g); if(g.type==='insp'){ inspectorVerdict(g,'left'); } else changeRep(-3*(g.T.rep||1)); state.today.left++;
   noteGuestDay(g,'unhappy',true); fxEmoji(g.x,2.2,g.z,0,'😤'); sfx('fail'); toast(`${g.T.e} ${g.name} beklemekten sıkılıp gitti`,'bad');
   guestLeave(g);
 }
@@ -2215,7 +2215,7 @@ GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,
 function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
+  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -2249,7 +2249,7 @@ function updateGuests(dt){
     try{
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
-      if(!g.path&&!g.asking){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1)*flowPatMul(); if(g.pat<=0){ angryLeave(g); continue; }
+      if(!g.path&&!g.asking){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1)*flowPatMul()*shopPatMul(); if(g.pat<=0){ angryLeave(g); continue; }
         if(built('cafe')&&!g.coffee&&g.state==='queue'&&!powerOut()){ if(g.coffeeT==null) g.coffeeT=rnd(1.5,5); g.coffeeT-=dt; if(g.coffeeT<=0) sellCoffee(g); } }
     }
     if(g.state==='room'){
@@ -2286,7 +2286,7 @@ function spawnStaff(kind,fromDoor){
   const sp=fromDoor?{x:rnd(-0.5,0.5),z:8.5,f:0}:staffIdleSpot(e.slot); e.place(sp.x,sp.z,sp.f); staffEnts.push(e);
   e.speed=2.3*staffSpeedMul(kind); return e;
 }
-function staffSpeedMul(kind){ return mgrStaff()*STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
+function staffSpeedMul(kind){ return moraleMul()*nightStaffMul()*mgrStaff()*STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
 function roomsWhere(fn){ return Object.keys(state.rooms).map(Number).filter(fn); }
 function nearestRoom(e,list){ let best=null,bd=1e9; list.forEach(id=>{ const ri=roomInfo(id), d=d2(e.x,e.z,ri.x,ri.z)+Math.abs(ri.f-e.f)*40; if(d<bd){ bd=d; best=id; } }); return best; }
 function staffGoIdle(e){
@@ -2486,7 +2486,7 @@ function updatePlayerZones(dt){
   for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
     if(built('depo')){ for(const it of ['paper','towel']){ const s=L.shelf[it]; if(d2(p.x,p.z,s.x,s.z)<0.36&&stockHas(it)&&canPick(it)){ useStock(it); addItem(it); pickT=0.5; tutEvent('pick'); break; } } }
-    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')){ addItem('food'); pickT=0.5; }
+    if(built('rest')&&d2(p.x,p.z,L.pass.x,L.pass.z)<0.4&&canPick('food')&&kitchenReady()){ kitchenTake(); addItem('food'); pickT=0.5; }
   }
   if(floorsBuilt()>1&&d2(p.x,p.z,L.elev.x,L.elev.z)<0.3&&!p.moving&&!p.path) elevHere=true;
 }
@@ -2523,7 +2523,7 @@ function updateDesk(dt){
 // =====================================================================
 function updateTime(dt){ state.t+=dt/DAY_SEC; if(state.t>=1){ state.t-=1; endDay(); } }
 function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
-function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*(1-0.12*skillLv('o4')); }
+function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*nightWageMul()*(1-0.12*skillLv('o4')); }
 function wagesToday(){ let w=crewPremium(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
   repDrift(state.today); const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
@@ -2532,7 +2532,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(); worldDayEnd(rep);
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
@@ -2640,7 +2640,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*mgrDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*invDemand()*mgrDemand()*worldDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
   if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1)*mgrNight();
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3)*flowSpawnMul();
   if(queue.length>=Math.min(6,nRooms+1)) return;
@@ -4051,7 +4051,7 @@ const SPA_TABLES=[-15.3,-13.65,-12.0];
 SPA_TABLES.forEach(tx=>SEATS.push({amen:'spa',x:tx,z:-7.75,px:tx,pz:-9.2,py:0.62,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 [-7.1,-6.1].forEach(z=>SEATS.push({amen:'spa',x:-12.25,z,px:-11.52,pz:z,py:0.12,rot:-Math.PI/2,pose:'sit',busy:null}));
 function spaOpen(){ const h=hourNow(); return built('spa')&&h>=8&&h<22; }
-function amenBonus(a){ return invAmen(a)*(a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
+function amenBonus(a){ return worldAmenBonus(a)*invAmen(a)*(a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
 function shellWalls(S,B,wallM,trimM){
   const cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2, w=B.x1-B.x0, d=B.z1-B.z0;
   S.add(mesh(box(w,2.4,0.16),wallM,cx,1.2,B.z0-0.08,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x0-0.08,1.2,cz,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x1+0.08,1.2,cz,true));
@@ -4097,7 +4097,7 @@ const LINEN_FEE=9;
 function linenFee(){ return Math.round(LINEN_FEE*incomeMult()*(state.staff.laundry&&state.staff.laundry.n>0?1.5:1)); }
 function afterRoomCleaned(byStaff){
   if(!built('laundry')) return;
-  if(byStaff){ if(state.staff.laundry&&state.staff.laundry.n>0){ state.piles.laundry+=linenFee(); pileChanged('laundry'); } }
+  if(byStaff){ if(state.staff.laundry&&state.staff.laundry.n>0){ laundryToStock(1); state.piles.laundry+=linenFee(); pileChanged('laundry'); } }
   else if(player&&player.c.items.length<capacity()){ addItem('linen'); if(!state.tips.linen){ state.tips.linen=true; hint('🧦 Kirli çarşafı çamaşırhaneye götür, para kazan',5); } }
 }
 function megaZones(p,dt){
@@ -4105,7 +4105,7 @@ function megaZones(p,dt){
   const n=p.c.items.filter(i=>i==='linen').length;
   if(n&&d2(p.x,p.z,L.laundryDrop.x,L.laundryDrop.z)<0.9*0.9){
     setHold(p.c,p.c.items.filter(i=>i!=='linen')); updateCarryUI();
-    const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
+    laundryToStock(n); const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
 }
 function staffPost(e){
   const sp=e.kind==='spaT'?L.spaT:L.laundryW;
@@ -4116,7 +4116,7 @@ function staffPost(e){
 
 // ---------- staff energy + employee of the day ----------
 const STAFF_NAMES=['Ayşe','Fatma','Ali','Veli','Hasan','Zehra','Emine','Murat','Ömer','Hülya','Serkan','Yasemin','Levent','Nazlı'];
-function staffEnergyMul(e){ return ((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e))*(e.rushUntil>gtime?1.3:1); }
+function staffEnergyMul(e){ const lv=onLeave(e); e.hidden=lv; if(lv) return 0.001; return ((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e))*(e.rushUntil>gtime?1.3:1); }
 function staffWorked(e){
   careerWorked(e); e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7));
   if(e.energy<30&&!e.tiredShown){ e.tiredShown=true; fxEmoji(e.x,e.y+2.1,e.z,e.f,'😓'); }
@@ -4216,7 +4216,7 @@ function updateMega2(dt){ updateEvents(dt); for(const e of staffEnts) if(!e.job&
 
 // ---------- price policy ----------
 const PRICES=[0.8,0.9,1,1.2,1.5];
-function priceMult(){ return (state.price||1)*mgrPrice(); }
+function priceMult(){ return (state.price||1)*mgrPrice()*priceWarMul(); }
 function priceDemand(){ const p=priceMult(); return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3*(1-0.5*skillLv('m4'))); }
 function priceSat(){ const p=priceMult(); return p<1?(1-p)*30:-(p-1)*25; }
 function priceTypeW(k){ const p=priceMult();
@@ -4230,19 +4230,20 @@ const RIVAL_NAMES=['Gri Kule Otel','Ekonomik Palas','Neon Suites','Beton Rezidan
 let rivalVis=null;
 function rivalOn(){ return !!state.rival&&!state.rival.bought; }
 function rivalPull(){ const r=state.rival; if(!rivalOn()) return 0;
-  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0),0,0.42)*(1-0.3*skillLv('m3')); }
+  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0),0,0.42)*(1-0.3*skillLv('m3'))*priceWarPull(); }
 function rivalBuyCost(){ const r=state.rival; return r?Math.round(22000*cm()*(r.q/60)):0; }
 function buildRival(){
   if(rivalVis){ rivalVis.parent.remove(rivalVis); rivalVis=null; } const r=state.rival; if(!r) return;
   const g=new THREE.Group(); g.position.set(-26.5,0,6); g.rotation.y=-3*Math.PI/4; outdoor.add(g); rivalVis=g;   /* otelin solunda, otele bakar */ const S=new THREE.Group();
   const body=mat(r.bought?0xf2e6d2:0x5d6776), trim=r.bought?M.trim:mat(0x4b5563), glass=mat(0x9fb8cc,{metalness:.4,roughness:.15,emissive:0x223344,emissiveIntensity:.3});
-  S.add(mesh(box(12,7.5,6),body,0,3.75,0,true)); S.add(mesh(box(12.3,0.3,6.3),trim,0,7.6,0,true));
-  for(let f=0;f<3;f++){ for(let i=0;i<6;i++){ if(!(f===0&&(i===2||i===3))) S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,-3.02)); S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,3.02)); }
+  const nF=rivalFloors(), H=nF*2.2+0.9; g.userData.nf=nF;
+  S.add(mesh(box(12,H,6),body,0,H/2,0,true)); S.add(mesh(box(12.3,0.3,6.3),trim,0,H+0.1,0,true));
+  for(let f=0;f<nF;f++){ for(let i=0;i<6;i++){ if(!(f===0&&(i===2||i===3))) S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,-3.02)); S.add(mesh(box(1.2,1.1,0.05),glass,-4.5+i*1.8,1.6+f*2.2,3.02)); }
     for(let i=0;i<3;i++){ S.add(mesh(box(0.05,1.1,1.2),glass,-6.02,1.6+f*2.2,-1.8+i*1.8)); S.add(mesh(box(0.05,1.1,1.2),glass,6.02,1.6+f*2.2,-1.8+i*1.8)); } }
   S.add(mesh(box(2.2,2.2,0.08),mat(0x2b2f36),0,1.1,-3.02)); S.add(mesh(box(3.2,0.12,1.2),trim,0,2.45,-3.5));
   g.add(bake(S));
   const sign=signPlane(r.bought?`${hotelName()} Annex`:r.name,5,0.8,{fg:r.bought?'#ffd76a':'#e8eef5',stroke:'#1f2733',strokeW:8,font:'800 90px "Baloo 2"',fit:true});
-  sign.position.set(0,6.6,-3.08); sign.rotation.y=Math.PI; g.add(sign);
+  sign.position.set(0,H-0.9,-3.08); sign.rotation.y=Math.PI; g.add(sign);
 }
 function rivalDayEnd(){
   if(!state.rival&&state.tut>=TUT.length&&!state.sandbox&&state.day>=(state.prestige?3:6)&&nRoomsNow()>=6){
@@ -4262,8 +4263,8 @@ function spawnPasser(){
 
 // ---------- supplies & delivery truck ----------
 function stockCap(){ return 40+20*skillLv('o3'); }
-function stockHas(it){ return it==='food'||!state.stock||(state.stock[it]||0)>0; }
-function useStock(it){ if(it==='food'||!state.stock) return; state.stock[it]=Math.max(0,(state.stock[it]||0)-1);
+function stockHas(it){ if(it==='food') return kitchenReady(); return !state.stock||(state.stock[it]||0)>0; }
+function useStock(it){ if(it==='food'){ kitchenTake(); return; } if(!state.stock) return; state.stock[it]=Math.max(0,(state.stock[it]||0)-1);
   if(state.stock[it]===0){ toast(`📦 Depoda ${ITEMS[it].name.toLowerCase()} bitti! Yönetim › Otel'den sipariş ver`,'bad'); } }
 function orderCost(){ return Math.round(70*cm()); }
 let truck=null;
@@ -4302,7 +4303,7 @@ function noteLoyal(g){
 function tryLoyalSpawn(){
   const Lq=state.loyal; if(!Lq||!Lq.length||Math.random()>0.12) return false;
   const x=Lq.splice(Math.floor(Math.random()*Lq.length),1)[0];
-  const g=spawnGuest(x.t); g.name=x.n; g.loyal=true; g.patMax=g.pat=g.patMax*1.3;
+  const g=spawnGuest(x.t); g.name=x.n; g.loyal=true; g.memory=x; g.patMax=g.pat=g.patMax*1.3;
   setTimeout(()=>{ if(queue.length<9){ const f=spawnGuest(x.t); f.loyal=true; } },900);
   toast(`💌 Sadık misafirin ${x.n} bir arkadaşıyla geri geldi!`); sfx('sparkle'); onGameEvent('loyal',1); markSave(); return true;
 }
@@ -6185,6 +6186,170 @@ function cityPlanHtml(){ const P=cityPlan(); if(!P) return ''; return `<div clas
 function bootCity(){ try{ buildCityFacade(); for(let f=1;f<3;f++) buildNooks(f); }catch(e){ console.warn('city',e); } }
 
 // =====================================================================
+// MG6-2 · İŞLETME DERİNLİĞİ: mutfak (oda servisi pişirilir), çamaşırhane →
+// depo havlu zinciri, rezervasyon takvimi + overbooking, personel morali
+// (vardiya, izin, grev, prim), misafir hafızası
+// =====================================================================
+
+// ---------- mutfak: oda servisi siparişleri pişirilir, tepsi hazır olunca alınır ----------
+function kitchen(){ return state.kitchen||(state.kitchen={ready:1,cook:0}); }
+function foodOrders(){ let n=0; for(const k in state.rooms){ const R=RT(+k); if(R.req&&R.req.item==='food') n++; } return n; }
+function kitchenReady(){ return kitchen().ready>0; }
+function kitchenTake(){ const K=kitchen(); K.ready=Math.max(0,K.ready-1); }
+function cookTime(){ return 7/(1+0.25*invLv('chef'))/(state.staff.cook&&state.staff.cook.n?1.5:1); }
+let trayG=null;
+function updateKitchen(dt){
+  if(!built('rest')) return; const K=kitchen(), want=Math.min(4,foodOrders()+(restOpen()?1:0));
+  if(K.ready<want&&restOpen()){ K.cook+=dt/cookTime(); if(K.cook>=1){ K.cook=0; K.ready++; if(player.f===0&&d2(player.x,player.z,L.pass.x,L.pass.z)<64) sfx('ding'); fxEmoji(L.pass.x,1.6,L.pass.z,0,'🍽️'); } if(Math.random()<dt*0.6) fxEmoji(-12.8,2.1,-2.75,0,rand(['🍳','🔥','🥘'])); } else K.cook=0;
+  // tezgâhta hazır tepsiler
+  if(!trayG){ trayG=new THREE.Group(); outdoor.add(trayG); for(let i=0;i<4;i++){ const t=new THREE.Group(); t.add(mesh(cyl(0.16,0.16,0.02,14),mat(0xc9d1d8,{metalness:.7,roughness:.3}),0,0,0)); t.add(mesh(new THREE.SphereGeometry(0.12,12,6,0,Math.PI*2,0,Math.PI/2),mat(0xdfe6ec,{metalness:.8,roughness:.25}),0,0.01,0)); t.position.set(L.pass.x-0.45+i*0.3,1.0,L.pass.z-0.35); trayG.add(t); } }
+  trayG.children.forEach((t,i)=>t.visible=i<K.ready);
+}
+function kitchenHtml(){ if(!built('rest')) return ''; const K=kitchen(); return `<div class="row"><div class="ic">👨‍🍳</div><div class="tx">Mutfak · ${K.ready} tepsi hazır<small>Oda servisi siparişi: ${foodOrders()} · her tepsi ${cookTime().toFixed(1)} sn'de pişer (Ödüllü şef hızlandırır)</small></div></div>`; }
+
+// ---------- çamaşırhane → depo: yıkanan çarşaf havlu stoğuna döner ----------
+function laundryToStock(n){ if(!state.stock) return; const cap=stockCap(); state.stock.towel=Math.min(cap,(state.stock.towel||0)+n*2); }
+
+// ---------- rezervasyon takvimi ----------
+const OB=[{k:0,n:'Yok'},{k:0.15,n:'%15'},{k:0.3,n:'%30'}];
+function obRate(){ return OB[state.obIx||0].k; }
+function bookDay(d){ return (state.book||{})[d]||{n:0,left:0}; }
+function planBookings(){ // gün sonu: 2 gün sonrası için rezervasyon alınır, kapora hemen kasaya girer
+  if(state.tut<TUT.length||state.sandbox) return; state.book=state.book||{}; const d=state.day+2; if(state.book[d]) return;
+  const cap=nRoomsNow(); if(cap<4) return; const n=Math.round(cap*rnd(0.18,0.32)*(1+obRate())*priceDemand()*invDemand());
+  const dep=r10(n*avgRate()*0.1*incomeMult()); state.book[d]={n,left:n,dep}; state.money+=dep; state.today.rooms+=dep;
+  for(const k in state.book) if(+k<state.day-1) delete state.book[k];
+}
+function avgRate(){ let s=0,c=0; for(const k in state.rooms){ s+=roomRate(+k); c++; } return c?s/c:30; }
+let bookT=5;
+function updateBookings(dt){
+  const B=(state.book||{})[state.day]; if(!B||B.left<=0||state.tut<TUT.length) return;
+  const h=hourNow(); if(h<9||h>21) return; bookT-=dt; if(bookT>0) return; bookT=DAY_SEC*(12/24)/Math.max(1,B.n)*rnd(0.7,1.3);
+  if(queue.length>=10) return; B.left--; const g=spawnGuest(); g.booked=true; g.patMax=g.pat=g.patMax*1.3; if(g.tag) g.tag.y=2.05; fxEmoji(g.x,2.4,g.z,0,'📅');
+}
+// rezervasyonlu misafir oda bulamayıp giderse: tazminat + ün
+function bookedLeft(g){ if(!g.booked) return; const c=r10(avgRate()*incomeMult()*0.6); state.money-=c; changeRep(-1.5); toast(`📅 Rezervasyonlu ${g.name} odasız kaldı: −${fmt(c)} ₺ tazminat, −1.5 ün`,'bad'); }
+function bookingHtml(){
+  const days=[0,1,2].map(i=>state.day+i), cap=nRoomsNow();
+  return `<div class="ugh">📅 Rezervasyon takvimi</div><div class="grid2" style="grid-template-columns:repeat(3,1fr)">${days.map(d=>{ const B=bookDay(d); return `<div class="stat">${d===state.day?'Bugün':d-state.day+' gün sonra'}<b>${B.n}${B.left&&d===state.day?` <small>(${B.left} yolda)</small>`:''}</b></div>`; }).join('')}</div>
+    <div class="row"><div class="ic">⚖️</div><div class="tx">Fazla rezervasyon (overbooking)<small>Daha çok kapora ve misafir; ama oda bulamayan rezervasyonlu misafir tazminat ve ün kaybettirir · ${cap} oda</small></div></div>
+    <div style="display:flex;gap:6px;margin:-4px 0 10px">${OB.map((o,i)=>`<button class="btn ${(state.obIx||0)===i?'gold':'ghost'}" data-ob="${i}" style="flex:1">${o.n}</button>`).join('')}</div>`; }
+
+// ---------- personel morali: vardiya, izin, grev, prim ----------
+function morale(){ return state.morale==null?70:state.morale; }
+function moraleMul(){ return (state.strike&&state.strike>gtime)?0.05:0.8+0.4*morale()/100; }
+function nightStaffMul(){ return isNight()&&!state.nightShift?0.5:1; }
+function nightWageMul(){ return state.nightShift?1.25:1; }
+function moraleDay(){
+  if(!built('staff')||!staffEnts.length) return; let d=0; const avgE=staffEnts.reduce((a,e)=>a+(e.energy??100),0)/staffEnts.length;
+  d+=state.breakroom?2:0; d+=avgE<40?-5:1; d+=state.money<0?-6:0; d+=state.nightShift?-1:0; if(state.leaveDenied===state.day-1) d-=6;
+  state.morale=clamp(morale()+d,0,100);
+  if(morale()<25&&Math.random()<0.5&&!state.sandbox){ state.strike=gtime+60; setTimeout(()=>openStrike(),5000); }
+  else if(Math.random()<0.35&&!state.sandbox) setTimeout(()=>askLeave(),9000);
+}
+function bonusCost(){ return r10(staffEnts.length*60*cm()); }
+function giveBonus(){ const c=bonusCost(); if(!spend(c)) return; state.morale=clamp(morale()+18,0,100); state.strike=0; staffEnts.forEach(e=>{ e.energy=100; fxEmoji(e.x,e.y+2.1,e.z,e.f,'🥳'); }); sfx('star'); toast(`💰 Personele prim verildi: moral +18`); markSave(); renderSheet(); }
+function openStrike(){ if(!(state.strike>gtime)) return; banner('✊ Personel grevde!','Moral çok düştü · prim ver ya da 1 saat bekle'); sfx('alarm');
+  openModal(`<h3>✊ Grev</h3><p class="sub">Personel moral düşüklüğü yüzünden iş bıraktı. Prim verirsen hemen işe dönerler.</p><button class="btn gold wide" id="skB">💰 Prim ver · ${fmt(bonusCost())} ₺</button><button class="btn ghost wide" id="skW">Bekle</button>`,m=>{ m.querySelector('#skB').onclick=()=>{ giveBonus(); closeModal(); }; m.querySelector('#skW').onclick=closeModal; }); }
+function askLeave(){ if(!staffEnts.length) return; const e=rand(staffEnts), nm=e.name||'Bir çalışan';
+  openModal(`<h3>🏖️ İzin talebi</h3><p class="sub">${escH(nm)} (${STAFF[e.kind].name}) yarın izin istiyor.</p><button class="btn gold wide" id="lvY">✅ İzin ver (moral +6, yarın 1 kişi eksik)</button><button class="btn ghost wide" id="lvN">❌ Reddet (moral −6)</button>`,m=>{
+    m.querySelector('#lvY').onclick=()=>{ state.morale=clamp(morale()+6,0,100); state.leaveDay={day:state.day+1,kind:e.kind}; closeModal(); toast('🏖️ İzin verildi'); markSave(); };
+    m.querySelector('#lvN').onclick=()=>{ state.leaveDenied=state.day; state.morale=clamp(morale()-6,0,100); closeModal(); markSave(); }; }); }
+function onLeave(e){ const L2=state.leaveDay; return !!(L2&&L2.day===state.day&&L2.kind===e.kind&&staffEnts.filter(x=>x.kind===e.kind).indexOf(e)===0); }
+function staffHtml2(){ if(!built('staff')) return ''; const m=Math.round(morale());
+  return `<div class="ugh">😊 Personel morali</div><div class="row"><div class="ic">${m>=70?'😄':m>=40?'🙂':m>=25?'😟':'😠'}</div><div class="tx">Moral ${m}/100${state.strike>gtime?' · ✊ GREV':''}<small>Hız ×${moraleMul().toFixed(2)} · düşük moral grev riski · mola odası ve prim moral verir</small>${pips(Math.round(m/20),5)}</div><button class="btn gold" data-bonus ${state.money<bonusCost()?'disabled':''}>Prim<br>${fmt(bonusCost())} ₺</button></div>
+    <div class="row"><div class="ic">🌙</div><div class="tx">Gece vardiyası<small>${state.nightShift?'Açık: personel gece de tam hızla çalışır, maaşlar +%25':'Kapalı: gece personel yarı hızla çalışır'}</small></div><button class="btn ${state.nightShift?'gold':''}" data-nshift>${state.nightShift?'Açık':'Kapalı'}</button></div>`; }
+function bindOps2(root){ const b=root.querySelector('[data-bonus]'); if(b) b.onclick=giveBonus; const n=root.querySelector('[data-nshift]'); if(n) n.onclick=()=>{ state.nightShift=!state.nightShift; sfx('click'); markSave(); renderSheet(); };
+  root.querySelectorAll('[data-ob]').forEach(x=>x.onclick=()=>{ state.obIx=+x.dataset.ob; sfx('click'); markSave(); renderSheet(); }); }
+
+// ---------- misafir hafızası ----------
+function rememberGuest(g){ if(!g.loyal&&!(state.loyal||[]).some(x=>x.n===g.name)) return; const x=(state.loyal||[]).find(x=>x.n===g.name)||{n:g.name,t:g.type};
+  x.room=g.lastRoomId; x.sat=Math.round(g.sat); x.visits=(x.visits||0)+1; x.food=g.ateFood||x.food; if(!(state.loyal||[]).includes(x)){ state.loyal=state.loyal||[]; state.loyal.push(x); } }
+function memoryAtDesk(g){ const x=g.memory; if(!x||g.memShown) return; g.memShown=true;
+  toast(`🧠 ${g.name} ${x.visits||1}. kez geliyor · geçen sefer ${x.room?'Oda '+x.room:'?'} ${x.sat>=68?'😄':x.sat>=42?'🙂':'😠'}${x.room?' · aynı odayı verirsen sevinir':''}`); }
+function memorySat(g,id){ const x=g.memory; if(!x) return 0; let d=0; if(x.room===id){ d+=8; fxEmoji(g.x,2.8,g.z,0,'🧠❤️'); } if(x.sat<42) d-=6; return d; }
+function memoryPick(g,rs){ const x=g.memory; return x&&x.room&&rs.includes(x.room)?x.room:null; }
+
+// ---------- hooks ----------
+function updateOps2(dt){ updateKitchen(dt); updateBookings(dt); if(queue[0]&&queue[0].memory&&queue[0].state==='queue'&&!queue[0].path) memoryAtDesk(queue[0]); }
+function ops2DayEnd(){ planBookings(); moraleDay(); }
+
+// =====================================================================
+// MG6-3 · YAŞAYAN DÜNYA: takvim (yaz akını, kış kayak turu, bayram tatili,
+// ramazan: iftar/sahur), şehir haberleri (maç/konser/fuar), büyüyen rakip +
+// fiyat savaşı, esnaf ortaklıkları (karşı kaldırımda simitçi, taksi…)
+// =====================================================================
+// ---------- takvim ----------
+// 24 günlük döngü: 3 gün bayram (gün 8-10), 7 gün ramazan (gün 15-21, son günü bayram arifesi)
+function calPhase(){ const d=((state.day-1)%24)+1; return d>=8&&d<=10?'bayram':d>=15&&d<=21?'ramazan':null; }
+function seasonTourism(){ const si=seasonIx(), c=city(); if(si===1&&c.palm) return {e:'🏖️',n:'Yaz akını',dem:1.3,w:{tourist:1.6,family:1.5}};
+  if(si===3&&c.snow) return {e:'⛷️',n:'Kayak sezonu',dem:1.15,w:{athlete:1.8,couple:1.3}}; return null; }
+// ---------- şehir haberleri ----------
+const NEWS=[{k:'mac',e:'⚽',n:'Derbi maçı var',d:'Taraftarlar ve sporcular şehirde: gürültü artar',dem:1.25,w:{student:1.8,athlete:1.8}},
+  {k:'konser',e:'🎤',n:'Büyük konser',d:'Fenomenler ve gençler akın ediyor',dem:1.3,w:{influencer:2.2,student:1.5}},
+  {k:'fuar',e:'💼',n:'Uluslararası fuar',d:'İş insanları geliyor, fiyata daha az bakarlar',dem:1.2,w:{business:2.5,vip:1.3},price:1.1},
+  {k:'kongre',e:'🩺',n:'Tıp kongresi',d:'Sakin ve bol bahşişli misafirler',dem:1.1,w:{business:1.6,elderly:1.4}}];
+function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; state.news=null; if(Math.random()<0.4){ const N=rand(NEWS); state.news={k:N.k,day:state.day}; setTimeout(()=>banner(`${N.e} Şehirde bugün: ${N.n}`,N.d),5200); } }
+function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
+// ---------- toplam etkiler ----------
+function worldDemand(){ let f=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
+function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') w*=({family:1.8,elderly:1.4})[k]||1; if(st) w*=st.w[k]||1; if(N) w*=N.w[k]||1; return w; }
+function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
+function iftarOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=19&&h<21; }
+function sahurOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=3.5&&h<5; }
+function worldAmenBonus(a){ return a==='rest'&&(iftarOn()||sahurOn())?1.6:1; }
+function worldLabel(){ const ph=calPhase(), st=seasonTourism(), N=newsToday(), L2=[]; if(ph==='bayram') L2.push('🎊 Bayram tatili'); if(ph==='ramazan') L2.push(iftarOn()?'🌙 İftar vakti':sahurOn()?'🌙 Sahur':'🌙 Ramazan'); if(st) L2.push(st.e+' '+st.n); if(N) L2.push(N.e+' '+N.n); return L2; }
+let iftarShown=-1, sahurShown=-1;
+function updateCalendar(){
+  if(iftarOn()&&iftarShown!==state.day){ iftarShown=state.day; banner('🌙 İftar vakti','Misafirler restorana akın ediyor · restoran geliri +%60'); guests.forEach(g=>{ if(g.state==='room'&&!g.asleep&&Math.random()<0.5){ g.amenT=0; g.T.likes; } }); }
+  if(sahurOn()&&sahurShown!==state.day){ sahurShown=state.day; toast('🌙 Sahur vakti: oda servisi siparişleri artıyor'); guests.forEach(g=>{ if(g.state==='room'&&Math.random()<0.3){ g.reqT=0; } }); }
+}
+function worldHtml(){ const L2=worldLabel(); const d=((state.day-1)%24)+1, nb=d<8?8-d:d<15?15-d:24-d+8;
+  return `<div class="ugh">🗓️ Şehir takvimi</div><div class="row"><div class="ic">📰</div><div class="tx">${L2.length?L2.join(' · '):'Sakin bir gün'}<small>${calPhase()?'':`Sıradaki ${d<8||d>21?'bayram':'ramazan'}: ${d<8?8-d:d<15?15-d:24-d+8} gün sonra`} · bayramda aileler, ramazanda iftar/sahur, yazın sahil, kışın kayak</small></div></div>`; }
+
+// ---------- rakip: büyür + fiyat savaşı ----------
+function rivalFloors(){ const r=state.rival; return r?clamp(2+Math.floor(r.q/25),2,5):0; }
+function priceWarOn(){ return state.priceWar===state.day; }
+function priceWarAsk(){ const r=state.rival; if(!rivalOn()||r.promo!==state.day||state.priceWarAsked===state.day) return; state.priceWarAsked=state.day;
+  setTimeout(()=>openModal(`<h3>📉 Fiyat savaşı!</h3><p class="sub">${escH(r.name)} bugün büyük indirim yaptı. Misafirlerini kapmaya çalışıyor.</p>
+    <button class="btn gold wide" id="pwY">⚔️ Karşılık ver: bugün fiyatlar −%10, müşteri kaybı yok</button><button class="btn ghost wide" id="pwN">😌 Boş ver (bugün daha çok misafir kaybedersin)</button>`,m=>{
+    m.querySelector('#pwY').onclick=()=>{ state.priceWar=state.day; closeModal(); toast('⚔️ Fiyat savaşına girdin: bugün −%10'); markSave(); }; m.querySelector('#pwN').onclick=closeModal; }),6000); }
+function priceWarMul(){ return priceWarOn()?0.9:1; }
+function priceWarPull(){ return priceWarOn()?0.3:1; }
+
+// ---------- esnaf ortaklıkları ----------
+const SHOPS={simit:{e:'🥯',n:'Simitçi',d:'Sabahları misafirler +2 memnuniyet · günlük pay',cost:900,inc:40,x:-6.5},
+  taksi:{e:'🚕',n:'Taksi durağı',d:'Sıradaki misafirler %10 daha sabırlı · günlük pay',cost:1400,inc:55,x:-1.5},
+  hediye:{e:'🧿',n:'Hediyelik eşya',d:'Mutlu ayrılan misafir hediyelik alır · satış payı',cost:1800,inc:0,x:3.5},
+  dondurma:{e:'🍦',n:'Dondurmacı',d:'Yazın ve sıcakta kuyruk sabrı +%10 · günlük pay',cost:1100,inc:45,x:8.5}};
+function shopOn(k){ return !!(state.shops&&state.shops[k]); }
+function shopCost(k){ return r10(SHOPS[k].cost*cm()); }
+function buyShop(k){ const c=shopCost(k); if(shopOn(k)||!spend(c)) return; state.shops=state.shops||{}; state.shops[k]=true; buildShops(); sfx('build'); toast(`${SHOPS[k].e} ${SHOPS[k].n} ile anlaşma yapıldı`); save(); renderSheet(); }
+function shopPatMul(){ let m=1; if(shopOn('taksi')) m*=0.9; if(shopOn('dondurma')&&(seasonIx()===1||wxEv('heat'))) m*=0.9; return m; }
+function shopCheckout(g,mood){ if(mood==='happy'&&shopOn('hediye')&&Math.random()<0.5){ const a=r10(15*incomeMult()); state.money+=a; state.today.amen+=a; fxEmoji(g.x,g.y+2.6,g.z,g.f,'🧿'); } }
+function shopMorning(g){ if(shopOn('simit')&&hourNow()<11) return 2; return 0; }
+function shopsDayEnd(t){ let s=0; for(const k in SHOPS) if(shopOn(k)) s+=r10(SHOPS[k].inc*cm()); if(s){ state.money+=s; t.amen+=s; } }
+let shopG=null;
+function buildShops(){
+  if(shopG){ outdoor.remove(shopG); shopG=null; } if(!state.shops) return; const g=new THREE.Group(); outdoor.add(g); shopG=g;
+  for(const k in SHOPS){ if(!shopOn(k)) continue; const S=SHOPS[k], x=S.x, z=18.4, c=({simit:0xc0392b,taksi:0xf2c14e,hediye:0x2e86c1,dondurma:0xff7aa8})[k];
+    if(k==='taksi'){ const car=new THREE.Group(); car.add(mesh(rbox(1.95,0.44,0.95,.16),mat(0xf2c14e,{metalness:.4,roughness:.3}),0,0.4,0,true)); car.add(mesh(rbox(1.08,0.38,0.86,.15),mat(0x22303c,{metalness:.6,roughness:.12}),-0.12,0.76,0,true));
+      car.add(mesh(box(0.4,0.14,0.2),mat(0x222222),-0.1,1.02,0)); [-0.62,0.62].forEach(a=>[-0.44,0.44].forEach(b=>{ const w=mesh(cyl(0.18,0.18,0.14,12),M.dark,a,0.18,b); w.rotation.x=Math.PI/2; car.add(w); })); car.position.set(x,0,z-1.1); g.add(car);
+      g.add(mesh(cyl(0.04,0.04,2.2,6),M.dark,x+1.3,1.1,z)); const sg=signPlane('🚕 TAKSİ',0.9,0.35,{bg:'#f2c14e',fg:'#222',font:'800 56px "Baloo 2"'}); sg.position.set(x+1.3,2.2,z+0.03); sg.rotation.y=Math.PI; g.add(sg); continue; }
+    g.add(mesh(rbox(1.2,0.9,0.7,.05),mat(0xf6f1e6),x,0.6,z,true)); [-0.45,0.45].forEach(d=>{ const w=mesh(cyl(0.2,0.2,0.08,12),M.dark,x+d,0.2,z-0.36); w.rotation.x=Math.PI/2; g.add(w); });
+    g.add(mesh(cyl(0.03,0.03,1.3,6),M.white,x,1.5,z)); g.add(mesh(cone(0.8,0.35,10),mat(c),x,2.2,z,true));
+    const sg=signPlane(`${S.e} ${S.n}`,1.2,0.3,{bg:'#'+c.toString(16).padStart(6,'0'),fg:'#fff',font:'800 50px "Baloo 2"',fit:true}); sg.position.set(x,1.2,z-0.37); sg.rotation.y=Math.PI; g.add(sg); }
+}
+function shopsHtml(){ let h=`<div class="ugh">🤝 Esnaf ortaklıkları</div>`; for(const k in SHOPS){ const S=SHOPS[k], on=shopOn(k), c=shopCost(k);
+  h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.n}<small>${S.d}${S.inc?` (${fmt(r10(S.inc*cm()))} ₺/gün)`:''}</small></div>${on?'<button class="btn" disabled>Ortak ✓</button>':`<button class="btn gold" data-shop="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; } return h; }
+function bindWorld(root){ root.querySelectorAll('[data-shop]').forEach(b=>b.onclick=()=>buyShop(b.dataset.shop)); }
+
+// ---------- hooks ----------
+function worldDayEnd(t){ rollNews(); shopsDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===8) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
+function updateWorld(dt){ updateCalendar(); }
+function bootWorld(){ buildShops(); }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -6363,7 +6528,7 @@ function renderSheet(){
           ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
           ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>${(()=>{ const M=staffLvlMaxInfo(k); return M.n>1?`<button class="btn" data-lvlmax="${k}">MAX +${M.n} · ${fmt(M.c)}</button>`:''; })()}`:''}
         </div></div>`; }
-    h+=staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
+    h+=staffHtml2()+staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
     for(const k of upgOrder()){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
@@ -6383,10 +6548,10 @@ function renderSheet(){
     h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
     if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
     if(H==='gen') h+=tierHtml()+mgrHtml()+mescitHtml()+floorsHtml();
-    if(H==='eco') h+=depthHtml()+invHtml()+luxHtml();
+    if(H==='eco') h+=bookingHtml()+kitchenHtml()+depthHtml()+invHtml()+luxHtml();
     else if(H==='evt') h+=eventsHtml()+partyHtml();
     else if(H==='rule') h+=opsHtml();
-    else if(H==='city') h+=cityPlanHtml()+specialHtml()+progressHtml(next)+legacyHtml();
+    else if(H==='city') h+=cityPlanHtml()+worldHtml()+shopsHtml()+specialHtml()+progressHtml(next)+legacyHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -6400,7 +6565,7 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
-  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet); bindMescit(sheet);
+  bindDepth(sheet); bindOps(sheet); bindFlow(sheet); bindInv(sheet); bindMescit(sheet); bindOps2(sheet); bindWorld(sheet);
   const spb=sheet.querySelector('[data-spbuy]'); if(spb) spb.onclick=buySpecial; const mgo=sheet.querySelector('[data-mgopen]'); if(mgo) mgo.onclick=openMgr;
   sheet.querySelectorAll('[data-fth]').forEach(b=>b.onclick=()=>{ const [f,k]=b.dataset.fth.split(':'); buyFloorTheme(+f,k); }); sheet.querySelectorAll('[data-flo]').forEach(b=>b.onclick=()=>buyLounge(+b.dataset.flo));
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
@@ -6793,7 +6958,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime)); guard('ops2',()=>updateOps2(dt*gameSpeed)); guard('world',()=>updateWorld(dt));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -6819,7 +6984,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

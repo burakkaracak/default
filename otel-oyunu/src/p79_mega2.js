@@ -10,7 +10,7 @@ const SPA_TABLES=[-15.3,-13.65,-12.0];
 SPA_TABLES.forEach(tx=>SEATS.push({amen:'spa',x:tx,z:-7.75,px:tx,pz:-9.2,py:0.62,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 [-7.1,-6.1].forEach(z=>SEATS.push({amen:'spa',x:-12.25,z,px:-11.52,pz:z,py:0.12,rot:-Math.PI/2,pose:'sit',busy:null}));
 function spaOpen(){ const h=hourNow(); return built('spa')&&h>=8&&h<22; }
-function amenBonus(a){ return invAmen(a)*(a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
+function amenBonus(a){ return worldAmenBonus(a)*invAmen(a)*(a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1)*(wxEv('heat')&&(a==='pool'||a==='spa')?1.6:1); }
 function shellWalls(S,B,wallM,trimM){
   const cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2, w=B.x1-B.x0, d=B.z1-B.z0;
   S.add(mesh(box(w,2.4,0.16),wallM,cx,1.2,B.z0-0.08,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x0-0.08,1.2,cz,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x1+0.08,1.2,cz,true));
@@ -56,7 +56,7 @@ const LINEN_FEE=9;
 function linenFee(){ return Math.round(LINEN_FEE*incomeMult()*(state.staff.laundry&&state.staff.laundry.n>0?1.5:1)); }
 function afterRoomCleaned(byStaff){
   if(!built('laundry')) return;
-  if(byStaff){ if(state.staff.laundry&&state.staff.laundry.n>0){ state.piles.laundry+=linenFee(); pileChanged('laundry'); } }
+  if(byStaff){ if(state.staff.laundry&&state.staff.laundry.n>0){ laundryToStock(1); state.piles.laundry+=linenFee(); pileChanged('laundry'); } }
   else if(player&&player.c.items.length<capacity()){ addItem('linen'); if(!state.tips.linen){ state.tips.linen=true; hint('🧦 Kirli çarşafı çamaşırhaneye götür, para kazan',5); } }
 }
 function megaZones(p,dt){
@@ -64,7 +64,7 @@ function megaZones(p,dt){
   const n=p.c.items.filter(i=>i==='linen').length;
   if(n&&d2(p.x,p.z,L.laundryDrop.x,L.laundryDrop.z)<0.9*0.9){
     setHold(p.c,p.c.items.filter(i=>i!=='linen')); updateCarryUI();
-    const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
+    laundryToStock(n); const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
 }
 function staffPost(e){
   const sp=e.kind==='spaT'?L.spaT:L.laundryW;
@@ -75,7 +75,7 @@ function staffPost(e){
 
 // ---------- staff energy + employee of the day ----------
 const STAFF_NAMES=['Ayşe','Fatma','Ali','Veli','Hasan','Zehra','Emine','Murat','Ömer','Hülya','Serkan','Yasemin','Levent','Nazlı'];
-function staffEnergyMul(e){ return ((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e))*(e.rushUntil>gtime?1.3:1); }
+function staffEnergyMul(e){ const lv=onLeave(e); e.hidden=lv; if(lv) return 0.001; return ((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e))*(e.rushUntil>gtime?1.3:1); }
 function staffWorked(e){
   careerWorked(e); e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7));
   if(e.energy<30&&!e.tiredShown){ e.tiredShown=true; fxEmoji(e.x,e.y+2.1,e.z,e.f,'😓'); }
