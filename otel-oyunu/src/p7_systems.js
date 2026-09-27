@@ -389,6 +389,7 @@ function coinArc(ax,ay,az,bx,by,bz){
   fx3.push({m,arc:{ax,ay,az,bx,by,bz},life:0.38,max:0.38});
 }
 function updateFx3(dt){
+  while(fx3.length>500){ const o=fx3.shift(); world.remove(o.m); if(o.m.material!==M.gold) o.m.material.dispose(); }
   for(let i=fx3.length-1;i>=0;i--){ const f=fx3[i]; f.life-=dt; const k=1-f.life/f.max;
     if(f.arc){ const a=f.arc; f.m.position.set(lerp(a.ax,a.bx,k),lerp(a.ay,a.by,k)+Math.sin(k*Math.PI)*1.2,lerp(a.az,a.bz,k)); f.m.rotation.x+=dt*12; }
     else { f.v.y-=f.g*dt; f.v.multiplyScalar(f.drag||1); f.m.position.addScaledVector(f.v,dt); if(f.bounceY!=null&&f.m.position.y<f.bounceY&&f.v.y<0){ f.m.position.y=f.bounceY; f.v.y*=-0.45; f.v.x*=0.7; f.v.z*=0.7; } if(f.grow) f.m.scale.multiplyScalar(1+f.grow*dt); if(f.s){ f.m.rotation.x+=f.s.x*dt; f.m.rotation.y+=f.s.y*dt; } if(f.m.material.opacity!==undefined) f.m.material.opacity=Math.min(1,f.life/f.max*2)*(f.twinkle?0.6+0.4*Math.sin(f.life*30):1); }
