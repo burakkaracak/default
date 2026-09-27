@@ -202,6 +202,8 @@ let sampleFn=null, aiState='checking';
 (async()=>{ try{ if(window.claude&&typeof window.claude.use==='function'){ sampleFn=await window.claude.use('sample'); } }catch(e){} aiState=sampleFn?'ready':'off'; })();
 const PERSONA={student:'bütçesi kısıtlı, neşeli ve sırt çantalı bir üniversite öğrencisi',elderly:'nazik, biraz yavaş, eski günleri anlatmayı seven emekli biri',couple:'balayındaki romantik ve birbirine düşkün bir çift (ikisi adına konuşuyorsun)',influencer:'sürekli fotoğraf çeken, takipçilerine otel hakkında paylaşım yapacak bir sosyal medya fenomeni',tourist:'meraklı, heyecanlı, fotoğraf çekmeyi seven bir gezgin',business:'aceleci, kibar ama talepkâr bir iş insanı; toplantıya yetişmeye çalışıyor',
   family:'çocukları yorgun düşmüş, sıcakkanlı ama biraz telaşlı bir ebeveyn',vip:'biraz şımarık, ilgi bekleyen ünlü bir sanatçı',
+  athlete:'enerjik, sporu ve sağlıklı yaşamı seven bir sporcu',grumpy:'huysuz, sabırsız ve her şeye söylenen ama hızlı hizmete bayılan biri',
+  dog:'köpeğini çok seven, onu hep yanında gezdiren neşeli biri',million:'sade giyinmiş, alçakgönüllü bir turist gibi davranan ama aslında çok zengin biri; bunu belli etmemeye çalışır',
   insp:'ciddi, detaycı ve gizlice otelleri puanlayan bir müfettiş; kimliğini açık etmemeye çalışır'};
 let chatGuest=null, chatBusy=false, chatCtl=null;
 function guestSituation(g){
@@ -300,7 +302,10 @@ function pickGuestAt(sx,sy){
 function updateFeatures(dt,t){
   updateRoof(t,dt); updateHeli(dt*gameSpeed,t);
   if(fpMode&&player) player.c.root.visible=false;
-  guests.forEach(g=>{ if(g.type==='influencer'&&(g.state==='amen'||g.state==='queue')&&Math.random()<dt*0.12) fxEmoji(g.x,g.y+2.1,g.z,g.f,'📸'); if(g.lucky&&Math.random()<dt*2) fxEmoji(g.x+rnd(-0.3,0.3),g.y+rnd(0.8,1.9),g.z,g.f,'✨'); });
+  guests.forEach(g=>{ if(g.type==='influencer'&&(g.state==='amen'||g.state==='queue')&&Math.random()<dt*0.12) fxEmoji(g.x,g.y+2.1,g.z,g.f,'📸'); if(g.state==='queue'&&Math.random()<dt*0.2){ const r=g.pat/g.patMax, e=g.type==='grumpy'?(r<0.7?'💢':'😤'):r<0.3?'😠':r<0.55?'😐':null; if(e) fxEmoji(g.x,g.y+2.3,g.z,g.f,e); }
+    if(g.type==='athlete'&&g.state==='amen'&&g.seat&&g.seat.amen==='gym'&&Math.random()<dt*0.3) fxEmoji(g.x,g.y+2.1,g.z,g.f,'💪');
+    if(g.type==='dog'&&g.path&&Math.random()<dt*0.25) fxEmoji(g.x-0.5,g.y+0.9,g.z,g.f,'🐾');
+    if(g.lucky&&Math.random()<dt*2) fxEmoji(g.x+rnd(-0.3,0.3),g.y+rnd(0.8,1.9),g.z,g.f,'✨'); });
   if(sheetMode==='chat') renderChatSheet();
 }
 function bootFeatures(){

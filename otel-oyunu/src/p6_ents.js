@@ -88,7 +88,7 @@ function spawnGuest(type,from,tour,fl){
   g.place(side.x,side.z+rnd(-0.2,0.2),fl||0); queue.push(g); g.qk=queue.length-1;
   const p=qPos(g.qk); if(!g.goTo(0,p.x,p.z,()=>{ g.tRot=Math.PI; })) g.place(p.x,p.z,0);
   g.tag=tagAdd({kind:'patience',ent:g,y:1.95});
-  if(g.type==='elderly') g.speed*=0.72;
+  if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
   return g;
 }
@@ -111,6 +111,7 @@ function checkIn(g,id){
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
+  if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
   g.state='toRoom'; const sp=roomSpots(id);
@@ -136,7 +137,14 @@ function checkout(g){
   if(g.type==='insp') inspectorVerdict(g,mood);
   if(mood==='happy'){ changeRep(0.9*mult*(1+0.15*state.up.fame)); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
+  if(g.type==='million') millionReveal(g,id,mood);
   applyRoomState(id); guestLeave(g); markSave();
+}
+function millionReveal(g,id,mood){
+  const s=state.rooms[id];
+  if(mood==='happy'){ const b=Math.round(roomRate(id)*4*incomeMult()); s.tip+=b; state.today.tips+=b; changeRep(2);
+    banner('🎩 Gizli milyoner!',`${g.name} aslında bir milyonermiş · bahşiş +${fmt(b)} ₺`); sfx('star'); confettiAt(g.x,g.y+2,g.z,50); fxEmoji(g.x,g.y+2.6,g.z,g.f,'🎩'); }
+  else toast(`🎩 ${g.name} gizli bir milyonermiş… mutlu edemedin 😢`,'bad');
 }
 function angryLeave(g){
   const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); }
@@ -154,7 +162,7 @@ GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,
 function amenOpen(a){ return a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
   const opts=['rest','pool','gym','roof'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a='pool';
+  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes;
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }

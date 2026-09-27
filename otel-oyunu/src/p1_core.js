@@ -42,6 +42,10 @@ const GTYPES={
   elderly: {name:'Emekli',   e:'👵',w:1.5,stars:2,pat:75,pay:1.15,want:1,nights:[2,3],tip:1.7,req:1.3,likes:'rest'},
   couple:  {name:'Balayı çifti',e:'💑',w:1.1,stars:3,pat:45,pay:1.9,want:2,nights:[2,3],tip:1.8,req:0.9,likes:'roof'},
   influencer:{name:'Fenomen',e:'🤳',w:0.9,stars:3,pat:28,pay:1.6,want:2,nights:[1,1],tip:1.2,req:1.2,rep:2.5},
+  athlete: {name:'Sporcu',   e:'🏋️',w:1.4,stars:2,pat:40,pay:1.2, want:1,nights:[1,2],tip:1.1,req:.8,likes:'gym'},
+  grumpy:  {name:'Huysuz',   e:'😤',w:1.2,stars:1,pat:24,pay:1.1, want:0,nights:[1,2],tip:2.2,req:1.4},
+  dog:     {name:'Köpekli',  e:'🐶',w:1.2,stars:2,pat:45,pay:1.35,want:1,nights:[1,3],tip:1.2,req:1},
+  million: {name:'Turist',   e:'🎒',w:.35,stars:3,pat:50,pay:1,   want:0,nights:[1,2],tip:1,  req:1},  // gizli milyoner: turist kılığında
   insp:    {name:'Müfettiş',  e:'🕵️',w:0,  stars:9,pat:38,pay:1,   want:1,nights:[1,1],tip:1.5,req:1.3,special:true}};
 const STAFF={
   rec:  {name:'Resepsiyonist',e:'🛎️',max:1,cost:[300],               wage:40,desc:'Sen yokken misafirleri karşılar'},

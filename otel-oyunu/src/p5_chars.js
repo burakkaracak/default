@@ -18,6 +18,10 @@ const LOOKS={
     if(tp==='vip'){ o.top=rand([0xf06292,0xffffff,0xf2b632,0x1a1a1a]); o.shades=true; o.gold=true; o.bag=0xf2d48a; }
     if(tp==='tourist'){ o.hat=Math.random()<.5?'sun':'cap'; o.hatC=rand([0xf2b632,0xe0574f,0x2e86c1,0xffffff]); o.pack=true; }
     if(tp==='family'){ o.child=true; }
+    if(tp==='million'){ o.hat=Math.random()<.5?'sun':'cap'; o.hatC=rand([0xf2b632,0xe0574f,0x2e86c1,0xffffff]); o.pack=true; }
+    if(tp==='athlete'){ const c=rand([0xe0574f,0x2e86c1,0x27ae60,0xff8c1a]); o.top=c; o.bottom=0x2b2f3a; o.hat='cap'; o.hatC=0xffffff; o.bag=null; o.hs=rand(['short','pony']); o.scale=rnd(1.0,1.08); }
+    if(tp==='grumpy'){ o.top=rand([0x6d6d6d,0x5a5048,0x4a5560]); o.bottom=0x3a3a3a; o.glasses=Math.random()<.4; o.hs=rand(['bald','short']); o.hunch=true; o.bag=0x3a3a3a; }
+    if(tp==='dog'){ o.dog=rand([0xc8894a,0x3b2a1e,0xf1e3c8,0x8a8a8a]); o.bag=null; }
     if(tp==='insp'){ o.top=0xb89a6a; o.bottom=0x4a3b2c; o.hat='fedora'; o.hatC=0x3b3024; o.bag=null; o.brief=true; o.hs='short'; }
     return o; },
   player:()=>{ const c=state.custom||{}; return {skin:c.skin??0xf0c49c,hair:c.hair??0x3a2618,hs:c.hs||'quiff',top:c.top??0x1f3450,bottom:c.top??0x1f3450,tie:c.tie??0xe0a93a,hat:c.hat&&c.hat!=='none'?c.hat:null,hatC:c.top??0x1f3450,badge:true,scale:1.08}; },
@@ -71,6 +75,12 @@ function makeChar(o){
   if(o.brief){ bag=new THREE.Group(); bag.position.set(0,-0.3,0.02); bag.add(mesh(rbox(0.3,0.22,0.08,.03),mat(0x3b2a1e,{roughness:.5}),0,-0.1,0,true)); arms[1].add(bag); }
   let child=null;
   if(o.child){ child=makeChar({skin:o.skin,hair:o.hair,hs:rand(['short','bun']),top:rand(TOPS),bottom:rand(BOTTOMS),scale:0.62}); child.root.position.set(-0.55,0,-0.1); root.add(child.root); }
+  let dog=null;
+  if(o.dog){ dog=new THREE.Group(); dog.position.set(-0.55,0,0.15); dog.scale.setScalar(1.25); const dm=mat(o.dog,{roughness:.8}), dk=mat(0x2a1c12);
+    dog.add(mesh(rbox(0.16,0.15,0.34,.06),dm,0,0.22,0,true)); const hd=mesh(rbox(0.15,0.14,0.16,.05),dm,0,0.32,0.21,true); dog.add(hd);
+    hd.add(mesh(box(0.06,0.05,0.06),dk,0,-0.02,0.1)); [-1,1].forEach(s=>{ hd.add(mesh(box(0.04,0.09,0.05),dk,0.07*s,0.06,-0.02)); hd.add(mesh(sph(0.018,6,4),M.dark,0.04*s,0.03,0.08)); });
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>dog.add(mesh(box(0.05,0.16,0.05),dm,0.05*a,0.08,0.11*b)));
+    const tail=mesh(box(0.03,0.03,0.14),dm,0,0.3,-0.2); tail.rotation.x=-0.7; dog.add(tail); dog.userData.tail=tail; dog.add(blob(0.2)); root.add(dog); }
   root.add(blob(0.34));
   if(o.glasses){ const gm=M.dark; [-1,1].forEach(sd=>{ const r=mesh(new THREE.TorusGeometry(0.045,0.009,6,14),gm,0.09*sd,0.02,0.245); head.add(r); }); head.add(mesh(box(0.06,0.01,0.01),gm,0,0.03,0.25)); }
   if(o.beard){ const bd=mesh(sph(0.2,12,8,0,Math.PI*2,Math.PI*0.55,Math.PI*0.45),hair,0,-0.02,0.03); head.add(bd); }
@@ -78,7 +88,7 @@ function makeChar(o){
   if(o.phone){ arms[0].add(mesh(box(0.08,0.14,0.015),M.dark,0,-0.33,0.07)); }
   if(o.partner&&!child){ child=makeChar({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['long','bun','short','curly','pony']),top:o.top,bottom:rand(BOTTOMS),scale:0.97}); child.root.position.set(-0.52,0,-0.05); root.add(child.root); }
   const s=o.scale||1; root.scale.setScalar(s);
-  return {root,body,head,legs,arms,hold,bag,child,eyes,hunch:o.hunch?0.16:0,t:Math.random()*10,ph:Math.random()*10,blink:1+Math.random()*4,sm:null,mode:'idle',spd:1,items:[]};
+  return {root,body,head,legs,arms,hold,bag,child,dog,eyes,hunch:o.hunch?0.16:0,t:Math.random()*10,ph:Math.random()*10,blink:1+Math.random()*4,sm:null,mode:'idle',spd:1,items:[]};
 }
 function setHold(c,items){
   while(c.hold.children.length) c.hold.remove(c.hold.children[0]);
@@ -125,5 +135,7 @@ function animChar(c,dt){
   if(c.sm){ const k=Math.min(1,dt*16); for(let i=0;i<8;i++) c.sm[i]+=(tgt[i]-c.sm[i])*k; } else c.sm=tgt.slice();
   const S=c.sm; L[0].rotation.x=S[0]; L[1].rotation.x=S[1]; A[0].rotation.x=S[2]; A[1].rotation.x=S[3]; A[0].rotation.z=S[4]; A[1].rotation.z=S[5]; B.position.y=S[6]; B.rotation.x=S[7]+(c.hunch||0);
   if(c.child){ c.child.mode=m==='walk'?'walk':'idle'; c.child.spd=c.spd; animChar(c.child,dt); c.child.root.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run'); }
+  if(c.dog){ const hide=m==='sleep'||m==='swim'||m==='sit'||m==='run'; c.dog.visible=!hide; c.dog.position.y=fast?Math.abs(Math.sin(c.t*1.4))*0.05:0;
+    c.dog.userData.tail.rotation.y=Math.sin(c.ph*(fast?14:6))*0.6; }
   if(c.bag&&!c.child&&c.bag.parent===c.root) c.bag.visible=!(m==='sleep'||m==='swim'||m==='sit'||m==='run');
 }
