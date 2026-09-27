@@ -79,7 +79,7 @@ function reflowQueue(){ queue.forEach((g,k)=>{ const p=qPos(k); g.qk=k; g.goTo(0
 function pickType(){
   const st=stars(), opts=Object.keys(GTYPES).filter(k=>GTYPES[k].stars<=st);
   let maxLv=0; for(const k in state.rooms) maxLv=Math.max(maxLv,ROOM_T[state.rooms[k].type].lvl);
-  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1)*festTypeW(k);
+  const w=k=>GTYPES[k].w*(GTYPES[k].want>maxLv?0.3:1)*(k==='vip'&&state.lux&&state.lux.limo?2:1)*priceTypeW(k)*(k==='vip'&&skillLv('g4')?1.6:1)*festTypeW(k)*worldTypeW(k);
   let tot=0; opts.forEach(k=>tot+=w(k)); let r=Math.random()*tot;
   for(const k of opts){ r-=w(k); if(r<=0) return k; } return 'tourist';
 }
@@ -98,7 +98,7 @@ function spawnGuest(type,from,tour,fl){
 }
 function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ const s=state.rooms[id],R=RT(id); return !s.dirty&&!s.broken&&!s.hold&&!R.guest&&R.group; }); }
 function pickRoom(g){
-  const rs=readyRooms(); if(!rs.length) return null;
+  const rs=readyRooms(); if(!rs.length) return null; const mp=memoryPick(g,rs); if(mp) return mp;
   let best=null, bs=1e9;
   rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2-(g.pref&&state.rooms[id].theme===g.pref?2.5:0); if(sc<bs){ bs=sc; best=id; } });
   return best;
@@ -107,7 +107,7 @@ function decorSat(s){ let v=designSat(s); for(const k in s.decor) if(s.decor[k])
 function roomRate(id){ const s=state.rooms[id]; return invRate(id)*ROOM_T[s.type].rate*(1+0.3*roomInfo(id).f)*(state.lux&&state.lux.brand?1.1:1); }
 function checkIn(g,id){
   const s=state.rooms[id], R=RT(id), T=ROOM_T[s.type];
-  R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
+  R.guest=g; g.room=id; g.lastRoomId=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
   const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
   g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)-expectPen()-Math.min(16,Math.max(0,waited-waitGrace())*(0.35+0.08*(stars()-1)))+viewSat(g,id)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
   const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle)*priceMult()*(g.loyal?1.2:1));
@@ -122,7 +122,7 @@ function checkIn(g,id){
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
   g.state='toRoom'; const sp=roomSpots(id);
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
-  g.sat=clamp(g.sat+floorSat(roomInfo(id).f)+nookSat(roomInfo(id).f),5,100); albumNoteGuest(g);
+  g.sat=clamp(g.sat+floorSat(roomInfo(id).f)+nookSat(roomInfo(id).f)+memorySat(g,id)+shopMorning(g),5,100); albumNoteGuest(g);
   tutEvent('checkin'); qEv('guest'); markSave();
 }
 function enterRoom(g){
@@ -145,7 +145,7 @@ function checkout(g){
   if(mood==='happy'){ changeRep(0.75*mult*(1+0.15*state.up.fame)*(1+0.1*skillLv('g4'))); state.today.happy++; qEv('happy'); } else if(mood==='unhappy'){ changeRep(-2.5*mult); state.today.unhappy++; } else { changeRep(0.15); state.today.neutral=(state.today.neutral||0)+1; }
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
-  noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
+  noteGuestDay(g,mood,false); noteLoyal(g); rememberGuest(g); shopCheckout(g,mood); if(g.story) storyCheckout(g,id,mood);
   applyRoomState(id); pendingUpgrade(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
@@ -157,7 +157,7 @@ function millionReveal(g,id,mood){
 function angryLeave(g){
   const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); }
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
-  if(g.type==='insp'){ inspectorVerdict(g,'left'); } else changeRep(-3*(g.T.rep||1)); state.today.left++;
+  bookedLeft(g); if(g.type==='insp'){ inspectorVerdict(g,'left'); } else changeRep(-3*(g.T.rep||1)); state.today.left++;
   noteGuestDay(g,'unhappy',true); fxEmoji(g.x,2.2,g.z,0,'😤'); sfx('fail'); toast(`${g.T.e} ${g.name} beklemekten sıkılıp gitti`,'bad');
   guestLeave(g);
 }
@@ -170,7 +170,7 @@ GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,
 function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
+  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -204,7 +204,7 @@ function updateGuests(dt){
     try{
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
-      if(!g.path&&!g.asking){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1)*flowPatMul(); if(g.pat<=0){ angryLeave(g); continue; }
+      if(!g.path&&!g.asking){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1)*flowPatMul()*shopPatMul(); if(g.pat<=0){ angryLeave(g); continue; }
         if(built('cafe')&&!g.coffee&&g.state==='queue'&&!powerOut()){ if(g.coffeeT==null) g.coffeeT=rnd(1.5,5); g.coffeeT-=dt; if(g.coffeeT<=0) sellCoffee(g); } }
     }
     if(g.state==='room'){
@@ -241,7 +241,7 @@ function spawnStaff(kind,fromDoor){
   const sp=fromDoor?{x:rnd(-0.5,0.5),z:8.5,f:0}:staffIdleSpot(e.slot); e.place(sp.x,sp.z,sp.f); staffEnts.push(e);
   e.speed=2.3*staffSpeedMul(kind); return e;
 }
-function staffSpeedMul(kind){ return mgrStaff()*STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
+function staffSpeedMul(kind){ return moraleMul()*nightStaffMul()*mgrStaff()*STAFF_SPEED[state.staff[kind].lvl-1]*(1+0.1*state.up.lead)*(1+0.08*skillLv('o2')); }
 function roomsWhere(fn){ return Object.keys(state.rooms).map(Number).filter(fn); }
 function nearestRoom(e,list){ let best=null,bd=1e9; list.forEach(id=>{ const ri=roomInfo(id), d=d2(e.x,e.z,ri.x,ri.z)+Math.abs(ri.f-e.f)*40; if(d<bd){ bd=d; best=id; } }); return best; }
 function staffGoIdle(e){

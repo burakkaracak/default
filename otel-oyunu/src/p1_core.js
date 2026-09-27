@@ -175,7 +175,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:46, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:46, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, news:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -202,7 +202,7 @@ function nRoomsAll(){ return Object.keys(state.rooms).length; }
 const STAR_REQ={
   3:[['8 oda',()=>nRoomsAll()>=8],['2 Deluxe oda',()=>roomsOfType('dlx')+roomsOfType('suite')>=2]],
   4:[['Restoran ve havuz',()=>built('rest')&&built('pool')],['16 oda',()=>nRoomsAll()>=16],['2 Suit oda',()=>roomsOfType('suite')>=2]],
-  5:[['Havuz, spor salonu ve spa',()=>built('pool')&&built('gym')&&built('spa')],['28 oda',()=>nRoomsAll()>=28],['6 Suit oda',()=>roomsOfType('suite')>=6]]};
+  5:[['Havuz, spor salonu ve spa',()=>built('pool')&&built('gym')&&built('spa')],['28 oda',()=>nRoomsAll()>=28],['8 Suit oda',()=>roomsOfType('suite')>=8]]};
 function starCap(){ let c=2; for(let s=3;s<=5;s++){ if(STAR_REQ[s].every(r=>r[1]())) c=s; else break; } return c; }
 function stars(){ return Math.min(rawStars(),starCap()); }
 function starMissing(s){ return (STAR_REQ[s]||[]).filter(r=>!r[1]()).map(r=>r[0]); }
