@@ -16,7 +16,7 @@ function renderTags(){
     let x,y,z,f=0,html='',show=true;
     switch(t.kind){
       case 'patience':{ const g=t.ent; x=g.x; y=g.y+t.y; z=g.z; f=g.f; show=g.state==='queue'||(g.state==='arrive'&&!g.path);
-        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${g.tour?'🚌':g.T.e}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
+        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${(g.tour?'🚌':g.T.e)+(g.pref?RTHEMES[g.pref].e:'')}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
           t.bar.style.width=(p*100)+'%'; t.bar.style.background=p>0.5?'#5fd98a':p>0.25?'#f2c14e':'#e0574f'; }
         html=null; break; }
       case 'pad':{ const d=t.def; x=d.x; y=d.f*FH+t.y; z=d.z; f=d.f; const lk=padLocked(d), rem=Math.ceil(d.cost-(state.paid[d.id]||0));
@@ -85,7 +85,7 @@ function updateHUD(){
   $('repBar').firstChild.style.width=(s===5||capped?100:(state.rep%20)/20*100)+'%';
   if(lastStarsHud!=null&&s>lastStarsHud){ banner(`${'★'.repeat(s)}`,`Otelin ${s} yıldız oldu! Gelir x${STAR_MULT[s-1]}`); sfx('star'); refreshPads(); } lastStarsHud=s;
   const h=hourNow(); $('clock').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor((h%1)*4)*15).padStart(2,'0');
-  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
+  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
   if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
@@ -165,12 +165,12 @@ function renderSheet(){
   if(mgmtTab==='staff'){
     if(!built('staff')) h+=`<p class="note">🔒 Personel işe almak için önce lobideki <b>Personel odası</b>nı aç.</p>`;
     for(const k in STAFF){ const S=STAFF[k], s=state.staff[k], hc=staffHireCost(k), lc=staffLvlCost(k), needOk=!S.needs||built(S.needs), can=built('staff')&&needOk;
-      h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?' · önce Depo gerekli':''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${pips(s.lvl,STAFF_SPEED.length)}</div>
+      h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?` · önce ${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs} gerekli`:''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${pips(s.lvl,STAFF_SPEED.length)}</div>
         <div style="display:flex;flex-direction:column;gap:6px">
-          ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?'<button class="btn" disabled>🔒 Önce<br>Depo</button>':`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
+          ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
           ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>`:''}
         </div></div>`; }
-    h+=`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
+    h+=staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
     for(const k in UPG){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
@@ -186,7 +186,7 @@ function renderSheet(){
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+legacyHtml()+luxHtml();
+      ${progressHtml(next)}`+eventsHtml()+legacyHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -197,6 +197,8 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
+  const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
+  sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
   const av=sheet.querySelector('[data-adv]'); if(av) av.onclick=()=>{ sfx('click'); openAdvisor(); };
   const mp=sheet.querySelector('[data-map]'); if(mp) mp.onclick=()=>{ sfx('click'); openCityMap(); };
   sheet.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>buyLegacy(b.dataset.leg));
@@ -269,12 +271,14 @@ function renderRoomSheet(){
   else h+=`<p class="note">${s.dirty?'🧹 Temizlik bekliyor':s.broken?'🔧 Tamir bekliyor':'Boş · misafir bekliyor'}</p>`;
   if(up!=null){ const nx=ROOM_T[ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]], ok=!g&&!s.dirty&&!s.broken;
     h+=`<div class="row"><div class="ic">⬆️</div><div class="tx">${nx.name} odaya yükselt<small>Gecelik ${fmt(roomRate(id)*incomeMult())} → ${fmt(nx.rate*(1+0.3*ri.f)*incomeMult())} ₺ · daha seçkin misafirler${ok?'':' · oda boş ve temiz olmalı'}</small></div><button class="btn gold" data-up ${!ok||state.money<up?'disabled':''}>${fmt(up)} ₺</button></div>`; }
+  h+=roomThemeHtml(id);
   for(const k in DECOR){ const D=DECOR[k], c=decorCost(k), has=s.decor[k];
     h+=`<div class="row"><div class="ic">${D.e}</div><div class="tx">${D.name}<small>Memnuniyet +${D.sat}${D.income?` · gecelik +${D.income} ₺`:''}</small></div>${has?'<button class="btn" disabled>Var ✓</button>':`<button class="btn" data-dec="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   const tk=sheet.querySelector('[data-talk]'); if(tk) tk.onclick=()=>openChat(R.guest);
   const ub=sheet.querySelector('[data-up]'); if(ub) ub.onclick=()=>{ const c=roomUpCost(id); if(R.guest||s.dirty||s.broken||!spend(c)) return; s.type=ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]; qEv('upg'); buildRoomVisual(id,true); confettiAt(ri.x,ri.f*FH+1,ri.z,40); sfx('build'); save(); renderSheet(); };
+  sheet.querySelectorAll('[data-rth]').forEach(b=>b.onclick=()=>{ setRoomTheme(id,b.dataset.rth); renderSheet(); });
   sheet.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{ const k=b.dataset.dec, c=decorCost(k); if(s.decor[k]||!spend(c)) return; s.decor[k]=true; qEv('upg'); if(R.guest) R.guest.sat=clamp(R.guest.sat+DECOR[k].sat,0,100); buildRoomVisual(id,true); sfx('build'); save(); renderSheet(); });
 }
 function renderQuestSheet(){
@@ -558,7 +562,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();
@@ -576,7 +580,7 @@ function boot(){
   resize(); applyTheme();
   PADS=padDefs(); PADMAP={}; PADS.forEach(d=>PADMAP[d.id]=d);
   buildGround(); buildShell(); buildXmas();
-  ['depo','staff','cafe','rest','pool','gym','f2','f3','roof'].forEach(id=>{ if(built(id)) buildFeature(id,false); });
+  ['depo','staff','cafe','rest','pool','gym','spa','laundry','f2','f3','roof'].forEach(id=>{ if(built(id)) buildFeature(id,false); });
   Object.keys(state.rooms).forEach(k=>{ const s=state.rooms[k]; s.decor=s.decor||{}; buildRoomVisual(+k,false); });
   Object.keys(L.piles).forEach(pileChanged);
   if(!state.quests||state.quests.day!==state.day) newQuests();

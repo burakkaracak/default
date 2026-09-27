@@ -108,7 +108,7 @@ function completePad(d){
   refreshPads(); tutEvent('built:'+d.id); save();
   if(PADS.every(x=>built(x.id))&&!state.done){ state.done=true; setTimeout(()=>{ banner('🏆 Otel tamamlandı!','Yönetim › Otel bölümünden yeni şehre taşınabilirsin'); sfx('star'); },1600); }
 }
-function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',staff:'Artık personel işe alabilirsin',rest:'Misafirler yemeğe gelecek',pool:'Havuz açıldı, misafirler bayılacak',gym:'Spor salonu açıldı',cafe:'Bekleyen misafirler artık kahve içecek',f2:'Asansörle yukarı çık',f3:'Otelin büyüyor!'}[id]||''; }
+function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',staff:'Artık personel işe alabilirsin',rest:'Misafirler yemeğe gelecek',pool:'Havuz açıldı, misafirler bayılacak',gym:'Spor salonu açıldı',cafe:'Bekleyen misafirler artık kahve içecek',f2:'Asansörle yukarı çık',spa:'Misafirler masaj ve saunaya gelecek · Spa terapisti işe alabilirsin',laundry:'Kendin temizlediğin odaların kirli çarşaflarını buraya getir',f3:'Otelin büyüyor!'}[id]||''; }
 
 // =====================================================================
 // PLAYER INTERACTION ZONES
@@ -139,7 +139,7 @@ function updatePlayerZones(dt){
     else if(s.broken){ R.fixP+=dt/playerFixTime(); workRing={p:R.fixP,icon:'🔧'}; if(!p.moving&&!p.path) p.anim='work'; if(R.fixP>=1) fixRoom(rid,false); }
   }
   if(p.f===0&&p.x>L.serve.x0&&p.x<L.serve.x1&&p.z>L.serve.z0&&p.z<L.serve.z1) atDesk=true;
-  extraPlayerZones(p,dt);
+  extraPlayerZones(p,dt); megaZones(p,dt);
   pickT-=dt;
   for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
@@ -151,7 +151,7 @@ function updatePlayerZones(dt){
 function cleanRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.dirty) return;
   s.dirty=false; R.cleanP=0; const sp=roomSpots(id); sparkleAt(sp.stand.x,sp.stand.f*FH+0.8,sp.stand.z); sfx('sparkle'); applyRoomState(id);
-  if(!byStaff){ tutEvent('clean'); qEv('clean'); } markSave();
+  if(!byStaff){ tutEvent('clean'); qEv('clean'); } afterRoomCleaned(byStaff); markSave();
 }
 function fixRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.broken) return;
@@ -298,7 +298,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0);
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6;
   if(isNight()) f*=0.3;
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
@@ -427,6 +427,7 @@ function goal(){
   if(s===3) return {icon:'💰',text:TUT[3].text,target:{x:L.piles.desk.x,y:0,z:L.piles.desk.z,f:0}};
   if(s===4){ const d=roomsWhere(id=>state.rooms[id].dirty)[0]; if(d){ const sp=roomSpots(d); return {icon:'🧹',text:TUT[4].text,target:{x:sp.stand.x,y:sp.stand.f*FH,z:sp.stand.z,f:sp.stand.f}}; }
     return {icon:'⏳',text:'Misafir odasında… bu arada parayı topla',target:null}; }
+  const evg=eventGoal(); if(evg) return evg;
   const chg=chainGoal(); if(chg) return chg;
   const av=PADS.filter(d=>padVis[d.id]);
   if(!av.length) return state.done?{icon:'🏆',text:'Otel tamamlandı! Yeni şehir seni bekliyor',target:null,done:true}:null;

@@ -206,7 +206,7 @@ function updateExtraSpawns(dt,h){
   if(state.messDue&&cat&&!state.mess&&h>=9&&h<20&&Math.random()<dt*0.015){ state.messDue=false; catKnock(); }
   if(state.crisisDue&&!state.crisis&&h>=10&&h<17&&Math.random()<dt*0.03){ const k=state.crisisDue; state.crisisDue=null; startCrisis(k); }
 }
-function endDayExtras(){ if(state.crisis&&state.crisis.type!=='flu'){ state.crisis=null; removeCrisisVis(); for(const k in state.rooms) applyRoomState(+k); changeRep(-3); setTimeout(()=>toast('🚨 Kriz gece boyunca ekipçe giderildi · −3 ün','bad'),1200); } const n=healAll(); if(n) setTimeout(()=>toast(`💪 ${n} personel iyileşip işe döndü`),1500); }
+function endDayExtras(){ eventsDayEnd(); if(state.crisis&&state.crisis.type!=='flu'){ state.crisis=null; removeCrisisVis(); for(const k in state.rooms) applyRoomState(+k); changeRep(-3); setTimeout(()=>toast('🚨 Kriz gece boyunca ekipçe giderildi · −3 ün','bad'),1200); } const n=healAll(); if(n) setTimeout(()=>toast(`💪 ${n} personel iyileşip işe döndü`),1500); }
 function extraPlayerZones(p,dt){
   if(p.riding) return;
   const c=state.crisis;

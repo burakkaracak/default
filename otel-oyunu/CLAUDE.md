@@ -4,7 +4,7 @@ Kullanıcı Türkçe konuşur; kısa, Türkçe cevap ver. Token tasarrufu öneml
 
 ## Yapı
 Tek HTML oyun, three.js r128 (cdnjs). Kaynak `src/` altında parçalar, `build.py` sırayla birleştirir:
-p0_head.html (CSS+HUD) → p1_core (veri, GTYPES, UPG, yıldız, ses, SAVE_KEY) → p2_render (renderer, prosedürel doku) → p26_gfx (env map, post: SAO/bloom/grade, kalite) → p3_world (yerleşim, odalar, kafe, bahçe) → p4_nav (A*, 4 kat, ROOF=3) → p5_chars (karakter modelleri) → p6_ents (misafir/personel/asansör) → p7_systems (görev, olay, maaş) → p75_extras (kriz, kedi, özelleştirme) → p76_features (çatı, helikopter, FP modu, temalar, AI sohbet) → p77_polish (lüks, log, kamera, yardım, export) → p78_mega (sandbox admin, XP/seviye, combo, 48 başarım, hava, mevsim) → p8_ui (HUD, menüler, input, ana döngü, boot).
+p0_head.html (CSS+HUD) → p1_core (veri, GTYPES, UPG, yıldız, ses, SAVE_KEY) → p2_render (renderer, prosedürel doku) → p26_gfx (env map, post: SAO/bloom/grade, kalite) → p3_world (yerleşim, odalar, kafe, bahçe) → p4_nav (A*, 4 kat, ROOF=3) → p5_chars (karakter modelleri) → p6_ents (misafir/personel/asansör) → p7_systems (görev, olay, maaş) → p75_extras (kriz, kedi, özelleştirme) → p76_features (çatı, helikopter, FP modu, temalar, AI sohbet) → p77_polish (lüks, log, kamera, yardım, export) → p78_mega (sandbox admin, XP/seviye, combo, 48 başarım, hava, mevsim) → p79_mega2 (spa, çamaşırhane, etkinlik rezervasyonu/festival, personel enerjisi, oda temaları) → p8_ui (HUD, menüler, input, ana döngü, boot).
 `src/p9_debug.js` sadece test/demo içindir, sürüme ASLA girmez.
 
 ## Komutlar
@@ -16,4 +16,4 @@ p0_head.html (CSS+HUD) → p1_core (veri, GTYPES, UPG, yıldız, ses, SAVE_KEY) 
 - Artifact: https://claude.ai/artifact/95QP8PCqhQZs5NMpWdDsF8 — hep AYNI url ile güncelle (Artifact publish, url=...), capabilities `{sample:{}, downloads:true}` korunsun (belirtilmezse korunur).
 - Kayıt anahtarı `otel_ustasi_v2` (+`_bak`, sandbox `otel_ustasi_v2_sandbox`) — eski kayıtlarla uyumluluğu bozma; yeni alanlara varsayılan ver.
 - Post-process scriptleri jsdelivr `npm/three@0.128.0/examples/js/` altından lazy yüklenir.
-- Mevcut sürüm: v26.
+- Mevcut sürüm: v29 (artifact). Şehirler 6 (İstanbul→Dubai, sonra tur); yapay zekâ özellikleri p76'da (sohbet, yorum, olay, danışman, müfettiş raporu), yapay zekâ yoksa şablona düşer.

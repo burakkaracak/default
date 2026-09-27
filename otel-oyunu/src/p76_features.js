@@ -212,7 +212,7 @@ function guestSituation(g){
   if(g.state==='queue'||g.state==='arrive') where=`Resepsiyonda sırada bekliyorsun, sabrın %${Math.round(100*g.pat/g.patMax)} kaldı${g.coffee?' (elinde kahve var)':''}.`;
   else if(g.room!=null){ const s=state.rooms[g.room], R=RT(g.room); where=`${ROOM_T[s.type].name} odasında (Oda ${g.room}) kalıyorsun, ${g.nights} gece.`;
     if(s.broken) where+=' Odanda bir şey bozuk!'; if(R.req) where+=` ${ITEMS[R.req.item].name} istedin, hâlâ gelmedi.`;
-    if(g.state==='amen'&&g.seat) where+=` Şu an ${({rest:'restoranda yemek yiyorsun',pool:'havuzdasın',gym:'spor salonundasın',roof:'çatıdaki sky bar ve havuzdasın'})[g.seat.amen]}.`; }
+    if(g.state==='amen'&&g.seat) where+=` Şu an ${({rest:'restoranda yemek yiyorsun',pool:'havuzdasın',gym:'spor salonundasın',roof:'çatıdaki sky bar ve havuzdasın',spa:'spada masaj ve saunadasın'})[g.seat.amen]}.`; }
   else if(g.state==='leave') where='Otelden ayrılıyorsun.';
   if(state.crisis&&state.crisis.type==='power') where+=' Otelde elektrikler kesik.';
   if(state.mess) where+=' Lobide devrilmiş bir saksı var.';

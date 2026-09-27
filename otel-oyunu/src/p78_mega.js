@@ -182,7 +182,7 @@ function buildSeasonProps(){
     [[-10,10.3],[10,10.3],[-14,10.5],[14,10.4]].forEach(([x,z])=>{ const d=decal('stain',1.6,1.1,x,0.07,z); d.material=d.material.clone(); d.material.color.setHex(0xd2691e); G.add(d); }); }
   else { // winter: snowmen + festive lights on the hedges
     [[-11.8,10.15],[11.8,10.15]].forEach(([x,z])=>{ const w=mat(0xffffff,{roughness:.9}); G.add(mesh(sph(0.42,14,10),w,x,0.38,z,true)); G.add(mesh(sph(0.3,14,10),w,x,0.98,z,true)); G.add(mesh(sph(0.21,12,8),w,x,1.42,z,true));
-      G.add(mesh(cone(0.04,0.2,6),mat(0xe07a1f),x,1.43,z+0.24)).rotation.x=Math.PI/2; G.add(mesh(cyl(0.16,0.16,0.2,12),M.dark,x,1.7,z)); G.add(mesh(cyl(0.24,0.24,0.02,12),M.dark,x,1.6,z));
+      const nose=mesh(cone(0.04,0.2,6),mat(0xe07a1f),x,1.43,z+0.24); nose.rotation.x=Math.PI/2; G.add(nose); G.add(mesh(cyl(0.16,0.16,0.2,12),M.dark,x,1.7,z)); G.add(mesh(cyl(0.24,0.24,0.02,12),M.dark,x,1.6,z));
       G.add(mesh(box(0.5,0.08,0.08),mat(0xc0392b),x,1.25,z+0.1)); cols.push([0,x-0.45,x+0.45,z-0.45,z+0.45]); });
     const bc=[0xff4d4d,0x4dd2ff,0xffd24d,0x7dff7d];
     [[-17.2,-1.6],[1.6,17.2]].forEach(([a,b])=>{ for(let x=a;x<b;x+=0.55) G.add(mesh(sph(0.05,6,4),new THREE.MeshBasicMaterial({color:bc[Math.floor(x*3)&3]}),x,0.64,11.35)); }); }

@@ -351,6 +351,8 @@ function buildFeature(id,pop){
     case 'pool': g=buildPool(); break;
     case 'gym': g=buildGym(); break;
     case 'cafe': g=buildCafe(); break;
+    case 'spa': g=buildSpa(); break;
+    case 'laundry': g=buildLaundry(); break;
     case 'f2': buildUpperFloor(1); g=buildElevator(); break;
     case 'f3': buildUpperFloor(2); g=buildElevator(); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
@@ -634,7 +636,7 @@ function buildRoomVisual(id,pop){
   const S=new THREE.Group(), hd=RD/2;
   S.add(mesh(box(RW,0.04,RD),tmat(P.floor,2,2),0,0.02,0));
   S.add(mesh(box(0.72,0.05,0.93),tmat('tile',1,1),1.1,0.026,-0.93));
-  const wm=tmat(P.wall,2,1.2);
+  const wm=s.theme&&RTHEMES[s.theme]?themedWall(P.wall,s.theme):tmat(P.wall,2,1.2), duv=s.theme&&RTHEMES[s.theme]?RTHEMES[s.theme].duvet:P.duvet;
   S.add(mesh(box(RW,2.4,0.12),wm,0,1.2,-hd-0.06,true));
   S.add(mesh(box(RW,0.08,0.16),M.white,0,2.44,-hd-0.06));
   S.add(mesh(box(RW-0.1,0.12,0.03),mat(0xefe6d6),0,0.06,-hd+0.015));
@@ -692,16 +694,19 @@ function buildRoomVisual(id,pop){
   if(s.decor.art){ S.add(mesh(box(0.8,0.52,0.04),M.gold,b.bx,1.6,-1.38)); const a=mesh(plane(0.72,0.44),new THREE.MeshStandardMaterial({map:tex('art'+(id%4)),roughness:.6}),b.bx,1.6,-1.355); S.add(a); }
   if(s.decor.plant){ bigPlant(S,-1.25,1.05,0.66); cols.push([-1.44,-1.06,0.85,1.28]); }
   if(s.decor.bar){ S.add(mesh(rbox(0.3,0.46,0.32,.03),mat(0x2b2f36,{metalness:.3,roughness:.4}),-0.88,0.23,1.02,true)); S.add(mesh(box(0.02,0.2,0.02),M.gold,-0.75,0.3,1.19)); S.add(mesh(box(0.18,0.05,0.01),mat(0x7fffd4,{emissive:0x33ccaa,emissiveIntensity:.8}),-0.88,0.4,1.185)); cols.push([-1.04,-0.72,0.86,1.2]); }
+  if(s.decor.aroma) [0,1,2].forEach(k=>{ S.add(mesh(cyl(0.025,0.025,0.07+k*0.02,8),mat(0xfff3d0),nsx+0.08-k*0.06,0.46+k*0.01,-1.08)); S.add(mesh(sph(0.012,6,4),M.lampOn,nsx+0.08-k*0.06,0.51+k*0.02,-1.08)); });
+  if(s.decor.welcome){ S.add(mesh(cyl(0.035,0.04,0.26,8),mat(0x2e5e3e,{roughness:.2,metalness:.2}),b.bx+0.25,0.66,0.55)); S.add(mesh(rbox(0.3,0.05,0.22,.02),mat(0xe8c77a),b.bx-0.1,0.55,0.55)); }
+  if(s.theme&&RTHEMES[s.theme]){ const em=signPlane(RTHEMES[s.theme].e,0.34,0.34,{w:128,h:128,font:'90px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'}); em.position.set(1.15,1.95,-hd+0.03); S.add(em); }
   // number plate
   const pl=mesh(plane(0.36,0.18),new THREE.MeshBasicMaterial({map:textTex(String(id),{w:128,h:64,bg:'#e0a93a',fg:'#2a1c00',r:10,font:'800 44px "Baloo 2"'})}),-1.0,0.22,hd+0.005); S.add(pl);
   const G=new THREE.Group(); G.userData.roomId=id; G.add(bake(S)); const win=roomWindowMesh(G);
   // ---- dynamic parts ----
   const made=new THREE.Group(), messy=new THREE.Group(), flies=new THREE.Group(), broken=new THREE.Group(), tip=new THREE.Group();
-  made.add(mesh(rbox(b.bw+0.03,0.08,1.35,.05),mat(P.duvet,{roughness:.95}),b.bx,0.47,0.03,true));
+  made.add(mesh(rbox(b.bw+0.03,0.08,1.35,.05),mat(duv,{roughness:.95}),b.bx,0.47,0.03,true));
   made.add(mesh(rbox(b.bw+0.05,0.085,0.24,.04),mat(P.accent,{roughness:.9}),b.bx,0.48,0.42));
   (b.bw>1.05?[-0.27,0.27]:[0]).forEach(dx=>made.add(mesh(rbox(b.bw>1.05?0.44:0.62,0.12,0.3,.06),M.white,b.bx+dx,0.5,-1.07,true)));
   made.add(mesh(rbox(0.3,0.06,0.22,.03),M.white,b.bx+0.2,0.53,0.3)); made.add(mesh(rbox(0.28,0.05,0.2,.03),mat(0xf2b632),b.bx+0.2,0.58,0.3));
-  const md=mesh(rbox(b.bw+0.05,0.1,1.25,.05),mat(P.duvet,{roughness:.95}),b.bx+0.12,0.47,0.2,true); md.rotation.y=0.4; md.rotation.z=0.08; messy.add(md);
+  const md=mesh(rbox(b.bw+0.05,0.1,1.25,.05),mat(duv,{roughness:.95}),b.bx+0.12,0.47,0.2,true); md.rotation.y=0.4; md.rotation.z=0.08; messy.add(md);
   messy.add(mesh(rbox(0.5,0.12,0.3,.06),M.white,b.bx-0.1,0.5,-1.0,true));
   const pw=mesh(rbox(0.45,0.12,0.3,.06),M.white,0.3,0.12,0.2); pw.rotation.set(0.2,0.7,0.1); messy.add(pw);
   [[0.1,0.9,0xe0574f],[-0.3,1.0,0x2e86c1],[0.35,-0.2,0x27ae60]].forEach(([x,z,c])=>{ const cl=mesh(rbox(0.36,0.03,0.26,.02),mat(c,{roughness:1}),x,0.06,z); cl.rotation.y=rnd(0,3); messy.add(cl); });

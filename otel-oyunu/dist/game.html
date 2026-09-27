@@ -277,7 +277,9 @@ const FLOOR_MULT=[1,1.7,2.6];
 const DECOR={
   art:  {e:'🖼️',name:'Tablo',  cost:90, sat:6},
   plant:{e:'🪴',name:'Bitki',  cost:60, sat:4},
-  bar:  {e:'🧃',name:'Minibar',cost:150,sat:3,income:6}};
+  bar:  {e:'🧃',name:'Minibar',cost:150,sat:3,income:6},
+  aroma:{e:'🕯️',name:'Aroma mumları',cost:80,sat:3},
+  welcome:{e:'🍾',name:'Karşılama paketi',cost:140,sat:5,income:4}};
 const GTYPES={
   tourist: {name:'Turist',   e:'🎒',w:4,  stars:1,pat:55,pay:1,   want:0,nights:[1,2],tip:1,  req:1},
   business:{name:'İş insanı',e:'💼',w:2.2,stars:2,pat:30,pay:1.45,want:1,nights:[1,1],tip:1.4,req:.7},
@@ -296,7 +298,9 @@ const STAFF={
   rec:  {name:'Resepsiyonist',e:'🛎️',max:1,cost:[300],               wage:40,desc:'Sen yokken misafirleri karşılar'},
   clean:{name:'Temizlikçi',   e:'🧹',max:4,cost:[200,320,480,700],   wage:30,desc:'Kirli odaları kendiliğinden temizler'},
   bell: {name:'Kat görevlisi',e:'🧺',max:3,cost:[350,550,800],       wage:35,desc:'İstekleri depodan alıp odalara götürür',needs:'depo'},
-  tech: {name:'Teknisyen',    e:'🔧',max:2,cost:[400,750],           wage:45,desc:'Arızalı odaları onarır'}};
+  tech: {name:'Teknisyen',    e:'🔧',max:2,cost:[400,750],           wage:45,desc:'Arızalı odaları onarır'},
+  spaT: {name:'Spa terapisti',e:'💆',max:1,cost:[900],               wage:55,desc:'Spa gelirini %60 artırır',needs:'spa'},
+  laundry:{name:'Çamaşırcı',   e:'🧼',max:1,cost:[600],               wage:40,desc:'Personelin temizlediği odaların çarşaflarını yıkar (gelir) · senin getirdiklerine +%50',needs:'laundry'}};
 const STAFF_LVL_COST=[250,650,1500,3200];
 const STAFF_SPEED=[1,1.35,1.75,2.1,2.5];
 const UPG={
@@ -313,9 +317,9 @@ const UPG={
   calm:  {g:3,name:'Sakinlik',   e:'🧘',costs:[180,500,1200,2600],desc:'Sıradaki misafirler %12 daha sabırlı bekler'},
 };
 const UPG_GROUPS=['🏃 Hareket','🛠️ İş becerileri','💰 Kazanç','👥 Yönetim'];
-const ITEMS={paper:{e:'🧻',name:'Tuvalet kâğıdı'},towel:{e:'🧺',name:'Havlu'},food:{e:'🍽️',name:'Oda servisi'}};
+const ITEMS={paper:{e:'🧻',name:'Tuvalet kâğıdı'},towel:{e:'🧺',name:'Havlu'},food:{e:'🍽️',name:'Oda servisi'},linen:{e:'🧦',name:'Kirli çarşaf'}};
 const REQ_TIP={paper:8,towel:10,food:26};
-const AMEN_FEE={rest:14,pool:7,gym:9,roof:22};
+const AMEN_FEE={rest:14,pool:7,gym:9,roof:22,spa:20};
 const COFFEE_FEE=6;
 const STAR_MULT=[0.9,1,1.1,1.2,1.3];
 const CITIES=[
@@ -355,9 +359,9 @@ const L={
   pass:{x:-12.0,z:-1.15},
   staffIdle:[[5.3,6.15],[5.85,6.15],[4.75,6.15],[5.3,5.6],[5.85,5.6],[4.25,5.65],[5.3,6.6],[5.85,6.6],[4.7,6.6],[4.2,6.2]],
   elev:{x:5.6,z:3.5},
-  piles:{desk:{x:-5.75,z:3.7,f:0},rest:{x:-9.6,z:6.3,f:0},pool:{x:12.9,z:6.2,f:0},gym:{x:13.3,z:-4.4,f:0},cafe:{x:3.85,z:3.2,f:0},roof:{x:0.3,z:-3.0,f:3}},
+  piles:{desk:{x:-5.75,z:3.7,f:0},spa:{x:-12.6,z:-4.9,f:0},laundry:{x:-8.6,z:-6.2,f:0},rest:{x:-9.6,z:6.3,f:0},pool:{x:12.9,z:6.2,f:0},gym:{x:13.3,z:-4.4,f:0},cafe:{x:3.85,z:3.2,f:0},roof:{x:0.3,z:-3.0,f:3}},
   helipad:{x:3.9,z:-8.3},
-  cafe:{x:2.45,z:3.0}, gen:{x:7.6,z:7.85}, genSpot:{x:7.6,z:8.7}, busStop:{x:-1.2,z:13.55}, busDoor:{x:0.7,z:12.5},
+  cafe:{x:2.45,z:3.0}, laundryDrop:{x:-9.3,z:-5.2}, laundryW:{x:-9.3,z:-8.8}, spaT:{x:-14.4,z:-7.4}, gen:{x:7.6,z:7.85}, genSpot:{x:7.6,z:8.7}, busStop:{x:-1.2,z:13.55}, busDoor:{x:0.7,z:12.5},
 };
 const REST_TABLES=[[-14.3,1.0],[-12.0,1.0],[-9.7,1.0],[-14.3,3.9],[-12.0,3.9],[-9.7,3.9]];
 const POOL_LOUNGERS=[9.3,10.5,13.5,14.7];
@@ -384,7 +388,9 @@ function padDefs(){
   room(0,9,400,['r108']); room(0,10,450,['r110']);
   push({id:'pool',kind:'pool',f:0,x:12.0,z:8.9,size:1.9,cost:820,req:['r111'],icon:'🏊',label:'Havuz'});
   room(0,8,500,['pool']); room(0,11,560,['r109']);
+  push({id:'laundry',kind:'laundry',f:0,x:-9.3,z:-3.75,size:1.2,cost:450,req:['staff'],icon:'🧺',label:'Çamaşırhane'});
   push({id:'gym',kind:'gym',f:0,x:11.9,z:-2.3,size:1.7,cost:720,req:['r112'],icon:'🏋️',label:'Spor salonu'});
+  push({id:'spa',kind:'spa',f:0,x:-13.6,z:-3.75,size:1.2,cost:1600,req:['gym'],stars:3,icon:'💆',label:'Spa & sauna'});
   push({id:'f2',kind:'floor',floor:1,f:0,x:L.elev.x,z:L.elev.z,size:1.3,cost:3000,req:['gym'],stars:3,icon:'🛗',label:'2. kat + asansör'});
   let prev='f2';
   const c2=[900,980,1060,1150,1250,1350,1460,1580,1700,1840,1980,2150];
@@ -406,13 +412,13 @@ const CAT_NAMES=['Pamuk','Tarçın','Boncuk','Minnoş','Duman','Karamel','Fıst�
 function blankToday(){ return {rooms:0,tips:0,amen:0,req:0,wages:0,happy:0,unhappy:0,left:0,guests:0,rep0:null,cafe:0,quest:0}; }
 function freshState(cityIx,prestige){
   return {v:2, city:cityIx||0, prestige:prestige||0, money:Math.round(60*CITIES[(cityIx||0)%CITIES.length].mult), rep:30, day:1, t:0.02, weather:'sun',
-    built:{}, paid:{}, rooms:{}, piles:{desk:0,rest:0,pool:0,gym:0,cafe:0,roof:0},
-    staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1}},
+    built:{}, paid:{}, rooms:{}, piles:{desk:0,rest:0,pool:0,gym:0,cafe:0,roof:0,spa:0,laundry:0},
+    staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1},spaT:{n:0,lvl:1},laundry:{n:0,lvl:1}},
     up:{speed:0,cap:0,clean:0,magnet:0,fix:0,desk:0,charm:0,haggle:0,fame:0,lead:0,calm:0},
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -443,7 +449,7 @@ const STAR_REQ={
 function starCap(){ let c=2; for(let s=3;s<=5;s++){ if(STAR_REQ[s].every(r=>r[1]())) c=s; else break; } return c; }
 function stars(){ return Math.min(rawStars(),starCap()); }
 function starMissing(s){ return (STAR_REQ[s]||[]).filter(r=>!r[1]()).map(r=>r[0]); }
-function incomeMult(){ return city().mult*(1+0.15*state.prestige)*STAR_MULT[stars()-1]*(state.lux&&state.lux.statue?1.05:1)*(1+0.05*((state.legacy||{}).income||0)); }
+function incomeMult(){ return city().mult*(1+0.15*state.prestige)*STAR_MULT[stars()-1]*(state.lux&&state.lux.statue?1.05:1)*(1+0.05*((state.legacy||{}).income||0))*(festivalOn()?1.15:1); }
 function seasonIx(){ return Math.floor((state.day-1)/SEASON_DAYS)%4; }
 function season(){ return SEASONS[seasonIx()]; }
 function isWinter(){ return seasonIx()===3; }
@@ -819,7 +825,7 @@ function buildGrass(){
   const geo=mergeGeos(parts);
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true});
   grassMesh=new THREE.InstancedMesh(geo,m,n); grassMesh.receiveShadow=true;
-  const zones=[[-17.2,-6.9,9.6,11.1],[6.9,17.2,9.6,11.1],[-3.1,-1.6,9.6,11.1],[1.6,3.1,9.6,11.1],[-16.9,-7.4,BACK+0.2,-3.5],[-17.3,-16.35,-3.4,7.4],[16.35,17.3,-3.4,7.4],[-7.9,-7.25,-3.2,7.3],[7.25,7.9,-3.2,7.2]];
+  const zones=[[-17.2,-6.9,9.6,11.1],[6.9,17.2,9.6,11.1],[-3.1,-1.6,9.6,11.1],[1.6,3.1,9.6,11.1],[-16.9,-7.4,-4.05,-3.5],[-16.9,-16.5,BACK+0.2,-4.1],[-7.9,-7.4,BACK+0.2,-4.1],[-17.3,-16.35,-3.4,7.4],[16.35,17.3,-3.4,7.4],[-7.9,-7.25,-3.2,7.3],[7.25,7.9,-3.2,7.2]];
   const area=zones.map(z=>(z[1]-z[0])*(z[3]-z[2])), tot=area.reduce((a,b)=>a+b,0);
   const dm=new THREE.Object3D(), col=new THREE.Color(); let i=0, guard=0;
   while(i<n&&guard++<n*4){
@@ -1255,6 +1261,8 @@ function buildFeature(id,pop){
     case 'pool': g=buildPool(); break;
     case 'gym': g=buildGym(); break;
     case 'cafe': g=buildCafe(); break;
+    case 'spa': g=buildSpa(); break;
+    case 'laundry': g=buildLaundry(); break;
     case 'f2': buildUpperFloor(1); g=buildElevator(); break;
     case 'f3': buildUpperFloor(2); g=buildElevator(); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
@@ -1538,7 +1546,7 @@ function buildRoomVisual(id,pop){
   const S=new THREE.Group(), hd=RD/2;
   S.add(mesh(box(RW,0.04,RD),tmat(P.floor,2,2),0,0.02,0));
   S.add(mesh(box(0.72,0.05,0.93),tmat('tile',1,1),1.1,0.026,-0.93));
-  const wm=tmat(P.wall,2,1.2);
+  const wm=s.theme&&RTHEMES[s.theme]?themedWall(P.wall,s.theme):tmat(P.wall,2,1.2), duv=s.theme&&RTHEMES[s.theme]?RTHEMES[s.theme].duvet:P.duvet;
   S.add(mesh(box(RW,2.4,0.12),wm,0,1.2,-hd-0.06,true));
   S.add(mesh(box(RW,0.08,0.16),M.white,0,2.44,-hd-0.06));
   S.add(mesh(box(RW-0.1,0.12,0.03),mat(0xefe6d6),0,0.06,-hd+0.015));
@@ -1596,16 +1604,19 @@ function buildRoomVisual(id,pop){
   if(s.decor.art){ S.add(mesh(box(0.8,0.52,0.04),M.gold,b.bx,1.6,-1.38)); const a=mesh(plane(0.72,0.44),new THREE.MeshStandardMaterial({map:tex('art'+(id%4)),roughness:.6}),b.bx,1.6,-1.355); S.add(a); }
   if(s.decor.plant){ bigPlant(S,-1.25,1.05,0.66); cols.push([-1.44,-1.06,0.85,1.28]); }
   if(s.decor.bar){ S.add(mesh(rbox(0.3,0.46,0.32,.03),mat(0x2b2f36,{metalness:.3,roughness:.4}),-0.88,0.23,1.02,true)); S.add(mesh(box(0.02,0.2,0.02),M.gold,-0.75,0.3,1.19)); S.add(mesh(box(0.18,0.05,0.01),mat(0x7fffd4,{emissive:0x33ccaa,emissiveIntensity:.8}),-0.88,0.4,1.185)); cols.push([-1.04,-0.72,0.86,1.2]); }
+  if(s.decor.aroma) [0,1,2].forEach(k=>{ S.add(mesh(cyl(0.025,0.025,0.07+k*0.02,8),mat(0xfff3d0),nsx+0.08-k*0.06,0.46+k*0.01,-1.08)); S.add(mesh(sph(0.012,6,4),M.lampOn,nsx+0.08-k*0.06,0.51+k*0.02,-1.08)); });
+  if(s.decor.welcome){ S.add(mesh(cyl(0.035,0.04,0.26,8),mat(0x2e5e3e,{roughness:.2,metalness:.2}),b.bx+0.25,0.66,0.55)); S.add(mesh(rbox(0.3,0.05,0.22,.02),mat(0xe8c77a),b.bx-0.1,0.55,0.55)); }
+  if(s.theme&&RTHEMES[s.theme]){ const em=signPlane(RTHEMES[s.theme].e,0.34,0.34,{w:128,h:128,font:'90px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'}); em.position.set(1.15,1.95,-hd+0.03); S.add(em); }
   // number plate
   const pl=mesh(plane(0.36,0.18),new THREE.MeshBasicMaterial({map:textTex(String(id),{w:128,h:64,bg:'#e0a93a',fg:'#2a1c00',r:10,font:'800 44px "Baloo 2"'})}),-1.0,0.22,hd+0.005); S.add(pl);
   const G=new THREE.Group(); G.userData.roomId=id; G.add(bake(S)); const win=roomWindowMesh(G);
   // ---- dynamic parts ----
   const made=new THREE.Group(), messy=new THREE.Group(), flies=new THREE.Group(), broken=new THREE.Group(), tip=new THREE.Group();
-  made.add(mesh(rbox(b.bw+0.03,0.08,1.35,.05),mat(P.duvet,{roughness:.95}),b.bx,0.47,0.03,true));
+  made.add(mesh(rbox(b.bw+0.03,0.08,1.35,.05),mat(duv,{roughness:.95}),b.bx,0.47,0.03,true));
   made.add(mesh(rbox(b.bw+0.05,0.085,0.24,.04),mat(P.accent,{roughness:.9}),b.bx,0.48,0.42));
   (b.bw>1.05?[-0.27,0.27]:[0]).forEach(dx=>made.add(mesh(rbox(b.bw>1.05?0.44:0.62,0.12,0.3,.06),M.white,b.bx+dx,0.5,-1.07,true)));
   made.add(mesh(rbox(0.3,0.06,0.22,.03),M.white,b.bx+0.2,0.53,0.3)); made.add(mesh(rbox(0.28,0.05,0.2,.03),mat(0xf2b632),b.bx+0.2,0.58,0.3));
-  const md=mesh(rbox(b.bw+0.05,0.1,1.25,.05),mat(P.duvet,{roughness:.95}),b.bx+0.12,0.47,0.2,true); md.rotation.y=0.4; md.rotation.z=0.08; messy.add(md);
+  const md=mesh(rbox(b.bw+0.05,0.1,1.25,.05),mat(duv,{roughness:.95}),b.bx+0.12,0.47,0.2,true); md.rotation.y=0.4; md.rotation.z=0.08; messy.add(md);
   messy.add(mesh(rbox(0.5,0.12,0.3,.06),M.white,b.bx-0.1,0.5,-1.0,true));
   const pw=mesh(rbox(0.45,0.12,0.3,.06),M.white,0.3,0.12,0.2); pw.rotation.set(0.2,0.7,0.1); messy.add(pw);
   [[0.1,0.9,0xe0574f],[-0.3,1.0,0x2e86c1],[0.35,-0.2,0x27ae60]].forEach(([x,z,c])=>{ const cl=mesh(rbox(0.36,0.03,0.26,.02),mat(c,{roughness:1}),x,0.06,z); cl.rotation.y=rnd(0,3); messy.add(cl); });
@@ -1780,6 +1791,8 @@ const LOOKS={
   bell:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xc0392b,bottom:0x1c1d22,hat:'pillbox',hatC:0xc0392b,trim:true}),
   tech:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xe67e22,bottom:0x34495e,hat:'hard',hatC:0xf2c14e}),
   barista:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','short']),top:0x2b2b2b,bottom:0x3b2a1e,apron:true,hat:'cap',hatC:0x6b4226}),
+  spaT:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','pony']),top:0xf4efe6,bottom:0x6f8f7a,apron:true}),
+  laundry:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['short','bun']),top:0x7fb3d5,bottom:0x2d5d8a,apron:true,hat:'cap',hatC:0x2d5d8a}),
   chef:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xffffff,bottom:0x333333,hat:'chef'}),
 };
 const hairCap=new THREE.SphereGeometry(0.285,18,10,0,Math.PI*2,0,Math.PI*0.52);
@@ -1846,6 +1859,7 @@ function setHold(c,items){
   items.forEach((it,k)=>{ const y=k*0.13;
     if(it==='paper'){ const r=mesh(cyl(0.09,0.09,0.16,12),M.white,0,y,0); r.rotation.z=Math.PI/2; c.hold.add(r); }
     else if(it==='towel'){ c.hold.add(mesh(rbox(0.3,0.1,0.22,.04),mat(k%2?0xffffff:0x5d9fd6),0,y,0)); }
+    else if(it==='linen'){ c.hold.add(mesh(rbox(0.32,0.12,0.24,.05),mat(0xcfc6b8,{roughness:1}),0,y,0)); }
     else if(it==='coffee'){ c.hold.add(mesh(cyl(0.07,0.055,0.14,12),M.white,0,y+0.02,0)); c.hold.add(mesh(cyl(0.072,0.072,0.03,12),mat(0x6b4226),0,y+0.08,0)); }
     else { c.hold.add(mesh(cyl(0.2,0.2,0.03,16),mat(0xc9d1d8,{metalness:.7,roughness:.3}),0,y,0)); c.hold.add(mesh(new THREE.SphereGeometry(0.14,12,8,0,Math.PI*2,0,Math.PI/2),mat(0xdfe6ec,{metalness:.8,roughness:.25}),0,y+0.015,0)); }
   });
@@ -1979,6 +1993,7 @@ function spawnGuest(type,from,tour,fl){
   g.place(side.x,side.z+rnd(-0.2,0.2),fl||0); queue.push(g); g.qk=queue.length-1;
   const p=qPos(g.qk); if(!g.goTo(0,p.x,p.z,()=>{ g.tRot=Math.PI; })) g.place(p.x,p.z,0);
   g.tag=tagAdd({kind:'patience',ent:g,y:1.95});
+  if(!type&&g.type!=='insp'&&anyThemed()&&Math.random()<0.3) g.pref=rand(Object.keys(RTHEMES));
   if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
   return g;
@@ -1987,7 +2002,7 @@ function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ 
 function pickRoom(g){
   const rs=readyRooms(); if(!rs.length) return null;
   let best=null, bs=1e9;
-  rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2; if(sc<bs){ bs=sc; best=id; } });
+  rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2-(g.pref&&state.rooms[id].theme===g.pref?2.5:0); if(sc<bs){ bs=sc; best=id; } });
   return best;
 }
 function decorSat(s){ let v=0; for(const k in s.decor) if(s.decor[k]) v+=DECOR[k].sat; return v; }
@@ -1997,11 +2012,12 @@ function checkIn(g,id){
   R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
   const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
   g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)+(stars()-3)*3-Math.min(14,Math.max(0,waited-10)*0.35)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
-  const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
+  const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
+  if(g.pref){ if(s.theme===g.pref){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.6,g.z,0,RTHEMES[g.pref].e); } else g.sat=clamp(g.sat-3,5,100); }
   if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
@@ -2051,10 +2067,10 @@ REST_TABLES.forEach(([tx,tz])=>[-1,1].forEach(sd=>SEATS.push({amen:'rest',x:tx+s
 POOL_LOUNGERS.forEach(lx=>SEATS.push({amen:'pool',x:lx,z:6.25,px:lx,pz:5.72,py:0.43,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 POOL_SWIM.forEach(([sx,sz])=>SEATS.push({amen:'pool',x:sx,z:4.05,px:sx,pz:sz,py:-0.42,rot:rnd(0,6),pose:'swim',busy:null}));
 GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,rot:Math.PI,pose:'run',busy:null}));
-function amenOpen(a){ return a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
+function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
-  const opts=['rest','pool','gym','roof'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes;
+  const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
+  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -2062,7 +2078,7 @@ function tryAmenity(g){
 }
 function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
-  const fee=Math.round(AMEN_FEE[a]*incomeMult()); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
+  const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
   g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); qEv('amen');
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
@@ -2118,7 +2134,7 @@ function updateGuests(dt){
 const staffEnts=[];
 function staffIdleSpot(k){ const s=L.staffIdle[k%L.staffIdle.length]; return {x:s[0],z:s[1],f:0}; }
 function spawnStaff(kind,fromDoor){
-  const e=new Ent(LOOKS[kind]()); e.kind=kind; e.job=null; e.wait=0; e.idx=staffEnts.length; e.slot=staffEnts.filter(x=>x.kind!=='rec').length; e.idleDone=false;
+  const e=new Ent(LOOKS[kind]()); e.kind=kind; e.job=null; e.wait=0; e.idx=staffEnts.length; e.name=rand(STAFF_NAMES); e.energy=100; e.slot=staffEnts.filter(x=>x.kind!=='rec').length; e.idleDone=false;
   const sp=fromDoor?{x:rnd(-0.5,0.5),z:8.5,f:0}:staffIdleSpot(e.slot); e.place(sp.x,sp.z,sp.f); staffEnts.push(e);
   e.speed=2.3*staffSpeedMul(kind); return e;
 }
@@ -2134,11 +2150,12 @@ function staffGoIdle(e){
 }
 function updateStaff(dt){
   for(const e of staffEnts){
-    e.speed=2.3*staffSpeedMul(e.kind);
+    e.speed=2.3*staffSpeedMul(e.kind)*staffEnergyMul(e);
     if(e.sick) continue;
-    if(e.path){ if(e.job||e.riding||e.kind==='rec') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
+    if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
     if(e.wait>0){ e.wait-=dt; if(e.job&&e.job.working){} else continue; }
     const j=e.job;
+    if(e.kind==='spaT'||e.kind==='laundry'){ staffPost(e); continue; }
     if(e.kind==='rec'){ if(d2(e.x,e.z,L.recSpot.x,L.recSpot.z)>0.05||e.f!==0) e.goTo(0,L.recSpot.x,L.recSpot.z,()=>{ e.tRot=0; }); continue; }
     if(!j){
       if(e.kind==='clean'){ const id=nearestRoom(e,roomsWhere(id=>state.rooms[id].dirty&&!RT(id).task)); if(id){ RT(id).task=e; e.job={type:'clean',id}; goRoom(e,id); } else if(!staffSpotJob(e,'mess')) staffGoIdle(e); }
@@ -2151,12 +2168,12 @@ function updateStaff(dt){
       }
       continue;
     }
-    if(j.working&&(j.type==='mess'||j.type==='crisis')){ j.t-=dt*staffSpeedMul(e.kind); e.anim='work'; const tgt=j.type==='mess'?state.mess:state.crisis; if(!tgt){ finishJob(e); continue; } if(j.t<=0){ if(j.type==='mess') cleanMess(true); else resolveCrisis(true); finishJob(e); } continue; }
+    if(j.working&&(j.type==='mess'||j.type==='crisis')){ j.t-=dt*staffSpeedMul(e.kind); e.anim='work'; const tgt=j.type==='mess'?state.mess:state.crisis; if(!tgt){ finishJob(e); continue; } if(j.t<=0){ if(j.type==='mess') cleanMess(true); else resolveCrisis(true); staffWorked(e); finishJob(e); } continue; }
     if(j.working){
       j.t-=dt*staffSpeedMul(e.kind); e.anim='work';
       const s=state.rooms[j.id];
       if(j.type==='clean'&&!s.dirty||j.type==='fix'&&!s.broken){ finishJob(e); continue; }
-      if(j.t<=0){ if(j.type==='clean') cleanRoom(j.id,true); else fixRoom(j.id,true); finishJob(e); }
+      if(j.t<=0){ if(j.type==='clean') cleanRoom(j.id,true); else fixRoom(j.id,true); staffWorked(e); finishJob(e); }
     }
   }
 }
@@ -2169,7 +2186,7 @@ function arriveRoom(e,id){
   const j=e.job; if(!j) return; const s=state.rooms[id], R=RT(id);
   if(j.type==='clean'){ if(!s.dirty){ finishJob(e); return; } j.working=true; j.t=4.2; e.tRot=-Math.PI*0.6; }
   else if(j.type==='fix'){ if(!s.broken){ finishJob(e); return; } j.working=true; j.t=4.5; e.tRot=Math.PI; }
-  else if(j.type==='carry'){ if(R.req&&R.req.item===j.item){ fulfillReq(id); } setHold(e.c,[]); finishJob(e); }
+  else if(j.type==='carry'){ if(R.req&&R.req.item===j.item){ fulfillReq(id); staffWorked(e); } setHold(e.c,[]); finishJob(e); }
 }
 function finishJob(e){
   const j=e.job; if(j&&(j.type==='mess'||j.type==='crisis')){ const tgt=j.type==='mess'?state.mess:state.crisis; if(tgt&&tgt.by===e.idx) tgt.by=null; } else if(j){ const R=RT(j.id); if(R.task===e) R.task=null; if(R.ftask===e) R.ftask=null; if(R.req&&R.req.by===e) R.req.by=null; }
@@ -2285,7 +2302,7 @@ function completePad(d){
   refreshPads(); tutEvent('built:'+d.id); save();
   if(PADS.every(x=>built(x.id))&&!state.done){ state.done=true; setTimeout(()=>{ banner('🏆 Otel tamamlandı!','Yönetim › Otel bölümünden yeni şehre taşınabilirsin'); sfx('star'); },1600); }
 }
-function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',staff:'Artık personel işe alabilirsin',rest:'Misafirler yemeğe gelecek',pool:'Havuz açıldı, misafirler bayılacak',gym:'Spor salonu açıldı',cafe:'Bekleyen misafirler artık kahve içecek',f2:'Asansörle yukarı çık',f3:'Otelin büyüyor!'}[id]||''; }
+function featureMsg(id){ return {depo:'Misafir isteklerini buradan karşıla',staff:'Artık personel işe alabilirsin',rest:'Misafirler yemeğe gelecek',pool:'Havuz açıldı, misafirler bayılacak',gym:'Spor salonu açıldı',cafe:'Bekleyen misafirler artık kahve içecek',f2:'Asansörle yukarı çık',spa:'Misafirler masaj ve saunaya gelecek · Spa terapisti işe alabilirsin',laundry:'Kendin temizlediğin odaların kirli çarşaflarını buraya getir',f3:'Otelin büyüyor!'}[id]||''; }
 
 // =====================================================================
 // PLAYER INTERACTION ZONES
@@ -2316,7 +2333,7 @@ function updatePlayerZones(dt){
     else if(s.broken){ R.fixP+=dt/playerFixTime(); workRing={p:R.fixP,icon:'🔧'}; if(!p.moving&&!p.path) p.anim='work'; if(R.fixP>=1) fixRoom(rid,false); }
   }
   if(p.f===0&&p.x>L.serve.x0&&p.x<L.serve.x1&&p.z>L.serve.z0&&p.z<L.serve.z1) atDesk=true;
-  extraPlayerZones(p,dt);
+  extraPlayerZones(p,dt); megaZones(p,dt);
   pickT-=dt;
   for(const it in pickArmed){ const s=it==='food'?L.pass:L.shelf[it]; if(s&&(p.f!==0||d2(p.x,p.z,s.x,s.z)>0.64)) pickArmed[it]=true; }
   if(p.f===0&&pickT<=0&&p.c.items.length<capacity()){
@@ -2328,7 +2345,7 @@ function updatePlayerZones(dt){
 function cleanRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.dirty) return;
   s.dirty=false; R.cleanP=0; const sp=roomSpots(id); sparkleAt(sp.stand.x,sp.stand.f*FH+0.8,sp.stand.z); sfx('sparkle'); applyRoomState(id);
-  if(!byStaff){ tutEvent('clean'); qEv('clean'); } markSave();
+  if(!byStaff){ tutEvent('clean'); qEv('clean'); } afterRoomCleaned(byStaff); markSave();
 }
 function fixRoom(id,byStaff){
   const s=state.rooms[id], R=RT(id); if(!s.broken) return;
@@ -2475,7 +2492,7 @@ function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
-  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0);
+  let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6;
   if(isNight()) f*=0.3;
   spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
   if(queue.length>=Math.min(6,nRooms+1)) return;
@@ -2604,6 +2621,7 @@ function goal(){
   if(s===3) return {icon:'💰',text:TUT[3].text,target:{x:L.piles.desk.x,y:0,z:L.piles.desk.z,f:0}};
   if(s===4){ const d=roomsWhere(id=>state.rooms[id].dirty)[0]; if(d){ const sp=roomSpots(d); return {icon:'🧹',text:TUT[4].text,target:{x:sp.stand.x,y:sp.stand.f*FH,z:sp.stand.z,f:sp.stand.f}}; }
     return {icon:'⏳',text:'Misafir odasında… bu arada parayı topla',target:null}; }
+  const evg=eventGoal(); if(evg) return evg;
   const chg=chainGoal(); if(chg) return chg;
   const av=PADS.filter(d=>padVis[d.id]);
   if(!av.length) return state.done?{icon:'🏆',text:'Otel tamamlandı! Yeni şehir seni bekliyor',target:null,done:true}:null;
@@ -2863,7 +2881,7 @@ function updateExtraSpawns(dt,h){
   if(state.messDue&&cat&&!state.mess&&h>=9&&h<20&&Math.random()<dt*0.015){ state.messDue=false; catKnock(); }
   if(state.crisisDue&&!state.crisis&&h>=10&&h<17&&Math.random()<dt*0.03){ const k=state.crisisDue; state.crisisDue=null; startCrisis(k); }
 }
-function endDayExtras(){ if(state.crisis&&state.crisis.type!=='flu'){ state.crisis=null; removeCrisisVis(); for(const k in state.rooms) applyRoomState(+k); changeRep(-3); setTimeout(()=>toast('🚨 Kriz gece boyunca ekipçe giderildi · −3 ün','bad'),1200); } const n=healAll(); if(n) setTimeout(()=>toast(`💪 ${n} personel iyileşip işe döndü`),1500); }
+function endDayExtras(){ eventsDayEnd(); if(state.crisis&&state.crisis.type!=='flu'){ state.crisis=null; removeCrisisVis(); for(const k in state.rooms) applyRoomState(+k); changeRep(-3); setTimeout(()=>toast('🚨 Kriz gece boyunca ekipçe giderildi · −3 ün','bad'),1200); } const n=healAll(); if(n) setTimeout(()=>toast(`💪 ${n} personel iyileşip işe döndü`),1500); }
 function extraPlayerZones(p,dt){
   if(p.riding) return;
   const c=state.crisis;
@@ -3153,7 +3171,7 @@ function guestSituation(g){
   if(g.state==='queue'||g.state==='arrive') where=`Resepsiyonda sırada bekliyorsun, sabrın %${Math.round(100*g.pat/g.patMax)} kaldı${g.coffee?' (elinde kahve var)':''}.`;
   else if(g.room!=null){ const s=state.rooms[g.room], R=RT(g.room); where=`${ROOM_T[s.type].name} odasında (Oda ${g.room}) kalıyorsun, ${g.nights} gece.`;
     if(s.broken) where+=' Odanda bir şey bozuk!'; if(R.req) where+=` ${ITEMS[R.req.item].name} istedin, hâlâ gelmedi.`;
-    if(g.state==='amen'&&g.seat) where+=` Şu an ${({rest:'restoranda yemek yiyorsun',pool:'havuzdasın',gym:'spor salonundasın',roof:'çatıdaki sky bar ve havuzdasın'})[g.seat.amen]}.`; }
+    if(g.state==='amen'&&g.seat) where+=` Şu an ${({rest:'restoranda yemek yiyorsun',pool:'havuzdasın',gym:'spor salonundasın',roof:'çatıdaki sky bar ve havuzdasın',spa:'spada masaj ve saunadasın'})[g.seat.amen]}.`; }
   else if(g.state==='leave') where='Otelden ayrılıyorsun.';
   if(state.crisis&&state.crisis.type==='power') where+=' Otelde elektrikler kesik.';
   if(state.mess) where+=' Lobide devrilmiş bir saksı var.';
@@ -3536,6 +3554,7 @@ function openHelp(){
     ${sec('⭐ Yıldızlar',['Mutlu misafirler ün kazandırır. Her yıldız geliri artırır.','Yıldız atlamak için ün yetmez: oda sayısı, Deluxe/Suit oda ve tesis şartları da var (Yönetim › Otel).'])}
     ${sec('👥 Personel ve yetenekler',['Personel odasını açınca Yönetim menüsünden işe alırsın. Maaşlar her sabah ödenir ve otel büyüdükçe artar.','Yönetim › Sen bölümünde 11 farklı yetenek var.'])}
     ${sec('🎲 Olaylar',['🕵️ Müfettiş: memnun kalırsa büyük ün verir.','🚌 Tur otobüsü ve 🚁 helikopter kalabalık ve zengin misafir getirir.','🚨 Krizler: elektrik kesintisi (jeneratör), boru patlaması, grip. Üstteki hedef seni sorunun yerine götürür.','🐱 Kedi: sevince ün verir, bazen saksı devirir.'])}
+    ${sec('🆕 Tesisler, etkinlikler, personel',['💆 Spa: misafirler masaja gelir; Spa terapisti geliri %60 artırır.','🧺 Çamaşırhane: kendin temizlediğin odadan çıkan 🧦 kirli çarşafı çamaşırhaneye götür. Çamaşırcı, personelin temizlediklerini de yıkar.','📅 Düğün, konferans, konser teklifleri Yönetim › Otel\'de: kabul et, o gün 12:00\'ye kadar yeterli hazır oda bulundur.','🎉 Her 8 günde bir festival: misafir akını ve +%15 gelir.','😓 Personel çalıştıkça yorulur; ☕ mola odası dinlenmelerini sağlar. 🏅 Günün çalışanı ertesi gün daha hızlıdır.','🎨 Oda teması seç: temayı isteyen misafir (baloncuğunda 🌊🌲🕺👑) eşleşirse çok mutlu olur.'])}
     ${sec('🎮 Kontroller',[IS_TOUCH?'Sürükle: yürü · dokun: oraya git · iki parmak: yakınlaştır ve çevir':'WASD: yürü · tıkla: git · tekerlek: yakınlaş · Q/E: çevir · V: göz kamerası · P: admin paneli','Misafire dokun: sohbet et · 🎯 Görevler: günlük ödüller · 🔔 Olay geçmişi'])}`,m=>{ m.querySelector('#hClose').onclick=closeModal; });
 }
 
@@ -3770,7 +3789,7 @@ function buildSeasonProps(){
     [[-10,10.3],[10,10.3],[-14,10.5],[14,10.4]].forEach(([x,z])=>{ const d=decal('stain',1.6,1.1,x,0.07,z); d.material=d.material.clone(); d.material.color.setHex(0xd2691e); G.add(d); }); }
   else { // winter: snowmen + festive lights on the hedges
     [[-11.8,10.15],[11.8,10.15]].forEach(([x,z])=>{ const w=mat(0xffffff,{roughness:.9}); G.add(mesh(sph(0.42,14,10),w,x,0.38,z,true)); G.add(mesh(sph(0.3,14,10),w,x,0.98,z,true)); G.add(mesh(sph(0.21,12,8),w,x,1.42,z,true));
-      G.add(mesh(cone(0.04,0.2,6),mat(0xe07a1f),x,1.43,z+0.24)).rotation.x=Math.PI/2; G.add(mesh(cyl(0.16,0.16,0.2,12),M.dark,x,1.7,z)); G.add(mesh(cyl(0.24,0.24,0.02,12),M.dark,x,1.6,z));
+      const nose=mesh(cone(0.04,0.2,6),mat(0xe07a1f),x,1.43,z+0.24); nose.rotation.x=Math.PI/2; G.add(nose); G.add(mesh(cyl(0.16,0.16,0.2,12),M.dark,x,1.7,z)); G.add(mesh(cyl(0.24,0.24,0.02,12),M.dark,x,1.6,z));
       G.add(mesh(box(0.5,0.08,0.08),mat(0xc0392b),x,1.25,z+0.1)); cols.push([0,x-0.45,x+0.45,z-0.45,z+0.45]); });
     const bc=[0xff4d4d,0x4dd2ff,0xffd24d,0x7dff7d];
     [[-17.2,-1.6],[1.6,17.2]].forEach(([a,b])=>{ for(let x=a;x<b;x+=0.55) G.add(mesh(sph(0.05,6,4),new THREE.MeshBasicMaterial({color:bc[Math.floor(x*3)&3]}),x,0.64,11.35)); }); }
@@ -3853,6 +3872,173 @@ function bootMega(){
 }
 
 // =====================================================================
+// MEGA UPDATE 2: spa & laundry, event bookings + festivals, staff energy
+// & employee of the day, room themes + guest theme wishes
+// =====================================================================
+
+// ---------- spa & laundry buildings (left back lawn, reached via the side lanes) ----------
+const SPA={x0:-16.3,x1:-11.0,z0:-11.2,z1:-4.3,door:[-14.2,-13.0]}, LAUN={x0:-10.6,x1:-8.0,z0:-11.2,z1:-4.3,door:[-9.9,-8.8]};
+const SPA_TABLES=[-15.3,-13.65,-12.0];
+SPA_TABLES.forEach(tx=>SEATS.push({amen:'spa',x:tx,z:-7.75,px:tx,pz:-9.2,py:0.62,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
+[-7.1,-6.1].forEach(z=>SEATS.push({amen:'spa',x:-12.25,z,px:-11.52,pz:z,py:0.12,rot:-Math.PI/2,pose:'sit',busy:null}));
+function spaOpen(){ const h=hourNow(); return built('spa')&&h>=8&&h<22; }
+function amenBonus(a){ return a==='spa'&&state.staff.spaT&&state.staff.spaT.n>0?1.6:1; }
+function shellWalls(S,B,wallM,trimM){
+  const cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2, w=B.x1-B.x0, d=B.z1-B.z0;
+  S.add(mesh(box(w,2.4,0.16),wallM,cx,1.2,B.z0-0.08,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x0-0.08,1.2,cz,true)); S.add(mesh(box(0.16,2.4,d),wallM,B.x1+0.08,1.2,cz,true));
+  S.add(mesh(box(w+0.3,0.16,0.24),trimM,cx,2.48,B.z0-0.08,true));
+  [[B.x0,B.door[0]],[B.door[1],B.x1]].forEach(([a,b])=>{ S.add(mesh(box(b-a,0.9,0.16),wallM,(a+b)/2,0.45,B.z1+0.08,true)); S.add(mesh(box(b-a,0.07,0.22),M.gold,(a+b)/2,0.93,B.z1+0.08)); });
+  return [[0,B.x0-0.16,B.x1+0.16,B.z0-0.16,B.z0],[0,B.x0-0.16,B.x0,B.z0,B.z1+0.16],[0,B.x1,B.x1+0.16,B.z0,B.z1+0.16],[0,B.x0,B.door[0],B.z1,B.z1+0.16],[0,B.door[1],B.x1,B.z1,B.z1+0.16]];
+}
+let spaTherapist=null;
+function buildSpa(){
+  const G=new THREE.Group(); outdoor.add(G); const S=new THREE.Group(), B=SPA, cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2;
+  S.add(mesh(box(B.x1-B.x0,0.2,B.z1-B.z0),tmat('sandTile',4,5),cx,-0.1,cz));
+  const cols=shellWalls(S,B,mat(0xe6efe6),mat(0x6f8f7a));
+  const towelM=mat(0xf4efe6), wood=tmat('woodLight',1,1);
+  SPA_TABLES.forEach(tx=>{ S.add(mesh(rbox(0.72,0.5,1.9,.06),wood,tx,0.25,-9.2,true)); S.add(mesh(rbox(0.7,0.08,1.85,.04),towelM,tx,0.54,-9.2));
+    S.add(mesh(rbox(0.3,0.06,0.2,.03),M.white,tx,0.6,-10.0)); cols.push([0,tx-0.38,tx+0.38,-10.18,-8.22]); });
+  // sauna bench + hot stones
+  S.add(mesh(rbox(0.6,0.42,2.4,.04),tmat('wood',1,2),-11.5,0.21,-6.6,true)); S.add(mesh(rbox(0.16,0.9,2.4,.03),tmat('wood',1,2),-11.2,0.7,-6.6,true)); cols.push([0,-11.82,-11.0,-7.85,-5.35]);
+  S.add(mesh(cyl(0.3,0.34,0.35,10),mat(0x4a4f57),-11.6,0.18,-5.0,true)); for(let k=0;k<6;k++) S.add(mesh(new THREE.IcosahedronGeometry(0.08,0),mat(0x6d6f73,{flatShading:true}),-11.6+rnd(-0.15,0.15),0.4,-5.0+rnd(-0.15,0.15))); cols.push([0,-11.95,-11.25,-5.35,-4.65]);
+  [[-16.0,-10.8],[-11.3,-10.8],[-16.0,-4.7]].forEach(([x,z])=>bigPlant(S,x,z,0.8));
+  for(let k=0;k<5;k++) S.add(mesh(cyl(0.035,0.035,0.08,8),mat(0xfff3d0),-15.9,0.95+0.001*k,-7.4+k*0.25));
+  S.add(mesh(box(0.1,0.9,1.6),wood,-16.2,0.45,-6.9,true));
+  const sg=signPlane('SPA & SAUNA',2.2,0.42,{bg:'#6f8f7a',fg:'#fff',font:'800 64px "Baloo 2"'}); sg.position.set(cx,1.35,B.z1+0.18); S.add(sg);
+  G.add(bake(S));
+  const water=mesh(cyl(0.45,0.45,0.02,20),new THREE.MeshStandardMaterial({map:tex('water',1,1),roughness:.05,emissive:0x0b5a8a,emissiveIntensity:.3}),-14.1,0.06,-5.6); G.add(water);
+  const rim=mesh(new THREE.TorusGeometry(0.47,0.06,6,20),mat(0xf1ece2),-14.1,0.07,-5.6); rim.rotation.x=Math.PI/2; G.add(rim); cols.push([0,-14.6,-13.6,-6.1,-5.1]);
+  addCols('spa',cols); return G;
+}
+function buildLaundry(){
+  const G=new THREE.Group(); outdoor.add(G); const S=new THREE.Group(), B=LAUN, cx=(B.x0+B.x1)/2, cz=(B.z0+B.z1)/2;
+  S.add(mesh(box(B.x1-B.x0,0.2,B.z1-B.z0),tmat('tile',3,5),cx,-0.1,cz));
+  const cols=shellWalls(S,B,mat(0xdfe8f0),mat(0x2d5d8a));
+  for(let k=0;k<3;k++){ const x=B.x0+0.5+k*0.8;
+    S.add(mesh(rbox(0.72,0.85,0.7,.05),M.white,x,0.43,-10.7,true)); const dr=mesh(cyl(0.22,0.22,0.03,20),mat(0x9fc8e8,{metalness:.3,roughness:.1}),x,0.45,-10.34); dr.rotation.x=Math.PI/2; S.add(dr);
+    S.add(mesh(new THREE.TorusGeometry(0.23,0.03,6,20),mat(0xb8c0c8,{metalness:.7}),x,0.45,-10.33)); S.add(mesh(box(0.5,0.06,0.02),M.dark,x,0.8,-10.34)); }
+  cols.push([0,B.x0,B.x1,-11.2,-10.3]);
+  S.add(mesh(rbox(1.2,0.8,0.6,.04),tmat('woodLight',2,1),-9.3,0.4,-7.8,true)); cols.push([0,-9.9,-8.7,-8.1,-7.5]);
+  [[-9.68,0x5d9fd6],[-9.3,0xffffff],[-8.92,0xf2b632]].forEach(([x,c],k)=>{ for(let i=0;i<3;i++) S.add(mesh(rbox(0.32,0.08,0.3,.03),mat(c),x,0.84+i*0.085,-7.8)); });
+  S.add(mesh(rbox(0.7,0.55,0.5,.08),mat(0xc9a15a),-8.5,0.28,-5.4,true)); cols.push([0,-8.85,-8.15,-5.65,-5.15]);
+  const sg=signPlane('ÇAMAŞIRHANE',1.9,0.36,{bg:'#2d5d8a',fg:'#fff',font:'800 56px "Baloo 2"',fit:true}); sg.position.set(cx,1.35,B.z1+0.18); S.add(sg);
+  G.add(bake(S)); addCols('laundry',cols); return G;
+}
+const LINEN_FEE=9;
+function linenFee(){ return Math.round(LINEN_FEE*incomeMult()*(state.staff.laundry&&state.staff.laundry.n>0?1.5:1)); }
+function afterRoomCleaned(byStaff){
+  if(!built('laundry')) return;
+  if(byStaff){ if(state.staff.laundry&&state.staff.laundry.n>0){ state.piles.laundry+=linenFee(); pileChanged('laundry'); } }
+  else if(player&&player.c.items.length<capacity()){ addItem('linen'); if(!state.tips.linen){ state.tips.linen=true; hint('🧦 Kirli çarşafı çamaşırhaneye götür, para kazan',5); } }
+}
+function megaZones(p,dt){
+  if(p.f!==0||!built('laundry')) return;
+  const n=p.c.items.filter(i=>i==='linen').length;
+  if(n&&d2(p.x,p.z,L.laundryDrop.x,L.laundryDrop.z)<0.9*0.9){
+    setHold(p.c,p.c.items.filter(i=>i!=='linen')); updateCarryUI();
+    const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
+}
+function staffPost(e){
+  const sp=e.kind==='spaT'?L.spaT:L.laundryW;
+  if(d2(e.x,e.z,sp.x,sp.z)>0.05||e.f!==0){ e.anim=null; if(!e.path) e.goTo(0,sp.x,sp.z,()=>{ e.tRot=Math.PI; }); return; }
+  const busy=e.kind==='spaT'?SEATS.some(s=>s.amen==='spa'&&s.busy&&s.busy.state==='amen'):state.piles.laundry>0||staffEnts.some(x=>x.kind==='clean'&&x.job&&x.job.working);
+  e.anim=busy?'work':null;
+}
+
+// ---------- staff energy + employee of the day ----------
+const STAFF_NAMES=['Ayşe','Fatma','Ali','Veli','Hasan','Zehra','Emine','Murat','Ömer','Hülya','Serkan','Yasemin','Levent','Nazlı'];
+function staffEnergyMul(e){ return (e.energy??100)<30?0.7:(e.star?1.15:1); }
+function staffWorked(e){
+  e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7));
+  if(e.energy<30&&!e.tiredShown){ e.tiredShown=true; fxEmoji(e.x,e.y+2.1,e.z,e.f,'😓'); }
+}
+function staffRest(e,dt){ if(state.breakroom&&(e.energy??100)<100){ e.energy=Math.min(100,(e.energy??100)+dt*3); if(e.energy>=40) e.tiredShown=false; } }
+function staffDayEnd(){
+  let best=null; for(const e of staffEnts){ if(e.kind==='rec') continue; if(!best||(e.jobs||0)>(best.jobs||0)) best=e; }
+  staffEnts.forEach(e=>{ e.star=false; });
+  if(best&&(best.jobs||0)>=3){ best.star=true; state.eotd={n:best.name,k:best.kind,j:best.jobs,d:state.day};
+    setTimeout(()=>toast(`🏅 Günün çalışanı: ${best.name} (${STAFF[best.kind].name}, ${best.jobs} iş) · bugün %15 hızlı`),2200); changeRep(0.5); }
+  staffEnts.forEach(e=>{ e.jobs=0; e.energy=100; e.tiredShown=false; });
+}
+function breakroomCost(){ return Math.round(800*cm()); }
+function staffExtraHtml(){
+  const tired=staffEnts.filter(e=>(e.energy??100)<30).length, E=state.eotd;
+  return `<div class="row"><div class="ic">☕</div><div class="tx">Personel mola odası<small>Personel boşta dinlenir ve iş başına daha az yorulur${tired?` · şu an ${tired} yorgun 😓`:''}</small></div>${state.breakroom?'<button class="btn" disabled>Var ✓</button>':`<button class="btn gold" data-break ${state.money<breakroomCost()?'disabled':''}>${fmt(breakroomCost())} ₺</button>`}</div>`+
+    (E?`<p class="note">🏅 Günün çalışanı: <b>${escH(E.n)}</b> (${STAFF[E.k]?STAFF[E.k].name:''}, ${E.j} iş)</p>`:'');
+}
+function buyBreakroom(){ if(state.breakroom||!spend(breakroomCost())) return; state.breakroom=true; sfx('build'); toast('☕ Mola odası açıldı: personel artık daha az yoruluyor'); save(); renderSheet(); }
+
+// ---------- room themes + guests who want a theme ----------
+const RTHEMES={
+  sea:   {e:'🌊',name:'Deniz',   wall:0xcfe6f2,duvet:0x2e86c1},
+  forest:{e:'🌲',name:'Orman',   wall:0xd6ead0,duvet:0x3f7a3e},
+  retro: {e:'🕺',name:'Retro',   wall:0xf6dcb4,duvet:0xe0574f},
+  royal: {e:'👑',name:'Kraliyet',wall:0xe6d8f0,duvet:0x6b3fa0}};
+function roomThemeCost(id){ return Math.round(260*FLOOR_MULT[roomInfo(id).f]*cm()); }
+function themedWall(name,th){ const m=tmat(name,2,1.2).clone(); m.color.setHex(RTHEMES[th].wall); return m; }
+function anyThemed(){ for(const k in state.rooms) if(state.rooms[k].theme) return true; return false; }
+function roomThemeHtml(id){
+  const s=state.rooms[id], c=roomThemeCost(id), ok=!RT(id).guest;
+  return `<div class="row" style="flex-wrap:wrap"><div class="ic">🎨</div><div class="tx">Oda teması${s.theme?`: ${RTHEMES[s.theme].e} ${RTHEMES[s.theme].name}`:''}<small>Bazı misafirler belli bir tema ister: eşleşirse +10 memnuniyet${ok?'':' · oda boşken değiştirilebilir'}</small></div>
+    <div class="agrid" style="width:100%;justify-content:flex-end">${Object.keys(RTHEMES).map(k=>`<button class="btn ${s.theme===k?'':'ghost'} abtn" data-rth="${k}" ${s.theme===k||!ok||state.money<c?'disabled':''}>${RTHEMES[k].e} ${RTHEMES[k].name}</button>`).join('')}</div><small style="width:100%;text-align:right;color:var(--muted)">${fmt(c)} ₺</small></div>`;
+}
+function setRoomTheme(id,k){ const s=state.rooms[id]; if(!s||s.theme===k||RT(id).guest||!spend(roomThemeCost(id))) return; s.theme=k; qEv('upg'); buildRoomVisual(id,true); sfx('build'); save(); }
+
+// ---------- event bookings & festivals ----------
+const EVT={
+  wedding:{e:'💒',name:'Düğün',     need:'rest',needN:'Restoran',   rooms:4,types:['couple','family','elderly'],n:5,rew:900},
+  conf:   {e:'🎤',name:'Konferans', need:'cafe',needN:'Kahve köşesi',rooms:5,types:['business'],n:5,rew:750},
+  concert:{e:'🎸',name:'Konser',    need:'pool',needN:'Havuz',      rooms:4,types:['influencer','tourist','student'],n:6,rew:1000}};
+const FEST=[{e:'🌷',name:'Lale Festivali'},{e:'🎶',name:'Yaz Konser Festivali'},{e:'🍇',name:'Hasat Festivali'},{e:'🎄',name:'Yılbaşı Festivali'}];
+function festivalOn(){ return !!state&&state.day>=3&&(state.day-1)%(SEASON_DAYS*2)===2; }
+function festival(){ return FEST[seasonIx()]; }
+function eventReady(){ return readyRooms().length; }
+function eventsDayEnd(){
+  if(state.offer&&state.offer.made<state.day){ toast(`📅 ${EVT[state.offer.k].name} teklifi zaman aşımına uğradı`,'bad'); state.offer=null; }
+  if(state.event&&!state.event.started&&state.day>state.event.day){ failEvent('Etkinlik günü geçti'); }
+  if(!state.event&&!state.offer&&state.tut>=TUT.length&&!state.sandbox&&state.day>=4&&nRoomsNow()>=6&&Math.random()<0.45){
+    const ks=Object.keys(EVT).filter(k=>built(EVT[k].need));
+    if(ks.length){ const k=rand(ks), E=EVT[k]; state.offer={k,made:state.day,day:state.day+2,rew:r10(E.rew*cm()*(1+stars()*0.15))};
+      setTimeout(()=>{ banner(`📅 ${E.e} ${E.name} teklifi!`,`${state.offer?state.offer.day:''}. gün · ödül ${fmt(state.offer?state.offer.rew:0)} ₺ · Yönetim › Otel`); sfx('req'); },3000); } }
+  if(state.event&&state.day===state.event.day){ const E=EVT[state.event.k]; setTimeout(()=>banner(`${E.e} Bugün ${E.name} var!`,`12:00'ye kadar ${E.rooms} hazır oda ve ${E.needN} gerekli`),3200); }
+  if(festivalOn()){ const F=festival(); setTimeout(()=>{ banner(`${F.e} ${F.name}!`,'Bugün misafir akını var ve gelirler %15 fazla'); sfx('star'); },4200); }
+  staffDayEnd();
+}
+function acceptOffer(){ if(!state.offer) return; state.event=Object.assign({started:false},state.offer); state.offer=null; sfx('build'); toast(`${EVT[state.event.k].e} Rezervasyon onaylandı: ${state.event.day}. gün 12:00`); save(); renderSheet(); }
+function declineOffer(){ state.offer=null; sfx('click'); save(); renderSheet(); }
+function failEvent(why){ const E=EVT[state.event.k]; state.event=null; changeRep(-3); banner(`${E.e} ${E.name} iptal oldu`,`${why} · −3 ün`); sfx('fail'); markSave(); }
+function updateEvents(dt){
+  const ev=state.event; if(!ev||ev.started||state.day!==ev.day||hourNow()<12||hourNow()>=22) return;
+  ev.started=true; const E=EVT[ev.k], ready=eventReady(ev), fac=built(E.need), calm=!state.crisis&&!state.mess;
+  const score=Math.min(1,ready/E.rooms)*0.7+(fac?0.2:0)+(calm?0.1:0), pay=Math.round(ev.rew*score);
+  state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; onGameEvent('event',1);
+  changeRep(score>=0.9?3:score>=0.6?1:-2);
+  banner(`${E.e} ${E.name} ${score>=0.9?'kusursuz geçti!':score>=0.6?'başladı':'aksak başladı'}`,`Hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada`);
+  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40);
+  for(let i=0;i<E.n;i++) setTimeout(()=>{ if(queue.length<10){ const g=spawnGuest(rand(E.types),rand([L.spawnL,L.spawnR]),true); g.evt=ev.k; } },i*900);
+  state.event=null; markSave();
+}
+function eventGoal(){
+  const ev=state.event; if(!ev||ev.started||state.day!==ev.day||state.tut<TUT.length) return null;
+  const E=EVT[ev.k], r=eventReady(ev);
+  if(!built(E.need)) return {icon:E.e,text:`${E.name}: ${E.needN} gerekli!`,target:null};
+  return {icon:E.e,text:`${E.name} 12:00'de · ${Math.min(r,E.rooms)}/${E.rooms} hazır oda`,target:r<E.rooms?chainTarget('clean'):null,prog:Math.min(1,r/E.rooms),done:r>=E.rooms};
+}
+function eventsHtml(){
+  let h=`<div class="ugh">📅 Etkinlikler ve festivaller</div>`;
+  const O=state.offer, V=state.event;
+  if(O){ const E=EVT[O.k]; h+=`<div class="row"><div class="ic">${E.e}</div><div class="tx">${E.name} teklifi · ${O.day}. gün 12:00<small>Gerekli: ${E.rooms} hazır oda + ${E.needN} · ${E.n} misafir gelir · ödül ${fmt(O.rew)} ₺ (hazırlığa göre)</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn gold" data-evt="yes">Kabul</button><button class="btn ghost" data-evt="no">Reddet</button></div></div>`; }
+  else if(V){ const E=EVT[V.k]; h+=`<div class="row"><div class="ic">${E.e}</div><div class="tx">${E.name} · ${V.day}. gün 12:00<small>Şu an ${eventReady(V)}/${E.rooms} hazır oda · ${E.needN} ${built(E.need)?'✅':'❌'} · ödül ${fmt(V.rew)} ₺</small></div></div>`; }
+  else h+=`<p class="note">Şu an teklif yok. Otel büyüdükçe düğün, konferans ve konser teklifleri gelir.</p>`;
+  let next=1; while(next<20&&((state.day+next-1)%(SEASON_DAYS*2)!==2||state.day+next<3)) next++;
+  h+=festivalOn()?`<p class="note">${festival().e} Bugün <b>${festival().name}</b>: misafir akını, gelir +%15</p>`:`<p class="note">🎉 Sıradaki festival ${next} gün sonra</p>`;
+  return h;
+}
+
+// ---------- hooks ----------
+function updateMega2(dt){ updateEvents(dt); for(const e of staffEnts) if(!e.job&&!e.path) staffRest(e,dt); }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -3869,7 +4055,7 @@ function renderTags(){
     let x,y,z,f=0,html='',show=true;
     switch(t.kind){
       case 'patience':{ const g=t.ent; x=g.x; y=g.y+t.y; z=g.z; f=g.f; show=g.state==='queue'||(g.state==='arrive'&&!g.path);
-        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${g.tour?'🚌':g.T.e}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
+        if(show){ const p=clamp(g.pat/g.patMax,0,1); if(!t.bar){ t.el.innerHTML=`<div><div class="bubble small" style="margin-bottom:3px">${(g.tour?'🚌':g.T.e)+(g.pref?RTHEMES[g.pref].e:'')}</div><div class="patience"><i></i></div></div>`; t.bar=t.el.querySelector('i'); t.html='x'; }
           t.bar.style.width=(p*100)+'%'; t.bar.style.background=p>0.5?'#5fd98a':p>0.25?'#f2c14e':'#e0574f'; }
         html=null; break; }
       case 'pad':{ const d=t.def; x=d.x; y=d.f*FH+t.y; z=d.z; f=d.f; const lk=padLocked(d), rem=Math.ceil(d.cost-(state.paid[d.id]||0));
@@ -3938,7 +4124,7 @@ function updateHUD(){
   $('repBar').firstChild.style.width=(s===5||capped?100:(state.rep%20)/20*100)+'%';
   if(lastStarsHud!=null&&s>lastStarsHud){ banner(`${'★'.repeat(s)}`,`Otelin ${s} yıldız oldu! Gelir x${STAR_MULT[s-1]}`); sfx('star'); refreshPads(); } lastStarsHud=s;
   const h=hourNow(); $('clock').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor((h%1)*4)*15).padStart(2,'0');
-  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
+  $('wxIcon').textContent=WEATHER[state.weather].e; $('dayLbl').textContent=`${season().e} Gün ${state.day}${festivalOn()?' · '+festival().e:''}${gameSpeed>1?' · ⏩'+gameSpeed+'x':''}`;
   // goal
   const g=goal(); curGoal=g; const ge=$('goal');
   if(g){ ge.classList.add('show'); ge.classList.toggle('done',!!g.done); $('goalIcon').textContent=g.icon; $('goalText').innerHTML=g.text+(g.price?` · <span class="price">${fmt(g.price)} ₺</span>`:'')+(g.rew?` <span class="rew">🎁 ${fmt(g.rew)}</span>`:'');
@@ -4018,12 +4204,12 @@ function renderSheet(){
   if(mgmtTab==='staff'){
     if(!built('staff')) h+=`<p class="note">🔒 Personel işe almak için önce lobideki <b>Personel odası</b>nı aç.</p>`;
     for(const k in STAFF){ const S=STAFF[k], s=state.staff[k], hc=staffHireCost(k), lc=staffLvlCost(k), needOk=!S.needs||built(S.needs), can=built('staff')&&needOk;
-      h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?' · önce Depo gerekli':''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${pips(s.lvl,STAFF_SPEED.length)}</div>
+      h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?` · önce ${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs} gerekli`:''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${pips(s.lvl,STAFF_SPEED.length)}</div>
         <div style="display:flex;flex-direction:column;gap:6px">
-          ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?'<button class="btn" disabled>🔒 Önce<br>Depo</button>':`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
+          ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
           ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>`:''}
         </div></div>`; }
-    h+=`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
+    h+=staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
     for(const k in UPG){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
@@ -4039,7 +4225,7 @@ function renderSheet(){
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+legacyHtml()+luxHtml();
+      ${progressHtml(next)}`+eventsHtml()+legacyHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -4050,6 +4236,8 @@ function renderSheet(){
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
+  const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
+  sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
   const av=sheet.querySelector('[data-adv]'); if(av) av.onclick=()=>{ sfx('click'); openAdvisor(); };
   const mp=sheet.querySelector('[data-map]'); if(mp) mp.onclick=()=>{ sfx('click'); openCityMap(); };
   sheet.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>buyLegacy(b.dataset.leg));
@@ -4122,12 +4310,14 @@ function renderRoomSheet(){
   else h+=`<p class="note">${s.dirty?'🧹 Temizlik bekliyor':s.broken?'🔧 Tamir bekliyor':'Boş · misafir bekliyor'}</p>`;
   if(up!=null){ const nx=ROOM_T[ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]], ok=!g&&!s.dirty&&!s.broken;
     h+=`<div class="row"><div class="ic">⬆️</div><div class="tx">${nx.name} odaya yükselt<small>Gecelik ${fmt(roomRate(id)*incomeMult())} → ${fmt(nx.rate*(1+0.3*ri.f)*incomeMult())} ₺ · daha seçkin misafirler${ok?'':' · oda boş ve temiz olmalı'}</small></div><button class="btn gold" data-up ${!ok||state.money<up?'disabled':''}>${fmt(up)} ₺</button></div>`; }
+  h+=roomThemeHtml(id);
   for(const k in DECOR){ const D=DECOR[k], c=decorCost(k), has=s.decor[k];
     h+=`<div class="row"><div class="ic">${D.e}</div><div class="tx">${D.name}<small>Memnuniyet +${D.sat}${D.income?` · gecelik +${D.income} ₺`:''}</small></div>${has?'<button class="btn" disabled>Var ✓</button>':`<button class="btn" data-dec="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   const tk=sheet.querySelector('[data-talk]'); if(tk) tk.onclick=()=>openChat(R.guest);
   const ub=sheet.querySelector('[data-up]'); if(ub) ub.onclick=()=>{ const c=roomUpCost(id); if(R.guest||s.dirty||s.broken||!spend(c)) return; s.type=ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]; qEv('upg'); buildRoomVisual(id,true); confettiAt(ri.x,ri.f*FH+1,ri.z,40); sfx('build'); save(); renderSheet(); };
+  sheet.querySelectorAll('[data-rth]').forEach(b=>b.onclick=()=>{ setRoomTheme(id,b.dataset.rth); renderSheet(); });
   sheet.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{ const k=b.dataset.dec, c=decorCost(k); if(s.decor[k]||!spend(c)) return; s.decor[k]=true; qEv('upg'); if(R.guest) R.guest.sat=clamp(R.guest.sat+DECOR[k].sat,0,100); buildRoomVisual(id,true); sfx('build'); save(); renderSheet(); });
 }
 function renderQuestSheet(){
@@ -4411,7 +4601,7 @@ function frame(now){
   if(viewFloor!==lastView){ lastView=viewFloor; applyFloorVis(); }
   if(cabin) cabin.visible=floorVisible(cabin.position.y);
   for(const e of ents.slice()) e.sync(dt);
-  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime);
+  updateAnims(dt); updateFx3(dt); updateWorldAnim(dt,gtime); updateMega2(dt*gameSpeed);
   updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz);
   updateGoalArrow(gtime);
   renderFrame();
@@ -4429,7 +4619,7 @@ function boot(){
   resize(); applyTheme();
   PADS=padDefs(); PADMAP={}; PADS.forEach(d=>PADMAP[d.id]=d);
   buildGround(); buildShell(); buildXmas();
-  ['depo','staff','cafe','rest','pool','gym','f2','f3','roof'].forEach(id=>{ if(built(id)) buildFeature(id,false); });
+  ['depo','staff','cafe','rest','pool','gym','spa','laundry','f2','f3','roof'].forEach(id=>{ if(built(id)) buildFeature(id,false); });
   Object.keys(state.rooms).forEach(k=>{ const s=state.rooms[k]; s.decor=s.decor||{}; buildRoomVisual(+k,false); });
   Object.keys(L.piles).forEach(pileChanged);
   if(!state.quests||state.quests.day!==state.day) newQuests();

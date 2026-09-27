@@ -30,6 +30,8 @@ const LOOKS={
   bell:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xc0392b,bottom:0x1c1d22,hat:'pillbox',hatC:0xc0392b,trim:true}),
   tech:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xe67e22,bottom:0x34495e,hat:'hard',hatC:0xf2c14e}),
   barista:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','short']),top:0x2b2b2b,bottom:0x3b2a1e,apron:true,hat:'cap',hatC:0x6b4226}),
+  spaT:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','pony']),top:0xf4efe6,bottom:0x6f8f7a,apron:true}),
+  laundry:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['short','bun']),top:0x7fb3d5,bottom:0x2d5d8a,apron:true,hat:'cap',hatC:0x2d5d8a}),
   chef:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xffffff,bottom:0x333333,hat:'chef'}),
 };
 const hairCap=new THREE.SphereGeometry(0.285,18,10,0,Math.PI*2,0,Math.PI*0.52);
@@ -96,6 +98,7 @@ function setHold(c,items){
   items.forEach((it,k)=>{ const y=k*0.13;
     if(it==='paper'){ const r=mesh(cyl(0.09,0.09,0.16,12),M.white,0,y,0); r.rotation.z=Math.PI/2; c.hold.add(r); }
     else if(it==='towel'){ c.hold.add(mesh(rbox(0.3,0.1,0.22,.04),mat(k%2?0xffffff:0x5d9fd6),0,y,0)); }
+    else if(it==='linen'){ c.hold.add(mesh(rbox(0.32,0.12,0.24,.05),mat(0xcfc6b8,{roughness:1}),0,y,0)); }
     else if(it==='coffee'){ c.hold.add(mesh(cyl(0.07,0.055,0.14,12),M.white,0,y+0.02,0)); c.hold.add(mesh(cyl(0.072,0.072,0.03,12),mat(0x6b4226),0,y+0.08,0)); }
     else { c.hold.add(mesh(cyl(0.2,0.2,0.03,16),mat(0xc9d1d8,{metalness:.7,roughness:.3}),0,y,0)); c.hold.add(mesh(new THREE.SphereGeometry(0.14,12,8,0,Math.PI*2,0,Math.PI/2),mat(0xdfe6ec,{metalness:.8,roughness:.25}),0,y+0.015,0)); }
   });

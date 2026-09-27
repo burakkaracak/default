@@ -59,7 +59,7 @@ function buildGrass(){
   const geo=mergeGeos(parts);
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9,flatShading:true});
   grassMesh=new THREE.InstancedMesh(geo,m,n); grassMesh.receiveShadow=true;
-  const zones=[[-17.2,-6.9,9.6,11.1],[6.9,17.2,9.6,11.1],[-3.1,-1.6,9.6,11.1],[1.6,3.1,9.6,11.1],[-16.9,-7.4,BACK+0.2,-3.5],[-17.3,-16.35,-3.4,7.4],[16.35,17.3,-3.4,7.4],[-7.9,-7.25,-3.2,7.3],[7.25,7.9,-3.2,7.2]];
+  const zones=[[-17.2,-6.9,9.6,11.1],[6.9,17.2,9.6,11.1],[-3.1,-1.6,9.6,11.1],[1.6,3.1,9.6,11.1],[-16.9,-7.4,-4.05,-3.5],[-16.9,-16.5,BACK+0.2,-4.1],[-7.9,-7.4,BACK+0.2,-4.1],[-17.3,-16.35,-3.4,7.4],[16.35,17.3,-3.4,7.4],[-7.9,-7.25,-3.2,7.3],[7.25,7.9,-3.2,7.2]];
   const area=zones.map(z=>(z[1]-z[0])*(z[3]-z[2])), tot=area.reduce((a,b)=>a+b,0);
   const dm=new THREE.Object3D(), col=new THREE.Color(); let i=0, guard=0;
   while(i<n&&guard++<n*4){

@@ -88,6 +88,7 @@ function spawnGuest(type,from,tour,fl){
   g.place(side.x,side.z+rnd(-0.2,0.2),fl||0); queue.push(g); g.qk=queue.length-1;
   const p=qPos(g.qk); if(!g.goTo(0,p.x,p.z,()=>{ g.tRot=Math.PI; })) g.place(p.x,p.z,0);
   g.tag=tagAdd({kind:'patience',ent:g,y:1.95});
+  if(!type&&g.type!=='insp'&&anyThemed()&&Math.random()<0.3) g.pref=rand(Object.keys(RTHEMES));
   if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
   return g;
@@ -96,7 +97,7 @@ function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ 
 function pickRoom(g){
   const rs=readyRooms(); if(!rs.length) return null;
   let best=null, bs=1e9;
-  rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2; if(sc<bs){ bs=sc; best=id; } });
+  rs.forEach(id=>{ const lv=ROOM_T[state.rooms[id].type].lvl, d=lv-g.T.want; const sc=(d<0?-d*3:d)+roomInfo(id).f*0.3+Math.random()*0.2-(g.pref&&state.rooms[id].theme===g.pref?2.5:0); if(sc<bs){ bs=sc; best=id; } });
   return best;
 }
 function decorSat(s){ let v=0; for(const k in s.decor) if(s.decor[k]) v+=DECOR[k].sat; return v; }
@@ -106,11 +107,12 @@ function checkIn(g,id){
   R.guest=g; g.room=id; g.stay=g.nights*NIGHT_SEC; queue.shift(); reflowQueue(); if(g.c.items.length) setHold(g.c,[]);
   const d=T.lvl-g.T.want, waited=g.patMax-g.pat; g.waited=waited; g.lastRoomT=T.name;
   g.sat=clamp(63+(d<0?9*d:5*d)+decorSat(s)+(stars()-3)*3-Math.min(14,Math.max(0,waited-10)*0.35)+(g.coffee?3:0)+(state.lux&&state.lux.chandelier?3:0)-(g.type==='insp'?2:0)-(state.mess?4:0)+rnd(-6,6),5,100);
-  const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
+  const pay0=Math.round((roomRate(id)+(s.decor.bar?DECOR.bar.income:0)+(s.decor.welcome?DECOR.welcome.income:0))*g.nights*g.T.pay*incomeMult()*(g.tour?1.2:1)*(g.heli?1.5:1)*(g.type==='vip'&&state.lux&&state.lux.limo?1.2:1)*(1+0.05*state.up.haggle));
   const pay=g.lucky?pay0*2:pay0; if(g.lucky) luckyJackpot(g);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; state.today.guests++; state.served++;
   fxText(L.piles.desk.x,1.6,L.piles.desk.z,0,'+'+fmt(pay)); fxEmoji(g.x,2.1,g.z,0,'🔑'); g.sqT=0.4;
   if(d<0) fxEmoji(g.x,2.3,g.z,0,'😒');
+  if(g.pref){ if(s.theme===g.pref){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.6,g.z,0,RTHEMES[g.pref].e); } else g.sat=clamp(g.sat-3,5,100); }
   if(g.type==='grumpy'){ if(waited<8){ g.sat=clamp(g.sat+10,5,100); fxEmoji(g.x,2.5,g.z,0,'😌'); } else g.sat=clamp(g.sat-Math.min(18,waited*0.6),5,100); }
   sfx('ding');
   if(g.tag){ tagRemove(g.tag); g.tag=null; }
@@ -160,10 +162,10 @@ REST_TABLES.forEach(([tx,tz])=>[-1,1].forEach(sd=>SEATS.push({amen:'rest',x:tx+s
 POOL_LOUNGERS.forEach(lx=>SEATS.push({amen:'pool',x:lx,z:6.25,px:lx,pz:5.72,py:0.43,rx:-Math.PI/2,rot:0,pose:'sleep',busy:null}));
 POOL_SWIM.forEach(([sx,sz])=>SEATS.push({amen:'pool',x:sx,z:4.05,px:sx,pz:sz,py:-0.42,rot:rnd(0,6),pose:'swim',busy:null}));
 GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,rot:Math.PI,pose:'run',busy:null}));
-function amenOpen(a){ return a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
+function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
-  const opts=['rest','pool','gym','roof'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes;
+  const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
+  let a=rand(opts); if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -171,7 +173,7 @@ function tryAmenity(g){
 }
 function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
-  const fee=Math.round(AMEN_FEE[a]*incomeMult()); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
+  const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
   g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); qEv('amen');
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
@@ -227,7 +229,7 @@ function updateGuests(dt){
 const staffEnts=[];
 function staffIdleSpot(k){ const s=L.staffIdle[k%L.staffIdle.length]; return {x:s[0],z:s[1],f:0}; }
 function spawnStaff(kind,fromDoor){
-  const e=new Ent(LOOKS[kind]()); e.kind=kind; e.job=null; e.wait=0; e.idx=staffEnts.length; e.slot=staffEnts.filter(x=>x.kind!=='rec').length; e.idleDone=false;
+  const e=new Ent(LOOKS[kind]()); e.kind=kind; e.job=null; e.wait=0; e.idx=staffEnts.length; e.name=rand(STAFF_NAMES); e.energy=100; e.slot=staffEnts.filter(x=>x.kind!=='rec').length; e.idleDone=false;
   const sp=fromDoor?{x:rnd(-0.5,0.5),z:8.5,f:0}:staffIdleSpot(e.slot); e.place(sp.x,sp.z,sp.f); staffEnts.push(e);
   e.speed=2.3*staffSpeedMul(kind); return e;
 }
@@ -243,11 +245,12 @@ function staffGoIdle(e){
 }
 function updateStaff(dt){
   for(const e of staffEnts){
-    e.speed=2.3*staffSpeedMul(e.kind);
+    e.speed=2.3*staffSpeedMul(e.kind)*staffEnergyMul(e);
     if(e.sick) continue;
-    if(e.path){ if(e.job||e.riding||e.kind==='rec') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
+    if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
     if(e.wait>0){ e.wait-=dt; if(e.job&&e.job.working){} else continue; }
     const j=e.job;
+    if(e.kind==='spaT'||e.kind==='laundry'){ staffPost(e); continue; }
     if(e.kind==='rec'){ if(d2(e.x,e.z,L.recSpot.x,L.recSpot.z)>0.05||e.f!==0) e.goTo(0,L.recSpot.x,L.recSpot.z,()=>{ e.tRot=0; }); continue; }
     if(!j){
       if(e.kind==='clean'){ const id=nearestRoom(e,roomsWhere(id=>state.rooms[id].dirty&&!RT(id).task)); if(id){ RT(id).task=e; e.job={type:'clean',id}; goRoom(e,id); } else if(!staffSpotJob(e,'mess')) staffGoIdle(e); }
@@ -260,12 +263,12 @@ function updateStaff(dt){
       }
       continue;
     }
-    if(j.working&&(j.type==='mess'||j.type==='crisis')){ j.t-=dt*staffSpeedMul(e.kind); e.anim='work'; const tgt=j.type==='mess'?state.mess:state.crisis; if(!tgt){ finishJob(e); continue; } if(j.t<=0){ if(j.type==='mess') cleanMess(true); else resolveCrisis(true); finishJob(e); } continue; }
+    if(j.working&&(j.type==='mess'||j.type==='crisis')){ j.t-=dt*staffSpeedMul(e.kind); e.anim='work'; const tgt=j.type==='mess'?state.mess:state.crisis; if(!tgt){ finishJob(e); continue; } if(j.t<=0){ if(j.type==='mess') cleanMess(true); else resolveCrisis(true); staffWorked(e); finishJob(e); } continue; }
     if(j.working){
       j.t-=dt*staffSpeedMul(e.kind); e.anim='work';
       const s=state.rooms[j.id];
       if(j.type==='clean'&&!s.dirty||j.type==='fix'&&!s.broken){ finishJob(e); continue; }
-      if(j.t<=0){ if(j.type==='clean') cleanRoom(j.id,true); else fixRoom(j.id,true); finishJob(e); }
+      if(j.t<=0){ if(j.type==='clean') cleanRoom(j.id,true); else fixRoom(j.id,true); staffWorked(e); finishJob(e); }
     }
   }
 }
@@ -278,7 +281,7 @@ function arriveRoom(e,id){
   const j=e.job; if(!j) return; const s=state.rooms[id], R=RT(id);
   if(j.type==='clean'){ if(!s.dirty){ finishJob(e); return; } j.working=true; j.t=4.2; e.tRot=-Math.PI*0.6; }
   else if(j.type==='fix'){ if(!s.broken){ finishJob(e); return; } j.working=true; j.t=4.5; e.tRot=Math.PI; }
-  else if(j.type==='carry'){ if(R.req&&R.req.item===j.item){ fulfillReq(id); } setHold(e.c,[]); finishJob(e); }
+  else if(j.type==='carry'){ if(R.req&&R.req.item===j.item){ fulfillReq(id); staffWorked(e); } setHold(e.c,[]); finishJob(e); }
 }
 function finishJob(e){
   const j=e.job; if(j&&(j.type==='mess'||j.type==='crisis')){ const tgt=j.type==='mess'?state.mess:state.crisis; if(tgt&&tgt.by===e.idx) tgt.by=null; } else if(j){ const R=RT(j.id); if(R.task===e) R.task=null; if(R.ftask===e) R.ftask=null; if(R.req&&R.req.by===e) R.req.by=null; }
