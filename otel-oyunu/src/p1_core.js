@@ -174,7 +174,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:36, parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:38, rules:{dog:true,booze:true}, live:null, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -215,7 +215,7 @@ function isNight(){ const h=hourNow(); return h>=22.5||h<6.5; }
 function capacity(){ return UPG.cap.vals[state.up.cap]; }
 function magnetR(){ return UPG.magnet.vals[state.up.magnet]; }
 function built(id){ return !!state.built[id]; }
-function poolOpen(){ return built('pool')&&!isWinter()&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
+function poolOpen(){ return built('pool')&&!(isWinter()&&state.weather==='snow')&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
 function restOpen(){ const h=hourNow(); return built('rest')&&h>=8&&h<22.5; }
 function gymOpen(){ const h=hourNow(); return built('gym')&&h>=7&&h<22; }
 function floorsBuilt(){ return built('roof')?4:built('f3')?3:built('f2')?2:1; }
@@ -232,11 +232,25 @@ function audioInit(){
   const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
   try{
     const c=Sound.ctx=new AC();
-    Sound.master=c.createGain(); Sound.master.gain.value=1; Sound.master.connect(c.destination);
-    Sound.sfx=c.createGain(); Sound.sfx.connect(Sound.master);
-    Sound.music=c.createGain(); Sound.music.connect(Sound.master); applyAudioPrefs();
+    // master → yumuşak kompresör → hoparlör; hafif oda yankısı (sentetik impuls) tüm seslere derinlik verir
+    const comp=c.createDynamicsCompressor(); comp.threshold.value=-18; comp.knee.value=12; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.2;
+    const tame=c.createBiquadFilter(); tame.type='lowpass'; tame.frequency.value=9000; tame.Q.value=0.5;
+    Sound.master=c.createGain(); Sound.master.gain.value=0.9; Sound.master.connect(tame); tame.connect(comp); comp.connect(c.destination);
+    const ir=c.createBuffer(2,Math.floor(c.sampleRate*1.6),c.sampleRate);
+    for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let i=0;i<d.length;i++){ const k=i/d.length; d[i]=(Math.random()*2-1)*Math.pow(1-k,3.2)*(i<c.sampleRate*0.01?i/(c.sampleRate*0.01):1); } }
+    const rev=c.createConvolver(); rev.buffer=ir; Sound.rev=c.createGain(); Sound.rev.gain.value=0.22; Sound.rev.connect(rev); rev.connect(Sound.master);
+    Sound.sfx=c.createGain(); Sound.sfx.connect(Sound.master); Sound.sfx.connect(Sound.rev);
+    const mlp=c.createBiquadFilter(); mlp.type='lowpass'; mlp.frequency.value=2400; mlp.Q.value=0.4; mlp.connect(Sound.master); mlp.connect(Sound.rev);
+    Sound.music=c.createGain(); Sound.music.connect(mlp); applyAudioPrefs();
     const len=Math.floor(c.sampleRate*0.4), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<len;i++) d[i]=Math.random()*2-1; Sound.noise=buf;
+    // uzun pembe gürültü (döngü duyulmasın): yağmur ve rüzgâr ambiyansı için
+    const pl=Math.floor(c.sampleRate*6), pb=c.createBuffer(2,pl,c.sampleRate);
+    for(let ch=0;ch<2;ch++){ const e=pb.getChannelData(ch); let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+      for(let i=0;i<pl;i++){ const w=Math.random()*2-1; b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.969*b2+w*0.153852; b3=0.8665*b3+w*0.3104856; b4=0.55*b4+w*0.5329522; b5=-0.7616*b5-w*0.016898;
+        e[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; }
+      const f=Math.floor(c.sampleRate*0.05); for(let i=0;i<f;i++){ const k=i/f; e[pl-f+i]=e[pl-f+i]*(1-k)+e[i]*k; } }
+    Sound.pink=pb;
     startMusic();
   }catch(e){ Sound.ctx=null; }
 }
@@ -246,6 +260,8 @@ function tone(f,dur,type='sine',vol=.12,delay=0,dest,slide){
   o.type=type; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur);
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g); g.connect(dest||Sound.sfx); o.start(t); o.stop(t+dur+0.05);
+  if(type==='sine'&&!dest&&dur>0.15){ const o2=c.createOscillator(), g2=c.createGain(); o2.type='sine'; o2.frequency.setValueAtTime(f*2.001,t); if(slide) o2.frequency.exponentialRampToValueAtTime(slide*2,t+dur);
+    g2.gain.setValueAtTime(0.0001,t); g2.gain.exponentialRampToValueAtTime(vol*0.18,t+0.01); g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.6); o2.connect(g2); g2.connect(Sound.sfx); o2.start(t); o2.stop(t+dur); }
 }
 function noiseBurst(dur,vol,freq,delay=0){
   const c=Sound.ctx; if(!c) return;
@@ -259,24 +275,24 @@ function sfx(name,p){
   if(!Sound.ctx||!state.sound) return;
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
   switch(name){
-    case 'ding':  tone(1568,.9,'sine',.12); tone(2093,.7,'sine',.05,.01); break;
+    case 'ding':  tone(1568,1.1,'sine',.1); tone(2093,.8,'sine',.04,.01); tone(3136,.3,'sine',.012); break;
     case 'bell':  tone(2093,.7,'sine',.035); tone(2637,.55,'sine',.018,.09); break;   // hafif resepsiyon zili
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
-      tone(1319*m+Math.random()*40,.07,'square',.028); tone(1976*m,.22,'square',.028,.06); break; }
+      tone(1319*m+Math.random()*30,.09,'triangle',.05); tone(1976*m,.26,'sine',.05,.055); break; }
     case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
     case 'pick':  tone(660,.08,'triangle',.08,0,null,990); break;
     case 'drop':  tone(990,.1,'triangle',.08,0,null,520); break;
-    case 'tick':  tone(p==null?1400+Math.random()*300:700+p*1100,.04,'square',.018); break;
-    case 'clean': noiseBurst(.16,.07,3000); noiseBurst(.16,.07,2400,.18); break;
+    case 'tick':  tone(p==null?1400+Math.random()*300:700+p*1100,.05,'triangle',.03); break;
+    case 'clean': noiseBurst(.18,.05,2600); noiseBurst(.18,.05,2100,.17); tone(1760,.12,'sine',.015,.3); break;
     case 'sparkle': [0,.06,.12].forEach((d,k)=>tone(1760+k*440,.18,'sine',.04,d)); break;
-    case 'fix':   [0,.13,.26].forEach(d=>{ tone(180,.07,'square',.05,d); noiseBurst(.05,.06,1800,d); }); break;
+    case 'fix':   [0,.13,.26].forEach(d=>{ tone(200,.08,'triangle',.07,d,null,140); noiseBurst(.05,.05,2200,d); }); break;
     case 'build': [523,659,784,1047].forEach((f,k)=>tone(f,.25,'triangle',.09,k*.07)); noiseBurst(.4,.05,700,.0); break;
     case 'fail':  tone(392,.2,'triangle',.08); tone(311,.32,'triangle',.08,.16); break;
     case 'star':  [523,659,784,1047,1319].forEach((f,k)=>tone(f,.4,'triangle',.09,k*.09)); break;
     case 'click': tone(700,.05,'sine',.05); break;
     case 'meow':  tone(620,.28,'sine',.07,0,null,980); tone(980,.35,'triangle',.05,.2,null,560); break;
-    case 'alarm': [0,.3,.6].forEach(d=>{ tone(880,.22,'square',.05,d,null,620); }); break;
+    case 'alarm': [0,.3,.6].forEach(d=>{ tone(880,.24,'triangle',.07,d,null,660); }); break;
     case 'whoosh':noiseBurst(.35,.05,900); break;
   }
 }
@@ -286,9 +302,10 @@ function startMusic(){
   const play=()=>{
     const c=Sound.ctx; if(!c||c.state!=='running'||!state.music) return;
     const ch=CHORDS[chordIx++%CHORDS.length], t=c.currentTime;
-    ch.forEach(f=>{ const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f/2;
-      g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.022,t+1.2); g.gain.linearRampToValueAtTime(0.0001,t+4);
-      o.connect(g); g.connect(Sound.music); o.start(t); o.stop(t+4.1); });
+    ch.forEach(f=>[-4,4].forEach(dt=>{ const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f/2; o.detune.value=dt;
+      g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.014,t+1.4); g.gain.linearRampToValueAtTime(0.0001,t+4.3);
+      o.connect(g); g.connect(Sound.music); o.start(t); o.stop(t+4.4); }));
+    { const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=ch[0]/4; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.03,t+0.3); g.gain.linearRampToValueAtTime(0.0001,t+3.6); o.connect(g); g.connect(Sound.music); o.start(t); o.stop(t+3.7); }
     for(let k=0;k<3;k++) tone(ch[Math.floor(Math.random()*3)]*2,.9,'sine',.018,k*1.2+Math.random()*.4,Sound.music);
   };
   play(); setInterval(play,3800);

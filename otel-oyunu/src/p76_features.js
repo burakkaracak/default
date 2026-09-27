@@ -328,14 +328,15 @@ function updateDilemmas(dt){
 }
 async function startDilemma(g){
   g.dilDone=true; if(state.dilDay!==state.day){ state.dilDay=state.day; state.dilN=0; } state.dilN++;
-  const cityT=DIL_CITY[city().name], base=Math.random()<0.4&&cityT?cityT:rand(DIL_BASE);
+  const cityT=DIL_CITY[city().name]; let base=Math.random()<0.4&&cityT?cityT:rand(DIL_BASE);
+  if(base===DIL_BASE[0]){ if(upsellDilemma(g)) return; base=rand(DIL_BASE.slice(1)); }
   const d={g,room:g.room,s:base.s,o:base.o.slice(),r:base.r.slice()}; dilCur=d;
   fxEmoji(g.x,g.y+2.3,g.z,g.f,'❗'); sfx('req');
   const r=await aiJSON(`Bir otel işletme oyununda misafirin müdürden bir isteği ya da şikâyeti var. Türkçe, kısa, doğal ve eğlenceli yaz; uygunsuz içerik yok.
 Otel: "${hotelName()}", ${city().name} (bu şehre özgü bir durum olabilir), ${stars()} yıldız, mevsim ${season().name}, hava ${({sun:'güneşli',cloud:'bulutlu',rain:'yağmurlu',snow:'karlı'})[state.weather]}.
 Misafir: ${g.name}, ${g.T.name} (${PERSONA[g.type]||PERSONA.tourist}), ${ROOM_T[state.rooms[g.room].type].name} odada.
 Örnek (kopyalama, yeni bir tane üret): "${base.s}"
-Üç seçenek yaz: 0 = cömert ve masraflı çözüm, 1 = ilgili ama ucuz çözüm, 2 = kibarca reddetme. Her seçenek için misafirin kısa tepkisini de yaz.
+Oda değişikliği ya da ücretsiz oda yükseltmesi konusu YAZMA (yükseltme sadece ücretli yapılır). Üç seçenek yaz: 0 = cömert ve masraflı çözüm, 1 = ilgili ama ucuz çözüm, 2 = kibarca reddetme. Her seçenek için misafirin kısa tepkisini de yaz.
 SADECE JSON: {"durum":"misafirin sözü (en fazla 2 cümle)","secenekler":["0","1","2"],"tepkiler":["0","1","2"]}`);
   if(dilCur!==d) return;
   if(r&&clip(r.durum,220)&&Array.isArray(r.secenekler)&&r.secenekler.length===3&&Array.isArray(r.tepkiler)&&r.tepkiler.length===3&&r.secenekler.every(x=>clip(x,70))){

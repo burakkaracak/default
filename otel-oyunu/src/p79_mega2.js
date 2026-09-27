@@ -139,11 +139,11 @@ function failEvent(why){ const E=EVT[state.event.k]; state.event=null; changeRep
 function updateEvents(dt){
   const ev=state.event; if(!ev||ev.started||state.day!==ev.day||hourNow()<12||hourNow()>=22) return;
   ev.started=true; const E=EVT[ev.k], ready=eventReady(ev), fac=built(E.need), calm=!state.crisis&&!state.mess;
-  const score=Math.min(1,ready/E.rooms)*0.7+(fac?0.2:0)+(calm?0.1:0), pay=Math.round(ev.rew*score);
+  const score=Math.min(1,ready/E.rooms)*0.7+(fac?0.2:0)+(calm?0.1:0), full=Math.round(ev.rew*score*1.15), pay=Math.round(full*0.35);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; onGameEvent('event',1);
   changeRep(score>=0.9?3:score>=0.6?1:-2);
-  banner(`${E.e} ${E.name} ${score>=0.9?'kusursuz geçti!':score>=0.6?'başladı':'aksak başladı'}`,`Hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada`);
-  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40); if(score>=0.6){ fireworksShow(0,-4); cinematic(); }
+  banner(`${E.e} ${E.name} ${score>=0.9?'muhteşem başladı!':score>=0.6?'başladı':'aksak başladı'}`,`CANLI 18:00'e kadar · hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada, kalanı etkinlik boyunca akar`);
+  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40); startLive(ev.k,score,full-pay);
   for(let i=0;i<E.n;i++) setTimeout(()=>{ if(queue.length<10){ const g=spawnGuest(rand(E.types),rand([L.spawnL,L.spawnR]),true); g.evt=ev.k; } },i*900);
   state.event=null; markSave();
 }

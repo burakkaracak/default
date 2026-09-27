@@ -56,11 +56,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=36;
+const GAME_VER=38;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['🏢','Rakip otel, fiyat politikası, tedarik kamyonu, kredi'],['🧠','Yetenek ağacı, personel kariyeri, haftalık görev + ödül yolu'],['📖','Hikâye misafirleri, hırsız & kayıp çocuk, fırtına, şehir festivalleri'],['🛋️','Oda tasarımı, oda temaları, spa & çamaşırhane'],['🎆','Havai fişek, LED cephe, yüz ifadeleri, sis'],['☁️','Bulut kayıt, personelle sohbet, sabah gazetesi']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 

@@ -432,7 +432,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:36, parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:38, rules:{dog:true,booze:true}, live:null, diff:'auto', flow:0, streak:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -473,7 +473,7 @@ function isNight(){ const h=hourNow(); return h>=22.5||h<6.5; }
 function capacity(){ return UPG.cap.vals[state.up.cap]; }
 function magnetR(){ return UPG.magnet.vals[state.up.magnet]; }
 function built(id){ return !!state.built[id]; }
-function poolOpen(){ return built('pool')&&!isWinter()&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
+function poolOpen(){ return built('pool')&&!(isWinter()&&state.weather==='snow')&&(state.weather==='sun'||state.weather==='cloud')&&!isNight()&&!stormOn(); }
 function restOpen(){ const h=hourNow(); return built('rest')&&h>=8&&h<22.5; }
 function gymOpen(){ const h=hourNow(); return built('gym')&&h>=7&&h<22; }
 function floorsBuilt(){ return built('roof')?4:built('f3')?3:built('f2')?2:1; }
@@ -490,11 +490,25 @@ function audioInit(){
   const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
   try{
     const c=Sound.ctx=new AC();
-    Sound.master=c.createGain(); Sound.master.gain.value=1; Sound.master.connect(c.destination);
-    Sound.sfx=c.createGain(); Sound.sfx.connect(Sound.master);
-    Sound.music=c.createGain(); Sound.music.connect(Sound.master); applyAudioPrefs();
+    // master → yumuşak kompresör → hoparlör; hafif oda yankısı (sentetik impuls) tüm seslere derinlik verir
+    const comp=c.createDynamicsCompressor(); comp.threshold.value=-18; comp.knee.value=12; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.2;
+    const tame=c.createBiquadFilter(); tame.type='lowpass'; tame.frequency.value=9000; tame.Q.value=0.5;
+    Sound.master=c.createGain(); Sound.master.gain.value=0.9; Sound.master.connect(tame); tame.connect(comp); comp.connect(c.destination);
+    const ir=c.createBuffer(2,Math.floor(c.sampleRate*1.6),c.sampleRate);
+    for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let i=0;i<d.length;i++){ const k=i/d.length; d[i]=(Math.random()*2-1)*Math.pow(1-k,3.2)*(i<c.sampleRate*0.01?i/(c.sampleRate*0.01):1); } }
+    const rev=c.createConvolver(); rev.buffer=ir; Sound.rev=c.createGain(); Sound.rev.gain.value=0.22; Sound.rev.connect(rev); rev.connect(Sound.master);
+    Sound.sfx=c.createGain(); Sound.sfx.connect(Sound.master); Sound.sfx.connect(Sound.rev);
+    const mlp=c.createBiquadFilter(); mlp.type='lowpass'; mlp.frequency.value=2400; mlp.Q.value=0.4; mlp.connect(Sound.master); mlp.connect(Sound.rev);
+    Sound.music=c.createGain(); Sound.music.connect(mlp); applyAudioPrefs();
     const len=Math.floor(c.sampleRate*0.4), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<len;i++) d[i]=Math.random()*2-1; Sound.noise=buf;
+    // uzun pembe gürültü (döngü duyulmasın): yağmur ve rüzgâr ambiyansı için
+    const pl=Math.floor(c.sampleRate*6), pb=c.createBuffer(2,pl,c.sampleRate);
+    for(let ch=0;ch<2;ch++){ const e=pb.getChannelData(ch); let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+      for(let i=0;i<pl;i++){ const w=Math.random()*2-1; b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.969*b2+w*0.153852; b3=0.8665*b3+w*0.3104856; b4=0.55*b4+w*0.5329522; b5=-0.7616*b5-w*0.016898;
+        e[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; }
+      const f=Math.floor(c.sampleRate*0.05); for(let i=0;i<f;i++){ const k=i/f; e[pl-f+i]=e[pl-f+i]*(1-k)+e[i]*k; } }
+    Sound.pink=pb;
     startMusic();
   }catch(e){ Sound.ctx=null; }
 }
@@ -504,6 +518,8 @@ function tone(f,dur,type='sine',vol=.12,delay=0,dest,slide){
   o.type=type; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur);
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g); g.connect(dest||Sound.sfx); o.start(t); o.stop(t+dur+0.05);
+  if(type==='sine'&&!dest&&dur>0.15){ const o2=c.createOscillator(), g2=c.createGain(); o2.type='sine'; o2.frequency.setValueAtTime(f*2.001,t); if(slide) o2.frequency.exponentialRampToValueAtTime(slide*2,t+dur);
+    g2.gain.setValueAtTime(0.0001,t); g2.gain.exponentialRampToValueAtTime(vol*0.18,t+0.01); g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.6); o2.connect(g2); g2.connect(Sound.sfx); o2.start(t); o2.stop(t+dur); }
 }
 function noiseBurst(dur,vol,freq,delay=0){
   const c=Sound.ctx; if(!c) return;
@@ -517,24 +533,24 @@ function sfx(name,p){
   if(!Sound.ctx||!state.sound) return;
   const now=performance.now(); if(lastSfx[name]&&now-lastSfx[name]<45) return; lastSfx[name]=now;
   switch(name){
-    case 'ding':  tone(1568,.9,'sine',.12); tone(2093,.7,'sine',.05,.01); break;
+    case 'ding':  tone(1568,1.1,'sine',.1); tone(2093,.8,'sine',.04,.01); tone(3136,.3,'sine',.012); break;
     case 'bell':  tone(2093,.7,'sine',.035); tone(2637,.55,'sine',.018,.09); break;   // hafif resepsiyon zili
     case 'req':   tone(880,.22,'sine',.06); tone(1175,.28,'sine',.06,.11); break;
     case 'coin':{ coinStreak=now-coinLastT<520?Math.min(15,coinStreak+1):0; coinLastT=now; const m=Math.pow(2,coinStreak/12);
-      tone(1319*m+Math.random()*40,.07,'square',.028); tone(1976*m,.22,'square',.028,.06); break; }
+      tone(1319*m+Math.random()*30,.09,'triangle',.05); tone(1976*m,.26,'sine',.05,.055); break; }
     case 'thud':  tone(140,.22,'sine',.16,0,null,55); noiseBurst(.22,.08,420); break;
     case 'pick':  tone(660,.08,'triangle',.08,0,null,990); break;
     case 'drop':  tone(990,.1,'triangle',.08,0,null,520); break;
-    case 'tick':  tone(p==null?1400+Math.random()*300:700+p*1100,.04,'square',.018); break;
-    case 'clean': noiseBurst(.16,.07,3000); noiseBurst(.16,.07,2400,.18); break;
+    case 'tick':  tone(p==null?1400+Math.random()*300:700+p*1100,.05,'triangle',.03); break;
+    case 'clean': noiseBurst(.18,.05,2600); noiseBurst(.18,.05,2100,.17); tone(1760,.12,'sine',.015,.3); break;
     case 'sparkle': [0,.06,.12].forEach((d,k)=>tone(1760+k*440,.18,'sine',.04,d)); break;
-    case 'fix':   [0,.13,.26].forEach(d=>{ tone(180,.07,'square',.05,d); noiseBurst(.05,.06,1800,d); }); break;
+    case 'fix':   [0,.13,.26].forEach(d=>{ tone(200,.08,'triangle',.07,d,null,140); noiseBurst(.05,.05,2200,d); }); break;
     case 'build': [523,659,784,1047].forEach((f,k)=>tone(f,.25,'triangle',.09,k*.07)); noiseBurst(.4,.05,700,.0); break;
     case 'fail':  tone(392,.2,'triangle',.08); tone(311,.32,'triangle',.08,.16); break;
     case 'star':  [523,659,784,1047,1319].forEach((f,k)=>tone(f,.4,'triangle',.09,k*.09)); break;
     case 'click': tone(700,.05,'sine',.05); break;
     case 'meow':  tone(620,.28,'sine',.07,0,null,980); tone(980,.35,'triangle',.05,.2,null,560); break;
-    case 'alarm': [0,.3,.6].forEach(d=>{ tone(880,.22,'square',.05,d,null,620); }); break;
+    case 'alarm': [0,.3,.6].forEach(d=>{ tone(880,.24,'triangle',.07,d,null,660); }); break;
     case 'whoosh':noiseBurst(.35,.05,900); break;
   }
 }
@@ -544,9 +560,10 @@ function startMusic(){
   const play=()=>{
     const c=Sound.ctx; if(!c||c.state!=='running'||!state.music) return;
     const ch=CHORDS[chordIx++%CHORDS.length], t=c.currentTime;
-    ch.forEach(f=>{ const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f/2;
-      g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.022,t+1.2); g.gain.linearRampToValueAtTime(0.0001,t+4);
-      o.connect(g); g.connect(Sound.music); o.start(t); o.stop(t+4.1); });
+    ch.forEach(f=>[-4,4].forEach(dt=>{ const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=f/2; o.detune.value=dt;
+      g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.014,t+1.4); g.gain.linearRampToValueAtTime(0.0001,t+4.3);
+      o.connect(g); g.connect(Sound.music); o.start(t); o.stop(t+4.4); }));
+    { const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=ch[0]/4; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.03,t+0.3); g.gain.linearRampToValueAtTime(0.0001,t+3.6); o.connect(g); g.connect(Sound.music); o.start(t); o.stop(t+3.7); }
     for(let k=0;k<3;k++) tone(ch[Math.floor(Math.random()*3)]*2,.9,'sine',.018,k*1.2+Math.random()*.4,Sound.music);
   };
   play(); setInterval(play,3800);
@@ -1164,6 +1181,9 @@ function makeBird(){
 // =====================================================================
 let doorL, doorR, deskGroup, deskMonitor, logoSign, canopySign, sunPatchM=null, lobbySofaM=null, lobbyCushM=null, canopyM=null;
 function hotelName(){ return (state.custom&&state.custom.name)||'Otel Ustası'; }
+// yan kapılar: lobiden restorana, çamaşırhane/spa ara yoluna, havuza ve spor salonuna kısa yol
+const SIDE_DOORS={L:[[1.05,2.35],[-3.55,-2.25]],R:[[1.05,2.35],[-8.15,-6.85]]};
+function segs(a,b,holes){ const out=[]; let c=a; holes.slice().sort((x,y)=>x[0]-y[0]).forEach(([h0,h1])=>{ if(h0>c) out.push([c,h0]); c=Math.max(c,h1); }); if(b>c) out.push([c,b]); return out; }
 function buildShell(){
   const G=floorRoot(0), S=new THREE.Group();
   S.add(mesh(box(13.8,0.2,4.9),tmat('marble',7,2.5),0,-0.1,5.05));
@@ -1173,11 +1193,13 @@ function buildShell(){
   const tallH=2.7;
   const SL=7.6-BACK+0.08, SC=(7.6+BACK-0.08)/2;
   S.add(mesh(box(14.12,tallH,0.16),M.facade,0,tallH/2,BACK,true));
-  S.add(mesh(box(0.16,tallH,SL),M.facade,-6.98,tallH/2,SC,true));
+  segs(BACK-0.08,7.6,SIDE_DOORS.L).forEach(([a,b])=>S.add(mesh(box(0.16,tallH,b-a),M.facade,-6.98,tallH/2,(a+b)/2,true)));
+  SIDE_DOORS.L.forEach(([a,b],i)=>{ S.add(mesh(box(0.16,0.5,b-a),M.facade,-6.98,tallH-0.25,(a+b)/2,true)); [a,b].forEach(z=>S.add(mesh(box(0.22,2.2,0.08),M.trim,-6.98,1.1,z,true)));
+    const sg=signPlane(i?'ÇAMAŞIRHANE · SPA':'RESTORAN',1.25,0.26,{bg:i?'#2d5d8a':'#8a2f3a',fg:'#fff',font:'800 56px "Baloo 2"',fit:true}); sg.position.set(-6.88,2.45,(a+b)/2); sg.rotation.y=Math.PI/2; S.add(sg); });
   S.add(mesh(box(14.2,0.18,0.24),M.trim,0,tallH+0.09,BACK,true));
   S.add(mesh(box(0.24,0.18,SL),M.trim,-6.98,tallH+0.09,SC,true));
-  S.add(mesh(box(0.16,0.9,SL),M.facade,6.98,0.45,SC,true));
-  S.add(mesh(box(0.24,0.08,SL),M.gold,6.98,0.93,SC));
+  segs(BACK-0.08,7.6,SIDE_DOORS.R).forEach(([a,b])=>{ S.add(mesh(box(0.16,0.9,b-a),M.facade,6.98,0.45,(a+b)/2,true)); S.add(mesh(box(0.24,0.08,b-a),M.gold,6.98,0.93,(a+b)/2)); });
+  SIDE_DOORS.R.forEach(([a,b])=>[a,b].forEach(z=>S.add(mesh(cyl(0.07,0.07,1.1,10),M.gold,6.98,0.55,z,true))));
   // front facade: low walls + glass + mullions + door frame
   [[-7.06,-1.1],[1.1,7.06]].forEach(([a,b])=>{ const w=b-a, cx=(a+b)/2;
     S.add(mesh(box(w,0.7,0.14),M.facade,cx,0.35,7.53,true)); S.add(mesh(box(w+0.02,0.06,0.2),M.trim,cx,0.72,7.53));
@@ -1231,20 +1253,21 @@ function buildShell(){
   // desk
   buildDesk(G);
   addCols('shell',[
-    [0,-7.06,7.06,BACK-0.08,BACK+0.08],[0,-7.06,-6.9,BACK-0.08,7.6],[0,6.9,7.06,BACK-0.08,7.6],
-    ...[[-6.55,CORR[1]],[6.55,CORR[1]],[-6.55,CORR[2]],[6.55,CORR[2]]].map(([x,z])=>[0,x-0.3,x+0.3,z-0.3,z+0.3]),
+    [0,-7.06,7.06,BACK-0.08,BACK+0.08],...segs(BACK-0.08,7.6,SIDE_DOORS.L).map(([a,b])=>[0,-7.06,-6.9,a,b]),...segs(BACK-0.08,7.6,SIDE_DOORS.R).map(([a,b])=>[0,6.9,7.06,a,b]),
+    ...CORR_PLANTS.map(([x,z])=>[0,x-0.3,x+0.3,z-0.3,z+0.3]),
     [0,-7.06,-1.02,7.46,7.6],[0,1.02,7.06,7.46,7.6],
     [0,1.6,3.8,4.4,6.3],[0,-6.8,-6.1,2.7,3.3],[0,1.3,1.8,6.8,7.3],[0,3.65,4.15,6.8,7.3],[0,6.2,6.8,4.4,4.9]]);
 }
+const CORR_PLANTS=[[6.55,CORR[1]],[-6.55,CORR[2]]];
 function addRunners(S,upper){
   const rm=(w,d)=>tmat('runner',Math.max(1,Math.round(w/1.1)),1);
   CORR.forEach(z=>S.add(mesh(box(13.4,0.012,1.4),tmat('runner',12,1),0,0.006,z)));
-  CORR.forEach(z=>{ S.add(mesh(box(0.06,0.3,0.18),M.gold,-6.86,1.75,z)); S.add(mesh(sph(0.1,10,8),M.lampOn,-6.76,1.95,z)); S.add(mesh(cyl(0.05,0.03,0.12,8),M.gold,-6.8,1.83,z)); });
+  CORR.forEach((z,ci)=>{ if(!upper&&ci<2) return; S.add(mesh(box(0.06,0.3,0.18),M.gold,-6.86,1.75,z)); S.add(mesh(sph(0.1,10,8),M.lampOn,-6.76,1.95,z)); S.add(mesh(cyl(0.05,0.03,0.12,8),M.gold,-6.8,1.83,z)); });
   const al=CORR[0]-CORR[2]; S.add(mesh(box(1.4,0.013,al),tmat('runner',1,Math.round(al)),0,0.016,(CORR[0]+CORR[2])/2));
   // door mats + corridor planters (visual polish)
   const matC=[0x8a2f3a,0x2d5d8a,0x2e7d4f];
   COLX.forEach(x=>ROWZ.forEach((z,r)=>S.add(mesh(rbox(1.1,0.018,0.5,.08),mat(matC[r]),x,0.02,z+RD/2+0.32))));
-  [[-6.55,CORR[1]],[6.55,CORR[1]],[-6.55,CORR[2]],[6.55,CORR[2]]].forEach(([x,z])=>bigPlant(S,x,z,0.75));
+  (upper?[[-6.55,CORR[1]],[6.55,CORR[1]],[-6.55,CORR[2]],[6.55,CORR[2]]]:CORR_PLANTS).forEach(([x,z])=>bigPlant(S,x,z,0.75));
 }
 function buildDesk(G){
   const S=new THREE.Group();
@@ -1378,7 +1401,7 @@ function buildRestaurant(){
   const wm=tmat('wallpaperStripe',4,1.3);
   S.add(mesh(box(x1-x0,2.7,0.16),wm,cx,1.35,z0-0.08,true)); S.add(mesh(box(0.16,2.7,z1-z0),wm,x0-0.08,1.35,cz,true));
   S.add(mesh(box(x1-x0+0.3,0.18,0.26),M.trim,cx,2.79,z0-0.08,true)); S.add(mesh(box(0.26,0.18,z1-z0),M.trim,x0-0.08,2.79,cz,true));
-  S.add(mesh(box(0.16,0.9,z1-z0),M.facade,x1+0.08,0.45,cz,true)); S.add(mesh(box(0.22,0.07,z1-z0),M.gold,x1+0.08,0.93,cz));
+  segs(z0,z1,[SIDE_DOORS.L[0]]).forEach(([a,b])=>{ S.add(mesh(box(0.16,0.9,b-a),M.facade,x1+0.08,0.45,(a+b)/2,true)); S.add(mesh(box(0.22,0.07,b-a),M.gold,x1+0.08,0.93,(a+b)/2)); });
   [[x0,-12.8],[-11.2,x1]].forEach(([a,b])=>{ S.add(mesh(box(b-a,0.8,0.16),M.facade,(a+b)/2,0.4,z1+0.08,true)); S.add(mesh(box(b-a,0.07,0.22),M.gold,(a+b)/2,0.83,z1+0.08)); });
   const aw=mesh(box(2.4,0.08,1.4),tmat('awning',1,1),-12,2.4,z1+0.55,true); aw.rotation.x=0.25; S.add(aw);
   [-13.1,-10.9].forEach(x=>S.add(mesh(cyl(0.05,0.05,2.4,8),M.dark,x,1.2,z1+1.15,true)));
@@ -1406,7 +1429,7 @@ function buildRestaurant(){
   REST_TABLES.forEach(([tx,tz])=>{ const gl=glowDecal(0.9,tx,tz,0.02); G.add(gl); restLamps.push(gl); });
   restChef=makeChar(LOOKS.chef()); restChef.root.position.set(-12.8,0,-2.75); G.add(restChef.root);
   addCols('rest',[
-    [0,x0-0.16,x1,z0-0.16,z0],[0,x0-0.16,x0,z0,z1+0.16],[0,x1,x1+0.16,z0,z1+0.16],
+    [0,x0-0.16,x1,z0-0.16,z0],[0,x0-0.16,x0,z0,z1+0.16],...segs(z0,z1+0.16,[SIDE_DOORS.L[0]]).map(([a,b])=>[0,x1,x1+0.16,a,b]),
     [0,x0,-12.8,z1,z1+0.16],[0,-11.2,x1,z1,z1+0.16],
     [0,-15.85,-8.55,-2.42,-1.78],
     ...REST_TABLES.map(([tx,tz])=>[0,tx-0.46,tx+0.46,tz-0.46,tz+0.46]),
@@ -1454,7 +1477,7 @@ function buildPool(){
   poolWater=mesh(box(5.9,0.02,3.7),new THREE.MeshStandardMaterial({map:tex('water',2,1.3),transparent:true,opacity:.72,roughness:.05,metalness:.1,emissive:0x0b5a8a,emissiveIntensity:.25,depthWrite:false}),12,0.1,1.7);
   G.add(poolWater);
   addCols('pool',[
-    [0,x0,11.2,z0-0.06,z0+0.06],[0,12.6,x1,z0-0.06,z0+0.06],[0,x0-0.06,x0+0.06,z0,z1],[0,x1-0.06,x1+0.06,z0,z1],
+    [0,x0,11.2,z0-0.06,z0+0.06],[0,12.6,x1,z0-0.06,z0+0.06],...segs(z0,z1,[SIDE_DOORS.R[0]]).map(([a,b])=>[0,x0-0.06,x0+0.06,a,b]),[0,x1-0.06,x1+0.06,z0,z1],
     [0,x0,11.2,z1-0.06,z1+0.06],[0,12.8,x1,z1-0.06,z1+0.06],
     [0,8.95,15.05,-0.3,3.7],
     ...POOL_LOUNGERS.map(lx=>[0,lx-0.3,lx+0.3,4.4,5.72]),
@@ -1465,7 +1488,8 @@ function buildGym(){
   const G=new THREE.Group(); outdoor.add(G); const S=new THREE.Group();
   const x0=8.0,x1=16.2,z0=BACK-0.08,z1=-3.6, cx=(x0+x1)/2, cz=(z0+z1)/2;
   S.add(mesh(box(x1-x0,0.2,z1-z0),tmat('rubber',4,3),cx,-0.1,cz));
-  S.add(mesh(box(x1-x0,2.7,0.16),mat(0xdfe6ec),cx,1.35,z0-0.08,true)); S.add(mesh(box(0.16,2.7,z1-z0),mat(0xdfe6ec),x0-0.08,1.35,cz,true));
+  S.add(mesh(box(x1-x0,2.7,0.16),mat(0xdfe6ec),cx,1.35,z0-0.08,true)); segs(z0,z1,[SIDE_DOORS.R[1]]).forEach(([a,b])=>S.add(mesh(box(0.16,2.7,b-a),mat(0xdfe6ec),x0-0.08,1.35,(a+b)/2,true)));
+  { const [a,b]=SIDE_DOORS.R[1]; S.add(mesh(box(0.16,0.5,b-a),mat(0xdfe6ec),x0-0.08,2.45,(a+b)/2,true)); }
   S.add(mesh(box(6.5,1.5,0.03),new THREE.MeshStandardMaterial({color:0xcfe2ec,metalness:.1,roughness:.12,emissive:0x7f98a8,emissiveIntensity:.25}),cx,1.35,z0+0.01));
   for(let k=0;k<5;k++) S.add(mesh(box(0.06,1.5,0.04),mat(0xb8c6d0),cx-3.25+k*1.625,1.35,z0+0.02));
   S.add(mesh(box(x1-x0+0.3,0.18,0.26),M.trim,cx,2.79,z0-0.08,true));
@@ -1483,7 +1507,7 @@ function buildGym(){
   const sg=signPlane('SPOR SALONU',2.4,0.45,{bg:'#27ae60',fg:'#fff',font:'800 64px "Baloo 2"'}); sg.position.set(cx,2.2,z0+0.06); S.add(sg);
   G.add(bake(S));
   addCols('gym',[
-    [0,x0-0.16,x1,z0-0.16,z0],[0,x0-0.16,x0,z0,z1+0.16],[0,x1,x1+0.16,z0,z1+0.16],
+    [0,x0-0.16,x1,z0-0.16,z0],...segs(z0,z1+0.16,[SIDE_DOORS.R[1]]).map(([a,b])=>[0,x0-0.16,x0,a,b]),[0,x1,x1+0.16,z0,z1+0.16],
     [0,x0,11.2,z1,z1+0.16],[0,12.6,x1,z1,z1+0.16],
     ...GYM_TREAD.map(tx=>[0,tx-0.37,tx+0.37,-9.45,-7.95]),
     [0,11.2,13.0,-5.42,-4.98],[0,14.1,15.1,-4.48,-4.02]]);
@@ -1904,6 +1928,16 @@ function animChar(c,dt){
     L[0].rotation.x=Math.sin(t*1.6)*0.5; L[1].rotation.x=-Math.sin(t*1.6)*0.5; A[0].rotation.x=-Math.PI+Math.sin(t)*1.2; A[1].rotation.x=-Math.PI-Math.sin(t)*1.2;
   } else if(m==='sleep'){
     A[0].rotation.z=0.15; A[1].rotation.z=-0.15; B.scale.y=1+Math.sin(t*0.8)*0.02;
+  } else if(m==='dance'){
+    const s=Math.sin(t*3.2+(c.ph0||0)), u=Math.sin(t*6.4+(c.ph0||0)); B.position.y=0.36+Math.abs(s)*0.08; B.rotation.z=s*0.12; A[0].rotation.z=-1.3-u*0.45; A[1].rotation.z=1.3-u*0.45; A[0].rotation.x=-0.3; A[1].rotation.x=-0.3; L[0].rotation.x=Math.max(0,s)*0.45; L[1].rotation.x=Math.max(0,-s)*0.45;
+  } else if(m==='clap'){
+    A[0].rotation.x=A[1].rotation.x=-1.15; A[0].rotation.z=-0.38+Math.sin(t*9)*0.28; A[1].rotation.z=0.38-Math.sin(t*9)*0.28; B.position.y=0.36+Math.abs(Math.sin(t*4.5))*0.02;
+  } else if(m==='sitclap'){
+    L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-1.1; A[0].rotation.z=-0.35+Math.sin(t*9)*0.25; A[1].rotation.z=0.35-Math.sin(t*9)*0.25;
+  } else if(m==='guitar'){
+    A[0].rotation.x=-0.9; A[0].rotation.z=-0.5; A[1].rotation.x=-0.7+Math.sin(t*14)*0.25; B.position.y=0.36+Math.abs(Math.sin(t*3.2))*0.04; B.rotation.z=Math.sin(t*1.6)*0.06;
+  } else if(m==='talk'){
+    A[1].rotation.x=-0.6+Math.sin(t*2.3)*0.35; A[1].rotation.z=-0.2; A[0].rotation.x=-0.3+Math.sin(t*1.7+1)*0.2; B.rotation.z=Math.sin(t*0.9)*0.04;
   } else if(m==='cheer'){
     A[0].rotation.z=-2.5+Math.sin(t*6)*0.3; A[1].rotation.z=2.5-Math.sin(t*6)*0.3; B.position.y=0.36+Math.abs(Math.sin(t*3))*0.12;
   } else {
@@ -1911,7 +1945,7 @@ function animChar(c,dt){
   }
   if(carrying&&m!=='sleep'&&m!=='swim'){ A[0].rotation.set(-1.25,0,0.25); A[1].rotation.set(-1.25,0,-0.25); }
   // --- life: head look-around, walking lean, blinking, smooth pose transitions ---
-  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim';
+  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance';
   c.ph+=dt; const look=idle?Math.sin(c.ph*0.45)*0.5*Math.max(0,Math.sin(c.ph*0.17+1)):0;
   H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
   if(fast) B.rotation.x+=0.07;
@@ -2019,9 +2053,10 @@ function spawnGuest(type,from,tour,fl){
   if(!type&&g.type!=='insp'&&anyThemed()&&Math.random()<0.3) g.pref=rand(Object.keys(RTHEMES));
   if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
+  if(!type&&g.type!=='dog'&&g.type!=='insp'&&state.tut>=TUT.length&&Math.random()<0.06) g.booze=true;
   return g;
 }
-function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ const s=state.rooms[id],R=RT(id); return !s.dirty&&!s.broken&&!R.guest&&R.group; }); }
+function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ const s=state.rooms[id],R=RT(id); return !s.dirty&&!s.broken&&!s.hold&&!R.guest&&R.group; }); }
 function pickRoom(g){
   const rs=readyRooms(); if(!rs.length) return null;
   let best=null, bs=1e9;
@@ -2070,7 +2105,7 @@ function checkout(g){
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
   noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
-  applyRoomState(id); guestLeave(g); markSave();
+  applyRoomState(id); pendingUpgrade(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
   const s=state.rooms[id];
@@ -2104,6 +2139,7 @@ function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
   const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
   g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen');
+  if(g.visitor){ const x=Math.round(fee*0.5); state.piles[a]+=x; state.today.amen+=x; fxEmoji(g.x,g.y+2.1,g.z,g.f,'👋'); guestLeave(g); return; }
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
@@ -2127,7 +2163,7 @@ function updateGuests(dt){
     try{
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
-      if(!g.path){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
+      if(!g.path&&!g.asking){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1)*flowPatMul(); if(g.pat<=0){ angryLeave(g); continue; }
         if(built('cafe')&&!g.coffee&&g.state==='queue'&&!powerOut()){ if(g.coffeeT==null) g.coffeeT=rnd(1.5,5); g.coffeeT-=dt; if(g.coffeeT<=0) sellCoffee(g); } }
     }
     if(g.state==='room'){
@@ -2393,7 +2429,7 @@ function updateDesk(dt){
   if(!server){ checkinP=0; return; }
   checkinP+=dt/(server==='player'?0.8/(1+0.3*state.up.desk):2.0/staffSpeedMul('rec'));
   deskState.p=checkinP;
-  if(checkinP>=1){ checkinP=0; checkIn(head,pickRoom(head)); }
+  if(checkinP>=1){ if(deskGate(head,server)){ checkinP=Math.min(checkinP,1); deskState.p=1; return; } checkinP=0; checkIn(head,pickRoom(head)); }
 }
 
 // =====================================================================
@@ -2513,14 +2549,14 @@ function claimQuest(i){
   save();
 }
 let spawnT=4;
-function readyCount(){ let n=0; for(const k in state.rooms){ const s=state.rooms[k]; if(!s.dirty&&!s.broken&&!RT(+k).guest) n++; } return n; }
+function readyCount(){ let n=0; for(const k in state.rooms){ const s=state.rooms[k]; if(!s.dirty&&!s.broken&&!s.hold&&!RT(+k).guest) n++; } return n; }
 function updateSpawner(dt){
   const nRooms=Object.keys(state.rooms).length; if(!nRooms) return;
   updateEventSpawns(dt);
   spawnT-=dt; if(spawnT>0) return;
   let f=0.55+0.12*stars()+season().arr*2+WEATHER[state.weather].arr*2+(state.adsUntil>state.day+state.t?0.7:0); if(festivalOn()) f*=1.6; f*=priceDemand()*(1+0.1*skillLv('m1'))*(stormOn()?0.7:1);
   if(isNight()) f*=0.3*(state.lux&&state.lux.led?1.25:1);
-  spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3);
+  spawnT=6/Math.max(0.2,f)*rnd(0.7,1.3)*clamp(4/nRooms,0.35,1.3)*flowSpawnMul();
   if(queue.length>=Math.min(6,nRooms+1)) return;
   if(Math.random()<rivalPull()){ spawnPasser(); return; }
   if(state.tut>=TUT.length&&tryLoyalSpawn()) return;
@@ -3316,14 +3352,15 @@ function updateDilemmas(dt){
 }
 async function startDilemma(g){
   g.dilDone=true; if(state.dilDay!==state.day){ state.dilDay=state.day; state.dilN=0; } state.dilN++;
-  const cityT=DIL_CITY[city().name], base=Math.random()<0.4&&cityT?cityT:rand(DIL_BASE);
+  const cityT=DIL_CITY[city().name]; let base=Math.random()<0.4&&cityT?cityT:rand(DIL_BASE);
+  if(base===DIL_BASE[0]){ if(upsellDilemma(g)) return; base=rand(DIL_BASE.slice(1)); }
   const d={g,room:g.room,s:base.s,o:base.o.slice(),r:base.r.slice()}; dilCur=d;
   fxEmoji(g.x,g.y+2.3,g.z,g.f,'❗'); sfx('req');
   const r=await aiJSON(`Bir otel işletme oyununda misafirin müdürden bir isteği ya da şikâyeti var. Türkçe, kısa, doğal ve eğlenceli yaz; uygunsuz içerik yok.
 Otel: "${hotelName()}", ${city().name} (bu şehre özgü bir durum olabilir), ${stars()} yıldız, mevsim ${season().name}, hava ${({sun:'güneşli',cloud:'bulutlu',rain:'yağmurlu',snow:'karlı'})[state.weather]}.
 Misafir: ${g.name}, ${g.T.name} (${PERSONA[g.type]||PERSONA.tourist}), ${ROOM_T[state.rooms[g.room].type].name} odada.
 Örnek (kopyalama, yeni bir tane üret): "${base.s}"
-Üç seçenek yaz: 0 = cömert ve masraflı çözüm, 1 = ilgili ama ucuz çözüm, 2 = kibarca reddetme. Her seçenek için misafirin kısa tepkisini de yaz.
+Oda değişikliği ya da ücretsiz oda yükseltmesi konusu YAZMA (yükseltme sadece ücretli yapılır). Üç seçenek yaz: 0 = cömert ve masraflı çözüm, 1 = ilgili ama ucuz çözüm, 2 = kibarca reddetme. Her seçenek için misafirin kısa tepkisini de yaz.
 SADECE JSON: {"durum":"misafirin sözü (en fazla 2 cümle)","secenekler":["0","1","2"],"tepkiler":["0","1","2"]}`);
   if(dilCur!==d) return;
   if(r&&clip(r.durum,220)&&Array.isArray(r.secenekler)&&r.secenekler.length===3&&Array.isArray(r.tepkiler)&&r.tepkiler.length===3&&r.secenekler.every(x=>clip(x,70))){
@@ -3756,8 +3793,12 @@ function setupGrassSway(){
 }
 function startAmbience(){
   if(windAmb||!Sound.ctx||!Sound.noise) return; const c=Sound.ctx;
-  const mk=(type,freq,q)=>{ const s=c.createBufferSource(); s.buffer=Sound.noise; s.loop=true; const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q; const g=c.createGain(); g.gain.value=0; s.connect(f); f.connect(g); g.connect(Sound.sfx); s.start(); return {g,f}; };
-  windAmb={wind:mk('bandpass',420,0.7),rain:mk('highpass',2500,0.5)};
+  const buf=Sound.pink||Sound.noise;
+  const mk=(type,freq,q,type2,freq2,off)=>{ const s=c.createBufferSource(); s.buffer=buf; s.loop=true; const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q; let last=f;
+    if(type2){ const f2=c.createBiquadFilter(); f2.type=type2; f2.frequency.value=freq2; f2.Q.value=0.5; f.connect(f2); last=f2; }
+    const g=c.createGain(); g.gain.value=0; s.connect(f); last.connect(g); g.connect(Sound.sfx); s.start(0,off||0); return {g,f}; };
+  // yağmur: pembe gürültü, alçak ve yüksek frekanslar kırpılmış (tıslama yok) + ayrı damla katmanı
+  windAmb={wind:mk('bandpass',420,0.7),rain:mk('highpass',350,0.5,'lowpass',2600,2.1),rainLo:mk('lowpass',260,0.5,null,0,4.3)};
 }
 function updateWeatherFeel(dt,t){
   const target=(WIND[state.weather]||0.3)*(0.7+0.25*Math.sin(t*0.55)+0.18*Math.sin(t*1.9+1.3));
@@ -3771,11 +3812,14 @@ function updateWeatherFeel(dt,t){
   if(snowCover){ const want=isWinter()&&city().snow?(state.weather==='snow'?0.9:0.6):0; const o=snowCover.material.opacity; snowCover.material.opacity=o+(want-o)*Math.min(1,dt*0.2); snowCover.visible=snowCover.material.opacity>0.02; }
   // lightning
   const fx=$('flashFx');
-  if(state.weather==='rain'){ nextBolt-=dt; if(nextBolt<=0){ nextBolt=rnd(9,22); flashT=0.35; if(Sound.ctx&&state.sound!==false){ noiseBurst(1.6,0.12,90,0.5); noiseBurst(1.0,0.08,160,0.7); } } }
+  if(state.weather==='rain'){ nextBolt-=dt; if(nextBolt<=0){ nextBolt=rnd(9,22); flashT=0.35; if(Sound.ctx&&state.sound!==false){ noiseBurst(2.6,0.1,70,0.6); noiseBurst(1.4,0.05,140,0.75); noiseBurst(0.25,0.04,900,0.55); } } }
   if(flashT>0){ flashT-=dt; fx.style.opacity=(flashT>0.2||(flashT>0.08&&flashT<0.14))?0.55:0; } else if(fx.style.opacity!=='0') fx.style.opacity=0;
   // ambience audio
   if(Sound.ctx&&!windAmb) startAmbience();
-  if(windAmb){ const out=viewFloor===0||fpMode?1:0.6; windAmb.wind.g.gain.value=0.045*wind*out; windAmb.wind.f.frequency.value=300+wind*400; windAmb.rain.g.gain.value=state.weather==='rain'?0.05:0; }
+  if(windAmb){ const out=viewFloor===0||fpMode?1:0.6; windAmb.wind.g.gain.value=0.045*wind*out; windAmb.wind.f.frequency.value=300+wind*400; const rw=state.weather==='rain'?(stormOn&&stormOn()?1.4:1):0, sm=(k,v)=>{ k.g.gain.value+=(v-k.g.gain.value)*Math.min(1,dt*1.5); };
+    sm(windAmb.rain,rw*0.07*out); sm(windAmb.rainLo,rw*0.05*out);
+    if(rw&&state.sound!==false&&Math.random()<dt*9){ const c=Sound.ctx, t=c.currentTime, o=c.createOscillator(), g=c.createGain(); o.type='sine'; const f=rnd(1800,4200); o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*0.55,t+0.035);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.006*out,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05); o.connect(g); g.connect(Sound.sfx); o.start(t); o.stop(t+0.06); } }
 }
 
 // ---------- seasons: particles, props, colour tint, transition ----------
@@ -4042,11 +4086,11 @@ function failEvent(why){ const E=EVT[state.event.k]; state.event=null; changeRep
 function updateEvents(dt){
   const ev=state.event; if(!ev||ev.started||state.day!==ev.day||hourNow()<12||hourNow()>=22) return;
   ev.started=true; const E=EVT[ev.k], ready=eventReady(ev), fac=built(E.need), calm=!state.crisis&&!state.mess;
-  const score=Math.min(1,ready/E.rooms)*0.7+(fac?0.2:0)+(calm?0.1:0), pay=Math.round(ev.rew*score);
+  const score=Math.min(1,ready/E.rooms)*0.7+(fac?0.2:0)+(calm?0.1:0), full=Math.round(ev.rew*score*1.15), pay=Math.round(full*0.35);
   state.piles.desk+=pay; pileChanged('desk'); state.today.rooms+=pay; onGameEvent('event',1);
   changeRep(score>=0.9?3:score>=0.6?1:-2);
-  banner(`${E.e} ${E.name} ${score>=0.9?'kusursuz geçti!':score>=0.6?'başladı':'aksak başladı'}`,`Hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada`);
-  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40); if(score>=0.6){ fireworksShow(0,-4); cinematic(); }
+  banner(`${E.e} ${E.name} ${score>=0.9?'muhteşem başladı!':score>=0.6?'başladı':'aksak başladı'}`,`CANLI 18:00'e kadar · hazırlık %${Math.round(score*100)} · ${fmt(pay)} ₺ masada, kalanı etkinlik boyunca akar`);
+  sfx(score>=0.6?'star':'fail'); confettiAt(L.desk.x,1.5,L.desk.z,score>=0.9?90:40); startLive(ev.k,score,full-pay);
   for(let i=0;i<E.n;i++) setTimeout(()=>{ if(queue.length<10){ const g=spawnGuest(rand(E.types),rand([L.spawnL,L.spawnR]),true); g.evt=ev.k; } },i*900);
   state.event=null; markSave();
 }
@@ -4773,11 +4817,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=36;
+const GAME_VER=38;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['🏢','Rakip otel, fiyat politikası, tedarik kamyonu, kredi'],['🧠','Yetenek ağacı, personel kariyeri, haftalık görev + ödül yolu'],['📖','Hikâye misafirleri, hırsız & kayıp çocuk, fırtına, şehir festivalleri'],['🛋️','Oda tasarımı, oda temaları, spa & çamaşırhane'],['🎆','Havai fişek, LED cephe, yüz ifadeleri, sis'],['☁️','Bulut kayıt, personelle sohbet, sabah gazetesi']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -4829,6 +4873,399 @@ function updateDeskBell(dt){
 // ---------- hooks ----------
 function updatePolish3(dt){ updateTips3(dt); updateDeskBell(dt*gameSpeed); if((gtime*4|0)!==(updatePolish3.s|0)){ updatePolish3.s=gtime*4; updateDots(); } }
 function bootPolish3(){ applyCityMusic(); whatsNew(); }
+
+// =====================================================================
+// OPS: resepsiyon onayları (uzun konaklama), otel kuralları (köpek /
+// alkol), bekleyen oda yükseltmesi, bakım modu, ücretli oda yükseltme
+// =====================================================================
+
+// ---------- otel kuralları: köpek ve alkol ----------
+const POLICY={dog:{e:'🐶',no:'🚫🐶',name:'Köpek yasak',say:'Üzgünüz, otelimize evcil hayvan kabul etmiyoruz.'},
+  booze:{e:'🍾',no:'🚫🍾',name:'Alkol yasak',say:'Otelimiz alkolsüz bir otel, içki ile giriş yapılamıyor.'}};
+function ruleOn(k){ return !state.rules||state.rules[k]!==false; }
+const POL_REV={
+  dog:{2:['Köpeğimle kalamayacağımı ancak resepsiyonda öğrendim, boşuna geldim.','Evcil hayvan dostu değil, bizim için uygun değilmiş.'],
+       3:['Kuralı kibarca söylediler ama köpeğimle kalamadık, başka otele geçtik.','Personel nazikti; keşke evcil hayvan kabul etselerdi.'],
+       4:['Kuralları net ve kibar. Köpeğim olmadan geldiğimde mutlaka kalacağım.','Evcil hayvan yok dediler ama çok nazik davrandılar, takdir ettim.']},
+  booze:{2:['Bir şişe şarap için geri çevrildim, biraz katı buldum.','Alkol yasağını bilmiyordum, hayal kırıklığı.'],
+       3:['Alkolsüz otel olduklarını kibarca anlattılar, tercih meselesi.','Kural kural, saygı duyuyorum ama bana göre değil.'],
+       4:['Aile ortamı için alkolsüz olması güzel, kibarca uyardılar.','Kuralları net, personel saygılı. Bir dahakine şişesiz gelirim.']}};
+function policyReview(g,kind){
+  const st=rand(kind==='dog'?[2,3,3,4]:[2,3,4,4]), R={n:g.name,e:g.T.e,s:st,t:rand(POL_REV[kind][st]),d:state.day};
+  state.reviews=(state.reviews||[]).concat([R]).slice(-15);
+  changeRep(st<=2?-0.4:st>=4?0.2:0); state.today.refused=(state.today.refused||0)+1;
+  const show=()=>toast(`${'★'.repeat(R.s)}${'☆'.repeat(5-R.s)} ${g.name}: “${R.t}”`,st<=2?'bad':null);
+  aiJSON(`Bir otel işletme oyununda misafir resepsiyonda "${POLICY[kind].say}" denilerek geri çevrildi (${kind==='dog'?'köpeğiyle gelmişti':'yanında içki vardı'}). Otel: "${hotelName()}", ${city().name}.
+Misafir: ${g.name}, ${g.T.name}. Bu misafirin internete yazdığı ${st}/5 yıldızlı kısa bir yorum yaz: Türkçe, doğal, en fazla 2 kısa cümle, uygunsuz içerik yok.
+SADECE JSON: {"yorum":"..."}`).then(r=>{ const t=r&&clip(r.yorum,220); if(t) R.t=t; show(); markSave(); });
+  markSave();
+}
+function turnAway(g,kind){
+  const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); }
+  if(g.tag){ tagRemove(g.tag); g.tag=null; } g.asking=false;
+  fxEmoji(g.x,2.5,g.z,0,POLICY[kind].no); fxText(g.x,2.1,g.z,0,kind==='dog'?'Evcil hayvan yok':'Alkol yok'); sfx('req');
+  logEvent(`${POLICY[kind].no} ${g.name} kural gereği geri döndü`); guestLeave(g); policyReview(g,kind);
+}
+// alkol: bazı misafirler şişeyi emanete bırakır ve kalır
+function policyHit(g){
+  if(g.polDone) return false; g.polDone=true;
+  if(g.type==='dog'&&ruleOn('dog')){ turnAway(g,'dog'); return true; }
+  if(g.booze&&ruleOn('booze')){
+    if(Math.random()<0.5){ g.booze=false; g.sat=clamp(g.sat-4,5,100); fxEmoji(g.x,2.4,g.z,0,'🍾➡️🗄️'); toast(`🍾 ${g.name} şişesini emanete bıraktı, giriş yapıyor`); return false; }
+    turnAway(g,'booze'); return true; }
+  return false;
+}
+
+// ---------- uzun konaklama onayı ----------
+let askG=null, askT=0, askEl=null;
+function stayPay(g,n){ const id=pickRoom(g); return id==null?0:Math.round(roomRate(id)*n*g.T.pay*incomeMult()*priceMult()); }
+function askUi(){
+  if(askEl) return askEl;
+  const st=document.createElement('style'); st.textContent=`#deskAsk{position:fixed;left:50%;bottom:calc(118px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:40;width:min(420px,calc(100vw - 24px));background:rgba(22,26,40,.94);border:1px solid rgba(255,215,120,.45);border-radius:16px;padding:10px 12px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);transition:.25s;font-size:14px}
+#deskAsk.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}#deskAsk .q{margin-bottom:8px;line-height:1.35}#deskAsk .q small{display:block;color:#b9c0d6;font-size:12px}
+#deskAsk .bt{display:flex;gap:6px}#deskAsk .bt button{flex:1;padding:8px 4px;font-size:13px;line-height:1.2}#deskAsk .tm{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}#deskAsk .tm i{display:block;height:100%;background:var(--gold2,#ffd24a)}
+#deskAsk .al{display:block;margin-top:6px;font-size:12px;color:#b9c0d6;text-align:center;cursor:pointer;text-decoration:underline}`;
+  document.head.appendChild(st); askEl=document.createElement('div'); askEl.id='deskAsk'; document.body.appendChild(askEl);
+  askEl.addEventListener('pointerdown',e=>e.stopPropagation()); return askEl;
+}
+function showAsk(g,server){
+  askG=g; askT=14; g.asking=true; const el=askUi(), n=g.nights, p1=stayPay(g,1), pn=stayPay(g,n);
+  el.innerHTML=`<div class="q">🛎️ ${server==='rec'?'Resepsiyonist soruyor: ':''}<b>${g.T.e} ${escH(g.name)}</b> <b>${n} gece</b> kalmak istiyor.<small>${n} gece = ${fmt(pn)} ₺ ama oda ${n} gün dolu kalır · 1 gece = ${fmt(p1)} ₺</small></div>
+    <div class="bt"><button class="btn gold" data-a="yes">✅ ${n} gece kabul</button><button class="btn" data-a="one">1️⃣ Sadece 1 gece</button><button class="btn ghost" data-a="no">❌ Yer yok</button></div>
+    <div class="tm"><i></i></div><span class="al" data-a="always">Hep kabul et, bir daha sorma</span>`;
+  el.querySelectorAll('[data-a]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); answerAsk(b.dataset.a); });
+  el.classList.add('show'); sfx('bell');
+}
+function hideAsk(){ if(askEl) askEl.classList.remove('show'); if(askG) askG.asking=false; askG=null; }
+function answerAsk(a){
+  const g=askG; if(!g) return; hideAsk(); sfx('click');
+  if(a==='always'){ state.stayPol='yes'; toast('✅ Uzun konaklamalar artık otomatik kabul (Yönetim › Otel\'den değiştir)'); a='yes'; }
+  if(a==='yes'){ g.gateOk=true; }
+  else if(a==='one'){ g.nights=1; g.gateOk=true; g.sat=clamp(g.sat-3,5,100); fxEmoji(g.x,2.3,g.z,0,'🙂'); }
+  else { const k=queue.indexOf(g); if(k>=0){ queue.splice(k,1); reflowQueue(); } if(g.tag){ tagRemove(g.tag); g.tag=null; }
+    fxEmoji(g.x,2.3,g.z,0,'🙁'); logEvent(`❌ ${g.name}'a ${g.nights} gece için yer verilmedi`); guestLeave(g); }
+  markSave();
+}
+// true: check-in bekletilsin (soruluyor ya da misafir gitti)
+function deskGate(g,server){
+  if(policyHit(g)) return true;
+  if(g.gateOk||g.nights<=1||g.tour||g.type==='insp'||state.tut<TUT.length) return false;
+  const pol=state.stayPol||'ask';
+  if(pol==='yes'){ g.gateOk=true; return false; }
+  if(pol==='one'){ g.nights=1; g.gateOk=true; return false; }
+  if(askG!==g) showAsk(g,server);
+  return true;
+}
+function updateAsk(dt){
+  if(!askG) return;
+  if(queue[0]!==askG||!guests.includes(askG)){ hideAsk(); return; }
+  askT-=dt; const bar=askEl&&askEl.querySelector('.tm i'); if(bar) bar.style.width=(Math.max(0,askT)/14*100).toFixed(0)+'%';
+  if(askT<=0){ toast(`🛎️ Cevap gelmedi, resepsiyon ${askG.name}'ı kabul etti`); answerAsk('yes'); }
+}
+
+// ---------- bekleyen yükseltme & bakım modu ----------
+function nextRoomType(id){ const i=ROOM_ORDER.indexOf(state.rooms[id].type); return i<2?ROOM_ORDER[i+1]:null; }
+function doRoomUpgrade(id){
+  const s=state.rooms[id], ri=roomInfo(id); s.type=nextRoomType(id); qEv('upg'); buildRoomVisual(id,true);
+  confettiAt(ri.x,ri.f*FH+1,ri.z,40); sfx('build');
+}
+function orderRoomUpgrade(id){
+  const s=state.rooms[id], R=RT(id); if(s.upPend||!nextRoomType(id)) return false; const c=roomUpCost(id); if(!spend(c)) return false;
+  if(R.guest){ s.upPend=true; toast(`⏳ Oda ${id}: misafir çıkınca otomatik yükseltilecek`); }
+  else doRoomUpgrade(id);
+  save(); return true;
+}
+function pendingUpgrade(id){
+  const s=state.rooms[id]; if(!s||!s.upPend) return; s.upPend=false;
+  if(nextRoomType(id)){ doRoomUpgrade(id); toast(`⬆️ Oda ${id} yükseltildi: ${ROOM_T[s.type].name}`); }
+}
+function upgradeRoomMax(id){ let n=0; while(!RT(id).guest&&nextRoomType(id)&&orderRoomUpgrade(id)) n++; if(!n) orderRoomUpgrade(id); }
+function toggleHold(id){ const s=state.rooms[id]; s.hold=!s.hold; sfx('click'); toast(s.hold?`🚧 Oda ${id} yeni misafire kapatıldı`:`✅ Oda ${id} yeniden misafir alıyor`); markSave(); }
+
+// ---------- ücretli oda yükseltme (misafir isteği) ----------
+function betterRoomFor(g){
+  const lv=ROOM_T[state.rooms[g.room].type].lvl, f=roomInfo(g.room).f;
+  let best=null, bs=1e9; readyRooms().forEach(id=>{ const L=ROOM_T[state.rooms[id].type].lvl, rf=roomInfo(id).f; if(L<lv||(L===lv&&rf<=f)) return; const sc=(L-lv)*10+rf; if(sc<bs){ bs=sc; best=id; } });
+  return best;
+}
+function upsellFee(g,nid){ const n=Math.max(1,Math.ceil(g.stay/NIGHT_SEC)); return Math.max(r10(roomRate(g.room)*0.5*incomeMult()),Math.round((roomRate(nid)-roomRate(g.room))*n*incomeMult()*1.1)); }
+function moveGuest(g,nid){
+  const oid=g.room, OR=RT(oid); OR.guest=null; OR.req=null; state.rooms[oid].dirty=true; applyRoomState(oid);
+  const NR=RT(nid); NR.guest=g; g.room=nid; g.inRoom=false; g.unpose(); g.asleep=false; g.lastRoomT=ROOM_T[state.rooms[nid].type].name; applyRoomState(nid);
+  g.state='toRoom'; const sp=roomSpots(nid); if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
+}
+function upsellDilemma(g){
+  const nid=betterRoomFor(g); if(nid==null) return false; const fee=upsellFee(g,nid), NT=ROOM_T[state.rooms[nid].type];
+  if(modalWrap.classList.contains('show')) return false;
+  openModal(`<h3>🛎️ Oda ${g.room} <small style="font-size:13px;color:var(--muted)">${g.T.e} ${escH(g.name)}</small></h3>
+    <div class="cb them" style="max-width:100%;margin:6px 0 10px">${rand(['Odamın manzarası beklediğim gibi değil, daha iyi bir odaya geçebilir miyim?','Biraz daha geniş bir oda olsa çok iyi olurdu, bir şey yapabilir misiniz?','Üst katlarda boş oda var mı? Manzaralı bir oda istiyorum.'])}</div>
+    <button class="btn gold wide" data-u="0">💳 Farkı ödesin, Oda ${nid} (${NT.name}) · +${fmt(fee)} ₺</button>
+    <button class="btn wide" data-u="1">🍎 Meyve tabağı gönderelim · ${fmt(r10(roomRate(g.room)*0.1*incomeMult()))} ₺</button>
+    <button class="btn ghost wide" data-u="2">🙅 Rezervasyonunuz bu oda için</button>
+    <p class="note">Ücretsiz yükseltme yok: misafir isterse farkı öder.</p>`,m=>m.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ closeModal(); resolveUpsell(g,+b.dataset.u,nid,fee); }));
+  fxEmoji(g.x,g.y+2.3,g.z,g.f,'❗'); sfx('req'); return true;
+}
+function resolveUpsell(g,i,nid,fee){
+  if(!guests.includes(g)||g.room==null) return;
+  if(i===0){ if(RT(nid).guest||state.rooms[nid].dirty||state.rooms[nid].broken){ toast('Oda artık müsait değil','bad'); return; }
+    if(Math.random()<0.75){ state.money+=fee; state.today.rooms+=fee; g.sat=clamp(g.sat+10,0,100); fxText(g.x,g.y+2,g.z,g.f,'+'+fmt(fee)); sfx('coin'); toast(`💳 ${g.name} farkı ödedi (+${fmt(fee)} ₺), Oda ${nid}'e geçiyor`); moveGuest(g,nid); }
+    else { g.sat=clamp(g.sat-2,0,100); toast(`💸 ${g.name}: “O kadar ödeyemem, burada kalayım.”`); } }
+  else if(i===1){ const c=r10(roomRate(g.room)*0.1*incomeMult()); if(state.money>=c){ state.money-=c; g.sat=clamp(g.sat+6,0,100); fxEmoji(g.x,g.y+2.2,g.z,g.f,'🍎'); } }
+  else { g.sat=clamp(g.sat-5,0,100); fxEmoji(g.x,g.y+2.2,g.z,g.f,'😒'); }
+  onGameEvent('chat',1); markSave();
+}
+
+// ---------- yönetim satırları ----------
+function opsHtml(){
+  const pol=state.stayPol||'ask', b=(k,l)=>`<button class="btn ${pol===k?'gold':'ghost'}" data-stay="${k}" style="flex:1">${l}</button>`;
+  return `<div class="ugh">📜 Otel kuralları</div>
+    ${['dog','booze'].map(k=>`<div class="row"><div class="ic">${POLICY[k].no}</div><div class="tx">${POLICY[k].name}<small>${k==='dog'?'Köpekli misafir resepsiyonda geri döner ve yorum yazar':'İçkili misafir şişeyi emanete bırakır ya da geri döner'}</small></div><button class="btn ${ruleOn(k)?'gold':''}" data-rule="${k}">${ruleOn(k)?'Açık':'Kapalı'}</button></div>`).join('')}
+    <div class="row"><div class="ic">🗓️</div><div class="tx">1 geceden uzun konaklama<small>Resepsiyon her seferinde sana sorsun mu?</small></div></div>
+    <div style="display:flex;gap:6px;margin:-4px 0 10px">${b('ask','Sor')}${b('yes','Hep kabul')}${b('one','Hep 1 gece')}</div>`;
+}
+function bindOps(root){
+  root.querySelectorAll('[data-rule]').forEach(x=>x.onclick=()=>{ state.rules=state.rules||{}; state.rules[x.dataset.rule]=!ruleOn(x.dataset.rule); sfx('click'); markSave(); renderSheet(); });
+  root.querySelectorAll('[data-stay]').forEach(x=>x.onclick=()=>{ state.stayPol=x.dataset.stay; sfx('click'); markSave(); renderSheet(); });
+}
+
+// ---------- hooks ----------
+let boozeT=0;
+function updateOps(dt){
+  updateAsk(dt);
+  boozeT-=dt; if(boozeT<=0){ boozeT=3.5; queue.forEach(g=>{ if(g.booze&&!g.path) fxEmoji(g.x,2.2,g.z,0,'🍾'); }); }
+}
+
+// =====================================================================
+// LIVE: canlı etkinlikler (düğün / konferans / konser sahnesi, kalabalık,
+// ışık, müzik, coşku), havuz-spor-spa günübirlik ziyaretçileri
+// =====================================================================
+
+let live3=null, camFocus=null;   // live3: sahnedeki görsel set (kayıtta state.live)
+const LIVE_END=18;
+const LIVE_FX={wedding:['🌸','💐','💕','🥂'],conf:['💡','📊','👏','🤝'],concert:['🎵','🎶','🤘','🔥']};
+function venueFor(k){
+  if((k==='wedding'||k==='conf')&&built('rest')) return {k:'rest',x:-12,z:-0.9,rot:0,pile:'rest'};
+  if(k==='concert'&&built('pool')) return {k:'pool',x:12,z:-2.35,rot:0,pile:'pool'};
+  return {k:'garden',x:13.7,z:9.8,rot:-Math.PI/2,pile:'desk'};
+}
+function liveCount(){ return state.lowFx||LOWQ?6:11; }
+function mkNpc(G,tp,x,y,z,rot,mode){ const c=makeChar(LOOKS.guest(tp)); c.root.position.set(x,y,z); c.root.rotation.y=rot; c.mode=mode; c.baseMode=mode; c.ph0=Math.random()*6; G.add(c.root); return c; }
+function grabSeats(amen){ const out=[]; SEATS.forEach(s=>{ if(s.amen===amen&&!s.busy){ s.busy='live'; out.push(s); } }); return out; }
+function slideTex(){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=280; const x=cv.getContext('2d');
+  const draw=n=>{ x.fillStyle='#f7f9fc'; x.fillRect(0,0,512,280); x.fillStyle='#2d5d8a'; x.fillRect(0,0,512,54);
+    x.fillStyle='#fff'; x.font='700 30px sans-serif'; x.fillText(rand(['Büyüme 2025','Yeni Pazarlar','Satış Raporu','Vizyon & Strateji','Q'+(1+n%4)+' Sonuçları']),20,38);
+    const cols=['#e0574f','#f2b632','#27ae60','#2e86c1','#8e44ad']; for(let i=0;i<5;i++){ const h=40+Math.random()*160; x.fillStyle=cols[i]; x.fillRect(40+i*92,262-h,60,h); }
+    x.strokeStyle='#333'; x.lineWidth=3; x.beginPath(); x.moveTo(30,262); x.lineTo(490,262); x.stroke(); tx.needsUpdate=true; };
+  const tx=new THREE.CanvasTexture(cv); tx.encoding=THREE.sRGBEncoding; draw(0); tx.userData={draw,n:0}; return tx;
+}
+function buildLiveSet(k){
+  const V=venueFor(k), G=new THREE.Group(); outdoor.add(G); const S={k,V,G,npcs:[],crowd:[],stage:[],seats:[],lights:[],spots:[],t:0,fxT:1,momT:rnd(14,22),beat:0,step:0,couple:null,slide:null};
+  const white=M.white, gold=M.gold, dark=M.dark, n=liveCount();
+  const place=(o,x,y,z)=>{ if(V.k==='garden'){ const c=Math.cos(V.rot), s=Math.sin(V.rot); o.position.set(V.x+x*c+z*s,y,V.z-x*s+z*c); o.rotation.y+=V.rot; } else o.position.set(V.x+x,y,V.z+z); G.add(o); return o; };
+  const npc=(tp,x,y,z,rot,mode,crowd)=>{ const c=mkNpc(G,tp,0,0,0,0,mode); place(c.root,x,y,z); c.root.rotation.y=(V.k==='garden'?V.rot:0)+rot; (crowd?S.crowd:S.stage).push(c); S.npcs.push(c); return c; };
+  if(V.k==='garden'){ const st=mesh(rbox(2.6,0.3,1.5,.05),tmat('wood',2,1),0,0,0,true); place(st,0,0.15,0); }
+  const sy=V.k==='garden'?0.3:0;
+  if(k==='wedding'){
+    const arch=new THREE.Group(); [-1,1].forEach(sd=>arch.add(mesh(cyl(0.05,0.05,1.5,8),white,sd,0.75,0,true)));
+    const ar=mesh(new THREE.TorusGeometry(1,0.06,8,24,Math.PI),white,0,1.5,0); arch.add(ar);
+    for(let i=0;i<=14;i++){ const a=i/14*Math.PI; arch.add(mesh(sph(0.1,8,6),mat(i%2?0xf7b6c8:0xffffff),Math.cos(a),1.5+Math.sin(a),0.02)); }
+    place(arch,0,sy,-0.55);
+    const cake=new THREE.Group(); cake.add(mesh(cyl(0.25,0.25,0.5,10),mat(0xf4efe6),0,0.25,0,true)); [0.3,0.22,0.15].forEach((r,i)=>cake.add(mesh(cyl(r,r,0.16,16),mat(i%2?0xfff3f6:0xffffff),0,0.58+i*0.16,0)));
+    cake.add(mesh(sph(0.05,8,6),mat(0xe0574f),0,1.02,0)); place(cake,1.7,sy,0.1);
+    const bride=npc('couple',-0.3,sy,0.25,0,'dance'), groom=npc('business',0.3,sy,0.25,0,'dance');
+    bride.head.add(mesh(cone(0.3,0.55,10),new THREE.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:.6}),0,0.05,-0.08)); S.couple=[bride,groom];
+  } else if(k==='conf'){
+    S.slide=slideTex(); const scr=mesh(plane(2.4,1.3),new THREE.MeshBasicMaterial({map:S.slide}),0,1.75,0); place(scr,-0.2,sy,-0.6);
+    place(mesh(box(2.6,1.45,0.06),dark,0,1.75,0),-0.2,sy,-0.65);
+    place(mesh(rbox(0.6,1.05,0.45,.05),tmat('woodDark',1,1),0,0.52,0,true),1.25,sy,0.2);
+    npc('business',1.25,sy,-0.25,0,'talk');
+  } else {
+    const st=new THREE.Group(); if(V.k!=='garden'){ st.add(mesh(rbox(4.2,0.45,1.8,.05),dark,0,0.22,0,true)); st.add(mesh(box(4.25,0.05,1.85),gold,0,0.46,0)); }
+    const tr=mat(0x7a7f87,{metalness:.8,roughness:.3}); [-2,2].forEach(x=>st.add(mesh(box(0.12,3.0,0.12),tr,x,1.5,-0.8,true))); st.add(mesh(box(4.2,0.14,0.14),tr,0,3.0,-0.8));
+    [-2.5,2.5].forEach(x=>{ st.add(mesh(rbox(0.6,1.1,0.5,.04),mat(0x1a1a1a),x,0.55,0.2,true)); st.add(mesh(cyl(0.16,0.16,0.02,14),mat(0x444444),x,0.75,0.46)); st.add(mesh(cyl(0.1,0.1,0.02,12),mat(0x444444),x,0.35,0.46)); });
+    place(st,0,sy,0);
+    const top=(V.k==='garden'?0.3:0.46);
+    [-1.4,-0.45,0.45,1.4].forEach((x,i)=>{ const col=[0xff3a8a,0x3ad2ff,0xffd24a,0x9d7aff][i], m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+      const pv=new THREE.Group(); const c=mesh(new THREE.ConeGeometry(0.9,3.2,16,1,true),m,0,-1.6,0); pv.add(c); place(pv,x,2.95,-0.7); S.spots.push({pv,m,i}); });
+    const gtr=npc('student',-1.1,top,0.1,0,'guitar'); gtr.root.add(mesh(rbox(0.5,0.18,0.1,.04),mat(0xc0392b),0.05,0.72,0.2));
+    npc('influencer',0,top,0.25,0,'dance'); const dr=npc('athlete',1.1,top,-0.35,0,'work');
+    place(mesh(cyl(0.3,0.3,0.4,14),mat(0xe0e0e0),0,0.2,0),1.1,top,0.15);
+  }
+  // kalabalık
+  const types=k==='conf'?['business','business','elderly','student']:k==='wedding'?['couple','family','elderly','vip','tourist']:['student','influencer','tourist','athlete','couple'];
+  if(V.k==='rest'){ S.seats=grabSeats('rest'); S.seats.slice(0,n).forEach(s=>{ const c=mkNpc(G,rand(types),s.px,s.py,s.pz,s.rot,k==='wedding'?'sit':'sit'); S.crowd.push(c); S.npcs.push(c); });
+    if(k==='wedding') for(let i=0;i<Math.min(4,n);i++){ const c=mkNpc(G,rand(types),-13.3+i*0.9,0,2.45,Math.PI*(i%2),'dance'); S.crowd.push(c); S.npcs.push(c); } }
+  else if(V.k==='pool'){ S.seats=grabSeats('pool'); for(let i=0;i<n;i++){ const c=mkNpc(G,rand(types),8.9+(i%7)*1.0+(i>=7?0.5:0),0,i>=7?6.95:6.4,Math.PI,'dance'); S.crowd.push(c); S.npcs.push(c); }
+    POOL_SWIM.slice(0,3).forEach(([x,z])=>{ const c=mkNpc(G,rand(types),x,-0.42,z,rnd(0,6),'swim'); S.crowd.push(c); S.npcs.push(c); }); }
+  else for(let i=0;i<Math.min(8,n);i++) npc(rand(types),-1.2+(i%4)*0.8,0,1.6+Math.floor(i/4)*0.8,Math.PI,k==='conf'?'clap':'dance',true);
+  // ışık zinciri
+  const lz=V.k==='rest'?[2.45]:V.k==='pool'?[5.9]:[]; lz.forEach(z=>{ for(let i=0;i<12;i++){ const x0=V.k==='rest'?-15.8:8.5, m=new THREE.MeshBasicMaterial({color:[0xffe08a,0xff9ad5,0x9ad2ff][i%3]}); const b=mesh(sph(0.06,6,4),m,x0+i*0.66,2.35+Math.sin(i*0.9)*0.08,z); G.add(b); S.lights.push(b); } });
+  S.npcs.forEach(c=>c.root.traverse(o=>{ o.castShadow=false; }));
+  return S;
+}
+function dropLiveSet(){
+  if(!live3) return; live3.seats.forEach(s=>{ if(s.busy==='live') s.busy=null; });
+  outdoor.remove(live3.G); if(live3.slide) live3.slide.dispose(); live3=null; liveHud();
+}
+function startLive(k,score,left){
+  state.live={k,score,left,total:0,day:state.day,hype:0.2}; dropLiveSet(); live3=buildLiveSet(k);
+  const V=live3.V; camFocus={x:V.x,z:V.z+2.5,t:5}; liveHud(); markSave();
+}
+function finishLive(silent){
+  const L=state.live; if(!L) return; const E=EVT[L.k];
+  if(L.left>0){ state.piles.desk+=Math.round(L.left); pileChanged('desk'); state.today.rooms+=Math.round(L.left); L.total+=L.left; }
+  if(!silent){ banner(`${E.e} ${E.name} sona erdi!`,`Toplam kazanç ${fmt(Math.round(L.total))} ₺ · coşku %${Math.round((L.hype||0)*100)}`); sfx('star');
+    if(live3&&!state.lowFx){ const V=live3.V; if(L.k!=='conf') for(let i=0;i<5;i++) setTimeout(()=>fireworksAt(V.x+rnd(-4,4),rnd(8,11),V.z+rnd(-3,1)),i*450); confettiAt(V.x,1.8,V.z+1,80); }
+    if((L.hype||0)>=0.7) changeRep(1); }
+  state.live=null; setTimeout(dropLiveSet,silent?0:2600); markSave();
+}
+// ---------- müzik (mesafeye göre) ----------
+function liveVol(){ if(!live3||!Sound.ctx||state.sound===false) return 0; const V=live3.V, d=Math.hypot(player.x-V.x,player.z-V.z)+(player.f?12:0); return clamp(1.15-d/26,0.12,1)*(fpMode||viewFloor===0?1:0.5); }
+const WED_MEL=[659,784,880,784,659,587,659,523,587,659,523,440];
+function liveMusic(dt){
+  const S=live3, v=liveVol(); if(!v) return; S.beat-=dt; if(S.beat>0) return;
+  if(S.k==='concert'){ S.beat=0.25; const st=S.step++%16;
+    if(st%4===0){ tone(120,.22,'sine',.16*v,0,null,42); }
+    if(st%8===4){ noiseBurst(.14,.07*v,1800); }
+    if(st%2===1) noiseBurst(.035,.025*v,8000);
+    const bass=[110,110,130.8,98][Math.floor(st/4)]; if(st%2===0) tone(bass,.2,'triangle',.07*v);
+    if(st%4===2) tone(bass*4*(Math.random()<.5?1:1.5),.18,'sawtooth',.012*v); }
+  else if(S.k==='wedding'){ S.beat=0.42; const st=S.step++; tone(WED_MEL[st%WED_MEL.length],.5,'sine',.045*v); if(st%3===0) tone(WED_MEL[st%WED_MEL.length]/2,.9,'triangle',.03*v); }
+  else { S.beat=rnd(1.8,3); if(S.clapT>0) for(let i=0;i<10;i++) noiseBurst(.03,.03*v,rnd(1500,3500),i*0.07+Math.random()*0.05); else tone(rnd(140,190),.18,'triangle',.012*v,0,null,rnd(120,200)); }
+}
+// ---------- per-frame ----------
+function updateLive(dt,t){
+  if(camFocus&&camFocus.t>0){ camFocus.t-=dt; if(joy.on||Object.keys(keys).some(k=>keys[k])||(player.path&&player.path.length)) camFocus.t=0; }
+  const L=state.live;
+  if(L&&!live3) live3=buildLiveSet(L.k);
+  if(!L){ if(live3) dropLiveSet(); return; }
+  if(L.day!==state.day||hourNow()>=LIVE_END||hourNow()<11){ finishLive(L.day!==state.day); return; }
+  const S=live3, V=S.V; S.t+=dt;
+  // coşku: yakında durmak coşkuyu artırır
+  const near=player.f===0&&Math.hypot(player.x-V.x,player.z-(V.z+2))<6.5;
+  L.hype=clamp((L.hype||0)+(near?dt*0.06:-dt*0.012),0,1);
+  // gelir akışı
+  const remH=Math.max(0.05,LIVE_END-hourNow()), remS=remH/24*DAY_SEC, part=Math.min(L.left,L.left*dt/remS);
+  if(part>0){ const bonus=part*L.hype*0.6; L.left-=part; L.total+=part+bonus; S.acc=(S.acc||0)+part+bonus;
+    if(S.acc>=1){ const a=Math.floor(S.acc); S.acc-=a; state.piles[V.pile]+=a; state.today.rooms+=a; if((S.pc=(S.pc||0)+dt)>1.2){ S.pc=0; pileChanged(V.pile); } } }
+  // animasyon
+  S.npcs.forEach(c=>animChar(c,dt));
+  if(S.couple){ const a=S.t*0.9; S.couple.forEach((c,i)=>{ const sd=i?1:-1; c.root.position.x=V.x+Math.cos(a)*0.32*sd; c.root.position.z=V.z+0.3+Math.sin(a)*0.32*sd; c.root.rotation.y=-a+(i?-Math.PI/2:Math.PI/2); }); }
+  S.spots.forEach(s=>{ s.pv.rotation.z=Math.sin(S.t*1.3+s.i*1.7)*0.55; s.pv.rotation.x=0.35+Math.sin(S.t*0.9+s.i)*0.2; s.m.color.setHSL((S.t*0.12+s.i*0.25)%1,0.95,0.55); s.m.opacity=nightF>0.3?0.34:0.2; });
+  S.lights.forEach((b,i)=>{ b.scale.setScalar(0.8+0.35*Math.abs(Math.sin(S.t*2+i))); });
+  if(S.slide){ S.slideT=(S.slideT||0)+dt; if(S.slideT>7){ S.slideT=0; S.slide.userData.draw(++S.slide.userData.n); } }
+  // anlar ve efektler
+  S.fxT-=dt; if(S.fxT<=0){ S.fxT=rnd(0.8,1.6); const c=rand(S.npcs); if(c){ const p=new THREE.Vector3(); c.head.getWorldPosition(p); fxEmoji(p.x,p.y+0.5,p.z,0,rand(LIVE_FX[S.k])); } }
+  if(S.clapT>0){ S.clapT-=dt; if(S.clapT<=0) S.npcs.forEach(c=>c.mode=c.baseMode); }
+  S.momT-=dt; if(S.momT<=0){ S.momT=rnd(18,30); liveMoment(); }
+  liveMusic(dt);
+  S.hudT=(S.hudT||0)-dt; if(S.hudT<=0){ S.hudT=0.5; liveHud(); }
+}
+function liveMoment(){
+  const S=live3, V=S.V, v=liveVol();
+  if(S.k==='wedding'){ toast(rand(['💍 Gelin ve damat ilk dansında!','🥂 Kadeh kaldırıldı!','💐 Gelin çiçeği attı!'])); if(!state.lowFx) confettiAt(V.x,1.8,V.z+0.4,50); }
+  else if(S.k==='concert'){ toast(rand(['🎸 Gitar solosu! Kalabalık coştu','🔥 Hit şarkı çalıyor!','🤘 Seyirci eşlik ediyor!'])); S.crowd.forEach(c=>{ if(c.mode==='dance') c.mode='cheer'; }); S.clapT=4; if(!state.lowFx) confettiAt(V.x,2.2,V.z+1,40); }
+  else { toast(rand(['👏 Konuşmacı alkış topladı','📊 Yeni sunum başladı','🤝 Ara: kahve molası'])); }
+  S.crowd.forEach(c=>{ if(c.mode==='sit') c.mode='sitclap'; else if(c.mode==='clap'||c.mode==='dance'&&S.k!=='concert') c.mode='cheer'; }); S.clapT=Math.max(S.clapT||0,3.5);
+  if(v&&S.k!=='concert') for(let i=0;i<16;i++) noiseBurst(.03,.03*v,rnd(1500,3500),i*0.08+Math.random()*0.06);
+}
+// ---------- HUD ----------
+let liveEl=null;
+function liveHud(){
+  if(!liveEl){ const st=document.createElement('style'); st.textContent=`#livePill{position:fixed;left:50%;top:calc(96px + env(safe-area-inset-top));transform:translateX(-50%);z-index:30;display:none;align-items:center;gap:8px;background:rgba(22,26,40,.9);border:1px solid rgba(255,90,90,.6);border-radius:999px;padding:5px 6px 5px 12px;color:#fff;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+#livePill .dot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:lvp 1s infinite}@keyframes lvp{50%{opacity:.25}}#livePill .hb{width:54px;height:7px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}#livePill .hb i{display:block;height:100%;background:linear-gradient(90deg,#ffd24a,#ff5a8a)}
+#livePill button{border:0;border-radius:999px;background:#ffd24a;color:#3a2600;font-weight:800;padding:5px 10px;font-size:12px;cursor:pointer}@media(max-width:440px){#livePill{top:calc(88px + env(safe-area-inset-top));font-size:12px}#livePill .lbl{max-width:130px;overflow:hidden;text-overflow:ellipsis}}`;
+    document.head.appendChild(st); liveEl=document.createElement('div'); liveEl.id='livePill'; document.body.appendChild(liveEl); liveEl.addEventListener('pointerdown',e=>e.stopPropagation()); }
+  const L=state.live; if(!L||!live3){ liveEl.style.display='none'; return; }
+  const E=EVT[L.k]; liveEl.style.display='flex';
+  liveEl.innerHTML=`<span class="dot"></span><span class="lbl">CANLI ${E.e} ${E.name} · ${LIVE_END}:00'e kadar</span><span title="Coşku: yakında dur">🔥</span><span class="hb"><i style="width:${Math.round((L.hype||0)*100)}%"></i></span><button id="lvW">👀 İzle</button>`;
+  liveEl.querySelector('#lvW').onclick=e=>{ e.stopPropagation(); const V=live3.V; camFocus={x:V.x,z:V.z+2.5,t:8}; peekFloor=null; sfx('click'); toast('🔥 Etkinliğin yanında durursan coşku ve kazanç artar'); };
+}
+
+// ---------- havuz / spor / spa: günübirlik ziyaretçiler ----------
+const VIS_T={pool:['tourist','student','family','influencer'],gym:['athlete','athlete','business'],spa:['couple','elderly','vip']};
+let visT=10, amenFxT=2;
+function visitorsNow(){ return guests.filter(g=>g.visitor&&g.state!=='leave').length; }
+function spawnVisitor(){
+  const opts=['pool','gym','spa'].filter(a=>amenOpen(a)&&SEATS.some(s=>s.amen===a&&!s.busy)); if(!opts.length) return;
+  const a=rand(opts), free=SEATS.filter(s=>s.amen===a&&!s.busy), seat=rand(free), tp=rand(VIS_T[a]); if(!GTYPES[tp]) return;
+  const g=new Guest(tp), side=Math.random()<.5?L.spawnL:L.spawnR; g.visitor=a; g.stay=999; g.sat=70;
+  g.place(side.x,side.z+rnd(-0.2,0.2),0); seat.busy=g; g.seat=seat; g.state='toAmen';
+  if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(14,22); fxEmoji(g.x,g.y+2.2,g.z,0,'🎟️'); })){ seat.busy=null; g.remove(); }
+}
+function updateAmenLife(dt){
+  if(state.tut<TUT.length) return;
+  visT-=dt; if(visT<=0){ visT=rnd(12,24)/(festivalOn()?1.6:1); if(!isNight()&&visitorsNow()<(stars()>=3?4:2)) spawnVisitor(); }
+  amenFxT-=dt; if(amenFxT<=0){ amenFxT=rnd(1.8,3.2);
+    const users=guests.filter(g=>g.state==='amen'&&g.seat); const g=users.length?rand(users):null; if(!g) return;
+    const a=g.seat.amen, e=a==='pool'?(g.seat.pose==='swim'?'💦':'😎'):a==='gym'?rand(['💪','🏃','🔥']):a==='spa'?rand(['🧖','✨','🌿']):a==='rest'?rand(['😋','🍝']):null;
+    if(e) fxEmoji(g.x,g.y+2,g.z,g.f,e);
+    if(a==='pool'&&g.seat.pose==='swim'&&Sound.ctx&&state.sound!==false&&viewFloor===0&&!live3){ const d=Math.hypot(player.x-g.x,player.z-g.z); if(d<14) noiseBurst(.25,.025*(1-d/14),1400); } }
+}
+
+// =====================================================================
+// FLOW: akış dengeleyici (otomatik zorluk), günlük giriş serisi
+// =====================================================================
+
+// ---------- akış dengeleyici ----------
+// flow −1 (zorlanıyor → misafir biraz daha sabırlı, daha seyrek) … +1 (rahat → daha çok misafir, daha çok kazanç ve iş)
+const DIFF={easy:{n:'Rahat',v:-0.6},auto:{n:'Otomatik',v:null},hard:{n:'Zorlu',v:0.75}};
+function flowV(){ const d=DIFF[state.diff||'auto']; return d.v!=null?d.v:(state.flow||0); }
+function flowSpawnMul(){ return 1-0.2*flowV(); }            // spawnT çarpanı
+function flowPatMul(){ return 1+0.16*flowV(); }             // sabır tükenme hızı çarpanı
+let flowT=0, flowIdle=0, flowWin={left:0,served:0,idle:0,t:0};
+function updateFlow(dt){
+  if(state.tut<TUT.length||state.sandbox) return;
+  const rc=readyCount(); if(!queue.length&&rc>=2) flowWin.idle+=dt;
+  flowWin.t+=dt; flowT+=dt; if(flowT<DAY_SEC/8) return; flowT=0;
+  // pencere: yaklaşık 3 oyun saati
+  const t=state.today, left=Math.max(0,(t.left||0)-flowWin.left), served=Math.max(0,(t.guests||0)-flowWin.served), idleF=flowWin.idle/Math.max(1,flowWin.t);
+  flowWin={left:t.left||0,served:t.guests||0,idle:0,t:0};
+  let s=0;
+  if(left>=2||left>0&&left>=served*0.35) s-=0.35;          // misafir kaçıyor
+  if(state.money<0) s-=0.3;
+  if(state.rep<25&&state.day>3) s-=0.15;
+  if(idleF>0.45) s+=0.25;                                   // boş oda + boş sıra: sıkılıyor
+  if(left===0&&served>=3) s+=0.12;
+  const nxt=nextBigCost(); if(nxt&&state.money>nxt*3) s+=0.15;
+  state.flow=clamp((state.flow||0)*0.8+s,-1,1);
+}
+function nextBigCost(){ let c=null; (PADS||[]).forEach(d=>{ if(!built(d.id)){ const r=d.cost-(state.paid[d.id]||0); if(c==null||r<c) c=r; } }); return c; }
+function flowLabel(){ const v=flowV(); return v<=-0.4?'😌 sakin':v>=0.4?'🔥 yoğun':'⚖️ dengeli'; }
+function flowHtml(){
+  const k=state.diff||'auto';
+  return `<div class="row"><div class="ic">🎚️</div><div class="tx">Oyun temposu · şu an ${flowLabel()}<small>Otomatik: zorlanırsan misafirler sabırlı olur, rahatlarsan daha çok misafir ve kazanç gelir</small></div></div>
+    <div style="display:flex;gap:6px;margin:-4px 0 10px">${Object.keys(DIFF).map(d=>`<button class="btn ${k===d?'gold':'ghost'}" data-diff="${d}" style="flex:1">${DIFF[d].n}</button>`).join('')}</div>`;
+}
+function bindFlow(root){ root.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{ state.diff=b.dataset.diff; sfx('click'); markSave(); renderSheet(); }); }
+
+// ---------- günlük giriş serisi ----------
+const STREAK=[{e:'💰',m:150},{e:'💰',m:300},{e:'⭐',xp:250},{e:'💰',m:600},{e:'🗝️',key:1},{e:'💰',m:1000},{e:'🎁',m:2000,key:1,xp:400,big:true}];
+function dayKey(d){ return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function streakCheck(){
+  if(state.sandbox||state.tut<TUT.length) return;
+  const now=new Date(), today=dayKey(now), y=new Date(now.getTime()-864e5), S=state.streak||(state.streak={last:null,n:0,got:true});
+  if(S.last===today) { if(!S.got) setTimeout(openStreak,2600); return; }
+  S.n=S.last===dayKey(y)?S.n+1:1; S.last=today; S.got=false; markSave(); setTimeout(openStreak,2600);
+}
+function streakRew(i){ const R=STREAK[i%7], cyc=Math.floor(i/7); return {e:R.e,big:R.big,m:R.m?r10(R.m*cm()*(1+0.25*cyc)):0,key:R.key||0,xp:R.xp?R.xp*(1+cyc):0}; }
+function rewTxt(r){ return [r.m?fmt(r.m)+' ₺':'',r.key?r.key+' 🗝️':'',r.xp?r.xp+' XP':''].filter(Boolean).join(' + '); }
+function openStreak(){
+  const S=state.streak; if(!S||S.got) return; if(modalWrap.classList.contains('show')){ setTimeout(openStreak,3000); return; }
+  const i=S.n-1, w=Math.floor(i/7)*7;
+  let h=`<h3>🔥 Giriş serisi: ${S.n}. gün</h3><p class="sub">Her gün gel, ödüller büyüsün. Bir gün kaçırırsan seri baştan başlar.</p><div class="dgrid" style="grid-template-columns:repeat(7,1fr);gap:4px">`;
+  for(let k=0;k<7;k++){ const r=streakRew(w+k), cur=w+k===i, done=w+k<i;
+    h+=`<div class="stat" style="text-align:center;padding:6px 2px;${cur?'border:2px solid var(--gold2);':''}${done?'opacity:.5;':''}${r.big?'background:rgba(255,210,74,.18);':''}"><small>${w+k+1}. gün</small><b style="font-size:20px">${done?'✅':r.e}</b></div>`; }
+  const r=streakRew(i);
+  h+=`</div><div class="row" style="margin-top:10px"><div class="ic">${r.e}</div><div class="tx">Bugünün ödülü<small>${rewTxt(r)}</small></div></div><button class="btn gold wide" id="stkGet">🎁 Ödülü al</button>`;
+  openModal(h,m=>{ m.querySelector('#stkGet').onclick=()=>{ claimStreak(); closeModal(); }; });
+}
+function claimStreak(){
+  const S=state.streak; if(!S||S.got) return; S.got=true; const r=streakRew(S.n-1);
+  if(r.m){ state.money+=r.m; } if(r.key) state.keys=(state.keys||0)+r.key; if(r.xp) gainXP(r.xp);
+  sfx(r.big?'star':'coin'); if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,r.big?90:40); toast(`🔥 Seri ödülü: ${rewTxt(r)}`); save();
+}
 
 // =====================================================================
 // WORLD-PINNED TAGS (DOM)
@@ -4974,6 +5411,7 @@ function staffLvlCost(k){ const s=state.staff[k], c=STAFF_LVL_COST[s.lvl-1]; ret
 function upgCost(k){ const c=UPG[k].costs[state.up[k]]; return c==null?null:Math.round(c*cm()); }
 function adsCost(){ return Math.round((90+stars()*40)*cm()*(1-0.3*skillLv('m2'))); }
 function roomUpCost(id){ const s=state.rooms[id], i=ROOM_ORDER.indexOf(s.type); if(i>=2) return null; return Math.round(ROOM_T[ROOM_ORDER[i+1]].up*FLOOR_MULT[roomInfo(id).f]*cm()); }
+function roomUpMaxCost(id){ const s=state.rooms[id]; let i=ROOM_ORDER.indexOf(s.type), c=0; while(i<2){ i++; c+=Math.round(ROOM_T[ROOM_ORDER[i]].up*FLOOR_MULT[roomInfo(id).f]*cm()); } return c; }
 function decorCost(k){ return Math.round(DECOR[k].cost*cm()); }
 function mgmtHasDeal(){
   if(built('staff')) for(const k in STAFF){ const c=staffHireCost(k); if(c!=null&&state.money>=c&&(!STAFF[k].needs||built(STAFF[k].needs))) return true; }
@@ -4999,7 +5437,7 @@ function renderSheet(){
       h+=`<div class="row"><div class="ic">${S.e}</div><div class="tx">${S.name} <span style="color:var(--gold2)">${s.n}/${S.max}</span><small>${S.desc}${!needOk?` · önce ${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs} gerekli`:''}</small><small>Maaş: ${fmt(staffWage(k))} ₺/gün · Seviye ${s.lvl}</small>${crewNames(k)}${pips(s.lvl,STAFF_SPEED.length)}</div>
         <div style="display:flex;flex-direction:column;gap:6px">
           ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
-          ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>`:''}
+          ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>${(()=>{ const M=staffLvlMaxInfo(k); return M.n>1?`<button class="btn" data-lvlmax="${k}">MAX +${M.n} · ${fmt(M.c)}</button>`:''; })()}`:''}
         </div></div>`; }
     h+=staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
@@ -5008,7 +5446,7 @@ function renderSheet(){
       if(U.g!==lastG){ lastG=U.g; h+=`<div class="ugh">${UPG_GROUPS[U.g]}</div>`; }
       const pct={charm:15,haggle:5,fame:15,lead:10,calm:12}[k];
       const val=k==='cap'?` · ${U.vals[lv]} eşya`:k==='magnet'?` · ${U.vals[lv].toFixed(1)} m`:pct&&lv?` · +%${pct*lv}`:'';
-      h+=`<div class="row"><div class="ic">${U.e}</div><div class="tx">${U.name}${val}<small>${U.desc}</small>${pips(lv,max)}</div>${c!=null?`<button class="btn gold" data-upg="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>`:'<button class="btn" disabled>Maks</button>'}</div>`; }
+      h+=`<div class="row"><div class="ic">${U.e}</div><div class="tx">${U.name}${val}<small>${U.desc}</small>${pips(lv,max)}</div>${c!=null?`<div style="display:flex;flex-direction:column;gap:6px"><button class="btn gold" data-upg="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>${(()=>{ const M=upgMaxInfo(k); return M.n>1?`<button class="btn" data-upgmax="${k}">MAX +${M.n}<br>${fmt(M.c)} ₺</button>`:''; })()}</div>`:'<button class="btn" disabled>Maks</button>'}</div>`; }
   } else {
     const nR=Object.keys(state.rooms).length, next=CITIES[(state.city+1)%CITIES.length], adsOn=state.adsUntil>state.day+state.t;
     h+=`<div class="grid2">
@@ -5017,7 +5455,7 @@ function renderSheet(){
       <div class="stat">Bugünkü gelir<b>${fmt(state.today.rooms+state.today.tips+state.today.amen+state.today.req+state.today.cafe)} ₺</b></div><div class="stat">Günlük maaşlar<b>${fmt(wagesToday())} ₺</b></div></div>
       ${starReqHtml()}
       <div class="row" style="margin-top:10px"><div class="ic">📣</div><div class="tx">Reklam kampanyası<small>Yarım gün boyunca çok daha fazla misafir gelir</small></div><button class="btn gold" data-ads ${adsOn||state.money<adsCost()?'disabled':''}>${adsOn?'Aktif':fmt(adsCost())+' ₺'}</button></div>
-      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+legacyHtml()+luxHtml();
+      ${progressHtml(next)}`+depthHtml()+eventsHtml()+partyHtml()+flowHtml()+opsHtml()+legacyHtml()+luxHtml();
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
@@ -5025,10 +5463,12 @@ function renderSheet(){
   sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));
   sheet.querySelectorAll('[data-upg]').forEach(b=>b.onclick=()=>buyUpg(b.dataset.upg));
+  sheet.querySelectorAll('[data-upgmax]').forEach(b=>b.onclick=()=>buyUpgMax(b.dataset.upgmax));
+  sheet.querySelectorAll('[data-lvlmax]').forEach(b=>b.onclick=()=>staffLvlMax(b.dataset.lvlmax));
   const ads=sheet.querySelector('[data-ads]'); if(ads) ads.onclick=buyAds;
   sheet.querySelectorAll('[data-lux]').forEach(b=>b.onclick=()=>buyLux(b.dataset.lux));
   const mv=sheet.querySelector('[data-move]'); if(mv) mv.onclick=confirmMove;
-  bindDepth(sheet);
+  bindDepth(sheet); bindOps(sheet); bindFlow(sheet);
   const bk=sheet.querySelector('[data-break]'); if(bk) bk.onclick=buyBreakroom;
   const pty=sheet.querySelector('[data-party]'); if(pty) pty.onclick=throwParty;
   sheet.querySelectorAll('[data-evt]').forEach(b=>b.onclick=()=>b.dataset.evt==='yes'?acceptOffer():declineOffer());
@@ -5039,6 +5479,11 @@ function renderSheet(){
 function spend(c){ if(c==null||state.money<c) return false; state.money-=c; markSave(); return true; }
 function hireStaff(k){ const c=staffHireCost(k); if(!built('staff')||!spend(c)) return; state.staff[k].n++; spawnStaff(k,true); sfx('build'); toast(`${STAFF[k].e} ${STAFF[k].name} işe başladı!`); save(); renderSheet(); }
 function staffLvl(k){ const c=staffLvlCost(k); if(!spend(c)) return; state.staff[k].lvl++; qEv('upg'); sfx('star'); save(); renderSheet(); }
+function maxCost(costFn,lvKey,max){ let c=0,n=0; for(let i=lvKey;i<max;i++){ const x=costFn(i); if(x==null||c+x>state.money) break; c+=x; n++; } return {c,n}; }
+function upgMaxInfo(k){ return maxCost(i=>{ const c=UPG[k].costs[i]; return c==null?null:Math.round(c*cm()); },state.up[k],UPG[k].costs.length); }
+function staffLvlMaxInfo(k){ return maxCost(i=>{ const c=STAFF_LVL_COST[i-1]; return c==null?null:Math.round(c*cm()); },state.staff[k].lvl,STAFF_SPEED.length); }
+function buyUpgMax(k){ const {c,n}=upgMaxInfo(k); if(n<1||!spend(c)) return; state.up[k]+=n; for(let i=0;i<n;i++) qEv('upg'); sfx('star'); toast(`⬆️ ${UPG[k].name} +${n} seviye`); updateCarryUI(); save(); renderSheet(); }
+function staffLvlMax(k){ const {c,n}=staffLvlMaxInfo(k); if(n<1||!spend(c)) return; state.staff[k].lvl+=n; for(let i=0;i<n;i++) qEv('upg'); sfx('star'); toast(`⬆️ ${STAFF[k].name} hızı +${n}`); save(); renderSheet(); }
 function buyUpg(k){ const c=upgCost(k); if(!spend(c)) return; state.up[k]++; qEv('upg'); sfx('star'); updateCarryUI(); save(); renderSheet(); }
 function buyAds(){ const c=adsCost(); if(!spend(c)) return; state.adsUntil=state.day+state.t+0.5*(1+0.5*skillLv('m2')); spawnT=0.5; sfx('build'); toast('📣 Reklam yayında! Misafirler yolda'); save(); renderSheet(); }
 // ---------- ilerleme: şehirler, anahtarlar, miras ----------
@@ -5102,15 +5547,19 @@ function renderRoomSheet(){
   let h=`<h3>🛏️ Oda ${id} · ${T.name}<button class="xbtn" data-close aria-label="Kapat">✖</button></h3><p class="sub">${ri.f+1}. kat · gecelik ${fmt(roomRate(id)*incomeMult())} ₺</p>`;
   if(g){ const m=g.sat>=68?'😄':g.sat>=42?'🙂':'😠'; h+=`<div class="row"><div class="ic">${g.T.e}</div><div class="tx">${g.name}<small>${g.T.name} · ${g.nights} gece · ${g.asleep?'uyuyor 😴':g.state==='amen'?'tesiste':'odasında'}</small></div><div style="font-size:24px">${m}<small style="display:block;font-size:12px;text-align:center">%${Math.round(g.sat)}</small></div></div><button class="btn wide" data-talk style="margin:-2px 0 10px">💬 ${g.name} ile konuş</button>`; }
   else h+=`<p class="note">${s.dirty?'🧹 Temizlik bekliyor':s.broken?'🔧 Tamir bekliyor':'Boş · misafir bekliyor'}</p>`;
-  if(up!=null){ const nx=ROOM_T[ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]], ok=!g&&!s.dirty&&!s.broken;
-    h+=`<div class="row"><div class="ic">⬆️</div><div class="tx">${nx.name} odaya yükselt<small>Gecelik ${fmt(roomRate(id)*incomeMult())} → ${fmt(nx.rate*(1+0.3*ri.f)*incomeMult())} ₺ · daha seçkin misafirler${ok?'':' · oda boş ve temiz olmalı'}</small></div><button class="btn gold" data-up ${!ok||state.money<up?'disabled':''}>${fmt(up)} ₺</button></div>`; }
+  if(s.upPend) h+=`<div class="row"><div class="ic">⏳</div><div class="tx">${ROOM_T[nextRoomType(id)].name} yükseltmesi ödendi<small>Misafir çıkınca otomatik yapılacak</small></div></div>`;
+  else if(up!=null){ const nx=ROOM_T[ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]], ups=roomUpMaxCost(id);
+    h+=`<div class="row"><div class="ic">⬆️</div><div class="tx">${nx.name} odaya yükselt<small>Gecelik ${fmt(roomRate(id)*incomeMult())} → ${fmt(nx.rate*(1+0.3*ri.f)*incomeMult())} ₺ · daha seçkin misafirler${g?' · misafir çıkınca yapılır':''}</small></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn gold" data-up ${state.money<up?'disabled':''}>${g?'⏳ ':''}${fmt(up)} ₺</button>${!g&&ups>up?`<button class="btn" data-upmax ${state.money<ups?'disabled':''}>MAX ${fmt(ups)}</button>`:''}</div></div>`; }
+  h+=`<button class="btn ${s.hold?'gold':'ghost'} wide" data-hold style="margin:-2px 0 10px">${s.hold?'🚧 Bakımda · misafir almıyor (aç)':'🚧 Yeni misafir alma (bakım modu)'}</button>`;
   h+=roomThemeHtml(id)+`<button class="btn wide" data-design style="margin:-2px 0 10px">🛋️ Odayı tasarla (${(s.furn||[]).length}/4 eşya · +${designSat(s)} memnuniyet)</button>`;
   for(const k in DECOR){ const D=DECOR[k], c=decorCost(k), has=s.decor[k];
     h+=`<div class="row"><div class="ic">${D.e}</div><div class="tx">${D.name}<small>Memnuniyet +${D.sat}${D.income?` · gecelik +${D.income} ₺`:''}</small></div>${has?'<button class="btn" disabled>Var ✓</button>':`<button class="btn" data-dec="${k}" ${state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   const tk=sheet.querySelector('[data-talk]'); if(tk) tk.onclick=()=>openChat(R.guest);
-  const ub=sheet.querySelector('[data-up]'); if(ub) ub.onclick=()=>{ const c=roomUpCost(id); if(R.guest||s.dirty||s.broken||!spend(c)) return; s.type=ROOM_ORDER[ROOM_ORDER.indexOf(s.type)+1]; qEv('upg'); buildRoomVisual(id,true); confettiAt(ri.x,ri.f*FH+1,ri.z,40); sfx('build'); save(); renderSheet(); };
+  const ub=sheet.querySelector('[data-up]'); if(ub) ub.onclick=()=>{ orderRoomUpgrade(id); renderSheet(); };
+  const um=sheet.querySelector('[data-upmax]'); if(um) um.onclick=()=>{ upgradeRoomMax(id); renderSheet(); };
+  const hb=sheet.querySelector('[data-hold]'); if(hb) hb.onclick=()=>{ toggleHold(id); renderSheet(); };
   const dz=sheet.querySelector('[data-design]'); if(dz) dz.onclick=()=>{ sfx('click'); openDesigner(id); };
   sheet.querySelectorAll('[data-rth]').forEach(b=>b.onclick=()=>{ setRoomTheme(id,b.dataset.rth); renderSheet(); });
   sheet.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{ const k=b.dataset.dec, c=decorCost(k); if(s.decor[k]||!spend(c)) return; s.decor[k]=true; qEv('upg'); if(R.guest) R.guest.sat=clamp(R.guest.sat+DECOR[k].sat,0,100); buildRoomVisual(id,true); sfx('build'); save(); renderSheet(); });
@@ -5317,6 +5766,7 @@ function updateCamera(dt){
   if(fpMode){ updateCameraFP(dt); return; }
   let tx=player.x+camLA.x, ty=player.y, tz=player.z-0.8+camLA.z;
   if(peekFloor!=null){ ty=peekFloor*FH; tx=0; tz=-4.2; }
+  if(camFocus&&camFocus.t>0){ tx=camFocus.x; ty=0; tz=camFocus.z; }
   const k=Math.min(1,dt*5); cam.tx+=(tx-cam.tx)*k; cam.ty+=(ty-cam.ty)*k; cam.tz+=(tz-cam.tz)*k;
   const cp=Math.cos(cam.pitch), sp=Math.sin(cam.pitch);
   let sx=0, sz=0; if(shake>0){ sx=rnd(-1,1)*shake; sz=rnd(-1,1)*shake; shake=Math.max(0,shake-dt*1.2); }
@@ -5409,7 +5859,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -5435,7 +5885,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

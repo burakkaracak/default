@@ -93,9 +93,10 @@ function spawnGuest(type,from,tour,fl){
   if(!type&&g.type!=='insp'&&anyThemed()&&Math.random()<0.3) g.pref=rand(Object.keys(RTHEMES));
   if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
+  if(!type&&g.type!=='dog'&&g.type!=='insp'&&state.tut>=TUT.length&&Math.random()<0.06) g.booze=true;
   return g;
 }
-function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ const s=state.rooms[id],R=RT(id); return !s.dirty&&!s.broken&&!R.guest&&R.group; }); }
+function readyRooms(){ return Object.keys(state.rooms).map(Number).filter(id=>{ const s=state.rooms[id],R=RT(id); return !s.dirty&&!s.broken&&!s.hold&&!R.guest&&R.group; }); }
 function pickRoom(g){
   const rs=readyRooms(); if(!rs.length) return null;
   let best=null, bs=1e9;
@@ -144,7 +145,7 @@ function checkout(g){
   fxEmoji(g.x,g.y+2.1,g.z,g.f,mood==='happy'?'😍':mood==='neutral'?'🙂':'😠');
   if(g.type==='million') millionReveal(g,id,mood);
   noteGuestDay(g,mood,false); noteLoyal(g); if(g.story) storyCheckout(g,id,mood);
-  applyRoomState(id); guestLeave(g); markSave();
+  applyRoomState(id); pendingUpgrade(id); guestLeave(g); markSave();
 }
 function millionReveal(g,id,mood){
   const s=state.rooms[id];
@@ -178,6 +179,7 @@ function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
   const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
   g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen');
+  if(g.visitor){ const x=Math.round(fee*0.5); state.piles[a]+=x; state.today.amen+=x; fxEmoji(g.x,g.y+2.1,g.z,g.f,'👋'); guestLeave(g); return; }
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
   if(!g.goTo(sp.stand.f,sp.stand.x,sp.stand.z,()=>enterRoom(g))){ g.place(sp.stand.x,sp.stand.z,sp.stand.f); enterRoom(g); }
@@ -201,7 +203,7 @@ function updateGuests(dt){
     try{
     if(g.state==='arrive'&&!g.path){ g.state='queue'; }
     if(g.state==='queue'||(g.state==='arrive'&&queue.indexOf(g)>=0&&g.qk===0)){
-      if(!g.path){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1); if(g.pat<=0){ angryLeave(g); continue; }
+      if(!g.path&&!g.asking){ g.pat-=dt*(wxEv('heat')?1.15:1)*(night?0.6:1)*(rc>0?1:0.35)*(built('cafe')?0.7:1)*(state.mess?1.25:1)/(1+0.12*state.up.calm)/(state.lux&&state.lux.piano?1.2:1)*flowPatMul(); if(g.pat<=0){ angryLeave(g); continue; }
         if(built('cafe')&&!g.coffee&&g.state==='queue'&&!powerOut()){ if(g.coffeeT==null) g.coffeeT=rnd(1.5,5); g.coffeeT-=dt; if(g.coffeeT<=0) sellCoffee(g); } }
     }
     if(g.state==='room'){

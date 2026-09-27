@@ -126,6 +126,16 @@ function animChar(c,dt){
     L[0].rotation.x=Math.sin(t*1.6)*0.5; L[1].rotation.x=-Math.sin(t*1.6)*0.5; A[0].rotation.x=-Math.PI+Math.sin(t)*1.2; A[1].rotation.x=-Math.PI-Math.sin(t)*1.2;
   } else if(m==='sleep'){
     A[0].rotation.z=0.15; A[1].rotation.z=-0.15; B.scale.y=1+Math.sin(t*0.8)*0.02;
+  } else if(m==='dance'){
+    const s=Math.sin(t*3.2+(c.ph0||0)), u=Math.sin(t*6.4+(c.ph0||0)); B.position.y=0.36+Math.abs(s)*0.08; B.rotation.z=s*0.12; A[0].rotation.z=-1.3-u*0.45; A[1].rotation.z=1.3-u*0.45; A[0].rotation.x=-0.3; A[1].rotation.x=-0.3; L[0].rotation.x=Math.max(0,s)*0.45; L[1].rotation.x=Math.max(0,-s)*0.45;
+  } else if(m==='clap'){
+    A[0].rotation.x=A[1].rotation.x=-1.15; A[0].rotation.z=-0.38+Math.sin(t*9)*0.28; A[1].rotation.z=0.38-Math.sin(t*9)*0.28; B.position.y=0.36+Math.abs(Math.sin(t*4.5))*0.02;
+  } else if(m==='sitclap'){
+    L[0].rotation.x=L[1].rotation.x=-1.45; B.position.y=0.28; A[0].rotation.x=A[1].rotation.x=-1.1; A[0].rotation.z=-0.35+Math.sin(t*9)*0.25; A[1].rotation.z=0.35-Math.sin(t*9)*0.25;
+  } else if(m==='guitar'){
+    A[0].rotation.x=-0.9; A[0].rotation.z=-0.5; A[1].rotation.x=-0.7+Math.sin(t*14)*0.25; B.position.y=0.36+Math.abs(Math.sin(t*3.2))*0.04; B.rotation.z=Math.sin(t*1.6)*0.06;
+  } else if(m==='talk'){
+    A[1].rotation.x=-0.6+Math.sin(t*2.3)*0.35; A[1].rotation.z=-0.2; A[0].rotation.x=-0.3+Math.sin(t*1.7+1)*0.2; B.rotation.z=Math.sin(t*0.9)*0.04;
   } else if(m==='cheer'){
     A[0].rotation.z=-2.5+Math.sin(t*6)*0.3; A[1].rotation.z=2.5-Math.sin(t*6)*0.3; B.position.y=0.36+Math.abs(Math.sin(t*3))*0.12;
   } else {
@@ -133,7 +143,7 @@ function animChar(c,dt){
   }
   if(carrying&&m!=='sleep'&&m!=='swim'){ A[0].rotation.set(-1.25,0,0.25); A[1].rotation.set(-1.25,0,-0.25); }
   // --- life: head look-around, walking lean, blinking, smooth pose transitions ---
-  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim';
+  const H=c.head, idle=!fast&&m!=='work'&&m!=='sleep'&&m!=='swim'&&m!=='dance';
   c.ph+=dt; const look=idle?Math.sin(c.ph*0.45)*0.5*Math.max(0,Math.sin(c.ph*0.17+1)):0;
   H.rotation.y+=(look-H.rotation.y)*Math.min(1,dt*4); H.rotation.x+=((m==='sleep'?0:idle?Math.sin(c.ph*0.6)*0.06:fast?0.08:m==='work'?0.25:0)-H.rotation.x)*Math.min(1,dt*5);
   if(fast) B.rotation.x+=0.07;

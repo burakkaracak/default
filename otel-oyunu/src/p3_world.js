@@ -239,6 +239,9 @@ function makeBird(){
 // =====================================================================
 let doorL, doorR, deskGroup, deskMonitor, logoSign, canopySign, sunPatchM=null, lobbySofaM=null, lobbyCushM=null, canopyM=null;
 function hotelName(){ return (state.custom&&state.custom.name)||'Otel Ustası'; }
+// yan kapılar: lobiden restorana, çamaşırhane/spa ara yoluna, havuza ve spor salonuna kısa yol
+const SIDE_DOORS={L:[[1.05,2.35],[-3.55,-2.25]],R:[[1.05,2.35],[-8.15,-6.85]]};
+function segs(a,b,holes){ const out=[]; let c=a; holes.slice().sort((x,y)=>x[0]-y[0]).forEach(([h0,h1])=>{ if(h0>c) out.push([c,h0]); c=Math.max(c,h1); }); if(b>c) out.push([c,b]); return out; }
 function buildShell(){
   const G=floorRoot(0), S=new THREE.Group();
   S.add(mesh(box(13.8,0.2,4.9),tmat('marble',7,2.5),0,-0.1,5.05));
@@ -248,11 +251,13 @@ function buildShell(){
   const tallH=2.7;
   const SL=7.6-BACK+0.08, SC=(7.6+BACK-0.08)/2;
   S.add(mesh(box(14.12,tallH,0.16),M.facade,0,tallH/2,BACK,true));
-  S.add(mesh(box(0.16,tallH,SL),M.facade,-6.98,tallH/2,SC,true));
+  segs(BACK-0.08,7.6,SIDE_DOORS.L).forEach(([a,b])=>S.add(mesh(box(0.16,tallH,b-a),M.facade,-6.98,tallH/2,(a+b)/2,true)));
+  SIDE_DOORS.L.forEach(([a,b],i)=>{ S.add(mesh(box(0.16,0.5,b-a),M.facade,-6.98,tallH-0.25,(a+b)/2,true)); [a,b].forEach(z=>S.add(mesh(box(0.22,2.2,0.08),M.trim,-6.98,1.1,z,true)));
+    const sg=signPlane(i?'ÇAMAŞIRHANE · SPA':'RESTORAN',1.25,0.26,{bg:i?'#2d5d8a':'#8a2f3a',fg:'#fff',font:'800 56px "Baloo 2"',fit:true}); sg.position.set(-6.88,2.45,(a+b)/2); sg.rotation.y=Math.PI/2; S.add(sg); });
   S.add(mesh(box(14.2,0.18,0.24),M.trim,0,tallH+0.09,BACK,true));
   S.add(mesh(box(0.24,0.18,SL),M.trim,-6.98,tallH+0.09,SC,true));
-  S.add(mesh(box(0.16,0.9,SL),M.facade,6.98,0.45,SC,true));
-  S.add(mesh(box(0.24,0.08,SL),M.gold,6.98,0.93,SC));
+  segs(BACK-0.08,7.6,SIDE_DOORS.R).forEach(([a,b])=>{ S.add(mesh(box(0.16,0.9,b-a),M.facade,6.98,0.45,(a+b)/2,true)); S.add(mesh(box(0.24,0.08,b-a),M.gold,6.98,0.93,(a+b)/2)); });
+  SIDE_DOORS.R.forEach(([a,b])=>[a,b].forEach(z=>S.add(mesh(cyl(0.07,0.07,1.1,10),M.gold,6.98,0.55,z,true))));
   // front facade: low walls + glass + mullions + door frame
   [[-7.06,-1.1],[1.1,7.06]].forEach(([a,b])=>{ const w=b-a, cx=(a+b)/2;
     S.add(mesh(box(w,0.7,0.14),M.facade,cx,0.35,7.53,true)); S.add(mesh(box(w+0.02,0.06,0.2),M.trim,cx,0.72,7.53));
@@ -306,20 +311,21 @@ function buildShell(){
   // desk
   buildDesk(G);
   addCols('shell',[
-    [0,-7.06,7.06,BACK-0.08,BACK+0.08],[0,-7.06,-6.9,BACK-0.08,7.6],[0,6.9,7.06,BACK-0.08,7.6],
-    ...[[-6.55,CORR[1]],[6.55,CORR[1]],[-6.55,CORR[2]],[6.55,CORR[2]]].map(([x,z])=>[0,x-0.3,x+0.3,z-0.3,z+0.3]),
+    [0,-7.06,7.06,BACK-0.08,BACK+0.08],...segs(BACK-0.08,7.6,SIDE_DOORS.L).map(([a,b])=>[0,-7.06,-6.9,a,b]),...segs(BACK-0.08,7.6,SIDE_DOORS.R).map(([a,b])=>[0,6.9,7.06,a,b]),
+    ...CORR_PLANTS.map(([x,z])=>[0,x-0.3,x+0.3,z-0.3,z+0.3]),
     [0,-7.06,-1.02,7.46,7.6],[0,1.02,7.06,7.46,7.6],
     [0,1.6,3.8,4.4,6.3],[0,-6.8,-6.1,2.7,3.3],[0,1.3,1.8,6.8,7.3],[0,3.65,4.15,6.8,7.3],[0,6.2,6.8,4.4,4.9]]);
 }
+const CORR_PLANTS=[[6.55,CORR[1]],[-6.55,CORR[2]]];
 function addRunners(S,upper){
   const rm=(w,d)=>tmat('runner',Math.max(1,Math.round(w/1.1)),1);
   CORR.forEach(z=>S.add(mesh(box(13.4,0.012,1.4),tmat('runner',12,1),0,0.006,z)));
-  CORR.forEach(z=>{ S.add(mesh(box(0.06,0.3,0.18),M.gold,-6.86,1.75,z)); S.add(mesh(sph(0.1,10,8),M.lampOn,-6.76,1.95,z)); S.add(mesh(cyl(0.05,0.03,0.12,8),M.gold,-6.8,1.83,z)); });
+  CORR.forEach((z,ci)=>{ if(!upper&&ci<2) return; S.add(mesh(box(0.06,0.3,0.18),M.gold,-6.86,1.75,z)); S.add(mesh(sph(0.1,10,8),M.lampOn,-6.76,1.95,z)); S.add(mesh(cyl(0.05,0.03,0.12,8),M.gold,-6.8,1.83,z)); });
   const al=CORR[0]-CORR[2]; S.add(mesh(box(1.4,0.013,al),tmat('runner',1,Math.round(al)),0,0.016,(CORR[0]+CORR[2])/2));
   // door mats + corridor planters (visual polish)
   const matC=[0x8a2f3a,0x2d5d8a,0x2e7d4f];
   COLX.forEach(x=>ROWZ.forEach((z,r)=>S.add(mesh(rbox(1.1,0.018,0.5,.08),mat(matC[r]),x,0.02,z+RD/2+0.32))));
-  [[-6.55,CORR[1]],[6.55,CORR[1]],[-6.55,CORR[2]],[6.55,CORR[2]]].forEach(([x,z])=>bigPlant(S,x,z,0.75));
+  (upper?[[-6.55,CORR[1]],[6.55,CORR[1]],[-6.55,CORR[2]],[6.55,CORR[2]]]:CORR_PLANTS).forEach(([x,z])=>bigPlant(S,x,z,0.75));
 }
 function buildDesk(G){
   const S=new THREE.Group();
@@ -453,7 +459,7 @@ function buildRestaurant(){
   const wm=tmat('wallpaperStripe',4,1.3);
   S.add(mesh(box(x1-x0,2.7,0.16),wm,cx,1.35,z0-0.08,true)); S.add(mesh(box(0.16,2.7,z1-z0),wm,x0-0.08,1.35,cz,true));
   S.add(mesh(box(x1-x0+0.3,0.18,0.26),M.trim,cx,2.79,z0-0.08,true)); S.add(mesh(box(0.26,0.18,z1-z0),M.trim,x0-0.08,2.79,cz,true));
-  S.add(mesh(box(0.16,0.9,z1-z0),M.facade,x1+0.08,0.45,cz,true)); S.add(mesh(box(0.22,0.07,z1-z0),M.gold,x1+0.08,0.93,cz));
+  segs(z0,z1,[SIDE_DOORS.L[0]]).forEach(([a,b])=>{ S.add(mesh(box(0.16,0.9,b-a),M.facade,x1+0.08,0.45,(a+b)/2,true)); S.add(mesh(box(0.22,0.07,b-a),M.gold,x1+0.08,0.93,(a+b)/2)); });
   [[x0,-12.8],[-11.2,x1]].forEach(([a,b])=>{ S.add(mesh(box(b-a,0.8,0.16),M.facade,(a+b)/2,0.4,z1+0.08,true)); S.add(mesh(box(b-a,0.07,0.22),M.gold,(a+b)/2,0.83,z1+0.08)); });
   const aw=mesh(box(2.4,0.08,1.4),tmat('awning',1,1),-12,2.4,z1+0.55,true); aw.rotation.x=0.25; S.add(aw);
   [-13.1,-10.9].forEach(x=>S.add(mesh(cyl(0.05,0.05,2.4,8),M.dark,x,1.2,z1+1.15,true)));
@@ -481,7 +487,7 @@ function buildRestaurant(){
   REST_TABLES.forEach(([tx,tz])=>{ const gl=glowDecal(0.9,tx,tz,0.02); G.add(gl); restLamps.push(gl); });
   restChef=makeChar(LOOKS.chef()); restChef.root.position.set(-12.8,0,-2.75); G.add(restChef.root);
   addCols('rest',[
-    [0,x0-0.16,x1,z0-0.16,z0],[0,x0-0.16,x0,z0,z1+0.16],[0,x1,x1+0.16,z0,z1+0.16],
+    [0,x0-0.16,x1,z0-0.16,z0],[0,x0-0.16,x0,z0,z1+0.16],...segs(z0,z1+0.16,[SIDE_DOORS.L[0]]).map(([a,b])=>[0,x1,x1+0.16,a,b]),
     [0,x0,-12.8,z1,z1+0.16],[0,-11.2,x1,z1,z1+0.16],
     [0,-15.85,-8.55,-2.42,-1.78],
     ...REST_TABLES.map(([tx,tz])=>[0,tx-0.46,tx+0.46,tz-0.46,tz+0.46]),
@@ -529,7 +535,7 @@ function buildPool(){
   poolWater=mesh(box(5.9,0.02,3.7),new THREE.MeshStandardMaterial({map:tex('water',2,1.3),transparent:true,opacity:.72,roughness:.05,metalness:.1,emissive:0x0b5a8a,emissiveIntensity:.25,depthWrite:false}),12,0.1,1.7);
   G.add(poolWater);
   addCols('pool',[
-    [0,x0,11.2,z0-0.06,z0+0.06],[0,12.6,x1,z0-0.06,z0+0.06],[0,x0-0.06,x0+0.06,z0,z1],[0,x1-0.06,x1+0.06,z0,z1],
+    [0,x0,11.2,z0-0.06,z0+0.06],[0,12.6,x1,z0-0.06,z0+0.06],...segs(z0,z1,[SIDE_DOORS.R[0]]).map(([a,b])=>[0,x0-0.06,x0+0.06,a,b]),[0,x1-0.06,x1+0.06,z0,z1],
     [0,x0,11.2,z1-0.06,z1+0.06],[0,12.8,x1,z1-0.06,z1+0.06],
     [0,8.95,15.05,-0.3,3.7],
     ...POOL_LOUNGERS.map(lx=>[0,lx-0.3,lx+0.3,4.4,5.72]),
@@ -540,7 +546,8 @@ function buildGym(){
   const G=new THREE.Group(); outdoor.add(G); const S=new THREE.Group();
   const x0=8.0,x1=16.2,z0=BACK-0.08,z1=-3.6, cx=(x0+x1)/2, cz=(z0+z1)/2;
   S.add(mesh(box(x1-x0,0.2,z1-z0),tmat('rubber',4,3),cx,-0.1,cz));
-  S.add(mesh(box(x1-x0,2.7,0.16),mat(0xdfe6ec),cx,1.35,z0-0.08,true)); S.add(mesh(box(0.16,2.7,z1-z0),mat(0xdfe6ec),x0-0.08,1.35,cz,true));
+  S.add(mesh(box(x1-x0,2.7,0.16),mat(0xdfe6ec),cx,1.35,z0-0.08,true)); segs(z0,z1,[SIDE_DOORS.R[1]]).forEach(([a,b])=>S.add(mesh(box(0.16,2.7,b-a),mat(0xdfe6ec),x0-0.08,1.35,(a+b)/2,true)));
+  { const [a,b]=SIDE_DOORS.R[1]; S.add(mesh(box(0.16,0.5,b-a),mat(0xdfe6ec),x0-0.08,2.45,(a+b)/2,true)); }
   S.add(mesh(box(6.5,1.5,0.03),new THREE.MeshStandardMaterial({color:0xcfe2ec,metalness:.1,roughness:.12,emissive:0x7f98a8,emissiveIntensity:.25}),cx,1.35,z0+0.01));
   for(let k=0;k<5;k++) S.add(mesh(box(0.06,1.5,0.04),mat(0xb8c6d0),cx-3.25+k*1.625,1.35,z0+0.02));
   S.add(mesh(box(x1-x0+0.3,0.18,0.26),M.trim,cx,2.79,z0-0.08,true));
@@ -558,7 +565,7 @@ function buildGym(){
   const sg=signPlane('SPOR SALONU',2.4,0.45,{bg:'#27ae60',fg:'#fff',font:'800 64px "Baloo 2"'}); sg.position.set(cx,2.2,z0+0.06); S.add(sg);
   G.add(bake(S));
   addCols('gym',[
-    [0,x0-0.16,x1,z0-0.16,z0],[0,x0-0.16,x0,z0,z1+0.16],[0,x1,x1+0.16,z0,z1+0.16],
+    [0,x0-0.16,x1,z0-0.16,z0],...segs(z0,z1+0.16,[SIDE_DOORS.R[1]]).map(([a,b])=>[0,x0-0.16,x0,a,b]),[0,x1,x1+0.16,z0,z1+0.16],
     [0,x0,11.2,z1,z1+0.16],[0,12.6,x1,z1,z1+0.16],
     ...GYM_TREAD.map(tx=>[0,tx-0.37,tx+0.37,-9.45,-7.95]),
     [0,11.2,13.0,-5.42,-4.98],[0,14.1,15.1,-4.48,-4.02]]);

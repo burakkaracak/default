@@ -118,8 +118,12 @@ function setupGrassSway(){
 }
 function startAmbience(){
   if(windAmb||!Sound.ctx||!Sound.noise) return; const c=Sound.ctx;
-  const mk=(type,freq,q)=>{ const s=c.createBufferSource(); s.buffer=Sound.noise; s.loop=true; const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q; const g=c.createGain(); g.gain.value=0; s.connect(f); f.connect(g); g.connect(Sound.sfx); s.start(); return {g,f}; };
-  windAmb={wind:mk('bandpass',420,0.7),rain:mk('highpass',2500,0.5)};
+  const buf=Sound.pink||Sound.noise;
+  const mk=(type,freq,q,type2,freq2,off)=>{ const s=c.createBufferSource(); s.buffer=buf; s.loop=true; const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q; let last=f;
+    if(type2){ const f2=c.createBiquadFilter(); f2.type=type2; f2.frequency.value=freq2; f2.Q.value=0.5; f.connect(f2); last=f2; }
+    const g=c.createGain(); g.gain.value=0; s.connect(f); last.connect(g); g.connect(Sound.sfx); s.start(0,off||0); return {g,f}; };
+  // yağmur: pembe gürültü, alçak ve yüksek frekanslar kırpılmış (tıslama yok) + ayrı damla katmanı
+  windAmb={wind:mk('bandpass',420,0.7),rain:mk('highpass',350,0.5,'lowpass',2600,2.1),rainLo:mk('lowpass',260,0.5,null,0,4.3)};
 }
 function updateWeatherFeel(dt,t){
   const target=(WIND[state.weather]||0.3)*(0.7+0.25*Math.sin(t*0.55)+0.18*Math.sin(t*1.9+1.3));
@@ -133,11 +137,14 @@ function updateWeatherFeel(dt,t){
   if(snowCover){ const want=isWinter()&&city().snow?(state.weather==='snow'?0.9:0.6):0; const o=snowCover.material.opacity; snowCover.material.opacity=o+(want-o)*Math.min(1,dt*0.2); snowCover.visible=snowCover.material.opacity>0.02; }
   // lightning
   const fx=$('flashFx');
-  if(state.weather==='rain'){ nextBolt-=dt; if(nextBolt<=0){ nextBolt=rnd(9,22); flashT=0.35; if(Sound.ctx&&state.sound!==false){ noiseBurst(1.6,0.12,90,0.5); noiseBurst(1.0,0.08,160,0.7); } } }
+  if(state.weather==='rain'){ nextBolt-=dt; if(nextBolt<=0){ nextBolt=rnd(9,22); flashT=0.35; if(Sound.ctx&&state.sound!==false){ noiseBurst(2.6,0.1,70,0.6); noiseBurst(1.4,0.05,140,0.75); noiseBurst(0.25,0.04,900,0.55); } } }
   if(flashT>0){ flashT-=dt; fx.style.opacity=(flashT>0.2||(flashT>0.08&&flashT<0.14))?0.55:0; } else if(fx.style.opacity!=='0') fx.style.opacity=0;
   // ambience audio
   if(Sound.ctx&&!windAmb) startAmbience();
-  if(windAmb){ const out=viewFloor===0||fpMode?1:0.6; windAmb.wind.g.gain.value=0.045*wind*out; windAmb.wind.f.frequency.value=300+wind*400; windAmb.rain.g.gain.value=state.weather==='rain'?0.05:0; }
+  if(windAmb){ const out=viewFloor===0||fpMode?1:0.6; windAmb.wind.g.gain.value=0.045*wind*out; windAmb.wind.f.frequency.value=300+wind*400; const rw=state.weather==='rain'?(stormOn&&stormOn()?1.4:1):0, sm=(k,v)=>{ k.g.gain.value+=(v-k.g.gain.value)*Math.min(1,dt*1.5); };
+    sm(windAmb.rain,rw*0.07*out); sm(windAmb.rainLo,rw*0.05*out);
+    if(rw&&state.sound!==false&&Math.random()<dt*9){ const c=Sound.ctx, t=c.currentTime, o=c.createOscillator(), g=c.createGain(); o.type='sine'; const f=rnd(1800,4200); o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*0.55,t+0.035);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.006*out,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05); o.connect(g); g.connect(Sound.sfx); o.start(t); o.stop(t+0.06); } }
 }
 
 // ---------- seasons: particles, props, colour tint, transition ----------
