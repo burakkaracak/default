@@ -19,7 +19,7 @@ function buyPrj(k,ok){ const c=prjCost(k); if(!prjOpen()||c==null||state.money<c
   if(!ok&&typeof wageShort==='function'&&wageShort(c)){ openModal(`<h3>⚠️ Maaşlar tehlikede</h3><p class="sub">${PRJ[k].e} ${PRJ[k].n} için ${fmt(c)} ₺ ödersen kasada ${fmt(state.money-c)} ₺ kalır; sabah maaşları ${fmt(wagesToday())} ₺.</p><button class="btn gold wide" id="pjY">Yine de yap</button><button class="btn ghost wide" id="pjN">Vazgeç</button>`,m=>{ m.querySelector('#pjY').onclick=()=>{ closeModal(); buyPrj(k,true); }; m.querySelector('#pjN').onclick=closeModal; }); return; }
   if(!spend(c)) return; state.prj=state.prj||{}; state.prj[k]=prjLv(k)+1; sfx('build'); buildPrj();
   const P=prjSpot(k); if(!state.lowFx){ confettiAt(P.x,2.5,P.z,70); fireworksAt&&fireworksAt(P.x,6,P.z); } camFocus={x:P.x,z:P.z-2,t:4};
-  banner(`${PRJ[k].e} ${PRJ[k].n} ${state.prj[k]}. seviye`,PRJ[k].d); onGameEvent('upg',1); save(); renderSheet(); }
+  banner(`${PRJ[k].e} ${PRJ[k].n} ${state.prj[k]}. seviye`,PRJ[k].d); qEv('upg'); save(); renderSheet(); }
 // ---------- hayır vakfı: sınırsız bağış (para batağı) ----------
 function charityN(){ return state.charity||0; }
 function charityCost(){ return r10(10000*cm()*(1+0.5*charityN())); }
