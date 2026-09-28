@@ -164,7 +164,7 @@ function fixRoom(id,byStaff){
 let checkinP=0; const deskState={p:0,noRoom:false,server:null};
 function updateDesk(dt){
   const head=queue[0];
-  const recHere=staffEnts.some(e=>e.kind==='rec'&&!e.path&&e.f===0&&d2(e.x,e.z,L.recSpot.x,L.recSpot.z)<0.1);
+  const recHere=staffEnts.some(e=>e.kind==='rec'&&!e.leaveNow&&!e.path&&e.f===0&&d2(e.x,e.z,L.recSpot.x,L.recSpot.z)<0.1);
   const server=atDesk?'player':recHere?'rec':null;
   deskState.noRoom=false; deskState.p=0; deskState.server=server; deskState.noPower=powerOut();
   if(deskState.noPower){ checkinP=0; return; }
@@ -190,7 +190,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(); worldDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep);
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }

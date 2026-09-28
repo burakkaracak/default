@@ -13,7 +13,7 @@ function dayPerf(t){
   const avg=n?t.pSat/n:40, lr=lf/(n+lf);
   return Math.round(clamp(25+(avg-40)*1.6-lr*90,5,100));
 }
-function repTarget(){ const H=state.repHist||[]; if(!H.length) return null; return H.reduce((a,b)=>a+b,0)/H.length; }
+function repTarget(){ const H=state.repHist||[]; if(!H.length) return null; return Math.min(100,H.reduce((a,b)=>a+b,0)/H.length+prjRepBonus()); }   // prestij (anıt, vakıf) kalıcı hedef bonusu
 function repDrift(t){
   const p=dayPerf(t); t.perf=p; if(p==null||state.sandbox) return;
   state.repHist=(state.repHist||[]).concat([p]).slice(-3);

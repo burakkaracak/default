@@ -1,13 +1,14 @@
 
 // =====================================================================
 // MG8 · OYUN SONU: 5★ sonrası prestij projeleri (caddenin karşısında şehir
-// parkı, otel müzesi, otel anıtı) + sınırsız hayır vakfı; dış görünüm kamerası;
-// gece iç mekân (IBL yansıması gece kısılır)
+// parkı, otel müzesi, otel anıtı) + sınırsız hayır vakfı; dış görünüm kamerası
 // =====================================================================
 const PRJ={
   park:{e:'🌳',n:'Şehir parkı',d:'Şehre park yaptır: misafir talebi +%4',per:'her seviyede',cost:[20000,50000,120000]},
   muze:{e:'🏛️',n:'Otel müzesi',d:'Otelinin tarihini sergile: her misafire +1 memnuniyet, günlük ziyaretçi geliri',per:'her seviyede',cost:[30000,70000,160000]},
-  anit:{e:'🗽',n:'Otel anıtı',d:'Meydana anıt: her gece +0,4 ün',per:'her seviyede',cost:[40000,90000,200000]}};
+  anit:{e:'🗽',n:'Otel anıtı',d:'Meydana anıt: ün hedefin kalıcı +2 (günlük ün hesabı bunu silmez)',per:'her seviyede',cost:[40000,90000,200000]}};
+// kalıcı prestij ünü: repTarget'e eklenir (repDrift bunu geri çekmez) · anıt +2/seviye, bağış +0,5/bağış (en fazla +8)
+function prjRepBonus(){ return 2*prjLv('anit')+Math.min(8,0.5*charityN()); }
 function prjLv(k){ return (state.prj||{})[k]||0; }
 function prjCost(k){ const c=PRJ[k].cost[prjLv(k)]; return c==null?null:r10(c*cm()); }
 function prjOpen(){ return stars()>=5; }
@@ -27,13 +28,13 @@ function charityTitle(){ let t=null; CHARITY_T.forEach(([n,s])=>{ if(charityN()>
 function donate(){ const c=charityCost(); if(!prjOpen()||!spend(c)) return; const t0=charityTitle(); state.charity=charityN()+1; changeRep(3); sfx('star');
   if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,50); const t1=charityTitle();
   if(t1!==t0) banner('💝 '+t1,`${charityN()}. bağışın · şehir seni seviyor`); else toast(`💝 Bağış yapıldı: +3 ün · toplam ${charityN()}`); save(); renderSheet(); }
-function prjDayEnd(t){ if(state.sandbox) return; const s=muzeIncome(); if(s>0){ state.money+=s; t.amen+=s; } if(prjLv('anit')) changeRep(0.4*prjLv('anit')); }
+function prjDayEnd(t){ if(state.sandbox) return; const s=muzeIncome(); if(s>0){ state.money+=s; t.amen+=s; } }
 function prjHtml(){
   let h=`<div class="ugh">🏆 Prestij projeleri${prjOpen()?'':' · 🔒 5★'}</div>`;
   for(const k in PRJ){ const X=PRJ[k], lv=prjLv(k), c=prjCost(k);
     h+=`<div class="row" style="${prjOpen()?'':'opacity:.55'}"><div class="ic">${X.e}</div><div class="tx">${X.n} <span style="color:var(--gold2)">${lv}/3</span><small>${X.d} (${X.per})${k==='muze'&&lv?` · şu an günlük +${fmt(muzeIncome())} ₺`:''}</small>${pips(lv,3)}</div>${c==null?'<button class="btn" disabled>Tamam</button>':`<button class="btn gold" data-prj="${k}" ${!prjOpen()||state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   const T=charityTitle();
-  h+=`<div class="row" style="${prjOpen()?'':'opacity:.55'}"><div class="ic">💝</div><div class="tx">Hayır vakfı${T?` · <span style="color:var(--gold2)">${T}</span>`:''}<small>Her bağış +3 ün · ${charityN()} bağış · sınırsız, her seferinde biraz daha pahalı</small></div><button class="btn gold" data-donate ${!prjOpen()||state.money<charityCost()?'disabled':''}>${fmt(charityCost())} ₺</button></div>`;
+  h+=`<div class="row" style="${prjOpen()?'':'opacity:.55'}"><div class="ic">💝</div><div class="tx">Hayır vakfı${T?` · <span style="color:var(--gold2)">${T}</span>`:''}<small>Her bağış hemen +3 ün ve kalıcı +0,5 ün hedefi (en fazla +8; şu an +${Math.min(8,0.5*charityN())}) · ${charityN()} bağış · sınırsız, her seferinde biraz daha pahalı</small></div><button class="btn gold" data-donate ${!prjOpen()||state.money<charityCost()?'disabled':''}>${fmt(charityCost())} ₺</button></div>`;
   return h; }
 function bindEndgame(root){ root.querySelectorAll('[data-prj]').forEach(b=>b.onclick=()=>buyPrj(b.dataset.prj)); const d=root.querySelector('[data-donate]'); if(d) d.onclick=donate; }
 
@@ -78,10 +79,7 @@ function toggleExtView(){
 }
 function updateExtView(){ if(!extView) return; if(peekFloor!==extView.pf||fpMode||player.moving||player.path){ const e=extView; extView=null; cam.dist=e.d; cam.pitch=e.p; cam.yaw=e.y; if(peekFloor===e.pf) peekFloor=null; } }
 
-// ---------- gece iç mekân: çevre yansıması (IBL) gece kısılır, ışıklar öne çıkar ----------
-let nightEnvK=-1;
-function updateNightInterior(){ const k=Math.round((typeof nightF==='number'?nightF:0)*20)/20; if(k===nightEnvK) return; nightEnvK=k; const f=1-0.7*k;
-  for(const key in matCache){ const m=matCache[key]; if(!m||!m.isMeshStandardMaterial||typeof m.envMapIntensity!=='number') continue; if(m.userData.baseEnv==null) m.userData.baseEnv=m.envMapIntensity; m.envMapIntensity=m.userData.baseEnv*f; } }
+// gece iç mekân: yansıma kısması p26 updateEnv'de (tek sahip; burada ikinci kez yazmak titreme yapıyordu)
 
 function bootEndgame(){ try{ buildPrj(); }catch(e){ console.warn('endgame',e); } }
-function updateEndgame(dt){ updateExtView(); updateNightInterior(); }
+function updateEndgame(dt){ updateExtView(); }

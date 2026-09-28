@@ -170,7 +170,7 @@ GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,
 function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if(roofBarOn()&&opts.includes('roof')&&Math.random()<0.6) a='roof'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
+  let a=rand(opts); if(roofBarOn()&&opts.includes('roof')&&Math.random()<0.6) a='roof'; if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest';   // iftar çatı barından önce gelir if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -187,13 +187,14 @@ function endAmenity(g){
 }
 function makeRequest(g){
   const R=RT(g.room); if(R.req) return;
-  const items=['paper','towel']; if(restOpen()) items.push('food');
-  R.req={item:rand(items),left:reqTime(),max:reqTime(),by:null};
+  const items=['paper','towel']; if(restOpen()||nightKitchen()) items.push('food');
+  R.req={item:g.sahurAwake&&nightKitchen()?'food':rand(items),left:reqTime(),max:reqTime(),by:null};
   sfx('req'); tutEvent('request');
 }
 function fulfillReq(id){
   const R=RT(id), s=state.rooms[id]; if(!R.req) return;
   const tip=Math.round(REQ_TIP[R.req.item]*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
+  if(R.guest&&R.req.item==='food') R.guest.ateFood=true;   // misafir hafızası: oda servisi aldı
   if(R.guest){ R.guest.sat=clamp(R.guest.sat+10,0,100); fxEmoji(R.guest.x,R.guest.y+2.1,R.guest.z,R.guest.f,'😊'); }
   s.tip+=tip; state.today.req+=tip; R.req=null; applyRoomState(id); sfx('drop'); qEv('req'); markSave();
 }
@@ -212,8 +213,9 @@ function updateGuests(dt){
       g.stay-=dt;
       if(s.broken) g.sat=Math.max(0,g.sat-dt*0.25);
       if(state.crisis&&(state.crisis.type==='power'||state.crisis.type==='flood'&&state.crisis.f===g.f)) g.sat=Math.max(0,g.sat-dt*0.18);
-      if(night&&!g.asleep){ const sp=roomSpots(g.room); g.asleep=true; g.act=null; g.pose({px:sp.bed.x,pz:sp.bed.z,py:0.5,rx:-Math.PI/2,rot:0,pose:'sleep'}); }
-      else if(!night&&g.asleep){ const sp=roomSpots(g.room); g.asleep=false; g.unpose(); g.x=sp.stand.x; g.z=sp.stand.z; g.tRot=Math.PI*0.5; }
+      const sleepNow=night&&!g.sahurAwake;   // sahurda uyanan misafir uyumaz
+      if(sleepNow&&!g.asleep){ const sp=roomSpots(g.room); g.asleep=true; g.act=null; g.pose({px:sp.bed.x,pz:sp.bed.z,py:0.5,rx:-Math.PI/2,rot:0,pose:'sleep'}); }
+      else if(!sleepNow&&g.asleep){ const sp=roomSpots(g.room); g.asleep=false; g.unpose(); g.x=sp.stand.x; g.z=sp.stand.z; g.tRot=Math.PI*0.5; }
       if(!g.asleep){
         if(built('depo')&&!R.req){ g.reqT-=dt*g.T.req; if(g.reqT<=0){ g.reqT=rnd(22,40); if(Math.random()<.75) makeRequest(g); } }
         if(!R.req){ g.amenT-=dt; if(g.amenT<=0){ g.amenT=rnd(16,30); if(g.stay>8&&Math.random()<.6) tryAmenity(g); } }
@@ -254,6 +256,9 @@ function staffGoIdle(e){
 function updateStaff(dt){
   for(const e of staffEnts){
     e.speed=2.3*staffSpeedMul(e.kind)*staffEnergyMul(e);
+    // izinli personel: işini bırakır, görünmez olur (hasta personel mekanizması: e.gone), ertesi gün kapıdan döner
+    if(onLeave(e)){ if(!e.leaveNow){ e.leaveNow=true; if(e.job) finishJob(e); e.gone=true; e.c.root.visible=false; } continue; }
+    else if(e.leaveNow){ e.leaveNow=false; if(!e.sick){ e.gone=false; e.c.root.visible=true; e.place(rnd(-0.5,0.5),8.6,0); e.idleDone=false; e.wait=0; } }
     if(e.sick) continue;
     if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry'||e.kind==='cook') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
     if(e.wait>0){ e.wait-=dt; if(e.job&&e.job.working){} else continue; }

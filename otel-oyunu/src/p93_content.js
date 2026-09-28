@@ -90,7 +90,7 @@ function mgrPrice(){ return mgrOn('flash')?0.9:1; }
 function mgrStaff(){ return mgrOn('train')?1.2:1; }
 function mgrNight(){ return mgrOn('night')?2:1; }
 function mgrUnlocked(){ return stars()>=4||!!state.done; }
-function mgrDeal(){ if(!mgrUnlocked()||state.sandbox||state.tut<TUT.length) return; const ks=Object.keys(MGR_CARDS).sort(()=>Math.random()-.5).slice(0,3); state.mgrOffer={day:state.day,ks}; setTimeout(openMgr,4200); }
+function mgrDeal(){ if(!mgrUnlocked()||state.sandbox||state.tut<TUT.length) return; const ks=Object.keys(MGR_CARDS).sort(()=>Math.random()-.5).slice(0,3); state.mgrOffer={day:state.day,ks}; morningAdd({k:'mgr'}); }
 function openMgr(){
   const O=state.mgrOffer; if(!O||O.day!==state.day) return;
   openModal(`<h3>🗂️ Müdür masası · ${state.day}. gün</h3><p class="sub">Bugünün stratejisini seç (günde bir kart)</p>${O.ks.map(k=>{ const C=MGR_CARDS[k], c=r10(C.cost*cm()); return `<button class="btn ${c?'':'gold'} wide" data-mg="${k}" ${state.money<c?'disabled':''} style="text-align:left;line-height:1.3">${C.e} <b>${C.n}</b>${c?` · ${fmt(c)} ₺`:''}<br><small style="font-weight:600;opacity:.85">${C.d}</small></button>`; }).join('')}<button class="btn ghost wide" data-mg="">Bugün kart yok</button>`,
