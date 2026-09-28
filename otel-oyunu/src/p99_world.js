@@ -5,8 +5,8 @@
 // fiyat savaşı, esnaf ortaklıkları (karşı kaldırımda simitçi, taksi…)
 // =====================================================================
 // ---------- takvim ----------
-// 24 günlük döngü: 3 gün bayram (gün 8-10), 7 gün ramazan (gün 15-21, son günü bayram arifesi)
-function calPhase(day=state.day){ const d=((day-1)%24)+1; return d>=8&&d<=10?'bayram':d>=15&&d<=21?'ramazan':null; }
+// 24 günlük döngü: 7 gün ramazan (gün 15-21), hemen ardından 3 gün bayram (gün 22-24)
+function calPhase(day=state.day){ const d=((day-1)%24)+1; return d>=22?'bayram':d>=15&&d<=21?'ramazan':null; }
 function seasonTourism(){ const si=seasonIx(), c=city(); if(si===1&&c.palm) return {e:'🏖️',n:'Yaz akını',dem:1.3,w:{tourist:1.6,family:1.5}};
   if(si===3&&c.snow) return {e:'⛷️',n:'Kayak sezonu',dem:1.15,w:{athlete:1.8,couple:1.3}}; return null; }
 // ---------- şehir haberleri ----------
@@ -22,7 +22,7 @@ function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; const P=sta
 function newsFor(d){ const k=(state.newsPlan||{})[d]; return k?NEWS.find(x=>x.k===k):null; }
 function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
 // ---------- toplam etkiler ----------
-function worldDemand(){ let f=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
+function worldDemand(){ let f=prjDemand(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
 function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') w*=({family:1.8,elderly:1.4})[k]||1; if(st) w*=st.w[k]||1; if(N) w*=N.w[k]||1; return w; }
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
 function iftarOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=19&&h<21; }
@@ -36,8 +36,8 @@ function updateCalendar(){
   if(iftarOn()&&iftarShown!==state.day){ iftarShown=state.day; banner('🌙 İftar vakti','Misafirler restorana akın ediyor · restoran geliri +%60'); guests.forEach(g=>{ if(g.state==='room'&&!g.asleep&&Math.random()<0.5){ g.amenT=0; g.T.likes; } }); }
   if(sahurOn()&&sahurShown!==state.day){ sahurShown=state.day; toast('🌙 Sahur vakti: oda servisi siparişleri artıyor'); guests.forEach(g=>{ if(g.state==='room'&&Math.random()<0.3){ g.reqT=0; } }); }
 }
-function worldHtml(){ const L2=worldLabel(); const d=((state.day-1)%24)+1, nb=d<8?8-d:d<15?15-d:24-d+8;
-  return `<div class="ugh">🗓️ Şehir takvimi</div><div class="row"><div class="ic">📰</div><div class="tx">${L2.length?L2.join(' · '):'Sakin bir gün'}<small>${calPhase()?'':`Sıradaki ${d<8||d>21?'bayram':'ramazan'}: ${d<8?8-d:d<15?15-d:24-d+8} gün sonra`} · bayramda aileler, ramazanda iftar/sahur, yazın sahil, kışın kayak</small></div></div>`; }
+function worldHtml(){ const L2=worldLabel(); const d=((state.day-1)%24)+1;
+  return `<div class="ugh">🗓️ Şehir takvimi</div><div class="row"><div class="ic">📰</div><div class="tx">${L2.length?L2.join(' · '):'Sakin bir gün'}<small>${calPhase()==='ramazan'?`Bayram: ${22-d} gün sonra`:calPhase()?'':`Ramazan: ${15-d} gün sonra, ardından bayram`} · bayramda aileler, ramazanda iftar/sahur, yazın sahil, kışın kayak</small></div></div>`; }
 
 // ---------- rakip: büyür + fiyat savaşı ----------
 function rivalFloors(){ const r=state.rival; return r?clamp(2+Math.floor(r.q/25),2,5):0; }
@@ -77,7 +77,7 @@ function shopsHtml(){ let h=`<div class="ugh">🤝 Esnaf ortaklıkları</div>`; 
 function bindWorld(root){ root.querySelectorAll('[data-shop]').forEach(b=>b.onclick=()=>buyShop(b.dataset.shop)); }
 
 // ---------- hooks ----------
-function worldDayEnd(t){ rollNews(); shopsDayEnd(t); nooksDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===8) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
+function worldDayEnd(t){ rollNews(); shopsDayEnd(t); nooksDayEnd(t); prjDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===22) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
 // ---------- takvim şeridi (HUD): bugün + 2 gün ----------
 let calEl=null, calT=0;
 function calDayChips(d){ const c=[], ph=calPhase(d), N=d===state.day?newsToday():newsFor(d); if(ph==='bayram') c.push('🎊'); if(ph==='ramazan') c.push('🌙'); if(N) c.push(N.e); if(d===state.day){ const st=seasonTourism(); if(st) c.push(st.e); } return c; }

@@ -22,7 +22,7 @@ B="""(()=>{ const out=[]; SETH setH(12); const r0=Math.random;
   state.money=1e6;
   const t={amen:0}; out.push('nooks:'+nookCount()+' inc:'+nookIncome()); nooksDayEnd(t); out.push('nook amen:'+t.amen);
   buildCityCrown(); out.push('crown:'+!!crownG+' kids:'+(crownG?crownG.children.length:0)+' floor:'+Object.keys(floorRoots).find(f=>floorRoots[f]===crownG.parent));
-  state.day=7; state.newsPlan=null; rollNews(); out.push('plan:'+JSON.stringify(state.newsPlan)); sheetMode=null; calT=0; updateCalStrip(0.1); out.push('strip:'+calEl.style.display+' '+calEl.textContent);
+  state.day=21; state.newsPlan=null; rollNews(); out.push('plan:'+JSON.stringify(state.newsPlan)); sheetMode=null; calT=0; updateCalStrip(0.1); out.push('strip:'+calEl.style.display+' '+calEl.textContent);
   const id=+Object.keys(state.rooms)[3]; RT(id).guest=null; const g=spawnGuest('tourist'); g.memory={n:g.name,t:'tourist',room:id,sat:80,visits:2}; g.state='queue'; memoryAtDesk(g);
   out.push('ring:'+!!memRing+' floor:'+roomInfo(id).f); updateMemRing(); out.push('ring kept:'+!!memRing); memorySat(g,id); out.push('ring after checkin:'+!!memRing);
   setH(20.5); state.weather='sun'; out.push('bar:'+roofBarOn()+' bonus:'+worldAmenBonus('roof')); updateRoofLights(); updateRoofLights();

@@ -13,7 +13,7 @@ function buildLampCones(){
 }
 function buildSplashes(){ if(splashG||gfxLevel()==='low') return; splashG=new THREE.Group(); outdoor.add(splashG);
   const m=new THREE.MeshBasicMaterial({color:0xcfe6ff,transparent:true,opacity:0,depthWrite:false});
-  for(let i=0;i<40;i++){ const r=mesh(new THREE.RingGeometry(0.05,0.08,14),m.clone(),0,0.06,0); r.rotation.x=-Math.PI/2; r.userData.t=Math.random(); splashG.add(r); splashes.push(r); } }
+  for(let i=0;i<40;i++){ const r=mesh(new THREE.RingGeometry(0.05,0.08,14),m.clone(),0,0.06,0); r.rotation.x=-Math.PI/2; splashG.add(r); splashes.push(r); placeSplash(r); r.userData.t=Math.random(); } }   // başlangıçta da dış mekâna yerleştir (yoksa lobide belirir)
 function placeSplash(r){ const zones=[[-17,17,8.5,11.2],[-17,17,11.6,12.9],[-17,17,13.2,17.2],[8.3,16,4.2,7]]; const z=rand(zones); r.position.set(rnd(z[0],z[1]),z===zones[2]?0.03:0.06,rnd(z[2],z[3])); r.userData.t=0; }
 function updateSplashes(dt){ if(!splashG) return; const on=state.weather==='rain'&&(viewFloor===0||fpMode); splashG.visible=on; if(!on) return;
   splashes.forEach(r=>{ r.userData.t+=dt*1.8; if(r.userData.t>=1){ placeSplash(r); } const t=r.userData.t; r.scale.setScalar(0.4+t*2.2); r.material.opacity=0.55*(1-t); }); }
