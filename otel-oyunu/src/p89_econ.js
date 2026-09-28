@@ -45,7 +45,7 @@ function wageShort(c){ return state.money-c<wagesToday(); }   // alırsan sabahk
 function buyInv(k,ok){ const c=invCost(k); if(stars()<4||c==null||state.money<c) return;
   if(!ok&&wageShort(c)){ openModal(`<h3>⚠️ Maaşlar tehlikede</h3><p class="sub">${INV[k].e} ${INV[k].name} için ${fmt(c)} ₺ ödersen kasada ${fmt(state.money-c)} ₺ kalır. Sabah 07:00 maaşları ${fmt(wagesToday())} ₺. Eksi bakiye moral ve ün kaybettirir.</p><button class="btn gold wide" id="ivY">Yine de al</button><button class="btn ghost wide" id="ivN">Vazgeç</button>`,m=>{ m.querySelector('#ivY').onclick=()=>{ closeModal(); buyInv(k,true); }; m.querySelector('#ivN').onclick=closeModal; }); return; }
   if(!spend(c)) return; state.inv=state.inv||{}; state.inv[k]=invLv(k)+1; sfx('build'); if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,60);
-  banner(`${INV[k].e} ${INV[k].name} ${state.inv[k]}. seviye`,`${INV[k].desc} ${INV[k].per}`); onGameEvent('upg',1); save(); renderSheet(); }
+  banner(`${INV[k].e} ${INV[k].name} ${state.inv[k]}. seviye`,`${INV[k].desc} ${INV[k].per}`); qEv('upg'); save(); renderSheet(); }
 function invHtml(){
   let h=`<div class="ugh">🏗️ Büyük yatırımlar${stars()<4?' · 🔒 4★':''}</div>`;
   for(const k in INV){ const X=INV[k], lv=invLv(k), c=invCost(k);

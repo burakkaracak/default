@@ -253,6 +253,15 @@ function sellCoffee(g){
 // =====================================================================
 function roomRateSum(){ let s=0; for(const k in state.rooms) s+=roomRate(+k); return s; }
 const r10=v=>Math.max(10,Math.round(v/10)*10);
+function upgAvailable(){
+  for(const k in UPG) if(upgCost(k)!=null) return true;
+  for(const k in STAFF) if(state.staff[k].n>0&&staffLvlCost(k)!=null) return true;
+  for(const id in state.rooms) if(roomUpCost(+id)!=null) return true;
+  for(const k in LUX) if(!state.lux[k]) return true;
+  if(stars()>=4) for(const k in INV) if(invCost(k)!=null) return true;
+  if(prjOpen()) for(const k in PRJ) if(prjCost(k)!=null) return true;
+  return false;
+}
 const QDEF={
   guest: {e:'🛎️',t:n=>`${n} misafir ağırla`,        n:r=>clamp(Math.round(r*0.9),3,14), ok:()=>true},
   happy: {e:'😍',t:n=>`${n} misafiri mutlu gönder`,   n:r=>clamp(Math.round(r*0.5),2,10), ok:()=>true},
@@ -264,7 +273,7 @@ const QDEF={
   fix:   {e:'🔧',t:n=>`${n} arızalı odayı onar`,      n:r=>clamp(Math.round(r/7),1,3),    ok:()=>nRoomsNow()>=5},
   pet:   {e:'🐱',t:n=>`${catName()} ile ${n} kez ilgilen`, n:()=>2, ok:()=>state.catOn},
   build: {e:'🏗️',t:()=>'Yeni bir alan aç',            n:()=>1, ok:()=>PADS.some(d=>padAvailable(d)&&!padLocked(d))},
-  upg:   {e:'⬆️',t:()=>'Bir geliştirme satın al',     n:()=>1, ok:()=>true},
+  upg:   {e:'⬆️',t:()=>'Bir geliştirme satın al',     n:()=>1, ok:()=>upgAvailable()},
 };
 function newQuests(){
   const r=nRoomsNow(), keys=Object.keys(QDEF).filter(k=>QDEF[k].ok()), pick=[];

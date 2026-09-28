@@ -28,6 +28,9 @@ A="""(()=>{ state.tut=99; spawnT=1e9; ADMIN.allOpen(); state.money=5e5; const ou
   state.prj={anit:2}; state.charity=4; state.repHist=[80,80,80]; out.push('repTarget '+repTarget()+' (80+4+2)');
   // 8) bildirim tekrar etmez (kayıtta)
   out.push('shown sahur saved:'+(state.shown.sahur===state.day));
+  // 9) upg görevi: büyük yatırım alımı sayılır, upgAvailable boolean döner
+  for(const k in UPG) state.up[k]=UPG[k].costs.length; out.push('upgAvailable bool:'+(typeof upgAvailable()==='boolean'));
+  state.quests={day:state.day,bonus:false,list:[{k:'upg',n:1,have:0,rew:10,done:false,claimed:false}]}; state.money=1e9; buyInv(Object.keys(INV)[0],true); out.push('upg quest via inv:'+state.quests.list[0].done);
   save(); return out.join('\\n'); })()""".replace('SETH',SETH)
 with sync_playwright() as p:
     b=p.chromium.launch(executable_path=CHROME); pg=b.new_page(); errs=[]
