@@ -6,7 +6,7 @@ with sync_playwright() as p:
     pg.on('pageerror',lambda e: errs.append(str(e)))
     pg.goto('file:///home/user/default/otel-oyunu/test2.html'); pg.wait_for_timeout(1000)
     print(pg.evaluate("""(()=>{ state.tut=99; spawnT=1e9; ADMIN.allOpen(); state.money=1e6; const out=[];
-      state.day=9; out.push('bayram:'+calPhase()+' dem:'+worldDemand().toFixed(2)+' famW:'+worldTypeW('family'));
+      state.day=23; out.push('bayram:'+calPhase()+' dem:'+worldDemand().toFixed(2)+' famW:'+worldTypeW('family'));
       state.day=16; const setH=h=>{ for(let t=0;t<1;t+=0.002){ if(hourOf(t)%24>=h){ state.t=t; return; } } }; setH(19.3); out.push('ramazan:'+calPhase()+' iftar:'+iftarOn()+' restBonus:'+worldAmenBonus('rest')); updateCalendar();
       state.news={k:'fuar',day:state.day}; out.push('news:'+newsToday().n+' bizW:'+worldTypeW('business').toFixed(1));
       state.rival={name:'X',q:90,price:1,promo:state.day,bought:false}; buildRival(); out.push('rivalFloors:'+rivalFloors()+' nf:'+rivalVis.userData.nf);

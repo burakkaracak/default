@@ -357,9 +357,9 @@ function updateSky(tx,tz){
   M.lampOn.emissiveIntensity=(0.35+2.4*nightF)*po; M.glow.opacity=nightF*0.8*po;
   M.window.color.setHex(0xb5dcf2).lerp(tmpC.setHex(0x1a2a44),nightF); M.window.emissive.setHex(0x5a8fb8); M.window.emissiveIntensity=0.35*dayF+0.04*nightF;
   M.windowLit.color.copy(M.window.color); M.windowLit.emissive.setHex(nightF>0.5?0xffb860:0x5a8fb8); M.windowLit.emissiveIntensity=(nightF>0.5?1.1*nightF:0.35*dayF)*(po<1?0.08:1);
-  lobbyLight.intensity=nightF*1.8*po;
+  lobbyLight.intensity=nightF*1.3*po;
   if(sunPatchM) sunPatchM.opacity=dayF*0.35*wl*(1-dusk*0.5);
-  renderer.toneMappingExposure=1.08-nightF*0.12;
+  renderer.toneMappingExposure=1.08-nightF*0.2;
 }
 
 // =====================================================================
