@@ -67,9 +67,9 @@ function megaZones(p,dt){
     laundryToStock(n); const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
 }
 function staffPost(e){
-  const sp=e.kind==='spaT'?L.spaT:L.laundryW;
+  const sp=e.kind==='spaT'?L.spaT:e.kind==='cook'?L.cookSpot:L.laundryW;
   if(d2(e.x,e.z,sp.x,sp.z)>0.05||e.f!==0){ e.anim=null; if(!e.path) e.goTo(0,sp.x,sp.z,()=>{ e.tRot=Math.PI; }); return; }
-  const busy=e.kind==='spaT'?SEATS.some(s=>s.amen==='spa'&&s.busy&&s.busy.state==='amen'):state.piles.laundry>0||staffEnts.some(x=>x.kind==='clean'&&x.job&&x.job.working);
+  const busy=e.kind==='cook'?restOpen()&&kitchen().cook>0:e.kind==='spaT'?SEATS.some(s=>s.amen==='spa'&&s.busy&&s.busy.state==='amen'):state.piles.laundry>0||staffEnts.some(x=>x.kind==='clean'&&x.job&&x.job.working);
   e.anim=busy?'work':null;
 }
 

@@ -170,7 +170,7 @@ GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,
 function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
+  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if(roofBarOn()&&opts.includes('roof')&&Math.random()<0.6) a='roof'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -255,10 +255,10 @@ function updateStaff(dt){
   for(const e of staffEnts){
     e.speed=2.3*staffSpeedMul(e.kind)*staffEnergyMul(e);
     if(e.sick) continue;
-    if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
+    if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry'||e.kind==='cook') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
     if(e.wait>0){ e.wait-=dt; if(e.job&&e.job.working){} else continue; }
     const j=e.job;
-    if(e.kind==='spaT'||e.kind==='laundry'){ staffPost(e); continue; }
+    if(e.kind==='spaT'||e.kind==='laundry'||e.kind==='cook'){ staffPost(e); continue; }
     if(e.kind==='rec'){ if(d2(e.x,e.z,L.recSpot.x,L.recSpot.z)>0.05||e.f!==0) e.goTo(0,L.recSpot.x,L.recSpot.z,()=>{ e.tRot=0; }); continue; }
     if(!j){
       if(e.kind==='clean'){ const id=nearestRoom(e,roomsWhere(id=>state.rooms[id].dirty&&!RT(id).task)); if(id){ RT(id).task=e; e.job={type:'clean',id}; goRoom(e,id); } else if(!staffSpotJob(e,'mess')) staffGoIdle(e); }

@@ -62,7 +62,7 @@ function buildSky(){
         gl_FragColor=vec4(c,1.); }`});
   skyMesh=new THREE.Mesh(new THREE.SphereGeometry(230,32,16),mt); skyMesh.frustumCulled=false; skyMesh.renderOrder=-10; scene.add(skyMesh);
 }
-function updateSky(t){
+function updateSkyDome(t){
   if(!skyMesh) return; const U=skyMesh.material.uniforms, bg=scene.background&&scene.background.isColor?scene.background:null;
   skyMesh.position.copy(camera.position);
   if(bg){ const day=1-nightF, dusk=clamp(1-Math.abs(hourNow()-19)/1.6,0,1)+clamp(1-Math.abs(hourNow()-6.8)/1.3,0,1);
@@ -95,7 +95,7 @@ function updateDust(dt,t){ if(!dustPts) return; const p=dustPts.geometry.attribu
 let gfx3Scan=0;
 function bootGfx3(){ try{ buildSky(); upgradeWater(); upgradeCharMat(); buildDust(); }catch(e){ console.warn('gfx3',e); } }
 function updateGfx3(dt,t){
-  updateSky(t); updateDust(dt,t);
+  updateSkyDome(t); updateDust(dt,t);
   if(waveTex){ waveTex.offset.set(t*0.02,t*0.013); } causticMats.forEach((m,i)=>{ m.map.offset.set(Math.sin(t*0.25+i)*0.3+t*0.015,Math.cos(t*0.2+i)*0.3); m.opacity=0.32*(0.35+0.65*(1-nightF)); });
   if(rimU){ rimU.value.setRGB(1,0.95,0.84).lerp(new THREE.Color(0.55,0.7,1),nightF); }
   gfx3Scan-=dt; if(gfx3Scan<=0){ gfx3Scan=3; upgradeWater(); upgradeCharMat(); }

@@ -6,7 +6,7 @@
 // =====================================================================
 // ---------- takvim ----------
 // 24 günlük döngü: 3 gün bayram (gün 8-10), 7 gün ramazan (gün 15-21, son günü bayram arifesi)
-function calPhase(){ const d=((state.day-1)%24)+1; return d>=8&&d<=10?'bayram':d>=15&&d<=21?'ramazan':null; }
+function calPhase(day=state.day){ const d=((day-1)%24)+1; return d>=8&&d<=10?'bayram':d>=15&&d<=21?'ramazan':null; }
 function seasonTourism(){ const si=seasonIx(), c=city(); if(si===1&&c.palm) return {e:'🏖️',n:'Yaz akını',dem:1.3,w:{tourist:1.6,family:1.5}};
   if(si===3&&c.snow) return {e:'⛷️',n:'Kayak sezonu',dem:1.15,w:{athlete:1.8,couple:1.3}}; return null; }
 // ---------- şehir haberleri ----------
@@ -14,7 +14,12 @@ const NEWS=[{k:'mac',e:'⚽',n:'Derbi maçı var',d:'Taraftarlar ve sporcular ş
   {k:'konser',e:'🎤',n:'Büyük konser',d:'Fenomenler ve gençler akın ediyor',dem:1.3,w:{influencer:2.2,student:1.5}},
   {k:'fuar',e:'💼',n:'Uluslararası fuar',d:'İş insanları geliyor, fiyata daha az bakarlar',dem:1.2,w:{business:2.5,vip:1.3},price:1.1},
   {k:'kongre',e:'🩺',n:'Tıp kongresi',d:'Sakin ve bol bahşişli misafirler',dem:1.1,w:{business:1.6,elderly:1.4}}];
-function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; state.news=null; if(Math.random()<0.4){ const N=rand(NEWS); state.news={k:N.k,day:state.day}; setTimeout(()=>banner(`${N.e} Şehirde bugün: ${N.n}`,N.d),5200); } }
+// haberler 2 gün önceden planlanır (takvim şeridi önceden gösterebilsin)
+function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; const P=state.newsPlan=state.newsPlan||{};
+  for(let d=state.day;d<=state.day+2;d++) if(P[d]===undefined) P[d]=Math.random()<0.4?rand(NEWS).k:null;
+  for(const k in P) if(+k<state.day) delete P[k];
+  state.news=P[state.day]?{k:P[state.day],day:state.day}:null; const N=newsToday(); if(N) setTimeout(()=>banner(`${N.e} Şehirde bugün: ${N.n}`,N.d),5200); }
+function newsFor(d){ const k=(state.newsPlan||{})[d]; return k?NEWS.find(x=>x.k===k):null; }
 function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
 // ---------- toplam etkiler ----------
 function worldDemand(){ let f=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
@@ -22,10 +27,12 @@ function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=news
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
 function iftarOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=19&&h<21; }
 function sahurOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=3.5&&h<5; }
-function worldAmenBonus(a){ return a==='rest'&&(iftarOn()||sahurOn())?1.6:1; }
+function roofBarOn(){ const h=hourNow(); return h>=19.5&&roofOpen(); }   // akşam: çatı gece barı
+function worldAmenBonus(a){ return a==='rest'&&(iftarOn()||sahurOn())?1.6:a==='roof'&&roofBarOn()?1.5:1; }
 function worldLabel(){ const ph=calPhase(), st=seasonTourism(), N=newsToday(), L2=[]; if(ph==='bayram') L2.push('🎊 Bayram tatili'); if(ph==='ramazan') L2.push(iftarOn()?'🌙 İftar vakti':sahurOn()?'🌙 Sahur':'🌙 Ramazan'); if(st) L2.push(st.e+' '+st.n); if(N) L2.push(N.e+' '+N.n); return L2; }
-let iftarShown=-1, sahurShown=-1;
+let iftarShown=-1, sahurShown=-1, barShown=-1;
 function updateCalendar(){
+  if(roofBarOn()&&barShown!==state.day&&state.tut>=TUT.length){ barShown=state.day; toast('🍸 Çatı gece barı açıldı: misafirler çatıya çıkıyor, çatı geliri +%50'); }
   if(iftarOn()&&iftarShown!==state.day){ iftarShown=state.day; banner('🌙 İftar vakti','Misafirler restorana akın ediyor · restoran geliri +%60'); guests.forEach(g=>{ if(g.state==='room'&&!g.asleep&&Math.random()<0.5){ g.amenT=0; g.T.likes; } }); }
   if(sahurOn()&&sahurShown!==state.day){ sahurShown=state.day; toast('🌙 Sahur vakti: oda servisi siparişleri artıyor'); guests.forEach(g=>{ if(g.state==='room'&&Math.random()<0.3){ g.reqT=0; } }); }
 }
@@ -70,6 +77,15 @@ function shopsHtml(){ let h=`<div class="ugh">🤝 Esnaf ortaklıkları</div>`; 
 function bindWorld(root){ root.querySelectorAll('[data-shop]').forEach(b=>b.onclick=()=>buyShop(b.dataset.shop)); }
 
 // ---------- hooks ----------
-function worldDayEnd(t){ rollNews(); shopsDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===8) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
-function updateWorld(dt){ updateCalendar(); }
-function bootWorld(){ buildShops(); }
+function worldDayEnd(t){ rollNews(); shopsDayEnd(t); nooksDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===8) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
+// ---------- takvim şeridi (HUD): bugün + 2 gün ----------
+let calEl=null, calT=0;
+function calDayChips(d){ const c=[], ph=calPhase(d), N=d===state.day?newsToday():newsFor(d); if(ph==='bayram') c.push('🎊'); if(ph==='ramazan') c.push('🌙'); if(N) c.push(N.e); if(d===state.day){ const st=seasonTourism(); if(st) c.push(st.e); } return c; }
+function calStripHtml(){ const days=[0,1,2].map(i=>state.day+i), lab=['Bugün','Yarın','+2 gün']; if(!days.some(d=>calDayChips(d).length)) return '';
+  return days.map((d,i)=>{ const c=calDayChips(d); return `<span class="cd${i?'':' now'}"><b>${lab[i]}</b>${c.length?c.join(''):'·'}</span>`; }).join(''); }
+function updateCalStrip(dt){ calT-=dt; if(calT>0) return; calT=1;
+  if(!calEl){ calEl=document.createElement('div'); calEl.id='calStrip'; calEl.setAttribute('role','button'); calEl.setAttribute('aria-label','Şehir takvimi'); document.getElementById('hud').appendChild(calEl);
+    calEl.onclick=()=>{ sfx('click'); mgmtTab='hotel'; hotelSub='city'; openSheet('mgmt'); }; }
+  const h=(state.tut<TUT.length||fpMode||sheetMode)?'':calStripHtml(); if(calEl._h!==h){ calEl._h=h; calEl.innerHTML=h; calEl.style.display=h?'flex':'none'; } }
+function updateWorld(dt){ updateCalendar(); updateCalStrip(dt); }
+function bootWorld(){ buildShops(); if(!state.newsPlan&&state.tut>=TUT.length&&!state.sandbox){ state.newsPlan={}; if(state.news&&state.news.day===state.day) state.newsPlan[state.day]=state.news.k; rollNews(); } }

@@ -61,6 +61,8 @@
   .round{width:40px;height:40px;border-radius:50%;background:var(--panel);border:2px solid rgba(242,182,50,.6);font-size:18px;cursor:pointer;color:var(--cream);box-shadow:0 3px 0 rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;flex:none;}
   #goal{position:absolute;top:calc(56px + var(--st));left:50%;transform:translateX(-50%);background:linear-gradient(#3a82c6,#2a639d);border:2px solid #a8d6ff;border-radius:14px;padding:2px 12px 3px;font-weight:800;font-size:14px;display:none;gap:7px;align-items:center;box-shadow:0 3px 0 rgba(0,0,0,.3);pointer-events:auto;cursor:pointer;max-width:94vw;white-space:nowrap;}
   #goal.show{display:flex;}
+  #calStrip{white-space:nowrap;position:absolute;top:calc(88px + var(--st));left:50%;transform:translateX(-50%);display:none;gap:4px;background:rgba(20,28,44,.72);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:2px 6px;font-size:13px;cursor:pointer;pointer-events:auto;z-index:5}
+  #calStrip .cd{display:flex;align-items:center;gap:3px;padding:1px 6px;border-radius:8px;opacity:.8} #calStrip .cd b{font-size:10px;font-weight:700;opacity:.8} #calStrip .cd.now{background:rgba(255,215,120,.18);opacity:1}
   #goal small{opacity:.85;font-size:12px;} #goal .rew{background:rgba(0,0,0,.22);border-radius:8px;padding:0 6px;font-size:12px;color:#ffe9a8;}
   #goalProg{display:none;position:absolute;left:10px;right:10px;bottom:2px;height:3px;border-radius:2px;background:rgba(0,0,0,.28);overflow:hidden;}
   #goalProg i{display:block;height:100%;width:0;background:var(--gold2);transition:width .3s;}
@@ -114,6 +116,10 @@
   .cb.them{align-self:flex-start;background:#2a4d6d;border-bottom-left-radius:4px;}
   .cb.typing{opacity:.7;font-style:italic;}
   .ugh{font-weight:800;font-size:13px;color:var(--gold2);margin:10px 4px 6px;letter-spacing:.3px;}
+  details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;margin:8px 0 6px;border-radius:10px;background:rgba(255,255,255,.05)}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary::after{content:'▸';margin-left:auto;transition:transform .15s}
+  details.fold[open]>summary::after{transform:rotate(90deg)}
   #powerFx{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 35%,rgba(5,8,30,.55) 100%),rgba(10,15,40,.18);}
   #powerFx.on{opacity:1;animation:pflick 3.2s steps(1) infinite;}
   @keyframes pflick{0%,100%{opacity:1}47%{opacity:.75}49%{opacity:1}83%{opacity:.8}85%{opacity:1}}
@@ -147,7 +153,7 @@
   #offArrow i{font-style:normal;font-size:30px;color:var(--gold2);filter:drop-shadow(0 2px 0 #6b4a00);}
   #hint{position:absolute;bottom:calc(130px + var(--sb));left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--gold);border-radius:16px;padding:6px 16px;font-weight:700;font-size:15px;text-align:center;display:none;pointer-events:none;max-width:88vw;}
   #hint.show{display:block;animation:tin .3s ease-out;}
-  #toasts{position:absolute;top:calc(96px + var(--st));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90vw;}
+  #toasts{position:absolute;top:calc(118px + var(--st));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90vw;}
   @media (max-width:520px){ #fsBtn{display:none;} }
   @media (max-width:440px){ .top{gap:4px;left:6px;right:6px;} .pill{height:36px;padding:1px 8px 1px 4px;gap:4px;} .money{font-size:16px;min-width:0;} .coin{width:20px;height:20px;} .stars{padding:0 7px;} #stars{font-size:12px;letter-spacing:0;} #repBar{width:44px;} .clock{font-size:13px;padding:0 7px;gap:3px;} .clock small{font-size:10px;} .round{width:36px;height:36px;font-size:16px;} #goal{font-size:12.5px;top:calc(84px + var(--st));max-width:calc(100vw - 150px);overflow:hidden;} #toasts{top:calc(118px + var(--st));} #lvlBox{top:calc(48px + var(--st));} }
   @media (max-width:370px){ .clock small{display:none;} }
@@ -218,6 +224,7 @@
   #boot h1{margin:0;font-size:44px;color:var(--gold2);text-shadow:0 4px 0 #6b4a00;}
   #boot p{margin:0;color:var(--muted);font-weight:700;}
   @media (prefers-reduced-motion: reduce){ .bubble.req,.qclaim,#powerFx.on{animation:none;} #banner{transition:opacity .2s;} }
+  @media (max-width:440px){ #calStrip{top:calc(116px + var(--st));font-size:12px} #toasts{top:calc(146px + var(--st))} }
 </style>
 </head>
 <body>
@@ -328,7 +335,8 @@ const STAFF={
   bell: {name:'Kat görevlisi',e:'🧺',max:3,cost:[350,550,800],       wage:35,desc:'İstekleri depodan alıp odalara götürür',needs:'depo'},
   tech: {name:'Teknisyen',    e:'🔧',max:2,cost:[400,750],           wage:45,desc:'Arızalı odaları onarır'},
   spaT: {name:'Spa terapisti',e:'💆',max:1,cost:[900],               wage:55,desc:'Spa gelirini %60 artırır',needs:'spa'},
-  laundry:{name:'Çamaşırcı',   e:'🧼',max:1,cost:[600],               wage:40,desc:'Personelin temizlediği odaların çarşaflarını yıkar (gelir) · senin getirdiklerine +%50',needs:'laundry'}};
+  laundry:{name:'Çamaşırcı',   e:'🧼',max:1,cost:[600],               wage:40,desc:'Personelin temizlediği odaların çarşaflarını yıkar (gelir) · senin getirdiklerine +%50',needs:'laundry'},
+  cook:   {name:'Aşçı',        e:'👨‍🍳',max:1,cost:[700],               wage:45,desc:'Mutfakta oda servisi yemeklerini 1,5 kat hızlı pişirir',needs:'rest'}};
 const STAFF_LVL_COST=[250,650,1500,3200];
 const STAFF_SPEED=[1,1.35,1.75,2.1,2.5];
 const UPG={
@@ -390,7 +398,7 @@ const L={
   elev:{x:5.6,z:3.5},
   piles:{desk:{x:-5.75,z:3.7,f:0},spa:{x:-12.6,z:-4.9,f:0},laundry:{x:-8.6,z:-6.2,f:0},rest:{x:-9.6,z:6.3,f:0},pool:{x:12.9,z:6.2,f:0},gym:{x:13.3,z:-4.4,f:0},cafe:{x:3.85,z:3.2,f:0},roof:{x:0.3,z:-3.0,f:3}},
   helipad:{x:3.9,z:-8.3},
-  cafe:{x:2.45,z:3.0}, laundryDrop:{x:-9.3,z:-5.2}, laundryW:{x:-9.3,z:-8.8}, spaT:{x:-14.4,z:-7.4}, gen:{x:7.6,z:7.85}, genSpot:{x:7.6,z:8.7}, busStop:{x:-1.2,z:13.55}, busDoor:{x:0.7,z:12.5},
+  cafe:{x:2.45,z:3.0}, laundryDrop:{x:-9.3,z:-5.2}, laundryW:{x:-9.3,z:-8.8}, spaT:{x:-14.4,z:-7.4}, cookSpot:{x:-14.9,z:-1.3}, gen:{x:7.6,z:7.85}, genSpot:{x:7.6,z:8.7}, busStop:{x:-1.2,z:13.55}, busDoor:{x:0.7,z:12.5},
 };
 const REST_TABLES=[[-14.3,1.0],[-12.0,1.0],[-9.7,1.0],[-14.3,3.9],[-12.0,3.9],[-9.7,3.9]];
 const POOL_LOUNGERS=[9.3,10.5,13.5,14.7];
@@ -443,12 +451,12 @@ function blankToday(){ return {rooms:0,tips:0,amen:0,req:0,wages:0,happy:0,unhap
 function freshState(cityIx,prestige){
   return {v:2, city:cityIx||0, prestige:prestige||0, money:Math.round(60*CITIES[(cityIx||0)%CITIES.length].mult), rep:30, day:1, t:0.02, weather:'sun',
     built:{}, paid:{}, rooms:{}, piles:{desk:0,rest:0,pool:0,gym:0,cafe:0,roof:0,spa:0,laundry:0},
-    staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1},spaT:{n:0,lvl:1},laundry:{n:0,lvl:1}},
+    staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1},spaT:{n:0,lvl:1},laundry:{n:0,lvl:1},cook:{n:0,lvl:1}},
     up:{speed:0,cap:0,clean:0,magnet:0,fix:0,desk:0,charm:0,haggle:0,fame:0,lead:0,calm:0,auto:0},
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:47, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:48, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -459,6 +467,7 @@ function loadState(){
     for(const k in base){ if(s[k]===undefined) s[k]=base[k]; }
     for(const k of ['staff','up','piles']) for(const kk in base[k]) if(s[k][kk]===undefined) s[k][kk]=base[k][kk];
     s.today=Object.assign(blankToday(),s.today||{});
+    if((s.strike||0)>70) s.strike=0;   // eski kayıt: grev bitiş zamanı mutlak oyun saatiydi (artık kalan saniye)
     return s;
   }catch(e){ return null; }
 }
@@ -1329,8 +1338,8 @@ function buildFeature(id,pop){
     case 'cafe': g=buildCafe(); break;
     case 'spa': g=buildSpa(); break;
     case 'laundry': g=buildLaundry(); break;
-    case 'f2': buildUpperFloor(1); g=buildElevator(); setTimeout(()=>buildNooks(1),0); break;
-    case 'f3': buildUpperFloor(2); g=buildElevator(); setTimeout(()=>buildNooks(2),0); break;
+    case 'f2': buildUpperFloor(1); g=buildElevator(); setTimeout(()=>{ buildNooks(1); buildCityCrown(); },0); break;
+    case 'f3': buildUpperFloor(2); g=buildElevator(); setTimeout(()=>{ buildNooks(2); buildCityCrown(); },0); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
     case 'mescit': buildMescit(); g=buildElevator(); break;
   }
@@ -1862,6 +1871,7 @@ const LOOKS={
   bell:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xc0392b,bottom:0x1c1d22,hat:'pillbox',hatC:0xc0392b,trim:true}),
   tech:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xe67e22,bottom:0x34495e,hat:'hard',hatC:0xf2c14e}),
   barista:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','short']),top:0x2b2b2b,bottom:0x3b2a1e,apron:true,hat:'cap',hatC:0x6b4226}),
+  cook:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xffffff,bottom:0x2b2b2b,apron:true,hat:'chef'}),
   spaT:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','pony']),top:0xf4efe6,bottom:0x6f8f7a,apron:true}),
   laundry:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['short','bun']),top:0x7fb3d5,bottom:0x2d5d8a,apron:true,hat:'cap',hatC:0x2d5d8a}),
   chef:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xffffff,bottom:0x333333,hat:'chef'}),
@@ -2221,7 +2231,7 @@ GYM_TREAD.forEach(tx=>SEATS.push({amen:'gym',x:tx,z:-7.5,px:tx,pz:-8.45,py:0.19,
 function amenOpen(a){ return a==='spa'?spaOpen():a==='rest'?restOpen():a==='pool'?poolOpen():a==='roof'?roofOpen():gymOpen(); }
 function tryAmenity(g){
   const opts=['rest','pool','gym','roof','spa'].filter(a=>amenOpen(a)); if(!opts.length) return false;
-  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
+  let a=rand(opts); if((iftarOn()||sahurOn())&&opts.includes('rest')&&Math.random()<0.7) a='rest'; if(roofBarOn()&&opts.includes('roof')&&Math.random()<0.6) a='roof'; if((g.type==='vip'||g.type==='business')&&opts.includes('roof')&&Math.random()<.5) a='roof'; if(g.T.likes&&opts.includes(g.T.likes)&&Math.random()<.6) a=g.T.likes; if((g.type==='couple'||g.type==='elderly'||g.type==='vip')&&opts.includes('spa')&&Math.random()<.35) a='spa';
   const free=SEATS.filter(s=>s.amen===a&&!s.busy); if(!free.length) return false;
   standUp(g); const seat=rand(free); seat.busy=g; g.seat=seat; g.state='toAmen'; g.inRoom=false; applyRoomState(g.room);
   if(!g.goTo(seat.f||0,seat.x,seat.z,()=>{ g.pose(seat); g.state='amen'; g.amenLeft=rnd(10,16); })){ seat.busy=null; g.seat=null; g.state='room'; g.inRoom=true; return false; }
@@ -2306,10 +2316,10 @@ function updateStaff(dt){
   for(const e of staffEnts){
     e.speed=2.3*staffSpeedMul(e.kind)*staffEnergyMul(e);
     if(e.sick) continue;
-    if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
+    if(e.path){ if(e.job||e.riding||e.kind==='rec'||e.kind==='spaT'||e.kind==='laundry'||e.kind==='cook') continue; e.scanT=(e.scanT||0)-dt; if(e.scanT>0) continue; e.scanT=0.5; e.wait=0; }
     if(e.wait>0){ e.wait-=dt; if(e.job&&e.job.working){} else continue; }
     const j=e.job;
-    if(e.kind==='spaT'||e.kind==='laundry'){ staffPost(e); continue; }
+    if(e.kind==='spaT'||e.kind==='laundry'||e.kind==='cook'){ staffPost(e); continue; }
     if(e.kind==='rec'){ if(d2(e.x,e.z,L.recSpot.x,L.recSpot.z)>0.05||e.f!==0) e.goTo(0,L.recSpot.x,L.recSpot.z,()=>{ e.tRot=0; }); continue; }
     if(!j){
       if(e.kind==='clean'){ const id=nearestRoom(e,roomsWhere(id=>state.rooms[id].dirty&&!RT(id).task)); if(id){ RT(id).task=e; e.job={type:'clean',id}; goRoom(e,id); } else if(!staffSpotJob(e,'mess')) staffGoIdle(e); }
@@ -4115,9 +4125,9 @@ function megaZones(p,dt){
     laundryToStock(n); const amt=n*linenFee(); addMoney(amt,L.laundryDrop.x,0.8,L.laundryDrop.z,0); state.today.req+=amt; sfx('drop'); onGameEvent('linen',n); }
 }
 function staffPost(e){
-  const sp=e.kind==='spaT'?L.spaT:L.laundryW;
+  const sp=e.kind==='spaT'?L.spaT:e.kind==='cook'?L.cookSpot:L.laundryW;
   if(d2(e.x,e.z,sp.x,sp.z)>0.05||e.f!==0){ e.anim=null; if(!e.path) e.goTo(0,sp.x,sp.z,()=>{ e.tRot=Math.PI; }); return; }
-  const busy=e.kind==='spaT'?SEATS.some(s=>s.amen==='spa'&&s.busy&&s.busy.state==='amen'):state.piles.laundry>0||staffEnts.some(x=>x.kind==='clean'&&x.job&&x.job.working);
+  const busy=e.kind==='cook'?restOpen()&&kitchen().cook>0:e.kind==='spaT'?SEATS.some(s=>s.amen==='spa'&&s.busy&&s.busy.state==='amen'):state.piles.laundry>0||staffEnts.some(x=>x.kind==='clean'&&x.job&&x.job.working);
   e.anim=busy?'work':null;
 }
 
@@ -4800,7 +4810,7 @@ function openDesigner(id){
 }
 
 // ---------- talking staff ----------
-const STAFF_PERSONA={rec:'güler yüzlü, düzenli resepsiyonist',clean:'titiz, biraz esprili temizlik görevlisi',bell:'enerjik, her yere koşturan kat görevlisi',tech:'sakin, her şeyi tamir edebilen teknisyen',spaT:'huzurlu, yumuşak konuşan spa terapisti',laundry:'pratik, şakacı çamaşırcı'};
+const STAFF_PERSONA={rec:'güler yüzlü, düzenli resepsiyonist',clean:'titiz, biraz esprili temizlik görevlisi',bell:'enerjik, her yere koşturan kat görevlisi',tech:'sakin, her şeyi tamir edebilen teknisyen',spaT:'huzurlu, yumuşak konuşan spa terapisti',laundry:'pratik, şakacı çamaşırcı',cook:'tutkulu, biraz titiz, yemeğiyle gurur duyan aşçı'};
 function pickStaffAt(){ const list=staffEnts.filter(e=>e.c.root.visible), roots=list.map(e=>e.c.root); const hits=ray.intersectObjects(roots,true); if(!hits.length) return null;
   let o=hits[0].object; while(o&&!roots.includes(o)) o=o.parent; return o?list[roots.indexOf(o)]:null; }
 let staffTalkBusy=false;
@@ -4910,6 +4920,23 @@ const GUIDE=[
     ['📖','Hikâye misafirleri','Özel misafirler 3 bölümde geri gelir; her seferinde daha iyi oda isterler.',()=>!!state.stories&&Object.keys(state.stories).length>0],
     ['🦹','Acil durumlar','Hırsızı kasaya varmadan yakala, kayıp çocuğu resepsiyona getir.',()=>state.day>=4],
     ['🤖','Yapay zekâ','Misafir ve personelle sohbet, yorumlar, danışman, gazete (claude.ai\'de açıkken).',()=>true]]],
+  ['🏢 İşletme',[['👨‍🍳','Mutfak ve oda servisi','Yemekler mutfakta pişer, hazır tepsiler restoran tezgâhında belirir. Aşçı 1,5 kat hızlı pişirir.',()=>built('rest')],
+    ['🧺','Çamaşır → depo','Çamaşırhanede yıkanan her çarşaf depoya 2 havlu ekler.',()=>built('laundry')],
+    ['📅','Rezervasyon ve overbooking','Her gece 2 gün sonrası için rezervasyon gelir, kapora hemen kasaya girer. Fazla rezervasyon daha çok para getirir; oda bulamayan misafir tazminat ve ün kaybettirir (Otel › Ekonomi).',()=>bookingsOpen()],
+    ['😊','Personel morali ve grev','Yorgunluk, eksi bakiye ve reddedilen izin morali düşürür; mola odası ve prim yükseltir. 3★ sonrası moral çok düşerse grev olur.',()=>built('staff')],
+    ['🌙','Gece vardiyası','Kapalıysa personel gece yarı hızla çalışır; açıksa maaşlar +%25 (Personel).',()=>built('staff')],
+    ['🧠','Misafir hafızası','Sadık misafir eski odasını hatırlar: resepsiyonda odası parlar, aynı odayı verirsen sevinir.',()=>(state.loyal||[]).length>0]]],
+  ['🌍 Şehir ve dünya',[['🏛️','Şehrin otel planı','Her şehrin kendi oda planı var; boş yerlerde şehre özgü köşeler küçük gelir ve memnuniyet getirir.',()=>true],
+    ['📆','Takvim ve haberler','Sezon, bayram, ramazan (iftar/sahur), maç-konser-fuar günleri misafir sayısını ve tipini değiştirir. Üstteki takvim şeridi 3 gün önceden gösterir.',()=>state.day>=2],
+    ['📉','Fiyat savaşı','Rakip indirim yaparsa karşılık ver (bugün −%10) ya da misafir kaybet.',()=>!!state.rival],
+    ['🥨','Esnaf ortaklıkları','Karşı sokaktaki simitçi, taksi, hediyelik, dondurmacı: günlük gelir ve misafir bonusu (Otel › Şehir).',()=>state.day>=3],
+    ['🍸','Çatı gece barı','Çatı açıksa geceleri misafirler çatı barına çıkar: ekstra gelir.',()=>built('roof')]]],
+  ['🏆 İleri seviye',[['📖','Misafir albümü','Her misafir tipini topla; şehirler arası kalıcı (Görevler › Albüm).',()=>true],
+    ['💎','Elmas / Platin ve lig','5★ sonrası kademeler, haftalık Yılın Oteli ligi.',()=>stars()>=5],
+    ['🗂️','Müdür masası','4★ sonrası her sabah günün stratejisini seç.',()=>stars()>=4],
+    ['🏗️','Büyük yatırımlar','4★ sonrası kalıcı yatırımlar; alırken maaşlardan sonra kalan paraya dikkat et.',()=>stars()>=4],
+    ['🏢','Kat temaları ve salon','Bir katın tamamına tema ver, kat salonu aç.',()=>floorsBuilt()>1],
+    ['🕌','Mescit','Çatının üstündeki kat: İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık.',()=>mescitOn()]]],
   ['🎨 Özelleştirme',[['🎨','Oda teması ve tasarımı','Oda menüsünden tema seç, 🛋️ ile mobilya yerleştir.',()=>nRoomsAll()>0],
     ['🎩','Karakter ve otel','Ayarlar › Otelim ve karakterim. Ödül yolundan yeni şapkalar.',()=>true],
     ['☁️','Bulut kayıt','Ayarlar\'dan başka cihazda devam et (claude.ai\'de).',()=>true]]]];
@@ -4920,11 +4947,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=47;
+const GAME_VER=48;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['🏛️','Her şehrin kendi otel planı: 30–36 oda yeri, boş yerlerde şehre özgü köşeler, girişte şehrin mimarisi'],['🍳','Mutfak: yemekler pişip tezgâha gelir · çamaşırhane havluyu depoya taşır'],['📅','Rezervasyonlar ve overbooking: kapora al, gelmeyen/yersiz kalan misafire tazminat'],['😤','Personel morali: prim, izin, gece vardiyası, grev'],['🧠','Misafir hafızası: sadık misafir aynı odasını ister, kötü deneyimi unutmaz'],['🌙','Yaşayan takvim: sezon, bayram, ramazan iftar/sahur, maç-konser-fuar haberleri'],['🏙️','Rakip otel büyür, fiyat savaşı açar · karşı sokakta esnaf ortaklıkları'],['💡','Gece sokak lambası ışıkları, yağmurda sıçramalar, karda ayak izleri, araba sesi, şehir açılış sinematiği'],['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🌙','Gece artık gerçekten kararıyor: sokak lambaları, pencereler, çatı ampulleri ve yıldızlar'],['👨‍🍳','Yeni personel: Aşçı · oda servisini 1,5 kat hızlı pişirir'],['🗓️','Üstte takvim şeridi: bayram, ramazan, maç, konser günlerini 2 gün önceden gör'],['🍸','Çatı gece barı: akşamları misafirler çatıya çıkar, gelir +%50'],['🏰','Her şehrin çatı silüeti: kubbeli kule, mansard, peribacaları, gökdelen kulesi'],['🧠','Sadık misafirin eski odası resepsiyonda pembe halkayla parlar'],['📘','Rehber yenilendi · menü bölümleri açılır-kapanır · maaş uyarıları'],['🔒','Rezervasyon ve grev artık 3★\'dan sonra açılıyor'],['🏛️','Her şehrin kendi otel planı: 30–36 oda yeri, boş yerlerde şehre özgü köşeler, girişte şehrin mimarisi'],['🍳','Mutfak: yemekler pişip tezgâha gelir · çamaşırhane havluyu depoya taşır'],['📅','Rezervasyonlar ve overbooking: kapora al, gelmeyen/yersiz kalan misafire tazminat'],['😤','Personel morali: prim, izin, gece vardiyası, grev'],['🧠','Misafir hafızası: sadık misafir aynı odasını ister, kötü deneyimi unutmaz'],['🌙','Yaşayan takvim: sezon, bayram, ramazan iftar/sahur, maç-konser-fuar haberleri'],['🏙️','Rakip otel büyür, fiyat savaşı açar · karşı sokakta esnaf ortaklıkları'],['💡','Gece sokak lambası ışıkları, yağmurda sıçramalar, karda ayak izleri, araba sesi, şehir açılış sinematiği'],['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -4937,6 +4964,12 @@ function updateTips3(dt){
   if(state.day>=4&&queue.length>=5&&tipOnce('t_price','💲 Sıra hep dolu: Yönetim › Otel\'den fiyatı artırmayı dene',6)) return;
   if(roomsOfType('dlx')>=1&&tipOnce('t_design','🛋️ Bir odaya dokun: tema seç ve mobilya yerleştir',6)) return;
   if(built('staff')&&staffEnts.length>=2&&tipOnce('t_staffchat','👥 Personele dokunarak onlarla konuşabilir, övebilirsin',6)) return;
+  if(built('rest')&&state.day>=2&&tipOnce('t_kitchen','👨‍🍳 Oda servisi mutfakta pişer, hazır tepsiler tezgâhta belirir · Aşçı işe alırsan hızlanır',7)) return;
+  if(bookingsOpen()&&tipOnce('t_book','📅 Rezervasyonlar açıldı! Kapora kasaya girer · Otel › Ekonomi › Rezervasyon takvimi',7)) return;
+  if(built('staff')&&staffEnts.length>=2&&morale()<45&&tipOnce('t_morale','😟 Personel morali düşüyor: prim ver ya da mola odası aç (Personel)',7)) return;
+  if(built('staff')&&staffEnts.length>=2&&isNight()&&!state.nightShift&&tipOnce('t_night','🌙 Gece personel yarı hızla çalışır · Personel › Gece vardiyası',7)) return;
+  if(state.day>=3&&!Object.keys(state.shops||{}).length&&tipOnce('t_shops','🥨 Karşı sokaktaki esnafla ortak ol: günlük gelir · Otel › Şehir',7)) return;
+  if(state.day>=2&&tipOnce('t_cal','📆 Üstteki takvim şeridi bayram, maç, konser günlerini önceden gösterir',7)) return;
   if(state.day>=6&&tipOnce('t_guide','📘 Tüm sistemler için Ayarlar › Rehber',6)) return;
 }
 
@@ -5412,12 +5445,15 @@ function invAmen(a){ return a==='rest'||a==='cafe'?1+0.25*invLv('chef'):a==='poo
 function invRate(id){ return state.rooms[id]&&state.rooms[id].type==='suite'?1+0.1*invLv('suite'):1; }
 function invDemand(){ return 1+0.08*invLv('ads'); }
 function invWage(){ return 1-0.07*invLv('acad'); }
-function buyInv(k){ const c=invCost(k); if(stars()<4||!spend(c)) return; state.inv=state.inv||{}; state.inv[k]=invLv(k)+1; sfx('build'); if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,60);
+function wageShort(c){ return state.money-c<wagesToday(); }   // alırsan sabahki maaşlara yetmez mi?
+function buyInv(k,ok){ const c=invCost(k); if(stars()<4||c==null||state.money<c) return;
+  if(!ok&&wageShort(c)){ openModal(`<h3>⚠️ Maaşlar tehlikede</h3><p class="sub">${INV[k].e} ${INV[k].name} için ${fmt(c)} ₺ ödersen kasada ${fmt(state.money-c)} ₺ kalır. Sabah 07:00 maaşları ${fmt(wagesToday())} ₺. Eksi bakiye moral ve ün kaybettirir.</p><button class="btn gold wide" id="ivY">Yine de al</button><button class="btn ghost wide" id="ivN">Vazgeç</button>`,m=>{ m.querySelector('#ivY').onclick=()=>{ closeModal(); buyInv(k,true); }; m.querySelector('#ivN').onclick=closeModal; }); return; }
+  if(!spend(c)) return; state.inv=state.inv||{}; state.inv[k]=invLv(k)+1; sfx('build'); if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,60);
   banner(`${INV[k].e} ${INV[k].name} ${state.inv[k]}. seviye`,`${INV[k].desc} ${INV[k].per}`); onGameEvent('upg',1); save(); renderSheet(); }
 function invHtml(){
   let h=`<div class="ugh">🏗️ Büyük yatırımlar${stars()<4?' · 🔒 4★':''}</div>`;
   for(const k in INV){ const X=INV[k], lv=invLv(k), c=invCost(k);
-    h+=`<div class="row" style="${stars()<4?'opacity:.55':''}"><div class="ic">${X.e}</div><div class="tx">${X.name} <span style="color:var(--gold2)">${lv}/3</span><small>${X.desc} ${X.per} her seviyede</small>${pips(lv,3)}</div>${c==null?'<button class="btn" disabled>Maks</button>':`<button class="btn gold" data-inv="${k}" ${stars()<4||state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
+    h+=`<div class="row" style="${stars()<4?'opacity:.55':''}"><div class="ic">${X.e}</div><div class="tx">${X.name} <span style="color:var(--gold2)">${lv}/3</span><small>${X.desc} ${X.per} her seviyede${c!=null&&stars()>=4&&state.money>=c&&wageShort(c)?`<br><span style="color:#ff8a80">⚠️ Alırsan kalan ${fmt(state.money-c)} ₺, maaşlar ${fmt(wagesToday())} ₺</span>`:''}</small>${pips(lv,3)}</div>${c==null?'<button class="btn" disabled>Maks</button>':`<button class="btn gold" data-inv="${k}" ${stars()<4||state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   return h;
 }
 function bindInv(root){ root.querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>buyInv(b.dataset.inv)); }
@@ -6090,7 +6126,7 @@ function buildSky(){
         gl_FragColor=vec4(c,1.); }`});
   skyMesh=new THREE.Mesh(new THREE.SphereGeometry(230,32,16),mt); skyMesh.frustumCulled=false; skyMesh.renderOrder=-10; scene.add(skyMesh);
 }
-function updateSky(t){
+function updateSkyDome(t){
   if(!skyMesh) return; const U=skyMesh.material.uniforms, bg=scene.background&&scene.background.isColor?scene.background:null;
   skyMesh.position.copy(camera.position);
   if(bg){ const day=1-nightF, dusk=clamp(1-Math.abs(hourNow()-19)/1.6,0,1)+clamp(1-Math.abs(hourNow()-6.8)/1.3,0,1);
@@ -6123,7 +6159,7 @@ function updateDust(dt,t){ if(!dustPts) return; const p=dustPts.geometry.attribu
 let gfx3Scan=0;
 function bootGfx3(){ try{ buildSky(); upgradeWater(); upgradeCharMat(); buildDust(); }catch(e){ console.warn('gfx3',e); } }
 function updateGfx3(dt,t){
-  updateSky(t); updateDust(dt,t);
+  updateSkyDome(t); updateDust(dt,t);
   if(waveTex){ waveTex.offset.set(t*0.02,t*0.013); } causticMats.forEach((m,i)=>{ m.map.offset.set(Math.sin(t*0.25+i)*0.3+t*0.015,Math.cos(t*0.2+i)*0.3); m.opacity=0.32*(0.35+0.65*(1-nightF)); });
   if(rimU){ rimU.value.setRGB(1,0.95,0.84).lerp(new THREE.Color(0.55,0.7,1),nightF); }
   gfx3Scan-=dt; if(gfx3Scan<=0){ gfx3Scan=3; upgradeWater(); upgradeCharMat(); }
@@ -6189,8 +6225,44 @@ function buildCityFacade(){
     g.add(mesh(box(14.2,0.05,0.05),new THREE.MeshBasicMaterial({color:0x7fe3ff}),0,3.05,Z+0.3)); }
   if(!g.children.length) return; bakeStatic(g); floorRoot(0).add(g); facadeG=g;
 }
-function cityPlanHtml(){ const P=cityPlan(); if(!P) return ''; return `<div class="row"><div class="ic">🏛️</div><div class="tx">${city().name} · ${P.n}<small>Bu şehirde ${cityCapacity()} oda yeri var · boş kalan yerler ${P.nook.e} ${P.nook.n} (+2 memnuniyet o katta)</small></div></div>`; }
-function bootCity(){ try{ buildCityFacade(); for(let f=1;f<3;f++) buildNooks(f); }catch(e){ console.warn('city',e); } }
+
+// ---------- köşe geliri: her köşe küçük bir günlük pay getirir ----------
+function nookCount(){ let n=0; for(let f=1;f<Math.min(floorsBuilt(),3);f++) for(let l=0;l<12;l++) if(!cityHasSlot(f,l)) n++; return n; }
+function nookIncome(){ return r10(nookCount()*20*cm()); }
+function nooksDayEnd(t){ const s=nookIncome(); if(s>0&&!state.sandbox){ state.money+=s; t.amen+=s; } }
+
+// ---------- bina kabuğu: çatı hizasında şehrin silüeti (kule, kubbe, mansard, kule ucu) ----------
+let crownG=null;
+function buildCityCrown(){
+  if(crownG){ crownG.parent&&crownG.parent.remove(crownG); crownG=null; }
+  const nm=city().name, t=Math.min(floorsBuilt(),3)-1, y0=FH, g=new THREE.Group(), C=city();
+  const body=mat(C.facade,{roughness:.8}), trim=mat(C.trim,{roughness:.6}), gold=M.gold, FZ=2.7, BZ=BACK;
+  const turret=(x,z,r,h,cap,capM,seg=16)=>{ // köşeden sarkan kule: konsol + gövde + başlık
+    const cb=mesh(cone(r,0.7,seg),body,x,y0-1.05,z); cb.rotation.x=Math.PI; g.add(cb); g.add(mesh(cyl(r,r,h,seg),body,x,y0-0.7+h/2,z,true));
+    g.add(mesh(cyl(r+0.06,r+0.06,0.12,seg),trim,x,y0-0.7+h,z)); const top=y0-0.64+h;
+    if(cap==='dome'){ g.add(mesh(new THREE.SphereGeometry(r*1.02,seg,8,0,Math.PI*2,0,Math.PI/2),capM,x,top,z)); g.add(mesh(cyl(0.03,0.03,0.5,6),gold,x,top+r+0.2,z)); g.add(mesh(sph(0.07,8,6),gold,x,top+r+0.48,z)); }
+    else if(cap==='cone'){ g.add(mesh(cone(r*1.15,r*2.4,seg),capM,x,top+r*1.2,z)); g.add(mesh(sph(0.06,8,6),gold,x,top+r*2.45,z)); }
+    else if(cap==='hip'){ const c=mesh(cone(r*1.45,r*1.1,4),capM,x,top+r*0.55,z); c.rotation.y=Math.PI/4; g.add(c); }
+    return top; };
+  if(nm==='İstanbul'){ const lead=mat(0x6f7f8c,{metalness:.5,roughness:.35});
+    [-7.45,7.45].forEach(x=>turret(x,FZ-0.1,0.55,2.4,'dome',lead)); g.add(mesh(box(14.4,0.18,0.34),trim,0,y0+0.05,FZ+0.05)); }
+  else if(nm==='Antalya'){ const tile=mat(0xc8643b,{roughness:.8,flatShading:true});
+    [-7.45,7.45].forEach(x=>turret(x,FZ-0.1,0.6,2.0,'hip',tile,4)); g.add(mesh(box(14.4,0.14,0.4),M.white,0,y0+0.05,FZ+0.08)); }
+  else if(nm==='Kapadokya'){ const st=mat(0xd9b48a,{roughness:1,flatShading:true}), cap=mat(0x8f5130,{roughness:1,flatShading:true});
+    [[-7.45,FZ-0.1],[7.45,FZ-0.1],[-7.45,BZ+0.2],[7.45,BZ+0.2]].forEach(([x,z],i)=>{ const h=2.6+i%2*0.7; g.add(mesh(cone(0.75,h,7),st,x,y0-0.6+h/2,z,true)); g.add(mesh(sph(0.38,7,5),cap,x,y0-0.5+h,z)); }); }
+  else if(nm==='Bodrum'){ const blue=mat(0x2a5fa8,{roughness:.4});
+    [-7.45,7.45].forEach(x=>turret(x,BZ+0.2,0.7,1.6,'dome',blue,12)); g.add(mesh(box(14.4,0.12,0.34),blue,0,y0+0.05,FZ+0.05)); }
+  else if(nm==='Paris'){ const slate=mat(0x4a5563,{roughness:.55,metalness:.2});
+    const mn=mesh(box(14.4,1.0,0.5),slate,0,y0+0.2,FZ+0.42,true); mn.rotation.x=-0.35; g.add(mn);
+    for(let i=0;i<5;i++){ const x=-5.2+i*2.6; g.add(mesh(box(0.8,0.8,0.45),M.facade,x,y0+0.45,FZ+0.5)); g.add(mesh(box(0.55,0.5,0.03),M.glass,x,y0+0.45,FZ+0.74)); const r=mesh(cone(0.62,0.4,4),slate,x,y0+1.05,FZ+0.5); r.rotation.y=Math.PI/4; g.add(r); }
+    turret(7.45,FZ-0.1,0.6,2.2,'cone',slate); }
+  else if(nm==='Dubai'){ const steel=mat(0xb9c6d0,{metalness:.85,roughness:.2}), led=new THREE.MeshBasicMaterial({color:0x7fe3ff});
+    g.add(mesh(cyl(0.12,0.55,9,12),steel,0,y0+4.3,BZ-0.45,true)); g.add(mesh(cone(0.14,1.4,10),gold,0,y0+9.5,BZ-0.45)); g.add(mesh(sph(0.12,8,6),new THREE.MeshBasicMaterial({color:0xff5040}),0,y0+10.3,BZ-0.45));
+    [[-7.2,FZ+0.05],[7.2,FZ+0.05],[-7.2,BZ-0.15],[7.2,BZ-0.15]].forEach(([x,z])=>{ g.add(mesh(box(0.16,3.2,0.16),steel,x,y0+0.9,z,true)); g.add(mesh(box(0.05,3.1,0.05),led,x,y0+0.9,z+(z>0?0.1:-0.1))); }); }
+  if(!g.children.length) return; bakeStatic(g); floorRoot(t).add(g); crownG=g;
+}
+function cityPlanHtml(){ const P=cityPlan(); if(!P) return ''; return `<div class="row"><div class="ic">🏛️</div><div class="tx">${city().name} · ${P.n}<small>Bu şehirde ${cityCapacity()} oda yeri var · boş kalan yerler ${P.nook.e} ${P.nook.n} (+2 memnuniyet o katta${nookCount()?` · günlük +${fmt(nookIncome())} ₺`:''})</small></div></div>`; }
+function bootCity(){ try{ buildCityFacade(); for(let f=1;f<3;f++) buildNooks(f); buildCityCrown(); }catch(e){ console.warn('city',e); } }
 
 // =====================================================================
 // MG6-2 · İŞLETME DERİNLİĞİ: mutfak (oda servisi pişirilir), çamaşırhane →
@@ -6212,7 +6284,7 @@ function updateKitchen(dt){
   if(!trayG){ trayG=new THREE.Group(); outdoor.add(trayG); for(let i=0;i<4;i++){ const t=new THREE.Group(); t.add(mesh(cyl(0.16,0.16,0.02,14),mat(0xc9d1d8,{metalness:.7,roughness:.3}),0,0,0)); t.add(mesh(new THREE.SphereGeometry(0.12,12,6,0,Math.PI*2,0,Math.PI/2),mat(0xdfe6ec,{metalness:.8,roughness:.25}),0,0.01,0)); t.position.set(L.pass.x-0.45+i*0.3,1.0,L.pass.z-0.35); trayG.add(t); } }
   trayG.children.forEach((t,i)=>t.visible=i<K.ready);
 }
-function kitchenHtml(){ if(!built('rest')) return ''; const K=kitchen(); return `<div class="row"><div class="ic">👨‍🍳</div><div class="tx">Mutfak · ${K.ready} tepsi hazır<small>Oda servisi siparişi: ${foodOrders()} · her tepsi ${cookTime().toFixed(1)} sn'de pişer (Ödüllü şef hızlandırır)</small></div></div>`; }
+function kitchenHtml(){ if(!built('rest')) return ''; const K=kitchen(); return `<div class="row"><div class="ic">👨‍🍳</div><div class="tx">Mutfak · ${K.ready} tepsi hazır<small>Oda servisi siparişi: ${foodOrders()} · her tepsi ${cookTime().toFixed(1)} sn'de pişer (${state.staff.cook&&state.staff.cook.n?'👨‍🍳 aşçı ×1,5':'aşçı işe al: ×1,5'} · şef yatırımı da hızlandırır)</small></div></div>`; }
 
 // ---------- çamaşırhane → depo: yıkanan çarşaf havlu stoğuna döner ----------
 function laundryToStock(n){ if(!state.stock) return; const cap=stockCap(); state.stock.towel=Math.min(cap,(state.stock.towel||0)+n*2); }
@@ -6221,8 +6293,9 @@ function laundryToStock(n){ if(!state.stock) return; const cap=stockCap(); state
 const OB=[{k:0,n:'Yok'},{k:0.15,n:'%15'},{k:0.3,n:'%30'}];
 function obRate(){ return OB[state.obIx||0].k; }
 function bookDay(d){ return (state.book||{})[d]||{n:0,left:0}; }
+function bookingsOpen(){ return stars()>=3; }   // yeni oyuncu yormasın: rezervasyon 3★'da açılır
 function planBookings(){ // gün sonu: 2 gün sonrası için rezervasyon alınır, kapora hemen kasaya girer
-  if(state.tut<TUT.length||state.sandbox) return; state.book=state.book||{}; const d=state.day+2; if(state.book[d]) return;
+  if(state.tut<TUT.length||state.sandbox||!bookingsOpen()) return; state.book=state.book||{}; const d=state.day+2; if(state.book[d]) return;
   const cap=nRoomsNow(); if(cap<4) return; const n=Math.round(cap*rnd(0.18,0.32)*(1+obRate())*priceDemand()*invDemand());
   const dep=r10(n*avgRate()*0.1*incomeMult()); state.book[d]={n,left:n,dep}; state.money+=dep; state.today.rooms+=dep;
   for(const k in state.book) if(+k<state.day-1) delete state.book[k];
@@ -6237,6 +6310,7 @@ function updateBookings(dt){
 // rezervasyonlu misafir oda bulamayıp giderse: tazminat + ün
 function bookedLeft(g){ if(!g.booked) return; const c=r10(avgRate()*incomeMult()*0.6); state.money-=c; changeRep(-1.5); toast(`📅 Rezervasyonlu ${g.name} odasız kaldı: −${fmt(c)} ₺ tazminat, −1.5 ün`,'bad'); }
 function bookingHtml(){
+  if(!bookingsOpen()) return `<div class="row" style="opacity:.55"><div class="ic">🔒</div><div class="tx">Rezervasyon takvimi<small>3★'da açılır: kapora, rezervasyonlu misafir ve fazla rezervasyon</small></div></div>`;
   const days=[0,1,2].map(i=>state.day+i), cap=nRoomsNow();
   return `<div class="ugh">📅 Rezervasyon takvimi</div><div class="grid2" style="grid-template-columns:repeat(3,1fr)">${days.map(d=>{ const B=bookDay(d); return `<div class="stat">${d===state.day?'Bugün':d-state.day+' gün sonra'}<b>${B.n}${B.left&&d===state.day?` <small>(${B.left} yolda)</small>`:''}</b></div>`; }).join('')}</div>
     <div class="row"><div class="ic">⚖️</div><div class="tx">Fazla rezervasyon (overbooking)<small>Daha çok kapora ve misafir; ama oda bulamayan rezervasyonlu misafir tazminat ve ün kaybettirir · ${cap} oda</small></div></div>
@@ -6244,19 +6318,21 @@ function bookingHtml(){
 
 // ---------- personel morali: vardiya, izin, grev, prim ----------
 function morale(){ return state.morale==null?70:state.morale; }
-function moraleMul(){ return (state.strike&&state.strike>gtime)?0.05:0.8+0.4*morale()/100; }
+function strikeOn(){ return (state.strike||0)>0; }
+function moraleMul(){ return strikeOn()?0.05:0.8+0.4*morale()/100; }
 function nightStaffMul(){ return isNight()&&!state.nightShift?0.5:1; }
 function nightWageMul(){ return state.nightShift?1.25:1; }
 function moraleDay(){
   if(!built('staff')||!staffEnts.length) return; let d=0; const avgE=staffEnts.reduce((a,e)=>a+(e.energy??100),0)/staffEnts.length;
   d+=state.breakroom?2:0; d+=avgE<40?-5:1; d+=state.money<0?-6:0; d+=state.nightShift?-1:0; if(state.leaveDenied===state.day-1) d-=6;
   state.morale=clamp(morale()+d,0,100);
-  if(morale()<25&&Math.random()<0.5&&!state.sandbox){ state.strike=gtime+60; setTimeout(()=>openStrike(),5000); }
-  else if(Math.random()<0.35&&!state.sandbox) setTimeout(()=>askLeave(),9000);
+  if(stars()<3||state.sandbox) return;   // grev ve izin talepleri 3★'dan sonra
+  if(morale()<25&&Math.random()<0.5){ state.strike=60; setTimeout(()=>openStrike(),5000); }
+  else if(Math.random()<0.35) setTimeout(()=>askLeave(),9000);
 }
 function bonusCost(){ return r10(staffEnts.length*60*cm()); }
 function giveBonus(){ const c=bonusCost(); if(!spend(c)) return; state.morale=clamp(morale()+18,0,100); state.strike=0; staffEnts.forEach(e=>{ e.energy=100; fxEmoji(e.x,e.y+2.1,e.z,e.f,'🥳'); }); sfx('star'); toast(`💰 Personele prim verildi: moral +18`); markSave(); renderSheet(); }
-function openStrike(){ if(!(state.strike>gtime)) return; banner('✊ Personel grevde!','Moral çok düştü · prim ver ya da 1 saat bekle'); sfx('alarm');
+function openStrike(){ if(!strikeOn()) return; banner('✊ Personel grevde!','Moral çok düştü · prim ver ya da 1 saat bekle'); sfx('alarm');
   openModal(`<h3>✊ Grev</h3><p class="sub">Personel moral düşüklüğü yüzünden iş bıraktı. Prim verirsen hemen işe dönerler.</p><button class="btn gold wide" id="skB">💰 Prim ver · ${fmt(bonusCost())} ₺</button><button class="btn ghost wide" id="skW">Bekle</button>`,m=>{ m.querySelector('#skB').onclick=()=>{ giveBonus(); closeModal(); }; m.querySelector('#skW').onclick=closeModal; }); }
 function askLeave(){ if(!staffEnts.length) return; const e=rand(staffEnts), nm=e.name||'Bir çalışan';
   openModal(`<h3>🏖️ İzin talebi</h3><p class="sub">${escH(nm)} (${STAFF[e.kind].name}) yarın izin istiyor.</p><button class="btn gold wide" id="lvY">✅ İzin ver (moral +6, yarın 1 kişi eksik)</button><button class="btn ghost wide" id="lvN">❌ Reddet (moral −6)</button>`,m=>{
@@ -6264,7 +6340,7 @@ function askLeave(){ if(!staffEnts.length) return; const e=rand(staffEnts), nm=e
     m.querySelector('#lvN').onclick=()=>{ state.leaveDenied=state.day; state.morale=clamp(morale()-6,0,100); closeModal(); markSave(); }; }); }
 function onLeave(e){ const L2=state.leaveDay; return !!(L2&&L2.day===state.day&&L2.kind===e.kind&&staffEnts.filter(x=>x.kind===e.kind).indexOf(e)===0); }
 function staffHtml2(){ if(!built('staff')) return ''; const m=Math.round(morale());
-  return `<div class="ugh">😊 Personel morali</div><div class="row"><div class="ic">${m>=70?'😄':m>=40?'🙂':m>=25?'😟':'😠'}</div><div class="tx">Moral ${m}/100${state.strike>gtime?' · ✊ GREV':''}<small>Hız ×${moraleMul().toFixed(2)} · düşük moral grev riski · mola odası ve prim moral verir</small>${pips(Math.round(m/20),5)}</div><button class="btn gold" data-bonus ${state.money<bonusCost()?'disabled':''}>Prim<br>${fmt(bonusCost())} ₺</button></div>
+  return `<div class="ugh">😊 Personel morali</div><div class="row"><div class="ic">${m>=70?'😄':m>=40?'🙂':m>=25?'😟':'😠'}</div><div class="tx">Moral ${m}/100${strikeOn()?' · ✊ GREV':''}<small>Hız ×${moraleMul().toFixed(2)} · düşük moral grev riski · mola odası ve prim moral verir</small>${pips(Math.round(m/20),5)}</div><button class="btn gold" data-bonus ${state.money<bonusCost()?'disabled':''}>Prim<br>${fmt(bonusCost())} ₺</button></div>
     <div class="row"><div class="ic">🌙</div><div class="tx">Gece vardiyası<small>${state.nightShift?'Açık: personel gece de tam hızla çalışır, maaşlar +%25':'Kapalı: gece personel yarı hızla çalışır'}</small></div><button class="btn ${state.nightShift?'gold':''}" data-nshift>${state.nightShift?'Açık':'Kapalı'}</button></div>`; }
 function bindOps2(root){ const b=root.querySelector('[data-bonus]'); if(b) b.onclick=giveBonus; const n=root.querySelector('[data-nshift]'); if(n) n.onclick=()=>{ state.nightShift=!state.nightShift; sfx('click'); markSave(); renderSheet(); };
   root.querySelectorAll('[data-ob]').forEach(x=>x.onclick=()=>{ state.obIx=+x.dataset.ob; sfx('click'); markSave(); renderSheet(); }); }
@@ -6273,12 +6349,22 @@ function bindOps2(root){ const b=root.querySelector('[data-bonus]'); if(b) b.onc
 function rememberGuest(g){ if(!g.loyal&&!(state.loyal||[]).some(x=>x.n===g.name)) return; const x=(state.loyal||[]).find(x=>x.n===g.name)||{n:g.name,t:g.type};
   x.room=g.lastRoomId; x.sat=Math.round(g.sat); x.visits=(x.visits||0)+1; x.food=g.ateFood||x.food; if(!(state.loyal||[]).includes(x)){ state.loyal=state.loyal||[]; state.loyal.push(x); } }
 function memoryAtDesk(g){ const x=g.memory; if(!x||g.memShown) return; g.memShown=true;
-  toast(`🧠 ${g.name} ${x.visits||1}. kez geliyor · geçen sefer ${x.room?'Oda '+x.room:'?'} ${x.sat>=68?'😄':x.sat>=42?'🙂':'😠'}${x.room?' · aynı odayı verirsen sevinir':''}`); }
-function memorySat(g,id){ const x=g.memory; if(!x) return 0; let d=0; if(x.room===id){ d+=8; fxEmoji(g.x,2.8,g.z,0,'🧠❤️'); } if(x.sat<42) d-=6; return d; }
+  toast(`🧠 ${g.name} ${x.visits||1}. kez geliyor · geçen sefer ${x.room?'Oda '+x.room:'?'} ${x.sat>=68?'😄':x.sat>=42?'🙂':'😠'}${x.room?' · aynı odayı verirsen sevinir':''}`); if(x.room) showMemRing(g,x.room); }
+function memorySat(g,id){ const x=g.memory; if(!x) return 0; let d=0; hideMemRing(); if(x.room===id){ d+=8; const ri=roomInfo(id); fxEmoji(g.x,2.8,g.z,0,'🧠❤️'); if(!state.lowFx) confettiAt(ri.x,ri.f*FH+1.6,ri.z,24); sfx('sparkle'); toast(`🧠❤️ ${g.name} eski odasına kavuştu: +8 memnuniyet`); } if(x.sat<42) d-=6; return d; }
+// resepsiyonda sadık misafirin eski odası yerde pembe halka ile parlar
+let memRing=null, memGuest=null;
+function showMemRing(g,id){ hideMemRing(); if(!state.rooms[id]||RT(id).guest) return; const ri=roomInfo(id);
+  memRing=mesh(new THREE.RingGeometry(0.95,1.15,40),new THREE.MeshBasicMaterial({color:0xff7eb6,transparent:true,opacity:0.75,depthWrite:false,side:THREE.DoubleSide}),ri.x,0.09,ri.z); memRing.rotation.x=-Math.PI/2; floorRoot(ri.f).add(memRing); memGuest=g; }
+function hideMemRing(){ if(memRing){ memRing.parent&&memRing.parent.remove(memRing); memRing.geometry.dispose(); memRing.material.dispose(); memRing=null; } memGuest=null; }
+function updateMemRing(){ if(!memRing) return; if(!memGuest||memGuest.state!=='queue'||memGuest.dead||!guests.includes(memGuest)){ hideMemRing(); return; } const k=1+0.12*Math.sin(performance.now()/180); memRing.scale.set(k,k,k); memRing.material.opacity=0.5+0.3*Math.sin(performance.now()/260); }
 function memoryPick(g,rs){ const x=g.memory; return x&&x.room&&rs.includes(x.room)?x.room:null; }
 
 // ---------- hooks ----------
-function updateOps2(dt){ updateKitchen(dt); updateBookings(dt); if(queue[0]&&queue[0].memory&&queue[0].state==='queue'&&!queue[0].path) memoryAtDesk(queue[0]); }
+// akşam uyarısı: kasa sabahki maaşlara yetmiyorsa
+let wageWarnDay=-1;
+function wageWarn(){ if(wageWarnDay===state.day||state.tut<TUT.length||state.sandbox||hourNow()<19) return; wageWarnDay=state.day; const w=wagesToday();
+  if(w>0&&state.money<w) toast(`⚠️ Kasada ${fmt(Math.max(0,Math.floor(state.money)))} ₺ var, sabah maaşları ${fmt(w)} ₺ · gece harcamaları dengele`,'bad'); }
+function updateOps2(dt){ wageWarn(); if(state.strike>0){ state.strike=Math.max(0,state.strike-dt); if(!state.strike) toast('✊ Grev bitti, personel işe döndü'); } updateKitchen(dt); updateBookings(dt); if(queue[0]&&queue[0].memory&&queue[0].state==='queue'&&!queue[0].path) memoryAtDesk(queue[0]); updateMemRing(); }
 function ops2DayEnd(){ planBookings(); moraleDay(); }
 
 // =====================================================================
@@ -6288,7 +6374,7 @@ function ops2DayEnd(){ planBookings(); moraleDay(); }
 // =====================================================================
 // ---------- takvim ----------
 // 24 günlük döngü: 3 gün bayram (gün 8-10), 7 gün ramazan (gün 15-21, son günü bayram arifesi)
-function calPhase(){ const d=((state.day-1)%24)+1; return d>=8&&d<=10?'bayram':d>=15&&d<=21?'ramazan':null; }
+function calPhase(day=state.day){ const d=((day-1)%24)+1; return d>=8&&d<=10?'bayram':d>=15&&d<=21?'ramazan':null; }
 function seasonTourism(){ const si=seasonIx(), c=city(); if(si===1&&c.palm) return {e:'🏖️',n:'Yaz akını',dem:1.3,w:{tourist:1.6,family:1.5}};
   if(si===3&&c.snow) return {e:'⛷️',n:'Kayak sezonu',dem:1.15,w:{athlete:1.8,couple:1.3}}; return null; }
 // ---------- şehir haberleri ----------
@@ -6296,7 +6382,12 @@ const NEWS=[{k:'mac',e:'⚽',n:'Derbi maçı var',d:'Taraftarlar ve sporcular ş
   {k:'konser',e:'🎤',n:'Büyük konser',d:'Fenomenler ve gençler akın ediyor',dem:1.3,w:{influencer:2.2,student:1.5}},
   {k:'fuar',e:'💼',n:'Uluslararası fuar',d:'İş insanları geliyor, fiyata daha az bakarlar',dem:1.2,w:{business:2.5,vip:1.3},price:1.1},
   {k:'kongre',e:'🩺',n:'Tıp kongresi',d:'Sakin ve bol bahşişli misafirler',dem:1.1,w:{business:1.6,elderly:1.4}}];
-function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; state.news=null; if(Math.random()<0.4){ const N=rand(NEWS); state.news={k:N.k,day:state.day}; setTimeout(()=>banner(`${N.e} Şehirde bugün: ${N.n}`,N.d),5200); } }
+// haberler 2 gün önceden planlanır (takvim şeridi önceden gösterebilsin)
+function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; const P=state.newsPlan=state.newsPlan||{};
+  for(let d=state.day;d<=state.day+2;d++) if(P[d]===undefined) P[d]=Math.random()<0.4?rand(NEWS).k:null;
+  for(const k in P) if(+k<state.day) delete P[k];
+  state.news=P[state.day]?{k:P[state.day],day:state.day}:null; const N=newsToday(); if(N) setTimeout(()=>banner(`${N.e} Şehirde bugün: ${N.n}`,N.d),5200); }
+function newsFor(d){ const k=(state.newsPlan||{})[d]; return k?NEWS.find(x=>x.k===k):null; }
 function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
 // ---------- toplam etkiler ----------
 function worldDemand(){ let f=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
@@ -6304,10 +6395,12 @@ function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=news
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
 function iftarOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=19&&h<21; }
 function sahurOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=3.5&&h<5; }
-function worldAmenBonus(a){ return a==='rest'&&(iftarOn()||sahurOn())?1.6:1; }
+function roofBarOn(){ const h=hourNow(); return h>=19.5&&roofOpen(); }   // akşam: çatı gece barı
+function worldAmenBonus(a){ return a==='rest'&&(iftarOn()||sahurOn())?1.6:a==='roof'&&roofBarOn()?1.5:1; }
 function worldLabel(){ const ph=calPhase(), st=seasonTourism(), N=newsToday(), L2=[]; if(ph==='bayram') L2.push('🎊 Bayram tatili'); if(ph==='ramazan') L2.push(iftarOn()?'🌙 İftar vakti':sahurOn()?'🌙 Sahur':'🌙 Ramazan'); if(st) L2.push(st.e+' '+st.n); if(N) L2.push(N.e+' '+N.n); return L2; }
-let iftarShown=-1, sahurShown=-1;
+let iftarShown=-1, sahurShown=-1, barShown=-1;
 function updateCalendar(){
+  if(roofBarOn()&&barShown!==state.day&&state.tut>=TUT.length){ barShown=state.day; toast('🍸 Çatı gece barı açıldı: misafirler çatıya çıkıyor, çatı geliri +%50'); }
   if(iftarOn()&&iftarShown!==state.day){ iftarShown=state.day; banner('🌙 İftar vakti','Misafirler restorana akın ediyor · restoran geliri +%60'); guests.forEach(g=>{ if(g.state==='room'&&!g.asleep&&Math.random()<0.5){ g.amenT=0; g.T.likes; } }); }
   if(sahurOn()&&sahurShown!==state.day){ sahurShown=state.day; toast('🌙 Sahur vakti: oda servisi siparişleri artıyor'); guests.forEach(g=>{ if(g.state==='room'&&Math.random()<0.3){ g.reqT=0; } }); }
 }
@@ -6352,9 +6445,18 @@ function shopsHtml(){ let h=`<div class="ugh">🤝 Esnaf ortaklıkları</div>`; 
 function bindWorld(root){ root.querySelectorAll('[data-shop]').forEach(b=>b.onclick=()=>buyShop(b.dataset.shop)); }
 
 // ---------- hooks ----------
-function worldDayEnd(t){ rollNews(); shopsDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===8) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
-function updateWorld(dt){ updateCalendar(); }
-function bootWorld(){ buildShops(); }
+function worldDayEnd(t){ rollNews(); shopsDayEnd(t); nooksDayEnd(t); const r=state.rival; if(r&&rivalVis&&rivalVis.userData.nf!==rivalFloors()) buildRival(); priceWarAsk(); if(calPhase()==='bayram'&&((state.day-1)%24)+1===8) setTimeout(()=>banner('🎊 Bayram tatili başladı!','3 gün boyunca aileler akın ediyor'),6500); if(calPhase()==='ramazan'&&((state.day-1)%24)+1===15) setTimeout(()=>banner('🌙 Ramazan geldi','İftar ve sahurda restoran ve oda servisi yoğun'),6500); }
+// ---------- takvim şeridi (HUD): bugün + 2 gün ----------
+let calEl=null, calT=0;
+function calDayChips(d){ const c=[], ph=calPhase(d), N=d===state.day?newsToday():newsFor(d); if(ph==='bayram') c.push('🎊'); if(ph==='ramazan') c.push('🌙'); if(N) c.push(N.e); if(d===state.day){ const st=seasonTourism(); if(st) c.push(st.e); } return c; }
+function calStripHtml(){ const days=[0,1,2].map(i=>state.day+i), lab=['Bugün','Yarın','+2 gün']; if(!days.some(d=>calDayChips(d).length)) return '';
+  return days.map((d,i)=>{ const c=calDayChips(d); return `<span class="cd${i?'':' now'}"><b>${lab[i]}</b>${c.length?c.join(''):'·'}</span>`; }).join(''); }
+function updateCalStrip(dt){ calT-=dt; if(calT>0) return; calT=1;
+  if(!calEl){ calEl=document.createElement('div'); calEl.id='calStrip'; calEl.setAttribute('role','button'); calEl.setAttribute('aria-label','Şehir takvimi'); document.getElementById('hud').appendChild(calEl);
+    calEl.onclick=()=>{ sfx('click'); mgmtTab='hotel'; hotelSub='city'; openSheet('mgmt'); }; }
+  const h=(state.tut<TUT.length||fpMode||sheetMode)?'':calStripHtml(); if(calEl._h!==h){ calEl._h=h; calEl.innerHTML=h; calEl.style.display=h?'flex':'none'; } }
+function updateWorld(dt){ updateCalendar(); updateCalStrip(dt); }
+function bootWorld(){ buildShops(); if(!state.newsPlan&&state.tut>=TUT.length&&!state.sandbox){ state.newsPlan={}; if(state.news&&state.news.day===state.day) state.newsPlan[state.day]=state.news.k; rollNews(); } }
 
 // =====================================================================
 // MG6-4 · GRAFİK 4: gece sokak lambası ışık konileri, havuz altı ışığı,
@@ -6394,10 +6496,21 @@ function updateCarSound(dt){ if(!Sound.ctx||state.sound===false||!SMP.engine) re
 // şehir açılış sinematiği (yeni şehirde ilk gün)
 function cityIntro(){ if(state.introDone===state.city||state.tut<TUT.length||state.sandbox) return; state.introDone=state.city; markSave(); const P=typeof cityPlan==='function'?cityPlan():null;
   setTimeout(()=>{ cinematic(5); banner(`${city().e||''} ${city().name}`,P?`${P.n} · ${cityCapacity()} oda yeri`:'Yeni otelin seni bekliyor'); },1500); }
+// çatı gece barı: parapet boyunca sarkan renkli ampuller (akşam yanar)
+let roofLightG=null, roofLightMat=null;
+function buildRoofLights(){ if(roofLightG||!built('roof')) return; roofLightMat=new THREE.MeshStandardMaterial({color:0xfff0c0,emissive:0xffc860,emissiveIntensity:0});
+  const g=new THREE.Group(), geo=sph(0.06,8,6), wire=M.dark, spans=[[-6.9,2.62,6.9,2.62],[-6.9,BACK+0.1,6.9,BACK+0.1],[-6.9,BACK+0.1,-6.9,2.62],[6.9,BACK+0.1,6.9,2.62]];
+  const pts=[]; spans.forEach(([x0,z0,x1,z1])=>{ const L0=Math.hypot(x1-x0,z1-z0), n=Math.round(L0/0.45); for(let i=0;i<=n;i++){ const t=i/n, k=(t*L0/2.3)%1; pts.push([x0+(x1-x0)*t,1.55-0.22*Math.sin(Math.PI*k),z0+(z1-z0)*t]); } });
+  // ampuller tek InstancedMesh (malzemesi paylaşılır → akşam yanıp söner); birleştirme (bake) malzemeyi değiştireceği için kullanılmaz
+  if(THREE.InstancedMesh){ const im=new THREE.InstancedMesh(geo,roofLightMat,pts.length), o=new THREE.Object3D(); pts.forEach((q,i)=>{ o.position.set(q[0],q[1],q[2]); o.updateMatrix(); im.setMatrixAt(i,o.matrix); }); g.add(im); }
+  else pts.forEach(q=>g.add(mesh(geo,roofLightMat,q[0],q[1],q[2])));
+  [[-6.9,2.62],[6.9,2.62],[-6.9,BACK+0.1],[6.9,BACK+0.1]].forEach(([x,z])=>g.add(mesh(cyl(0.025,0.025,1.6,6),wire,x,0.8,z)));
+  floorRoot(ROOF).add(g); roofLightG=g; }
+function updateRoofLights(){ if(!roofLightG){ if(built('roof')) buildRoofLights(); return; } const on=(typeof roofBarOn==='function'&&roofBarOn())||nightF>0.4; roofLightMat.emissiveIntensity=on?1.4+0.2*Math.sin(performance.now()/400):0; }
 function bootGfx4(){ try{ buildLampCones(); buildSplashes(); cityIntro(); }catch(e){ console.warn('gfx4',e); } }
 function updateGfx4(dt){
   if(coneMat){ const on=nightF>0.35&&!powerOut(); coneMat.opacity=on?0.1*nightF*(state.weather==='rain'?1.4:1):0; lampCones.forEach(c=>c.visible=on&&(viewFloor===0||fpMode)); }
-  updateSplashes(dt); updatePrints(dt); updatePoolLight(); updateCarSound(dt);
+  updateSplashes(dt); updatePrints(dt); updatePoolLight(); updateCarSound(dt); updateRoofLights();
 }
 
 // =====================================================================
@@ -6558,6 +6671,12 @@ function mgmtHasDeal(){
   return false;
 }
 function pips(n,max){ let s='<div class="pips">'; for(let i=0;i<max;i++) s+=`<i class="${i<n?'on':''}"></i>`; return s+'</div>'; }
+// Otel alt sekmelerinde her "ugh" başlıklı bölüm açılır-kapanır olur (telefonda uzun kaydırmayı azaltır); açık/kapalı durumu hatırlanır
+const foldOpen={};
+function foldSecs(h,tab){ const parts=h.split('<div class="ugh">'); if(parts.length<2) return h; let out=parts[0];
+  parts.slice(1).forEach((c,i)=>{ const j=c.indexOf('</div>'), title=c.slice(0,j), body=c.slice(j+6), key=tab+':'+title.replace(/<[^>]*>|[0-9.,/%₺()+−-]/g,'').trim().slice(0,24);
+    const open=foldOpen[key]!=null?foldOpen[key]:i===0; out+=`<details class="fold" data-fold="${key}"${open?' open':''}><summary class="ugh">${title}</summary>${body}</details>`; });
+  return out; }
 function renderSheet(){
   if(sheetMode==='room') return renderRoomSheet();
   if(sheetMode==='quests') return renderQuestSheet();
@@ -6598,15 +6717,16 @@ function renderSheet(){
     const H=hotelSub;
     h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
     if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
-    if(H==='gen') h+=tierHtml()+mgrHtml()+mescitHtml()+floorsHtml();
-    if(H==='eco') h+=bookingHtml()+kitchenHtml()+depthHtml()+invHtml()+luxHtml();
+    if(H==='gen') h+=foldSecs(tierHtml()+mgrHtml()+mescitHtml()+floorsHtml(),H);
+    if(H==='eco') h+=foldSecs(bookingHtml()+kitchenHtml()+depthHtml()+invHtml()+luxHtml(),H);
     else if(H==='evt') h+=eventsHtml()+partyHtml();
     else if(H==='rule') h+=opsHtml();
-    else if(H==='city') h+=cityPlanHtml()+worldHtml()+shopsHtml()+specialHtml()+progressHtml(next)+legacyHtml();
+    else if(H==='city') h+=foldSecs(cityPlanHtml()+worldHtml()+shopsHtml()+specialHtml()+progressHtml(next)+legacyHtml(),H);
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   sheet.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ mgmtTab=b.dataset.tab; sfx('click'); renderSheet(); });
+  sheet.querySelectorAll('details[data-fold]').forEach(d=>d.ontoggle=()=>{ if(foldOpen[d.dataset.fold]!==d.open) foldOpen[d.dataset.fold]=d.open; });
   sheet.querySelectorAll('[data-hsub]').forEach(b=>b.onclick=()=>{ hotelSub=b.dataset.hsub; sfx('click'); renderSheet(); sheet.scrollTop=0; });
   sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));
