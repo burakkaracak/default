@@ -360,8 +360,8 @@ function buildFeature(id,pop){
     case 'cafe': g=buildCafe(); break;
     case 'spa': g=buildSpa(); break;
     case 'laundry': g=buildLaundry(); break;
-    case 'f2': buildUpperFloor(1); g=buildElevator(); setTimeout(()=>buildNooks(1),0); break;
-    case 'f3': buildUpperFloor(2); g=buildElevator(); setTimeout(()=>buildNooks(2),0); break;
+    case 'f2': buildUpperFloor(1); g=buildElevator(); setTimeout(()=>{ buildNooks(1); buildCityCrown(); },0); break;
+    case 'f3': buildUpperFloor(2); g=buildElevator(); setTimeout(()=>{ buildNooks(2); buildCityCrown(); },0); break;
     case 'roof': buildRoof(); g=buildElevator(); break;
     case 'mescit': buildMescit(); g=buildElevator(); break;
   }

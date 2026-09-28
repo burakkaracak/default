@@ -157,6 +157,12 @@ function mgmtHasDeal(){
   return false;
 }
 function pips(n,max){ let s='<div class="pips">'; for(let i=0;i<max;i++) s+=`<i class="${i<n?'on':''}"></i>`; return s+'</div>'; }
+// Otel alt sekmelerinde her "ugh" başlıklı bölüm açılır-kapanır olur (telefonda uzun kaydırmayı azaltır); açık/kapalı durumu hatırlanır
+const foldOpen={};
+function foldSecs(h,tab){ const parts=h.split('<div class="ugh">'); if(parts.length<2) return h; let out=parts[0];
+  parts.slice(1).forEach((c,i)=>{ const j=c.indexOf('</div>'), title=c.slice(0,j), body=c.slice(j+6), key=tab+':'+title.replace(/<[^>]*>|[0-9.,/%₺()+−-]/g,'').trim().slice(0,24);
+    const open=foldOpen[key]!=null?foldOpen[key]:i===0; out+=`<details class="fold" data-fold="${key}"${open?' open':''}><summary class="ugh">${title}</summary>${body}</details>`; });
+  return out; }
 function renderSheet(){
   if(sheetMode==='room') return renderRoomSheet();
   if(sheetMode==='quests') return renderQuestSheet();
@@ -197,15 +203,16 @@ function renderSheet(){
     const H=hotelSub;
     h=h.replace('<div class="grid2">',subTabsHtml()+(H==='gen'?'<div class="grid2">':'<div class="grid2" style="display:none">'));
     if(H!=='gen'){ const i=h.indexOf('<div class="grid2" style="display:none">'); h=h.slice(0,i); }
-    if(H==='gen') h+=tierHtml()+mgrHtml()+mescitHtml()+floorsHtml();
-    if(H==='eco') h+=bookingHtml()+kitchenHtml()+depthHtml()+invHtml()+luxHtml();
+    if(H==='gen') h+=foldSecs(tierHtml()+mgrHtml()+mescitHtml()+floorsHtml(),H);
+    if(H==='eco') h+=foldSecs(bookingHtml()+kitchenHtml()+depthHtml()+invHtml()+luxHtml(),H);
     else if(H==='evt') h+=eventsHtml()+partyHtml();
     else if(H==='rule') h+=opsHtml();
-    else if(H==='city') h+=cityPlanHtml()+worldHtml()+shopsHtml()+specialHtml()+progressHtml(next)+legacyHtml();
+    else if(H==='city') h+=foldSecs(cityPlanHtml()+worldHtml()+shopsHtml()+specialHtml()+progressHtml(next)+legacyHtml(),H);
   }
   if(sheet._h===h) return; sheet._h=h; sheet.innerHTML=h;
   sheet.querySelector('[data-close]').onclick=closeSheet;
   sheet.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ mgmtTab=b.dataset.tab; sfx('click'); renderSheet(); });
+  sheet.querySelectorAll('details[data-fold]').forEach(d=>d.ontoggle=()=>{ if(foldOpen[d.dataset.fold]!==d.open) foldOpen[d.dataset.fold]=d.open; });
   sheet.querySelectorAll('[data-hsub]').forEach(b=>b.onclick=()=>{ hotelSub=b.dataset.hsub; sfx('click'); renderSheet(); sheet.scrollTop=0; });
   sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));

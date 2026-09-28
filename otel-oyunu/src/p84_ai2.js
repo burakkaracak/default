@@ -54,7 +54,7 @@ function openDesigner(id){
 }
 
 // ---------- talking staff ----------
-const STAFF_PERSONA={rec:'güler yüzlü, düzenli resepsiyonist',clean:'titiz, biraz esprili temizlik görevlisi',bell:'enerjik, her yere koşturan kat görevlisi',tech:'sakin, her şeyi tamir edebilen teknisyen',spaT:'huzurlu, yumuşak konuşan spa terapisti',laundry:'pratik, şakacı çamaşırcı'};
+const STAFF_PERSONA={rec:'güler yüzlü, düzenli resepsiyonist',clean:'titiz, biraz esprili temizlik görevlisi',bell:'enerjik, her yere koşturan kat görevlisi',tech:'sakin, her şeyi tamir edebilen teknisyen',spaT:'huzurlu, yumuşak konuşan spa terapisti',laundry:'pratik, şakacı çamaşırcı',cook:'tutkulu, biraz titiz, yemeğiyle gurur duyan aşçı'};
 function pickStaffAt(){ const list=staffEnts.filter(e=>e.c.root.visible), roots=list.map(e=>e.c.root); const hits=ray.intersectObjects(roots,true); if(!hits.length) return null;
   let o=hits[0].object; while(o&&!roots.includes(o)) o=o.parent; return o?list[roots.indexOf(o)]:null; }
 let staffTalkBusy=false;

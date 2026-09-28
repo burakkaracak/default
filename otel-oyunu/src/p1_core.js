@@ -55,7 +55,8 @@ const STAFF={
   bell: {name:'Kat görevlisi',e:'🧺',max:3,cost:[350,550,800],       wage:35,desc:'İstekleri depodan alıp odalara götürür',needs:'depo'},
   tech: {name:'Teknisyen',    e:'🔧',max:2,cost:[400,750],           wage:45,desc:'Arızalı odaları onarır'},
   spaT: {name:'Spa terapisti',e:'💆',max:1,cost:[900],               wage:55,desc:'Spa gelirini %60 artırır',needs:'spa'},
-  laundry:{name:'Çamaşırcı',   e:'🧼',max:1,cost:[600],               wage:40,desc:'Personelin temizlediği odaların çarşaflarını yıkar (gelir) · senin getirdiklerine +%50',needs:'laundry'}};
+  laundry:{name:'Çamaşırcı',   e:'🧼',max:1,cost:[600],               wage:40,desc:'Personelin temizlediği odaların çarşaflarını yıkar (gelir) · senin getirdiklerine +%50',needs:'laundry'},
+  cook:   {name:'Aşçı',        e:'👨‍🍳',max:1,cost:[700],               wage:45,desc:'Mutfakta oda servisi yemeklerini 1,5 kat hızlı pişirir',needs:'rest'}};
 const STAFF_LVL_COST=[250,650,1500,3200];
 const STAFF_SPEED=[1,1.35,1.75,2.1,2.5];
 const UPG={
@@ -117,7 +118,7 @@ const L={
   elev:{x:5.6,z:3.5},
   piles:{desk:{x:-5.75,z:3.7,f:0},spa:{x:-12.6,z:-4.9,f:0},laundry:{x:-8.6,z:-6.2,f:0},rest:{x:-9.6,z:6.3,f:0},pool:{x:12.9,z:6.2,f:0},gym:{x:13.3,z:-4.4,f:0},cafe:{x:3.85,z:3.2,f:0},roof:{x:0.3,z:-3.0,f:3}},
   helipad:{x:3.9,z:-8.3},
-  cafe:{x:2.45,z:3.0}, laundryDrop:{x:-9.3,z:-5.2}, laundryW:{x:-9.3,z:-8.8}, spaT:{x:-14.4,z:-7.4}, gen:{x:7.6,z:7.85}, genSpot:{x:7.6,z:8.7}, busStop:{x:-1.2,z:13.55}, busDoor:{x:0.7,z:12.5},
+  cafe:{x:2.45,z:3.0}, laundryDrop:{x:-9.3,z:-5.2}, laundryW:{x:-9.3,z:-8.8}, spaT:{x:-14.4,z:-7.4}, cookSpot:{x:-14.9,z:-1.3}, gen:{x:7.6,z:7.85}, genSpot:{x:7.6,z:8.7}, busStop:{x:-1.2,z:13.55}, busDoor:{x:0.7,z:12.5},
 };
 const REST_TABLES=[[-14.3,1.0],[-12.0,1.0],[-9.7,1.0],[-14.3,3.9],[-12.0,3.9],[-9.7,3.9]];
 const POOL_LOUNGERS=[9.3,10.5,13.5,14.7];
@@ -170,12 +171,12 @@ function blankToday(){ return {rooms:0,tips:0,amen:0,req:0,wages:0,happy:0,unhap
 function freshState(cityIx,prestige){
   return {v:2, city:cityIx||0, prestige:prestige||0, money:Math.round(60*CITIES[(cityIx||0)%CITIES.length].mult), rep:30, day:1, t:0.02, weather:'sun',
     built:{}, paid:{}, rooms:{}, piles:{desk:0,rest:0,pool:0,gym:0,cafe:0,roof:0,spa:0,laundry:0},
-    staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1},spaT:{n:0,lvl:1},laundry:{n:0,lvl:1}},
+    staff:{rec:{n:0,lvl:1},clean:{n:0,lvl:1},bell:{n:0,lvl:1},tech:{n:0,lvl:1},spaT:{n:0,lvl:1},laundry:{n:0,lvl:1},cook:{n:0,lvl:1}},
     up:{speed:0,cap:0,clean:0,magnet:0,fix:0,desk:0,charm:0,haggle:0,fame:0,lead:0,calm:0,auto:0},
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:47, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:48, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -186,6 +187,7 @@ function loadState(){
     for(const k in base){ if(s[k]===undefined) s[k]=base[k]; }
     for(const k of ['staff','up','piles']) for(const kk in base[k]) if(s[k][kk]===undefined) s[k][kk]=base[k][kk];
     s.today=Object.assign(blankToday(),s.today||{});
+    if((s.strike||0)>70) s.strike=0;   // eski kayıt: grev bitiş zamanı mutlak oyun saatiydi (artık kalan saniye)
     return s;
   }catch(e){ return null; }
 }

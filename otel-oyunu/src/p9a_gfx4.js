@@ -37,8 +37,19 @@ function updateCarSound(dt){ if(!Sound.ctx||state.sound===false||!SMP.engine) re
 // şehir açılış sinematiği (yeni şehirde ilk gün)
 function cityIntro(){ if(state.introDone===state.city||state.tut<TUT.length||state.sandbox) return; state.introDone=state.city; markSave(); const P=typeof cityPlan==='function'?cityPlan():null;
   setTimeout(()=>{ cinematic(5); banner(`${city().e||''} ${city().name}`,P?`${P.n} · ${cityCapacity()} oda yeri`:'Yeni otelin seni bekliyor'); },1500); }
+// çatı gece barı: parapet boyunca sarkan renkli ampuller (akşam yanar)
+let roofLightG=null, roofLightMat=null;
+function buildRoofLights(){ if(roofLightG||!built('roof')) return; roofLightMat=new THREE.MeshStandardMaterial({color:0xfff0c0,emissive:0xffc860,emissiveIntensity:0});
+  const g=new THREE.Group(), geo=sph(0.06,8,6), wire=M.dark, spans=[[-6.9,2.62,6.9,2.62],[-6.9,BACK+0.1,6.9,BACK+0.1],[-6.9,BACK+0.1,-6.9,2.62],[6.9,BACK+0.1,6.9,2.62]];
+  const pts=[]; spans.forEach(([x0,z0,x1,z1])=>{ const L0=Math.hypot(x1-x0,z1-z0), n=Math.round(L0/0.45); for(let i=0;i<=n;i++){ const t=i/n, k=(t*L0/2.3)%1; pts.push([x0+(x1-x0)*t,1.55-0.22*Math.sin(Math.PI*k),z0+(z1-z0)*t]); } });
+  // ampuller tek InstancedMesh (malzemesi paylaşılır → akşam yanıp söner); birleştirme (bake) malzemeyi değiştireceği için kullanılmaz
+  if(THREE.InstancedMesh){ const im=new THREE.InstancedMesh(geo,roofLightMat,pts.length), o=new THREE.Object3D(); pts.forEach((q,i)=>{ o.position.set(q[0],q[1],q[2]); o.updateMatrix(); im.setMatrixAt(i,o.matrix); }); g.add(im); }
+  else pts.forEach(q=>g.add(mesh(geo,roofLightMat,q[0],q[1],q[2])));
+  [[-6.9,2.62],[6.9,2.62],[-6.9,BACK+0.1],[6.9,BACK+0.1]].forEach(([x,z])=>g.add(mesh(cyl(0.025,0.025,1.6,6),wire,x,0.8,z)));
+  floorRoot(ROOF).add(g); roofLightG=g; }
+function updateRoofLights(){ if(!roofLightG){ if(built('roof')) buildRoofLights(); return; } const on=(typeof roofBarOn==='function'&&roofBarOn())||nightF>0.4; roofLightMat.emissiveIntensity=on?1.4+0.2*Math.sin(performance.now()/400):0; }
 function bootGfx4(){ try{ buildLampCones(); buildSplashes(); cityIntro(); }catch(e){ console.warn('gfx4',e); } }
 function updateGfx4(dt){
   if(coneMat){ const on=nightF>0.35&&!powerOut(); coneMat.opacity=on?0.1*nightF*(state.weather==='rain'?1.4:1):0; lampCones.forEach(c=>c.visible=on&&(viewFloor===0||fpMode)); }
-  updateSplashes(dt); updatePrints(dt); updatePoolLight(); updateCarSound(dt);
+  updateSplashes(dt); updatePrints(dt); updatePoolLight(); updateCarSound(dt); updateRoofLights();
 }

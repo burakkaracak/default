@@ -30,6 +30,7 @@ const LOOKS={
   bell:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xc0392b,bottom:0x1c1d22,hat:'pillbox',hatC:0xc0392b,trim:true}),
   tech:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xe67e22,bottom:0x34495e,hat:'hard',hatC:0xf2c14e}),
   barista:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','short']),top:0x2b2b2b,bottom:0x3b2a1e,apron:true,hat:'cap',hatC:0x6b4226}),
+  cook:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xffffff,bottom:0x2b2b2b,apron:true,hat:'chef'}),
   spaT:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['bun','pony']),top:0xf4efe6,bottom:0x6f8f7a,apron:true}),
   laundry:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['short','bun']),top:0x7fb3d5,bottom:0x2d5d8a,apron:true,hat:'cap',hatC:0x2d5d8a}),
   chef:()=>({skin:rand(SKINS),hair:rand(HAIRC),hs:'short',top:0xffffff,bottom:0x333333,hat:'chef'}),

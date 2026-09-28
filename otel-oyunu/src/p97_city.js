@@ -59,5 +59,41 @@ function buildCityFacade(){
     g.add(mesh(box(14.2,0.05,0.05),new THREE.MeshBasicMaterial({color:0x7fe3ff}),0,3.05,Z+0.3)); }
   if(!g.children.length) return; bakeStatic(g); floorRoot(0).add(g); facadeG=g;
 }
-function cityPlanHtml(){ const P=cityPlan(); if(!P) return ''; return `<div class="row"><div class="ic">🏛️</div><div class="tx">${city().name} · ${P.n}<small>Bu şehirde ${cityCapacity()} oda yeri var · boş kalan yerler ${P.nook.e} ${P.nook.n} (+2 memnuniyet o katta)</small></div></div>`; }
-function bootCity(){ try{ buildCityFacade(); for(let f=1;f<3;f++) buildNooks(f); }catch(e){ console.warn('city',e); } }
+
+// ---------- köşe geliri: her köşe küçük bir günlük pay getirir ----------
+function nookCount(){ let n=0; for(let f=1;f<Math.min(floorsBuilt(),3);f++) for(let l=0;l<12;l++) if(!cityHasSlot(f,l)) n++; return n; }
+function nookIncome(){ return r10(nookCount()*20*cm()); }
+function nooksDayEnd(t){ const s=nookIncome(); if(s>0&&!state.sandbox){ state.money+=s; t.amen+=s; } }
+
+// ---------- bina kabuğu: çatı hizasında şehrin silüeti (kule, kubbe, mansard, kule ucu) ----------
+let crownG=null;
+function buildCityCrown(){
+  if(crownG){ crownG.parent&&crownG.parent.remove(crownG); crownG=null; }
+  const nm=city().name, t=Math.min(floorsBuilt(),3)-1, y0=FH, g=new THREE.Group(), C=city();
+  const body=mat(C.facade,{roughness:.8}), trim=mat(C.trim,{roughness:.6}), gold=M.gold, FZ=2.7, BZ=BACK;
+  const turret=(x,z,r,h,cap,capM,seg=16)=>{ // köşeden sarkan kule: konsol + gövde + başlık
+    const cb=mesh(cone(r,0.7,seg),body,x,y0-1.05,z); cb.rotation.x=Math.PI; g.add(cb); g.add(mesh(cyl(r,r,h,seg),body,x,y0-0.7+h/2,z,true));
+    g.add(mesh(cyl(r+0.06,r+0.06,0.12,seg),trim,x,y0-0.7+h,z)); const top=y0-0.64+h;
+    if(cap==='dome'){ g.add(mesh(new THREE.SphereGeometry(r*1.02,seg,8,0,Math.PI*2,0,Math.PI/2),capM,x,top,z)); g.add(mesh(cyl(0.03,0.03,0.5,6),gold,x,top+r+0.2,z)); g.add(mesh(sph(0.07,8,6),gold,x,top+r+0.48,z)); }
+    else if(cap==='cone'){ g.add(mesh(cone(r*1.15,r*2.4,seg),capM,x,top+r*1.2,z)); g.add(mesh(sph(0.06,8,6),gold,x,top+r*2.45,z)); }
+    else if(cap==='hip'){ const c=mesh(cone(r*1.45,r*1.1,4),capM,x,top+r*0.55,z); c.rotation.y=Math.PI/4; g.add(c); }
+    return top; };
+  if(nm==='İstanbul'){ const lead=mat(0x6f7f8c,{metalness:.5,roughness:.35});
+    [-7.45,7.45].forEach(x=>turret(x,FZ-0.1,0.55,2.4,'dome',lead)); g.add(mesh(box(14.4,0.18,0.34),trim,0,y0+0.05,FZ+0.05)); }
+  else if(nm==='Antalya'){ const tile=mat(0xc8643b,{roughness:.8,flatShading:true});
+    [-7.45,7.45].forEach(x=>turret(x,FZ-0.1,0.6,2.0,'hip',tile,4)); g.add(mesh(box(14.4,0.14,0.4),M.white,0,y0+0.05,FZ+0.08)); }
+  else if(nm==='Kapadokya'){ const st=mat(0xd9b48a,{roughness:1,flatShading:true}), cap=mat(0x8f5130,{roughness:1,flatShading:true});
+    [[-7.45,FZ-0.1],[7.45,FZ-0.1],[-7.45,BZ+0.2],[7.45,BZ+0.2]].forEach(([x,z],i)=>{ const h=2.6+i%2*0.7; g.add(mesh(cone(0.75,h,7),st,x,y0-0.6+h/2,z,true)); g.add(mesh(sph(0.38,7,5),cap,x,y0-0.5+h,z)); }); }
+  else if(nm==='Bodrum'){ const blue=mat(0x2a5fa8,{roughness:.4});
+    [-7.45,7.45].forEach(x=>turret(x,BZ+0.2,0.7,1.6,'dome',blue,12)); g.add(mesh(box(14.4,0.12,0.34),blue,0,y0+0.05,FZ+0.05)); }
+  else if(nm==='Paris'){ const slate=mat(0x4a5563,{roughness:.55,metalness:.2});
+    const mn=mesh(box(14.4,1.0,0.5),slate,0,y0+0.2,FZ+0.42,true); mn.rotation.x=-0.35; g.add(mn);
+    for(let i=0;i<5;i++){ const x=-5.2+i*2.6; g.add(mesh(box(0.8,0.8,0.45),M.facade,x,y0+0.45,FZ+0.5)); g.add(mesh(box(0.55,0.5,0.03),M.glass,x,y0+0.45,FZ+0.74)); const r=mesh(cone(0.62,0.4,4),slate,x,y0+1.05,FZ+0.5); r.rotation.y=Math.PI/4; g.add(r); }
+    turret(7.45,FZ-0.1,0.6,2.2,'cone',slate); }
+  else if(nm==='Dubai'){ const steel=mat(0xb9c6d0,{metalness:.85,roughness:.2}), led=new THREE.MeshBasicMaterial({color:0x7fe3ff});
+    g.add(mesh(cyl(0.12,0.55,9,12),steel,0,y0+4.3,BZ-0.45,true)); g.add(mesh(cone(0.14,1.4,10),gold,0,y0+9.5,BZ-0.45)); g.add(mesh(sph(0.12,8,6),new THREE.MeshBasicMaterial({color:0xff5040}),0,y0+10.3,BZ-0.45));
+    [[-7.2,FZ+0.05],[7.2,FZ+0.05],[-7.2,BZ-0.15],[7.2,BZ-0.15]].forEach(([x,z])=>{ g.add(mesh(box(0.16,3.2,0.16),steel,x,y0+0.9,z,true)); g.add(mesh(box(0.05,3.1,0.05),led,x,y0+0.9,z+(z>0?0.1:-0.1))); }); }
+  if(!g.children.length) return; bakeStatic(g); floorRoot(t).add(g); crownG=g;
+}
+function cityPlanHtml(){ const P=cityPlan(); if(!P) return ''; return `<div class="row"><div class="ic">🏛️</div><div class="tx">${city().name} · ${P.n}<small>Bu şehirde ${cityCapacity()} oda yeri var · boş kalan yerler ${P.nook.e} ${P.nook.n} (+2 memnuniyet o katta${nookCount()?` · günlük +${fmt(nookIncome())} ₺`:''})</small></div></div>`; }
+function bootCity(){ try{ buildCityFacade(); for(let f=1;f<3;f++) buildNooks(f); buildCityCrown(); }catch(e){ console.warn('city',e); } }

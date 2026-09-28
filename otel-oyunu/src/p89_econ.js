@@ -41,12 +41,15 @@ function invAmen(a){ return a==='rest'||a==='cafe'?1+0.25*invLv('chef'):a==='poo
 function invRate(id){ return state.rooms[id]&&state.rooms[id].type==='suite'?1+0.1*invLv('suite'):1; }
 function invDemand(){ return 1+0.08*invLv('ads'); }
 function invWage(){ return 1-0.07*invLv('acad'); }
-function buyInv(k){ const c=invCost(k); if(stars()<4||!spend(c)) return; state.inv=state.inv||{}; state.inv[k]=invLv(k)+1; sfx('build'); if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,60);
+function wageShort(c){ return state.money-c<wagesToday(); }   // alırsan sabahki maaşlara yetmez mi?
+function buyInv(k,ok){ const c=invCost(k); if(stars()<4||c==null||state.money<c) return;
+  if(!ok&&wageShort(c)){ openModal(`<h3>⚠️ Maaşlar tehlikede</h3><p class="sub">${INV[k].e} ${INV[k].name} için ${fmt(c)} ₺ ödersen kasada ${fmt(state.money-c)} ₺ kalır. Sabah 07:00 maaşları ${fmt(wagesToday())} ₺. Eksi bakiye moral ve ün kaybettirir.</p><button class="btn gold wide" id="ivY">Yine de al</button><button class="btn ghost wide" id="ivN">Vazgeç</button>`,m=>{ m.querySelector('#ivY').onclick=()=>{ closeModal(); buyInv(k,true); }; m.querySelector('#ivN').onclick=closeModal; }); return; }
+  if(!spend(c)) return; state.inv=state.inv||{}; state.inv[k]=invLv(k)+1; sfx('build'); if(!state.lowFx) confettiAt(player.x,player.y+2,player.z,60);
   banner(`${INV[k].e} ${INV[k].name} ${state.inv[k]}. seviye`,`${INV[k].desc} ${INV[k].per}`); onGameEvent('upg',1); save(); renderSheet(); }
 function invHtml(){
   let h=`<div class="ugh">🏗️ Büyük yatırımlar${stars()<4?' · 🔒 4★':''}</div>`;
   for(const k in INV){ const X=INV[k], lv=invLv(k), c=invCost(k);
-    h+=`<div class="row" style="${stars()<4?'opacity:.55':''}"><div class="ic">${X.e}</div><div class="tx">${X.name} <span style="color:var(--gold2)">${lv}/3</span><small>${X.desc} ${X.per} her seviyede</small>${pips(lv,3)}</div>${c==null?'<button class="btn" disabled>Maks</button>':`<button class="btn gold" data-inv="${k}" ${stars()<4||state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
+    h+=`<div class="row" style="${stars()<4?'opacity:.55':''}"><div class="ic">${X.e}</div><div class="tx">${X.name} <span style="color:var(--gold2)">${lv}/3</span><small>${X.desc} ${X.per} her seviyede${c!=null&&stars()>=4&&state.money>=c&&wageShort(c)?`<br><span style="color:#ff8a80">⚠️ Alırsan kalan ${fmt(state.money-c)} ₺, maaşlar ${fmt(wagesToday())} ₺</span>`:''}</small>${pips(lv,3)}</div>${c==null?'<button class="btn" disabled>Maks</button>':`<button class="btn gold" data-inv="${k}" ${stars()<4||state.money<c?'disabled':''}>${fmt(c)} ₺</button>`}</div>`; }
   return h;
 }
 function bindInv(root){ root.querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>buyInv(b.dataset.inv)); }
