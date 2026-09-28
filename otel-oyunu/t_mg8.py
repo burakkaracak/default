@@ -15,8 +15,8 @@ A="""(()=>{ state.tut=99; spawnT=1e9; ADMIN.allOpen(); state.money=5e6; const ou
   out.push('cal:'+[14,15,21,22,24,25,8].map(d=>d+'='+calPhase(d)).join(','));
   // yağmur halkaları başlangıçta dışarıda mı
   let inside=0; splashes.forEach(r=>{ const x=r.position.x, z=r.position.z; if(x>-8&&x<8&&z<8) inside++; }); out.push('splash inside:'+inside+'/'+splashes.length);
-  // gece iç mekân
-  nightF=1; nightEnvK=-1; updateNightInterior(); const m=Object.values(matCache).find(x=>x.isMeshStandardMaterial); out.push('env night:'+(m.envMapIntensity/m.userData.baseEnv).toFixed(2)); nightF=0; updateNightInterior(); out.push('env day:'+(m.envMapIntensity/m.userData.baseEnv).toFixed(2));
+  // gece iç mekân: tek sahip p26 (updateNightInterior kaldırıldı)
+  out.push('nightInterior removed:'+(typeof updateNightInterior==='undefined'));
   // kayıt/yükleme
   save(); return out.join('\\n'); })()"""
 with sync_playwright() as p:

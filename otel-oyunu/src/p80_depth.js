@@ -7,8 +7,8 @@
 // ---------- price policy ----------
 const PRICES=[0.8,0.9,1,1.2,1.5];
 function priceMult(){ return (state.price||1)*mgrPrice()*priceWarMul(); }
-function priceDemand(){ const p=priceMult(); return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3*(1-0.5*skillLv('m4'))); }
-function priceSat(){ const p=priceMult(); return p<1?(1-p)*30:-(p-1)*25; }
+function priceDemand(){ const p=priceMult()/worldPriceTol(); /* fuarda misafir fiyata daha az bakar */ return p<=1?1+(1-p)*1.5:Math.max(0.35,1-(p-1)*1.3*(1-0.5*skillLv('m4'))); }
+function priceSat(){ const p=priceMult()/worldPriceTol(); return p<1?(1-p)*30:-(p-1)*25; }
 function priceTypeW(k){ const p=priceMult();
   if(p>1.1) return ({vip:1.7,business:1.6,couple:1.5,million:1.5,student:0.5,tourist:0.6})[k]||1;
   if(p<0.95) return ({student:1.6,tourist:1.4,family:1.3,vip:0.6,business:0.8})[k]||1;
@@ -41,7 +41,8 @@ function rivalDayEnd(){
     setTimeout(()=>{ banner(`🏢 Rakip otel açıldı: ${state.rival.name}`,'Hemen yanı başında! Misafirlerini kapmaya çalışacak · Yönetim › Otel'); sfx('alarm'); },3600); return; }
   const r=state.rival; if(!rivalOn()) return;
   r.q=Math.round(clamp(r.q+(state.rep*0.8+22-r.q)*0.15+rnd(-3,4),25,95)); r.price=rand([0.85,0.9,1,1,1.1]);
-  if(Math.random()<0.2){ r.promo=state.day; setTimeout(()=>toast(`📉 ${r.name} bugün büyük indirimde! Misafir kaybın artabilir`,'bad'),4000); }
+  if(Math.random()<0.2){ r.promo=state.day+1;   // rivalDayEnd gün artmadan önce çalışır: indirim YENİ güne
+    setTimeout(()=>toast(`📉 ${r.name} bugün büyük indirimde! Misafir kaybın artabilir`,'bad'),4000); }
 }
 function buyRival(){ const r=state.rival; if(!rivalOn()||stars()<4||!spend(rivalBuyCost())) return;
   r.bought=true; buildRival(); banner('🤝 Rakip otel artık senin!',`${hotelName()} Annex · tüm gelirler +%10`); sfx('star'); confettiAt(player.x,player.y+2,player.z,90); onGameEvent('rival',1); save(); renderSheet(); }

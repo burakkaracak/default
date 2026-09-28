@@ -25,16 +25,21 @@ function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(
 function worldDemand(){ let f=prjDemand(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
 function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') w*=({family:1.8,elderly:1.4})[k]||1; if(st) w*=st.w[k]||1; if(N) w*=N.w[k]||1; return w; }
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
+// gece mutfağı: sahurda ya da gece vardiyası açıkken oda servisi pişer
+function nightKitchen(){ return built('rest')&&(sahurOn()||!!state.nightShift&&isNight()); }
 function iftarOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=19&&h<21; }
 function sahurOn(){ const h=hourNow(); return calPhase()==='ramazan'&&h>=3.5&&h<5; }
 function roofBarOn(){ const h=hourNow(); return h>=19.5&&roofOpen(); }   // akşam: çatı gece barı
 function worldAmenBonus(a){ return a==='rest'&&(iftarOn()||sahurOn())?1.6:a==='roof'&&roofBarOn()?1.5:1; }
 function worldLabel(){ const ph=calPhase(), st=seasonTourism(), N=newsToday(), L2=[]; if(ph==='bayram') L2.push('🎊 Bayram tatili'); if(ph==='ramazan') L2.push(iftarOn()?'🌙 İftar vakti':sahurOn()?'🌙 Sahur':'🌙 Ramazan'); if(st) L2.push(st.e+' '+st.n); if(N) L2.push(N.e+' '+N.n); return L2; }
-let iftarShown=-1, sahurShown=-1, barShown=-1;
+// günde bir kez gösterilen bildirimler kayıtta (state.shown): sayfa yenilenince aynı gün tekrar çıkmaz
+function shownToday(k){ const S=state.shown||(state.shown={}); if(S[k]===state.day) return true; S[k]=state.day; markSave(); return false; }
 function updateCalendar(){
-  if(roofBarOn()&&barShown!==state.day&&state.tut>=TUT.length){ barShown=state.day; toast('🍸 Çatı gece barı açıldı: misafirler çatıya çıkıyor, çatı geliri +%50'); }
-  if(iftarOn()&&iftarShown!==state.day){ iftarShown=state.day; banner('🌙 İftar vakti','Misafirler restorana akın ediyor · restoran geliri +%60'); guests.forEach(g=>{ if(g.state==='room'&&!g.asleep&&Math.random()<0.5){ g.amenT=0; g.T.likes; } }); }
-  if(sahurOn()&&sahurShown!==state.day){ sahurShown=state.day; toast('🌙 Sahur vakti: oda servisi siparişleri artıyor'); guests.forEach(g=>{ if(g.state==='room'&&Math.random()<0.3){ g.reqT=0; } }); }
+  if(roofBarOn()&&state.tut>=TUT.length&&!shownToday('bar')){ toast('🍸 Çatı gece barı açıldı: misafirler çatıya çıkıyor, çatı geliri +%50'); }
+  if(iftarOn()&&!shownToday('iftar')){ banner('🌙 İftar vakti','Misafirler restorana akın ediyor · restoran geliri +%60'); guests.forEach(g=>{ if(g.state==='room'&&!g.asleep&&Math.random()<0.5) g.amenT=0; }); }
+  if(sahurOn()&&!shownToday('sahur')){ let n=0; guests.forEach(g=>{ if(g.state==='room'&&g.inRoom&&Math.random()<0.45){ g.sahurAwake=true; g.reqT=rnd(0.5,6); n++; } });
+    if(n) toast(`🌙 Sahur vakti: ${n} misafir uyandı, oda servisi istiyor · mutfak açık`); }
+  if(!sahurOn()) guests.forEach(g=>{ if(g.sahurAwake) g.sahurAwake=false; });
 }
 function worldHtml(){ const L2=worldLabel(); const d=((state.day-1)%24)+1;
   return `<div class="ugh">🗓️ Şehir takvimi</div><div class="row"><div class="ic">📰</div><div class="tx">${L2.length?L2.join(' · '):'Sakin bir gün'}<small>${calPhase()==='ramazan'?`Bayram: ${22-d} gün sonra`:calPhase()?'':`Ramazan: ${15-d} gün sonra, ardından bayram`} · bayramda aileler, ramazanda iftar/sahur, yazın sahil, kışın kayak</small></div></div>`; }
@@ -42,25 +47,22 @@ function worldHtml(){ const L2=worldLabel(); const d=((state.day-1)%24)+1;
 // ---------- rakip: büyür + fiyat savaşı ----------
 function rivalFloors(){ const r=state.rival; return r?clamp(2+Math.floor(r.q/25),2,5):0; }
 function priceWarOn(){ return state.priceWar===state.day; }
-function priceWarAsk(){ const r=state.rival; if(!rivalOn()||r.promo!==state.day||state.priceWarAsked===state.day) return; state.priceWarAsked=state.day;
-  setTimeout(()=>openModal(`<h3>📉 Fiyat savaşı!</h3><p class="sub">${escH(r.name)} bugün büyük indirim yaptı. Misafirlerini kapmaya çalışıyor.</p>
-    <button class="btn gold wide" id="pwY">⚔️ Karşılık ver: bugün fiyatlar −%10, müşteri kaybı yok</button><button class="btn ghost wide" id="pwN">😌 Boş ver (bugün daha çok misafir kaybedersin)</button>`,m=>{
-    m.querySelector('#pwY').onclick=()=>{ state.priceWar=state.day; closeModal(); toast('⚔️ Fiyat savaşına girdin: bugün −%10'); markSave(); }; m.querySelector('#pwN').onclick=closeModal; }),6000); }
+function priceWarAsk(){ const r=state.rival; if(!rivalOn()||r.promo!==state.day||state.priceWarAsked===state.day) return; state.priceWarAsked=state.day; morningAdd({k:'war'}); }
 function priceWarMul(){ return priceWarOn()?0.9:1; }
 function priceWarPull(){ return priceWarOn()?0.3:1; }
 
 // ---------- esnaf ortaklıkları ----------
-const SHOPS={simit:{e:'🥯',n:'Simitçi',d:'Sabahları misafirler +2 memnuniyet · günlük pay',cost:900,inc:40,x:-6.5},
-  taksi:{e:'🚕',n:'Taksi durağı',d:'Sıradaki misafirler %10 daha sabırlı · günlük pay',cost:1400,inc:55,x:-1.5},
-  hediye:{e:'🧿',n:'Hediyelik eşya',d:'Mutlu ayrılan misafir hediyelik alır · satış payı',cost:1800,inc:0,x:3.5},
-  dondurma:{e:'🍦',n:'Dondurmacı',d:'Yazın ve sıcakta kuyruk sabrı +%10 · günlük pay',cost:1100,inc:45,x:8.5}};
+const SHOPS={simit:{e:'🥯',n:'Simitçi',d:'Sabahları misafirler +2 memnuniyet · günlük pay',cost:900,inc:100,x:-6.5},   // geri dönüş ~9 gün (bir şehir 15-25 gün sürer)
+  taksi:{e:'🚕',n:'Taksi durağı',d:'Sıradaki misafirler %10 daha sabırlı · günlük pay',cost:1400,inc:150,x:-1.5},
+  hediye:{e:'🧿',n:'Hediyelik eşya',d:'Mutlu ayrılan misafir hediyelik alır · satış payı',cost:1200,inc:0,x:3.5},
+  dondurma:{e:'🍦',n:'Dondurmacı',d:'Yazın ve sıcakta kuyruk sabrı +%10 · günlük pay',cost:1100,inc:120,x:8.5}};
 function shopOn(k){ return !!(state.shops&&state.shops[k]); }
 function shopCost(k){ return r10(SHOPS[k].cost*cm()); }
 function buyShop(k){ const c=shopCost(k); if(shopOn(k)||!spend(c)) return; state.shops=state.shops||{}; state.shops[k]=true; buildShops(); sfx('build'); toast(`${SHOPS[k].e} ${SHOPS[k].n} ile anlaşma yapıldı`); save(); renderSheet(); }
 function shopPatMul(){ let m=1; if(shopOn('taksi')) m*=0.9; if(shopOn('dondurma')&&(seasonIx()===1||wxEv('heat'))) m*=0.9; return m; }
 function shopCheckout(g,mood){ if(mood==='happy'&&shopOn('hediye')&&Math.random()<0.5){ const a=r10(15*incomeMult()); state.money+=a; state.today.amen+=a; fxEmoji(g.x,g.y+2.6,g.z,g.f,'🧿'); } }
 function shopMorning(g){ if(shopOn('simit')&&hourNow()<11) return 2; return 0; }
-function shopsDayEnd(t){ let s=0; for(const k in SHOPS) if(shopOn(k)) s+=r10(SHOPS[k].inc*cm()); if(s){ state.money+=s; t.amen+=s; } }
+function shopsDayEnd(t){ if(state.sandbox) return; let s=0; for(const k in SHOPS) if(shopOn(k)) s+=r10(SHOPS[k].inc*cm()); if(s){ state.money+=s; t.amen+=s; } }
 let shopG=null;
 function buildShops(){
   if(shopG){ outdoor.remove(shopG); shopG=null; } if(!state.shops) return; const g=new THREE.Group(); outdoor.add(g); shopG=g;
