@@ -72,7 +72,7 @@ function faceFor(e){
 
 // ---------- cinematic camera ----------
 let cine=null;
-function cinematic(dur=3.4){ if(fpMode||cine||state.lowFx) return; cine={t:0,dur,yaw0:cam.yaw,dist0:cam.dist}; }
+function cinematic(dur=3.4){ if(fpMode||cine||state.lowFx||reduceMotion()) return; cine={t:0,dur,yaw0:cam.yaw,dist0:cam.dist}; }
 function updateCine(dt){
   if(!cine) return; cine.t+=dt; const k=cine.t/cine.dur, e=Math.sin(Math.min(1,k)*Math.PI);
   cam.yaw=cine.yaw0+Math.sin(k*Math.PI*2)*0.55*e; cam.dist=cine.dist0*(1-0.28*e);

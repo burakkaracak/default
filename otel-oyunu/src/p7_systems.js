@@ -191,7 +191,7 @@ function endDay(){
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
   rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd(); lodaDayEnd(rep); curveDayEnd(rep); sagaDayEnd(rep);
-  try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
+  rotateBackup(); try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
 const SEASON_TIPS=['Doğa canlanıyor','Yaz sezonu: daha çok misafir, havuz çok popüler!','Yağmurlu günler artıyor','Kış geldi: havuz kapalı, misafir azalır'];
@@ -406,7 +406,7 @@ function updateFx3(dt){
   }
 }
 let shake=0;
-function camShake(a){ if(state.lowFx) return; shake=Math.max(shake,a); }
+function camShake(a){ if(state.lowFx||reduceMotion()) return; shake=Math.max(shake,a); }
 
 // =====================================================================
 // TUTORIAL & GOALS

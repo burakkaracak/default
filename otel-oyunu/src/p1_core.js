@@ -179,12 +179,13 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:56, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, prj:{}, charity:0, morning:null, shown:{}, diffDays:{}, filmBoost:0, loda:null, lodaUI:false, rivalAd:null, lowMoraleDays:0, crisisDue2:null, saga:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:57, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, prj:{}, charity:0, morning:null, shown:{}, diffDays:{}, filmBoost:0, loda:null, lodaUI:false, rivalAd:null, lowMoraleDays:0, crisisDue2:null, saga:null, a11y:null, sv:0, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
     let s=null; try{ s=JSON.parse(localStorage.getItem(SAVE_KEY)); }catch(e){ s=null; }
     if(!s||s.v!==2){ try{ s=JSON.parse(localStorage.getItem(SAVE_KEY+'_bak')); }catch(e){ s=null; } }
+    if(!s||s.v!==2){ try{ s=JSON.parse(localStorage.getItem(SAVE_KEY+'_bak2')); }catch(e){ s=null; } }   // 2 gün geriye yedek
     if(!s||s.v!==2) return null;
     const base=freshState(s.city,s.prestige);
     for(const k in base){ if(s[k]===undefined) s[k]=base[k]; }
@@ -197,7 +198,7 @@ function loadState(){
 let state=loadState()||freshState(0,0);
 if(state.custom&&!state.custom.migr){ if(state.custom.name==='Otel Ustası') state.custom.name=rand(HOTEL_NAMES); if(!state.custom.cat||state.custom.cat==='Pamuk') state.custom.cat=rand(CAT_NAMES); state.custom.migr=1; }
 let saveDirty=false, saveT=0;
-function save(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(state)); saveDirty=false; }catch(e){} }
+function save(){ try{ state.savedAt=Date.now(); if(typeof GAME_VER==='number') state.sv=GAME_VER; localStorage.setItem(SAVE_KEY,JSON.stringify(state)); saveDirty=false; }catch(e){} }
 function markSave(){ saveDirty=true; }
 
 function city(){ return CITIES[state.city%CITIES.length]; }
