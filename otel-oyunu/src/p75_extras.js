@@ -196,9 +196,9 @@ function rollExtras(){
   if(built('roof')&&Math.random()<0.6) state.heliDue=true;
   if(!state.catOn) state.catDue=true;
   else if(Math.random()<0.35) state.messDue=true;
-  if(state.day>=4&&state.day-(state.lastCrisis||0)>=2&&Math.random()<0.4){
+  if(state.day>=4&&state.day-(state.lastCrisis||0)>=crisisGapDays()&&Math.random()<crisisChance()){
     const opts=['power']; if(nRoomsNow()>=4) opts.push('flood','flood'); if(staffEnts.filter(e=>e.kind!=='rec').length>=3) opts.push('flu');
-    state.crisisDue=rand(opts); }
+    state.crisisDue=rand(opts); planSecondCrisis(state.crisisDue); }
 }
 function updateExtraSpawns(dt,h){
   if(state.heliDue&&!heli&&h>=11&&h<18&&Math.random()<dt*0.05){ state.heliDue=false; startHeli(); }

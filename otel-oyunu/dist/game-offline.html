@@ -465,7 +465,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:53, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, prj:{}, charity:0, morning:null, shown:{}, diffDays:{}, filmBoost:0, loda:null, lodaUI:false, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:54, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, prj:{}, charity:0, morning:null, shown:{}, diffDays:{}, filmBoost:0, loda:null, lodaUI:false, rivalAd:null, lowMoraleDays:0, crisisDue2:null, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -817,11 +817,11 @@ function signPlane(text,w,h,o){ const m=new THREE.Mesh(plane(w,h),new THREE.Mesh
 // =====================================================================
 function mergeGeos(geos){
   let n=0; geos.forEach(g=>n+=g.attributes.position.count);
-  const pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2); let o=0;
+  const pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2), hasCol=geos.some(g=>g.attributes.color), col=hasCol?new Float32Array(n*3).fill(1):null; let o=0;
   geos.forEach(g=>{ const c=g.attributes.position.count; pos.set(g.attributes.position.array,o*3); nor.set(g.attributes.normal.array,o*3);
-    if(g.attributes.uv) uv.set(g.attributes.uv.array,o*2); o+=c; g.dispose(); });
+    if(g.attributes.uv) uv.set(g.attributes.uv.array,o*2); if(col&&g.attributes.color) col.set(g.attributes.color.array,o*3); o+=c; g.dispose(); });
   const bg=new THREE.BufferGeometry();
-  bg.setAttribute('position',new THREE.BufferAttribute(pos,3)); bg.setAttribute('normal',new THREE.BufferAttribute(nor,3)); bg.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  bg.setAttribute('position',new THREE.BufferAttribute(pos,3)); bg.setAttribute('normal',new THREE.BufferAttribute(nor,3)); bg.setAttribute('uv',new THREE.BufferAttribute(uv,2)); if(col) bg.setAttribute('color',new THREE.BufferAttribute(col,3));   // köşe rengi (bakeFlat) korunur
   bg.computeBoundingSphere(); return bg;
 }
 function bake(root){
@@ -2565,7 +2565,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd(); lodaDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd(); lodaDayEnd(rep); curveDayEnd(rep);
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
@@ -3065,9 +3065,9 @@ function rollExtras(){
   if(built('roof')&&Math.random()<0.6) state.heliDue=true;
   if(!state.catOn) state.catDue=true;
   else if(Math.random()<0.35) state.messDue=true;
-  if(state.day>=4&&state.day-(state.lastCrisis||0)>=2&&Math.random()<0.4){
+  if(state.day>=4&&state.day-(state.lastCrisis||0)>=crisisGapDays()&&Math.random()<crisisChance()){
     const opts=['power']; if(nRoomsNow()>=4) opts.push('flood','flood'); if(staffEnts.filter(e=>e.kind!=='rec').length>=3) opts.push('flu');
-    state.crisisDue=rand(opts); }
+    state.crisisDue=rand(opts); planSecondCrisis(state.crisisDue); }
 }
 function updateExtraSpawns(dt,h){
   if(state.heliDue&&!heli&&h>=11&&h<18&&Math.random()<dt*0.05){ state.heliDue=false; startHeli(); }
@@ -4273,7 +4273,7 @@ const RIVAL_NAMES=['Gri Kule Otel','Ekonomik Palas','Neon Suites','Beton Rezidan
 let rivalVis=null;
 function rivalOn(){ return !!state.rival&&!state.rival.bought; }
 function rivalPull(){ const r=state.rival; if(!rivalOn()) return 0;
-  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0),0,0.42)*(1-0.3*skillLv('m3'))*priceWarPull(); }
+  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0)+rivalAdPull(),0,0.5)*(1-0.3*skillLv('m3'))*priceWarPull(); }
 function rivalBuyCost(){ const r=state.rival; return r?Math.round(22000*cm()*(r.q/60)):0; }
 function buildRival(){
   if(rivalVis){ rivalVis.parent.remove(rivalVis); rivalVis=null; } const r=state.rival; if(!r) return;
@@ -4376,6 +4376,7 @@ function depthHtml(){
     if(r.bought) h+=`<div class="row"><div class="ic">🤝</div><div class="tx">${escH(hotelName())} Annex<small>Rakibi satın aldın · tüm gelirler +%10</small></div></div>`;
     else h+=`<div class="row"><div class="ic">🏢</div><div class="tx">${escH(r.name)} · kalite ${r.q}<small>Fiyatı %${Math.round(r.price*100)}${r.promo===state.day?' · bugün indirimde!':''} · senden kaçan misafir ~%${Math.round(rivalPull()*100)} · ünün yükseldikçe ve fiyatın düştükçe azalır</small></div>
       <button class="btn gold" data-rivalbuy ${stars()<4||state.money<rivalBuyCost()?'disabled':''}>${stars()<4?'4★ gerekli':'Satın al<br>'+fmt(rivalBuyCost())+' ₺'}</button></div>`; }
+  h+=curveHtml();
   if(built('depo')){ const s=state.stock||{paper:25,towel:25}, c=stockCap();
     h+=`<div class="ugh">📦 Tedarik</div><div class="row"><div class="ic">📦</div><div class="tx">Depo: 🧻 ${s.paper}/${c} · 🧺 ${s.towel}/${c}<small>${state.order?'🚚 Kamyon yolda…':'Stok bitince misafir isteklerini karşılayamazsın'}</small></div>
       <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-order ${state.order||state.money<orderCost()?'disabled':''}>Sipariş<br>${fmt(orderCost())} ₺</button>
@@ -4384,7 +4385,7 @@ function depthHtml(){
     :`<div class="row"><div class="ic">🏦</div><div class="tx">Kredi çek: ${fmt(loanOffer())} ₺<small>Hızlı büyümek için · günlük %3 faiz</small></div><button class="btn" data-loan>Çek</button></div>`);
   return h;
 }
-function bindDepth(sh){
+function bindDepth(sh){ bindCurve(sh);
   sh.querySelectorAll('[data-price]').forEach(b=>b.onclick=()=>setPrice(+b.dataset.price));
   const q=s=>sh.querySelector(s);
   if(q('[data-rivalbuy]')) q('[data-rivalbuy]').onclick=buyRival;
@@ -4809,7 +4810,7 @@ function cellFree(id,i,j){ const c=cellCenter(i,j), hw=FG.cw*0.45, hh=FG.ch*0.45
 function designSat(s){ const f=s.furn||[]; if(!f.length) return 0; const kinds=new Set(f.map(x=>x.k)).size; return Math.min(10,f.reduce((a,x)=>a+FURN[x.k].sat,0))+Math.min(2,kinds-1)+lodaSetBonus(s); }
 function migrateFurn(s){ (s.furn||[]).forEach(f=>{ if(f.g===2) return; const x=-1.5+(f.i+0.5)*0.5, z=-1.4+(f.j+0.5)*(2.8/6); f.i=clamp(Math.floor((x-FG.x0)/FG.cw),0,FG.cols-1); f.j=clamp(Math.floor((z-FG.z0)/FG.ch),0,FG.rows-1); f.g=2; }); }
 function buildFurn(S,s,cols){ migrateFurn(s); // eşyalar hücre merkezinde 0.8 ölçekli grup içine kurulur
-  (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), G0=new THREE.Group(); G0.position.set(c.x,0,c.z); G0.scale.setScalar(0.8); S.add(G0); const x=0, z=0, S0=S; S=G0;
+  (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), G0=new THREE.Group(); G0.position.set(c.x,0,c.z); G0.scale.setScalar(LODA_FURN[f.k]?1.5:0.8); /* Loda parçaları gerçek ölçüye yakın */ S.add(G0); const x=0, z=0, S0=S; S=G0;
     if(f.k==='lamp'){ S.add(mesh(cyl(0.12,0.14,0.03,12),M.dark,x,0.015,z)); S.add(mesh(cyl(0.015,0.015,1.1,6),M.gold,x,0.56,z)); S.add(mesh(cone(0.16,0.2,12),M.lampOn,x,1.15,z)); }
     else if(f.k==='plant2') bigPlant(S,x,z,0.55);
     else if(f.k==='chair'){ const m=mat(0xb0736a,{roughness:.95}); S.add(mesh(rbox(0.42,0.24,0.4,.08),m,x,0.2,z,true)); S.add(mesh(rbox(0.42,0.4,0.1,.05),m,x,0.42,z-0.16,true)); }
@@ -4960,6 +4961,7 @@ const GUIDE=[
   ['🌍 Şehir ve dünya',[['🏛️','Şehrin otel planı','Her şehrin kendi oda planı var; boş yerlerde şehre özgü köşeler küçük gelir ve memnuniyet getirir.',()=>true],
     ['📆','Takvim ve haberler','Sezon, bayram, ramazan (iftar/sahur), maç-konser-fuar günleri misafir sayısını ve tipini değiştirir. Üstteki takvim şeridi 3 gün önceden gösterir.',()=>state.day>=2],
     ['🔥','Efsane zorluk','Otel › Genel › Oyun temposu: misafir daha çok ve sabırsız, maaş +%25, arıza +%50. Şehrin %80\'ini Efsane\'de oynarsan taşınma anahtarları ×1,5.',()=>state.day>=2],
+    ['📈','4★ sonrası zorluk','4 yıldızdan sonra otel büyüdükçe işler zorlaşır: krizler daha sık (5★\'da aynı gün ikinci kriz gelebilir), rakip 3 günlük reklam kampanyası açar (sabah brifinginden karşı kampanya), moral 2 gün üst üste 35\'in altında kalırsa bir çalışan istifa eder (zamla geri kazanılabilir). Otel › Genel\'de durum görünür.',()=>stars()>=4],
     ['◆','Loda Mobilya','Loda (İstanbul, 2000; TD Tech Design iştiraki) gerçek marka olarak oyunda: oda tasarımcısında koleksiyon parçaları, LODA Gallery showroomu, ihracat bayileri, Loda Signature Suite. Ayarlar › Loda tasarım dili.',()=>true],
     ['✨','Yüksek grafik','Ayarlar › Grafik kalitesi › Yüksek: yansımalı mermer ve havuz, gece gerçek lamba ışıkları, lens parlaması; güçlü cihazlar için.',()=>true],
     ['📸','Foto modu','Kamera düğmelerindeki 📸: otelin adı, şehir, gün ve yıldızla çerçeveli fotoğraf; indir ve paylaş.',()=>true],
@@ -4984,11 +4986,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=53;
+const GAME_VER=54;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['◆','LODA geldi: oda tasarımcısında Savana, Domo, Nova, Dali ve Sophia parçaları (lake / ahşap kaplama gövde, fluting kuralı) · 3 Loda parçalı suit = LODA Signature Suite (+%25 gecelik)'],['🛋️','LODA Gallery (3★): caddenin karşısında showroom, mutlu ayrılan misafirler mobilya alır · vitrinlerle satış şansı artar'],['🧳','İhracat bayileri (4★): Fargotex ve AlmiDécor alıcıları gelir, memnun ayrılırsa kaporalı sipariş'],['◆','Ayarlar › Loda tasarım dili: Montserrat, altın ve siyah arayüz; foto çerçevesi de Loda paletinde'],['✨','Grafik 5 (Yüksek kalite): lobide gerçek zemin yansıması, havuzda gök yansıması, gece sokak lambaları ve restoranda gerçek ışık, güneşe bakınca lens parlaması'],['🧬','Personel kişilikleri: işe alırken iki aday, her birinin kalıcı bir huyu var (Çalışkan, Gece kuşu, Tutumlu, Sakar…)'],['🔥','Efsane zorluk: daha çok ve sabırsız misafir, pahalı maaş, sık arıza · şehri Efsane zorlukta bitirirsen taşınma anahtarları ×1,5'],['📸','Foto modu: kamera düğmelerindeki 📸 ile otelinin çerçeveli fotoğrafını indir'],['🏆','Spor takımı: kaptan + 2 sporcu birlikte gelir, hepsi mutlu ayrılırsa takım fotoğrafı (+1 ün)'],['🎬','Film ekibi (4★): çatıya çıkınca çekim yapar · +1 ün, ertesi gün misafir +%20'],['☀️','Sabah brifingi: günün kararları (müdür kartı, izin, fiyat savaşı, grev) artık tek kartta · sayfayı yenilesen de kaybolmaz'],['📉','Fiyat savaşı gerçekten çalışıyor: rakip indirim yapınca karşılık verebilirsin'],['🌙','Sahurda misafirler uyanıp oda servisi istiyor · gece vardiyası açıksa mutfak gece de çalışır'],['🏖️','İzindeki personel artık gerçekten izinde: işi bırakır, ertesi gün döner'],['🚚','Taşınırken ayarların ve zincir müdürlerin seninle gelir'],['🗽','Anıt ve bağışlar ün hedefine kalıcı bonus verir'],['🥯','Esnaf ortaklıkları daha kârlı (~9 günde geri döner)'],['💼','Fuar günü misafirler fiyata daha az bakıyor'],['🏆','5★ sonrası prestij projeleri: şehir parkı, otel müzesi, anıt · hayır vakfına sınırsız bağış'],['🏙️','Dış görünüm: kat çubuğundaki 🏙️ ile otelin tamamını gör'],['🌃','Gece iç mekân daha loş ve sıcak'],['🌙','Bayram artık ramazanın hemen ardından geliyor'],['🔇','Uygulamadan çıkınca sesler susuyor'],['🌙','Gece artık gerçekten kararıyor: sokak lambaları, pencereler, çatı ampulleri ve yıldızlar'],['👨‍🍳','Yeni personel: Aşçı · oda servisini 1,5 kat hızlı pişirir'],['🗓️','Üstte takvim şeridi: bayram, ramazan, maç, konser günlerini 2 gün önceden gör'],['🍸','Çatı gece barı: akşamları misafirler çatıya çıkar, gelir +%50'],['🏰','Her şehrin çatı silüeti: kubbeli kule, mansard, peribacaları, gökdelen kulesi'],['🧠','Sadık misafirin eski odası resepsiyonda pembe halkayla parlar'],['📘','Rehber yenilendi · menü bölümleri açılır-kapanır · maaş uyarıları'],['🔒','Rezervasyon ve grev artık 3★\'dan sonra açılıyor'],['🏛️','Her şehrin kendi otel planı: 30–36 oda yeri, boş yerlerde şehre özgü köşeler, girişte şehrin mimarisi'],['🍳','Mutfak: yemekler pişip tezgâha gelir · çamaşırhane havluyu depoya taşır'],['📅','Rezervasyonlar ve overbooking: kapora al, gelmeyen/yersiz kalan misafire tazminat'],['😤','Personel morali: prim, izin, gece vardiyası, grev'],['🧠','Misafir hafızası: sadık misafir aynı odasını ister, kötü deneyimi unutmaz'],['🌙','Yaşayan takvim: sezon, bayram, ramazan iftar/sahur, maç-konser-fuar haberleri'],['🏙️','Rakip otel büyür, fiyat savaşı açar · karşı sokakta esnaf ortaklıkları'],['💡','Gece sokak lambası ışıkları, yağmurda sıçramalar, karda ayak izleri, araba sesi, şehir açılış sinematiği'],['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['📈','4★ sonrası zorluk eğrisi: krizler sıklaşır (5★: çifte kriz), rakip reklam kampanyası açar → sabah brifinginden karşı kampanya, düşük moralde istifa → zamla geri kazan'],['◆','LODA geldi: oda tasarımcısında Savana, Domo, Nova, Dali ve Sophia parçaları (lake / ahşap kaplama gövde, fluting kuralı) · 3 Loda parçalı suit = LODA Signature Suite (+%25 gecelik)'],['🛋️','LODA Gallery (3★): caddenin karşısında showroom, mutlu ayrılan misafirler mobilya alır · vitrinlerle satış şansı artar'],['🧳','İhracat bayileri (4★): Fargotex ve AlmiDécor alıcıları gelir, memnun ayrılırsa kaporalı sipariş'],['◆','Ayarlar › Loda tasarım dili: Montserrat, altın ve siyah arayüz; foto çerçevesi de Loda paletinde'],['✨','Grafik 5 (Yüksek kalite): lobide gerçek zemin yansıması, havuzda gök yansıması, gece sokak lambaları ve restoranda gerçek ışık, güneşe bakınca lens parlaması'],['🧬','Personel kişilikleri: işe alırken iki aday, her birinin kalıcı bir huyu var (Çalışkan, Gece kuşu, Tutumlu, Sakar…)'],['🔥','Efsane zorluk: daha çok ve sabırsız misafir, pahalı maaş, sık arıza · şehri Efsane zorlukta bitirirsen taşınma anahtarları ×1,5'],['📸','Foto modu: kamera düğmelerindeki 📸 ile otelinin çerçeveli fotoğrafını indir'],['🏆','Spor takımı: kaptan + 2 sporcu birlikte gelir, hepsi mutlu ayrılırsa takım fotoğrafı (+1 ün)'],['🎬','Film ekibi (4★): çatıya çıkınca çekim yapar · +1 ün, ertesi gün misafir +%20'],['☀️','Sabah brifingi: günün kararları (müdür kartı, izin, fiyat savaşı, grev) artık tek kartta · sayfayı yenilesen de kaybolmaz'],['📉','Fiyat savaşı gerçekten çalışıyor: rakip indirim yapınca karşılık verebilirsin'],['🌙','Sahurda misafirler uyanıp oda servisi istiyor · gece vardiyası açıksa mutfak gece de çalışır'],['🏖️','İzindeki personel artık gerçekten izinde: işi bırakır, ertesi gün döner'],['🚚','Taşınırken ayarların ve zincir müdürlerin seninle gelir'],['🗽','Anıt ve bağışlar ün hedefine kalıcı bonus verir'],['🥯','Esnaf ortaklıkları daha kârlı (~9 günde geri döner)'],['💼','Fuar günü misafirler fiyata daha az bakıyor'],['🏆','5★ sonrası prestij projeleri: şehir parkı, otel müzesi, anıt · hayır vakfına sınırsız bağış'],['🏙️','Dış görünüm: kat çubuğundaki 🏙️ ile otelin tamamını gör'],['🌃','Gece iç mekân daha loş ve sıcak'],['🌙','Bayram artık ramazanın hemen ardından geliyor'],['🔇','Uygulamadan çıkınca sesler susuyor'],['🌙','Gece artık gerçekten kararıyor: sokak lambaları, pencereler, çatı ampulleri ve yıldızlar'],['👨‍🍳','Yeni personel: Aşçı · oda servisini 1,5 kat hızlı pişirir'],['🗓️','Üstte takvim şeridi: bayram, ramazan, maç, konser günlerini 2 gün önceden gör'],['🍸','Çatı gece barı: akşamları misafirler çatıya çıkar, gelir +%50'],['🏰','Her şehrin çatı silüeti: kubbeli kule, mansard, peribacaları, gökdelen kulesi'],['🧠','Sadık misafirin eski odası resepsiyonda pembe halkayla parlar'],['📘','Rehber yenilendi · menü bölümleri açılır-kapanır · maaş uyarıları'],['🔒','Rezervasyon ve grev artık 3★\'dan sonra açılıyor'],['🏛️','Her şehrin kendi otel planı: 30–36 oda yeri, boş yerlerde şehre özgü köşeler, girişte şehrin mimarisi'],['🍳','Mutfak: yemekler pişip tezgâha gelir · çamaşırhane havluyu depoya taşır'],['📅','Rezervasyonlar ve overbooking: kapora al, gelmeyen/yersiz kalan misafire tazminat'],['😤','Personel morali: prim, izin, gece vardiyası, grev'],['🧠','Misafir hafızası: sadık misafir aynı odasını ister, kötü deneyimi unutmaz'],['🌙','Yaşayan takvim: sezon, bayram, ramazan iftar/sahur, maç-konser-fuar haberleri'],['🏙️','Rakip otel büyür, fiyat savaşı açar · karşı sokakta esnaf ortaklıkları'],['💡','Gece sokak lambası ışıkları, yağmurda sıçramalar, karda ayak izleri, araba sesi, şehir açılış sinematiği'],['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -6061,6 +6063,19 @@ function bakeInPlace(g){ if(!g||!g.children.length) return; const par=g.parent, 
   const b=bake(g); if(b!==g){ while(g.children.length) g.remove(g.children[0]); b.children.slice().forEach(m=>g.add(m)); }
   g.position.copy(pos); g.rotation.copy(rot); g.scale.copy(sc); g.visible=vis; if(par) par.add(g); }
 
+// MG11-D2: dokusuz, saydam olmayan, ışımasız MeshStandard parçaları renkleri köşe rengine (vertex color) yazarak TEK ağa indir
+// (malzeme sayısı kadar çizim yerine 1 çizim; pürüzlülük farkı kaybolur). Diğer parçalar (doku, saydam, ışıma) olduğu gibi kalır.
+let flatMat=null;
+function flatOk(o){ const m=o.material; return o.isMesh&&m&&m.isMeshStandardMaterial&&!m.map&&!m.normalMap&&!m.emissiveMap&&!m.transparent&&(m.metalness||0)<0.5&&(!m.emissive||m.emissive.getHex()===0)&&!m.vertexColors&&o.geometry&&o.geometry.attributes&&o.geometry.attributes.normal; }
+function bakeFlat(g){ try{ if(!g||!g.children.length) return; const list=[]; g.updateMatrixWorld(true); g.traverse(o=>{ if(o!==g&&flatOk(o)) list.push(o); }); if(list.length<2) return;
+  const inv=new THREE.Matrix4().copy(g.matrixWorld).invert(); let n=0; const geos=list.map(o=>{ const ge=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); ge.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)); n+=ge.attributes.position.count; return ge; });
+  const pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2), col=new Float32Array(n*3); let off=0, cast=false;
+  geos.forEach((ge,i)=>{ const c=ge.attributes.position.count, m=list[i].material; pos.set(ge.attributes.position.array,off*3); nor.set(ge.attributes.normal.array,off*3); if(ge.attributes.uv) uv.set(ge.attributes.uv.array,off*2);
+    for(let k=0;k<c;k++){ col[(off+k)*3]=m.color.r; col[(off+k)*3+1]=m.color.g; col[(off+k)*3+2]=m.color.b; } off+=c; cast=cast||list[i].castShadow; ge.dispose(); });
+  const bg=new THREE.BufferGeometry(); bg.setAttribute('position',new THREE.BufferAttribute(pos,3)); bg.setAttribute('normal',new THREE.BufferAttribute(nor,3)); bg.setAttribute('uv',new THREE.BufferAttribute(uv,2)); bg.setAttribute('color',new THREE.BufferAttribute(col,3)); bg.computeBoundingSphere();
+  flatMat=flatMat||new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,metalness:0}); const m=new THREE.Mesh(bg,flatMat); m.castShadow=cast; m.receiveShadow=true; m.userData.flat=true;
+  list.forEach(o=>{ if(o.parent) o.parent.remove(o); }); g.add(m); }catch(e){ console.warn('bakeFlat',e); } }
+
 // bir grubun (dönüşümsüz kabul edilir) hareketsiz çocuklarını tek partide birleştir
 function bakeStatic(G,exclude){ try{ if(!G) return; const keep=exclude||new Set(), list=G.children.filter(o=>!keep.has(o)&&!(o.isMesh&&o.material&&o.material.transparent)); if(list.length<3) return;
   const cont=new THREE.Group(); list.forEach(o=>{ G.remove(o); cont.add(o); }); cont.updateMatrixWorld(true); const b=bake(cont);
@@ -6071,7 +6086,7 @@ const floorBatch={}, batchIds={}, batchDue={};
 function perfRoomPrep(G,win){ const st=G.children[0]; if(!st) return; if(win&&win.parent===st) G.add(win); G.userData.static=st; }
 function perfRoomPost(id){
   const R=RT(id), P=R.parts, f=roomInfo(id).f; if(!P) return;
-  ['made','messy','tip'].forEach(k=>bakeInPlace(P[k]));
+  ['made','messy','tip'].forEach(k=>{ bakeFlat(P[k]); bakeInPlace(P[k]); });   // önce düz renkliler tek ağa, kalanlar malzemeye göre
   if(floorBatch[f]&&batchIds[f]&&batchIds[f].has(id)) rebatchFloor(f,id);   // eski kopyayı hemen partiden çıkar
   batchDue[f]=1.4;
 }
@@ -6390,6 +6405,7 @@ function briefItemHtml(it){
   if(it.k==='mgr'){ const O=state.mgrOffer; if(!O||O.day!==state.day) return ''; return `<div class="row"><div class="ic">🗂️</div><div class="tx">Müdür masası<small>Bugünün stratejisi için ${O.ks.length} kart</small></div><button class="btn gold" data-bf="mgr">Seç</button></div>`; }
   if(it.k==='leave') return `<div class="row"><div class="ic">🏖️</div><div class="tx">İzin talebi<small>${escH(it.name||'Bir çalışan')} (${(STAFF[it.kind]||{}).name||''}) yarın izin istiyor · ver: moral +6, reddet: moral −6</small></div><button class="btn gold" data-bf="leaveY">Ver</button><button class="btn ghost" data-bf="leaveN">Reddet</button></div>`;
   if(it.k==='war'){ const r=state.rival; if(!rivalOn()) return ''; return `<div class="row"><div class="ic">📉</div><div class="tx">Fiyat savaşı<small>${escH(r.name)} bugün indirimde · karşılık verirsen bugün fiyatlar −%10 ama misafir kaybı büyük ölçüde durur</small></div><button class="btn gold" data-bf="warY">Karşılık ver</button><button class="btn ghost" data-bf="warN">Boş ver</button></div>`; }
+  { const x=curveBriefHtml(it); if(x) return x; }
   if(it.k==='strike'){ if(!strikeOn()) return ''; return `<div class="row"><div class="ic">✊</div><div class="tx">Grev<small>Moral çok düştü, personel iş bıraktı · yaklaşık ${Math.ceil(state.strike/60*7.5)} oyun saati sürer</small></div><button class="btn gold" data-bf="strike" ${state.money<bonusCost()?'disabled':''}>Prim ${fmt(bonusCost())} ₺</button></div>`; }
   return ''; }
 function openBriefing(){
@@ -6403,6 +6419,7 @@ function openBriefing(){
       if(a==='warY'){ state.priceWar=state.day; toast('⚔️ Fiyat savaşına girdin: bugün −%10'); morningDone('war'); }
       if(a==='warN'){ morningDone('war'); }
       if(a==='strike'){ giveBonus(); morningDone('strike'); }
+      curveBriefAct(a,it);
       sfx('click'); markSave(); closeModal(); if(morningQ().some(x=>briefItemHtml(x))) setTimeout(openBriefing,250); }); }); }
 function briefingHtml(){ const n=morningQ().filter(it=>briefItemHtml(it)).length; if(!n) return ''; return `<div class="row"><div class="ic">☀️</div><div class="tx">Sabah brifingi<small>${n} karar bekliyor</small></div><button class="btn gold" data-brief>Aç</button></div>`; }
 function bootBriefing(){ if(strikeOn()) morningAdd({k:'strike'}); else if(morningQ().length) briefT=setTimeout(()=>{ briefT=null; openBriefing(); },3500); }
@@ -6452,7 +6469,7 @@ function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; const P=sta
 function newsFor(d){ const k=(state.newsPlan||{})[d]; return k?NEWS.find(x=>x.k===k):null; }
 function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
 // ---------- toplam etkiler ----------
-function worldDemand(){ let f=prjDemand()*filmDemand(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
+function worldDemand(){ let f=prjDemand()*filmDemand()*adDemandMul(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
 function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') w*=({family:1.8,elderly:1.4})[k]||1; if(st) w*=st.w[k]||1; if(N) w*=N.w[k]||1; return w; }
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
 // gece mutfağı: sahurda ya da gece vardiyası açıkken oda servisi pişer
@@ -6898,6 +6915,48 @@ function updateLoda(dt){ dealerT-=dt; if(dealerT<=0){ dealerT=45; const h=hourNo
 function applyLodaUI(){ document.body.classList.toggle('loda',!!state.lodaUI); }
 function lodaUiHtml(){ return `<button class="btn ghost wide" data-lodaui>◆ Loda tasarım dili: ${state.lodaUI?'Açık':'Kapalı'}</button>`; }
 function bootLoda(){ try{ buildGallery(); applyLodaUI(); }catch(e){ console.warn('loda',e); } }
+// =====================================================================
+// MG11-D1: 3★ sonrası zorluk eğrisi — kriz sıklığı/çifte kriz, rakip reklam
+// kampanyası (sabah brifinginden karşı kampanya), düşük moralde istifa
+// (sabah brifinginden geri kazanma). Hepsi 4★+ ve sandbox dışında.
+// =====================================================================
+function curveOn(){ return stars()>=4&&!state.sandbox&&state.tut>=TUT.length; }
+// ---------- kriz eğrisi ----------
+function crisisGapDays(){ return curveOn()?1:2; }                                   // krizler arası en az gün
+function crisisChance(){ return curveOn()?(stars()>=5?0.65:0.55):0.4; }             // gün sonunda kriz planlama şansı
+function planSecondCrisis(k){ if(!curveOn()||stars()<5||Math.random()>0.35) return; const opts=['power','flood'].filter(x=>x!==k); state.crisisDue2=rand(opts); }
+function updateCurve(dt){ curveT-=dt; if(curveT>0) return; curveT=2;
+  if(state.crisisDue2&&!state.crisis&&!state.crisisDue){ const h=hourNow(); if(h>=11&&h<17){ state.crisisDue=state.crisisDue2; state.crisisDue2=null; toast('⚠️ Aynı gün ikinci bir kriz kapıda!','bad'); } } }
+let curveT=0;
+// ---------- rakip reklam kampanyası ----------
+function rivalAdOn(){ const A=state.rivalAd; return !!(A&&!A.countered&&state.day>=A.from&&state.day<=A.to&&rivalOn()); }
+function rivalAdPull(){ return rivalAdOn()?0.1:0; }                                  // rivalPull'a eklenir
+function adDemandMul(){ return rivalAdOn()?0.9:1; }                                  // worldDemand çarpanı
+function adCounterCost(){ return r10(4000*cm()*(stars()>=5?1.3:1)); }
+function counterAd(){ const A=state.rivalAd; if(!A||A.countered||!spend(adCounterCost())) return false; A.countered=true; changeRep(1); toast('📣 Karşı kampanya yayında · rakibin reklamı etkisiz'); onGameEvent('counterAd',1); return true; }
+// ---------- istifa ----------
+function resignCost(kind){ const c=STAFF[kind].cost[Math.max(0,state.staff[kind].n)]||STAFF[kind].cost[STAFF[kind].cost.length-1]; return r10(c*cm()*1.5); }
+function rehireResigned(it){ if(!it||!spend(resignCost(it.kind))) return false; state.staff[it.kind].n++; const e=spawnStaff(it.kind,true); if(e&&it.name) e.name=it.name; state.morale=clamp(morale()+4,0,100); toast(`🤝 ${escH(it.name||STAFF[it.kind].name)} geri döndü`); return true; }
+function curveDayEnd(rep){                                                            // state.day artmış hâlde çağrılır (yeni gün)
+  if(!curveOn()) { state.lowMoraleDays=0; return; }
+  // reklam kampanyası: 4★+ rakip varken %25, 3 gün sürer, üst üste gelmez
+  if(rivalOn()&&!state.rivalAd||(state.rivalAd&&state.day>state.rivalAd.to+2)){ if(rivalOn()&&Math.random()<0.25){ state.rivalAd={from:state.day,to:state.day+2,countered:false}; morningAdd({k:'ad'}); } }
+  // istifa: moral 2 gün üst üste <35 → %50 bir çalışan (resepsiyon hariç) ayrılır
+  state.lowMoraleDays=morale()<35?(state.lowMoraleDays||0)+1:0;
+  if(state.lowMoraleDays>=2&&staffEnts.length>=3&&Math.random()<0.5){ const cand=staffEnts.filter(e=>e.kind!=='rec'); if(cand.length){ const e=rand(cand), it={k:'resign',kind:e.kind,name:e.name||''}; fireStaff(e); state.lowMoraleDays=0; morningAdd(it); setTimeout(()=>toast(`😞 ${escH(it.name||STAFF[it.kind].name)} istifa etti · moral düşük`,'bad'),3000); } }
+}
+// ---------- sabah brifingi öğeleri ----------
+function curveBriefHtml(it){
+  if(it.k==='ad'){ if(!rivalAdOn()) return ''; const r=state.rival; return `<div class="row"><div class="ic">📣</div><div class="tx">Rakip reklam kampanyası<small>${escH(r.name)} ${state.rivalAd.to-state.day+1} gün boyunca reklamda · talep −%10, misafir kaybı artar · karşı kampanya etkisini siler, +1 ün</small></div><button class="btn gold" data-bf="adY" ${state.money<adCounterCost()?'disabled':''}>Karşı kampanya ${fmt(adCounterCost())} ₺</button><button class="btn ghost" data-bf="adN">Boş ver</button></div>`; }
+  if(it.k==='resign'){ const c=resignCost(it.kind); return `<div class="row"><div class="ic">😞</div><div class="tx">İstifa<small>${escH(it.name||'Bir çalışan')} (${STAFF[it.kind].name}) düşük moral yüzünden ayrıldı · geri kazanmak için zam teklif edebilirsin (moral +4)</small></div><button class="btn gold" data-bf="resignY" ${state.money<c?'disabled':''}>Geri kazan ${fmt(c)} ₺</button><button class="btn ghost" data-bf="resignN">Kabul et</button></div>`; }
+  return ''; }
+function curveBriefAct(a,it){
+  if(a==='adY'){ if(counterAd()) morningDone('ad'); return true; } if(a==='adN'){ morningDone('ad'); return true; }
+  if(a==='resignY'){ if(rehireResigned(it)) morningDone('resign'); return true; } if(a==='resignN'){ morningDone('resign'); return true; }
+  return false; }
+function curveHtml(){ if(!curveOn()) return ''; let h=''; if(rivalAdOn()) h+=`<div class="row"><div class="ic">📣</div><div class="tx">${escH(state.rival.name)} reklamda<small>${state.rivalAd.to-state.day+1} gün · talep −%10</small></div><button class="btn gold" data-cad ${state.money<adCounterCost()?'disabled':''}>${fmt(adCounterCost())} ₺</button></div>`;
+  if(state.crisisDue2) h+=`<div class="row"><div class="ic">⚠️</div><div class="tx">İkinci kriz bekleniyor<small>Bugün öğleden sonra</small></div></div>`; return h; }
+function bindCurve(root){ const b=root.querySelector('[data-cad]'); if(b) b.onclick=()=>{ if(counterAd()){ morningDone('ad'); save(); renderSheet(); } }; }
 
 // =====================================================================
 // WORLD-PINNED TAGS (DOM)
@@ -7519,7 +7578,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime)); guard('ops2',()=>updateOps2(dt*gameSpeed)); guard('world',()=>updateWorld(dt)); guard('gfx4',()=>updateGfx4(dt)); guard('gfx5',()=>updateGfx5()); guard('endgame',()=>updateEndgame(dt)); guard('loda',()=>updateLoda(dt));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime)); guard('ops2',()=>updateOps2(dt*gameSpeed)); guard('world',()=>updateWorld(dt)); guard('gfx4',()=>updateGfx4(dt)); guard('gfx5',()=>updateGfx5()); guard('endgame',()=>updateEndgame(dt)); guard('loda',()=>updateLoda(dt)); guard('curve',()=>updateCurve(dt));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });

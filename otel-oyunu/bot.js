@@ -24,7 +24,7 @@ window.botBuy=()=>{ state.stayPol='yes'; state.obIx=1; if(morale()<35&&state.mon
   // esnaf: geri dönüşü ~9 gün olduğundan erken alınır
   if(state.day>=3) for(const k in SHOPS){ if(!shopOn(k)&&state.money>shopCost(k)*3&&!wageShort(shopCost(k))){ buyShop(k); break; } }
   // sabah brifingi: izin ver, fiyat savaşına karşılık ver, grevde prim
-  morningQ().slice().forEach(it=>{ if(it.k==='leave'){ state.morale=clamp(morale()+6,0,100); state.leaveDay={day:state.day+1,kind:it.kind}; morningDone('leave'); } else if(it.k==='war'){ state.priceWar=state.day; morningDone('war'); } else if(it.k==='strike'&&state.money>bonusCost()){ giveBonus(); morningDone('strike'); } else if(it.k==='mgr') morningDone('mgr'); });
+  morningQ().slice().forEach(it=>{ if(it.k==='leave'){ state.morale=clamp(morale()+6,0,100); state.leaveDay={day:state.day+1,kind:it.kind}; morningDone('leave'); } else if(it.k==='war'){ state.priceWar=state.day; morningDone('war'); } else if(it.k==='strike'&&state.money>bonusCost()){ giveBonus(); morningDone('strike'); } else if(it.k==='mgr') morningDone('mgr'); else if(it.k==='ad'){ if(state.money>adCounterCost()*3) counterAd(); morningDone('ad'); } else if(it.k==='resign'){ if(state.money>resignCost(it.kind)*2) rehireResigned(it); morningDone('resign'); } });
 };
 window.botTarget=()=>{
   const p=player, items=p.c.items;
