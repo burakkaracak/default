@@ -41,9 +41,9 @@ function buildNightLights(){
   mk(-12,2.5,2.4,0xffd9a0,9,1.1);                                                                       // restoran
   mk(2.7,ROOF*FH+2.3,-4.3,0xffcf8a,8,1.3);                                                              // çatı barı
 }
-function bootGfx5(){ try{ if(gfxLevel()!=='high') return; buildNightLights(); if(typeof THREE.Reflector==='function'){ buildReflectors(); buildLensflare(); gfx5Ready=true; } }catch(e){ console.warn('gfx5',e); gfx5Ready=true; } }   // Reflector/Lensflare post dosyalarıyla gelir: gelene kadar her karede yeniden dene
+function bootGfx5(){ try{ if(!gfxHigh()) return; buildNightLights(); if(typeof THREE.Reflector==='function'){ buildReflectors(); buildLensflare(); gfx5Ready=true; } }catch(e){ console.warn('gfx5',e); gfx5Ready=true; } }   // Reflector/Lensflare post dosyalarıyla gelir: gelene kadar her karede yeniden dene
 function updateGfx5(){
-  const hi=gfxLevel()==='high'; if(hi&&!gfx5Ready&&typeof THREE.Reflector==='function') bootGfx5();
+  const hi=gfxHigh(); if(hi&&!gfx5Ready&&typeof THREE.Reflector==='function') bootGfx5();
   const ground=viewFloor===0||(fpMode&&player&&player.f===0), nf=typeof nightF==='number'?nightF:0, po=powerOut()?0:1;
   const near=(x,z,r)=>Math.hypot(cam.tx-x,cam.tz-z)<r;   // uzaktan bakarken yansıma kapalı (maliyet)
   if(reflLobby){ reflLobby.visible=hi&&ground&&!state.lowFx&&near(0,5,26); }

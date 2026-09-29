@@ -413,9 +413,9 @@ function openSettings(){
   openModal(`<h3>⚙️ Ayarlar <button class="xbtn" id="sClose2" aria-label="Kapat">✖</button></h3>
     <div class="row"><div class="ic">🔊</div><div class="tx">Efektler</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.sfx*100)}" id="vSfx" aria-label="Efekt ses seviyesi"></div></div>
     <div class="row"><div class="ic">🎵</div><div class="tx">Müzik</div><div class="vol"><input type="range" min="0" max="100" value="${Math.round(V.music*100)}" id="vMus" aria-label="Müzik ses seviyesi"></div></div>
-    <div class="row" style="flex-wrap:wrap"><div class="ic">🖼️</div><div class="tx">Grafik kalitesi<small>${state.gfxAuto!==false?'Otomatik: oyun yavaşlarsa kaliteyi düşürür':'Elle seçildi'}</small></div><div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${[['low','Düşük'],['mid','Orta'],['high','Yüksek']].map(([k,l])=>`<button class="btn ${gfxLevel()===k?'':'ghost'}" style="padding:4px 8px;min-height:34px" data-gfx="${k}">${l}</button>`).join('')}<button class="btn ${state.gfxAuto!==false?'':'ghost'}" style="padding:4px 8px;min-height:34px" id="gAuto">Oto</button></div></div>
+    <div class="row" style="flex-wrap:wrap"><div class="ic">🖼️</div><div class="tx">Grafik kalitesi<small>${state.gfxAuto!==false?'Otomatik: oyun yavaşlarsa kaliteyi düşürür':'Elle seçildi'}</small></div><div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${[['low','Düşük'],['mid','Orta'],['high','Yüksek'],['ultra','Ultra']].map(([k,l])=>`<button class="btn ${gfxLevel()===k?'':'ghost'}" style="padding:4px 8px;min-height:34px" data-gfx="${k}">${l}</button>`).join('')}<button class="btn ${state.gfxAuto!==false?'':'ghost'}" style="padding:4px 8px;min-height:34px" id="gAuto">Oto</button></div></div>
     ${(document.fullscreenEnabled||document.webkitFullscreenEnabled)?`<button class="btn wide" id="sFs">⛶ Tam ekran ${fsEl()?'kapat':'aç'}</button>`:''}
-    ${cloudHtml()}
+    ${ultraHtml()}${cloudHtml()}
     <button class="btn wide" id="sHelp">📖 Nasıl oynanır</button>
     <div style="display:flex;gap:6px"><button class="btn wide" id="sGuide">📘 Rehber</button><button class="btn ghost wide" id="sLowFx">✨ Efektleri azalt: ${state.lowFx?'Açık':'Kapalı'}</button></div>${lodaUiHtml()}
     <button class="btn wide" id="sCustom">🎨 Otelim ve karakterim</button>
@@ -428,7 +428,7 @@ function openSettings(){
     vs.oninput=()=>{ state.vol=Object.assign({},state.vol,{sfx:vs.value/100}); state.sound=vs.value>0; audioInit(); applyAudioPrefs(); };
     vm.oninput=()=>{ state.vol=Object.assign({},state.vol,{music:vm.value/100}); state.music=vm.value>0; audioInit(); applyAudioPrefs(); };
     vs.onchange=()=>{ sfx('coin'); save(); }; vm.onchange=()=>save();
-    m.querySelectorAll('[data-gfx]').forEach(b=>b.onclick=()=>{ state.gfx=b.dataset.gfx; state.gfxAuto=false; save(); applyGfx(); openSettings(); if(b.dataset.gfx==='high'&&!composer) toast('Efektler yükleniyor…'); });
+    m.querySelectorAll('[data-gfx]').forEach(b=>b.onclick=()=>{ state.gfx=b.dataset.gfx; state.gfxAuto=false; save(); applyGfx(); openSettings(); if((b.dataset.gfx==='high'||b.dataset.gfx==='ultra')&&!composer) toast('Efektler yükleniyor…'); });
     m.querySelector('#gAuto').onclick=()=>{ state.gfxAuto=state.gfxAuto===false; save(); openSettings(); };
     m.querySelector('#sHelp').onclick=openHelp;
     m.querySelector('#sGuide').onclick=openGuide; bindLoda(m); m.querySelector('#sLowFx').onclick=()=>{ state.lowFx=!state.lowFx; save(); openSettings(); };
@@ -619,7 +619,7 @@ function frame(now){
   guard('efekt',()=>{ updateAnims(dt); updateFx3(dt); });
   guard('dünya',()=>updateWorldAnim(dt,gtime));
   guard('mega2',()=>updateMega2(dt*gameSpeed)); guard('derinlik',()=>updateDepth(dt*gameSpeed)); guard('derinlik2',()=>updateDepth2(dt*gameSpeed));
-  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime)); guard('ops2',()=>updateOps2(dt*gameSpeed)); guard('world',()=>updateWorld(dt)); guard('gfx4',()=>updateGfx4(dt)); guard('gfx5',()=>updateGfx5()); guard('endgame',()=>updateEndgame(dt)); guard('loda',()=>updateLoda(dt)); guard('curve',()=>updateCurve(dt)); guard('saga',()=>updateSaga(dt));
+  guard('olaylar',()=>updateEvents3(dt*gameSpeed)); guard('tamir',()=>updateFixGame(dt)); guard('grafik2',()=>updateGfx2(dt,gtime)); guard('bulut',()=>updateCloud(dt)); guard('cila',()=>updatePolish3(dt)); guard('resepsiyon',()=>updateOps(dt*gameSpeed)); guard('canli',()=>updateLive(dt*gameSpeed,gtime)); guard('tesis',()=>updateAmenLife(dt*gameSpeed)); guard('akis',()=>updateFlow(dt*gameSpeed)); guard('gercek',()=>updateReal(dt*gameSpeed)); guard('icerik',()=>updateContent(dt*gameSpeed,gtime)); guard('mescit',()=>updateMescit(dt)); guard('perf',()=>updatePerf(dt)); guard('gfx3',()=>updateGfx3(dt,gtime)); guard('ops2',()=>updateOps2(dt*gameSpeed)); guard('world',()=>updateWorld(dt)); guard('gfx4',()=>updateGfx4(dt)); guard('gfx5',()=>updateGfx5()); guard('endgame',()=>updateEndgame(dt)); guard('loda',()=>updateLoda(dt)); guard('curve',()=>updateCurve(dt)); guard('saga',()=>updateSaga(dt)); guard('ultra',()=>updateUltra(dt));
   guard('kamera',()=>{ updateCamera(dt); updateSky(cam.tx,cam.tz); updateWeatherFx(dt,gtime,cam.tx,cam.ty,cam.tz); updateGoalArrow(gtime); });
   guard('render',()=>renderFrame());
   guard('etiket',()=>{ renderTags(); updateMoneyHUD(dt); });
@@ -646,7 +646,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); bootGfx4(); bootEndgame(); bootBriefing(); bootNext(); bootGfx5(); bootLoda(); bootSaga(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); bootGfx4(); bootEndgame(); bootBriefing(); bootNext(); bootGfx5(); bootLoda(); bootSaga(); bootUltra(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);
