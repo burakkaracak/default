@@ -19,6 +19,7 @@ const LOOKS={
     if(tp==='tourist'){ o.hat=Math.random()<.5?'sun':'cap'; o.hatC=rand([0xf2b632,0xe0574f,0x2e86c1,0xffffff]); o.pack=true; }
     if(tp==='family'){ o.child=true; }
     if(tp==='million'){ o.hat=Math.random()<.5?'sun':'cap'; o.hatC=rand([0xf2b632,0xe0574f,0x2e86c1,0xffffff]); o.pack=true; }
+    if(tp==='dealer'){ o.top=0x1f1f1f; o.bottom=0x1f1f1f; o.tie=0x9C905C; o.bag=0x2b2b2b; o.brief=true; o.hs='short'; o.glasses=true; }
     if(tp==='team'){ o.top=0xe0574f; o.bottom=0x2b2f3a; o.hat='cap'; o.hatC=0xf2c14e; o.bag=0xf2c14e; o.hs='short'; o.scale=1.08; }
     if(tp==='film'){ o.top=0x1a1a1a; o.bottom=0x1a1a1a; o.hat='beret'; o.hatC=0x2b2b2b; o.shades=true; o.bag=0x3b3b3b; o.hs='pony'; }
     if(tp==='athlete'){ const c=rand([0xe0574f,0x2e86c1,0x27ae60,0xff8c1a]); o.top=c; o.bottom=0x2b2f3a; o.hat='cap'; o.hatC=0xffffff; o.bag=null; o.hs=rand(['short','pony']); o.scale=rnd(1.0,1.08); }
