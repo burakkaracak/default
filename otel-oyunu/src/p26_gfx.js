@@ -80,7 +80,7 @@ function updateGrassSeason(){
 // ---------- post-processing (high quality only) ----------
 const POST_BASE='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/';
 const POST_FILES=['shaders/CopyShader.js','postprocessing/EffectComposer.js','postprocessing/RenderPass.js','postprocessing/ShaderPass.js',
-  'shaders/LuminosityHighPassShader.js','postprocessing/UnrealBloomPass.js','shaders/SAOShader.js','shaders/DepthLimitedBlurShader.js','shaders/UnpackDepthRGBAShader.js','postprocessing/SAOPass.js'];
+  'shaders/LuminosityHighPassShader.js','postprocessing/UnrealBloomPass.js','shaders/SAOShader.js','shaders/DepthLimitedBlurShader.js','shaders/UnpackDepthRGBAShader.js','postprocessing/SAOPass.js','objects/Reflector.js','objects/Lensflare.js'];
 let postState='none', composer=null, saoPass=null, bloomPass=null, gradePass=null;
 function loadPost(){
   if(postState!=='none') return; postState='loading'; let i=0;
