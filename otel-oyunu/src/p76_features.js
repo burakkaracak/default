@@ -415,7 +415,7 @@ SADECE JSON: {"rapor":"..."}`);
 // ---------- gün sonu misafir yorumları ----------
 let dayGuests=[];
 function noteGuestDay(g,mood,left){ if(g.type==='insp') return; perfNote(g.sat,left);
-  dayGuests.push({name:g.name,type:g.T.name,e:g.T.e,sat:Math.round(g.sat),left:!!left,room:g.lastRoomT||'',waited:Math.round(g.waited||0),chatted:!!g.chatted,gifted:!!g.gifted,persona:PERSONA[g.type]||PERSONA.tourist});
+  dayGuests.push({name:g.name,type:g.T.name,e:g.T.e,sat:Math.round(g.sat),left:!!left,room:g.lastRoomT||'',waited:Math.round(g.waited||0),chatted:!!g.chatted,gifted:!!g.gifted,lodaSuite:!!g.lodaSuite,persona:PERSONA[g.type]||PERSONA.tourist});
   if(dayGuests.length>40) dayGuests.shift(); }
 function reviewStars(x){ return x.left?1:x.sat>=85?5:x.sat>=68?4:x.sat>=50?3:x.sat>=35?2:1; }
 function pickReviewGuests(){ if(!dayGuests.length) return []; const L=dayGuests.slice().sort((a,b)=>a.sat-b.sat), out=[L[L.length-1]];
@@ -423,7 +423,7 @@ function pickReviewGuests(){ if(!dayGuests.length) return []; const L=dayGuests.
 function cannedReview(x,st){ const n=x.name.split(' ')[0];
   const T={5:['Harika bir deneyimdi, kesinlikle tekrar geleceğim!','Personel çok ilgiliydi, oda tertemizdi. Tavsiye ederim.'],4:['Güzel bir konaklamaydı, birkaç küçük eksik dışında memnun kaldım.','Oda rahattı, fiyatına göre gayet iyi.'],
     3:['İdare eder. Biraz daha özen gösterilebilir.','Ne iyi ne kötü; beklediğim kadar.'],2:['Beklediğimin altında kaldı, oda ve hizmet vasattı.','Çok bekledim, pek memnun kalmadım.'],1:[x.left?'Resepsiyonda o kadar bekledim ki sonunda çıkıp gittim.':'Kötü bir deneyimdi, tavsiye etmem.','Hiç memnun kalmadım.']}[st];
-  return rand(T)+(x.gifted&&st>=3?' Müdürün ikramı çok hoştu.':'')+(x.chatted&&st>=4?' Müdür bizzat ilgilendi!':''); }
+  return rand(T)+(x.lodaSuite&&st>=4?' Odadaki Loda mobilyaları ayrı bir zarafet katmış.':'')+(x.gifted&&st>=3?' Müdürün ikramı çok hoştu.':'')+(x.chatted&&st>=4?' Müdür bizzat ilgilendi!':''); }
 function buildReviewPrompt(list){
   return `Bir otel işletme oyununda gün sonunda misafirlerin bıraktığı kısa internet yorumlarını yazıyorsun. Türkçe, doğal, samimi, her biri en fazla 2 kısa cümle. Emoji en fazla 1. Uygunsuz içerik yok. Verilen yıldız sayısına uygun ton kullan.
 Otel: "${hotelName()}", ${city().name}, ${stars()} yıldızlı.

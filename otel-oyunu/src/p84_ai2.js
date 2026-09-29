@@ -23,7 +23,7 @@ function roomBlockRects(id){
 }
 function cellFree(id,i,j){ const c=cellCenter(i,j), hw=FG.cw*0.45, hh=FG.ch*0.45;
   return !roomBlockRects(id).some(r=>c.x+hw>r[0]&&c.x-hw<r[1]&&c.z+hh>r[2]&&c.z-hh<r[3]); }
-function designSat(s){ const f=s.furn||[]; if(!f.length) return 0; const kinds=new Set(f.map(x=>x.k)).size; return Math.min(8,f.reduce((a,x)=>a+FURN[x.k].sat,0))+Math.min(2,kinds-1); }
+function designSat(s){ const f=s.furn||[]; if(!f.length) return 0; const kinds=new Set(f.map(x=>x.k)).size; return Math.min(10,f.reduce((a,x)=>a+FURN[x.k].sat,0))+Math.min(2,kinds-1)+lodaSetBonus(s); }
 function migrateFurn(s){ (s.furn||[]).forEach(f=>{ if(f.g===2) return; const x=-1.5+(f.i+0.5)*0.5, z=-1.4+(f.j+0.5)*(2.8/6); f.i=clamp(Math.floor((x-FG.x0)/FG.cw),0,FG.cols-1); f.j=clamp(Math.floor((z-FG.z0)/FG.ch),0,FG.rows-1); f.g=2; }); }
 function buildFurn(S,s,cols){ migrateFurn(s); // eşyalar hücre merkezinde 0.8 ölçekli grup içine kurulur
   (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), G0=new THREE.Group(); G0.position.set(c.x,0,c.z); G0.scale.setScalar(0.8); S.add(G0); const x=0, z=0, S0=S; S=G0;
@@ -32,6 +32,7 @@ function buildFurn(S,s,cols){ migrateFurn(s); // eşyalar hücre merkezinde 0.8 
     else if(f.k==='chair'){ const m=mat(0xb0736a,{roughness:.95}); S.add(mesh(rbox(0.42,0.24,0.4,.08),m,x,0.2,z,true)); S.add(mesh(rbox(0.42,0.4,0.1,.05),m,x,0.42,z-0.16,true)); }
     else if(f.k==='shelf'){ S.add(mesh(rbox(0.44,1.3,0.26,.02),tmat('woodDark',1,2),x,0.65,z,true)); for(let r=0;r<3;r++) for(let b=0;b<5;b++) S.add(mesh(box(0.06,0.24,0.18),mat(rand([0xc0392b,0x2e86c1,0x27ae60,0xf2b632,0x8e44ad])),x-0.16+b*0.08,0.3+r*0.38,z+0.02)); }
     else if(f.k==='desk'){ S.add(mesh(rbox(0.46,0.05,0.32,.02),tmat('wood',1,1),x,0.62,z,true)); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,c2])=>S.add(mesh(cyl(0.015,0.015,0.6,6),M.dark,x+a*0.19,0.3,z+c2*0.12))); S.add(mesh(box(0.26,0.17,0.02),M.dark,x,0.76,z-0.08)); }
+    else if(LODA_FURN[f.k]) buildLodaFurn(S,f);
     else if(f.k==='aqua'){ S.add(mesh(rbox(0.46,0.5,0.3,.02),tmat('woodDark',1,1),x,0.25,z,true)); S.add(mesh(box(0.44,0.34,0.28),new THREE.MeshStandardMaterial({color:0x5fc4e8,transparent:true,opacity:.55,roughness:.05,emissive:0x0b5a8a,emissiveIntensity:.35}),x,0.68,z)); S.add(mesh(sph(0.03,6,4),mat(0xff8a3a),x+0.06,0.68,z)); S.add(mesh(sph(0.025,6,4),mat(0xf2d24a),x-0.08,0.62,z)); }
     S=S0; cols.push([c.x-FG.cw*0.46,c.x+FG.cw*0.46,c.z-FG.ch*0.46,c.z+FG.ch*0.46]); });
 }
@@ -43,13 +44,14 @@ function openDesigner(id){
   openModal(`<h3>🛋️ Oda ${id} tasarımı <button class="xbtn" id="dsX" aria-label="Kapat">✖</button></h3>
     <p class="sub">Tasarım puanı: +${designSat(s)} memnuniyet · en fazla 4 eşya · çeşit bonus verir${busy?' · <b>misafir varken değiştirilemez</b>':''}</p>
     <div class="dgrid">${grid}</div><p class="note">⬆ Oda kuşbakışı: üstte yatak ve banyo, altta kapı. Seçili eşyayı boş kareye koy; eşyaya dokunursan kaldırılır (yarı fiyat iade).</p>
-    <div class="agrid">${Object.keys(FURN).map(k=>`<button class="btn ${designSel===k?'':'ghost'} abtn" data-fk="${k}">${FURN[k].e} ${FURN[k].name} · ${fmt(furnCost(k))} ₺</button>`).join('')}</div>`,m=>{
+    <div class="agrid">${Object.keys(FURN).map(k=>`<button class="btn ${designSel===k?'':'ghost'} abtn" data-fk="${k}" ${FURN[k].loda?'style="border:1px solid #9C905C"':''}>${FURN[k].e} ${FURN[k].name} · ${fmt(furnCost(k))} ₺</button>`).join('')}</div>${lodaFinHtml()}`,m=>{
+    m.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{ designFin=b.dataset.fin; sfx('click'); openDesigner(id); });
     m.querySelector('#dsX').onclick=closeModal;
     m.querySelectorAll('[data-fk]').forEach(b=>b.onclick=()=>{ designSel=b.dataset.fk; sfx('click'); openDesigner(id); });
     m.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ const [i,j]=b.dataset.c.split(',').map(Number), k=s.furn.findIndex(x=>x.i===i&&x.j===j);
       if(RT(id).guest) return;
       if(k>=0){ const f=s.furn.splice(k,1)[0]; state.money+=Math.round(furnCost(f.k)/2); sfx('drop'); }
-      else { if(s.furn.length>=4||!cellFree(id,i,j)||!spend(furnCost(designSel))) return; s.furn.push({k:designSel,i,j,g:2}); sfx('build'); qEv('upg'); }
+      else { if(s.furn.length>=4||!cellFree(id,i,j)||!spend(furnCost(designSel))) return; s.furn.push(Object.assign({k:designSel,i,j,g:2},LODA_FURN[designSel]?{fin:designFin}:{})); sfx('build'); qEv('upg'); if(LODA_FURN[designSel]) onGameEvent('lodaFurn',1); }
       buildRoomVisual(id,false); ents.forEach(unstick); save(); openDesigner(id); }); });
 }
 

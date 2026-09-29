@@ -55,11 +55,11 @@ async function photoMode(){
   try{ renderFrame(); url=cv.toDataURL('image/png'); }catch(e){ toast('Bu görünümde fotoğraf çekilemiyor','bad'); return; }
   const img=new Image(); await new Promise(r=>{ img.onload=r; img.onerror=r; img.src=url; });
   const W=img.width||cv.width, H=img.height||cv.height, bar=Math.round(H*0.11), c=document.createElement('canvas'); c.width=W; c.height=H+bar; const x=c.getContext('2d');
-  x.drawImage(img,0,0); x.fillStyle='#1b2a3a'; x.fillRect(0,H,W,bar); x.fillStyle='#f2c14e'; x.fillRect(0,H,W,Math.max(2,Math.round(bar*0.06)));
+  const LU=!!state.lodaUI, gold=LU?'#9C905C':'#f2c14e', ff=LU?'Montserrat, sans-serif':'"Baloo 2", sans-serif'; x.drawImage(img,0,0); x.fillStyle=LU?'#111111':'#1b2a3a'; x.fillRect(0,H,W,bar); x.fillStyle=gold; x.fillRect(0,H,W,Math.max(2,Math.round(bar*0.06)));
   const nm=(state.custom&&state.custom.name)||'Otel Ustası', fs=Math.round(bar*0.36);
-  x.fillStyle='#fff'; x.font=`800 ${fs}px "Baloo 2", sans-serif`; x.textBaseline='middle'; x.fillText(`${nm} · ${'★'.repeat(stars())}`,Math.round(W*0.03),H+bar*0.42);
-  x.fillStyle='#cfd8e3'; x.font=`600 ${Math.round(fs*0.7)}px "Baloo 2", sans-serif`; x.fillText(`${city().e||''} ${city().name} · ${state.day}. gün · ${fmt(state.served)} misafir`,Math.round(W*0.03),H+bar*0.78);
-  x.fillStyle='#f2c14e'; x.textAlign='right'; x.font=`800 ${Math.round(fs*0.8)}px "Baloo 2", sans-serif`; x.fillText('🏨 Otel Ustası',Math.round(W*0.97),H+bar*0.5);
+  x.fillStyle='#fff'; x.font=`800 ${fs}px ${ff}`; x.textBaseline='middle'; x.fillText(`${nm} · ${'★'.repeat(stars())}`,Math.round(W*0.03),H+bar*0.42);
+  x.fillStyle='#cfd8e3'; x.font=`600 ${Math.round(fs*0.7)}px ${ff}`; x.fillText(`${city().e||''} ${city().name} · ${state.day}. gün · ${fmt(state.served)} misafir`,Math.round(W*0.03),H+bar*0.78);
+  x.fillStyle=gold; x.textAlign='right'; x.font=`800 ${Math.round(fs*0.8)}px ${ff}`; x.fillText(LU?'LODA · Otel Ustası':'🏨 Otel Ustası',Math.round(W*0.97),H+bar*0.5);
   const out=c.toDataURL('image/png'); sfx('sparkle'); { const fx=document.getElementById('flashFx'); if(fx&&!state.lowFx){ fx.style.opacity=.9; setTimeout(()=>fx.style.opacity=0,120); } }
   openModal(`<h3>📸 Fotoğraf</h3><img src="${out}" style="width:100%;border-radius:12px;display:block;margin:6px 0 10px" alt="Otel fotoğrafı"><button class="btn gold wide" id="phD">⬇️ İndir</button><button class="btn ghost wide" id="phX">Kapat</button>`,m=>{
     m.querySelector('#phX').onclick=closeModal; m.querySelector('#phD').onclick=async()=>{ const fn=`otel-${state.day}.gun.png`;

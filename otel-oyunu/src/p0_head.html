@@ -5,13 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>My Perfect Hotel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#14263a; --panel:rgba(16,36,56,.9); --panel2:#1f4262; --gold:#f2b632; --gold2:#ffd76a;
     --cream:#fff7e8; --green:#3fbf6f; --red:#e0574f; --muted:#a9bccd; --blue:#2f6fae;
     --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
   }
+  /* Loda tasarım dili: Montserrat, altın #9C905C, siyah bant, koyu gri başlık */
+  body.loda{--gold:#9C905C;--gold2:#c9bc82;--panel:rgba(17,17,17,.92);--panel2:#2A2A2A;--ink:#111111;--blue:#3A3A3A;--cream:#F4F4F4;--muted:#b8b8b8}
+  body.loda h3,body.loda .ugh,body.loda .tabs button,body.loda .stabs button,body.loda #goal,body.loda .btn{font-family:Montserrat,'Baloo 2',sans-serif;letter-spacing:.2px}
+  body.loda .btn{background:linear-gradient(#b3a76e,#9C905C);color:#111;box-shadow:0 3px 0 #6f6640} body.loda .btn.gold{background:linear-gradient(#e6dcae,#9C905C);color:#111} body.loda .btn.ghost{background:#2A2A2A;color:#F4F4F4;box-shadow:0 3px 0 #000}
+  body.loda .pill,body.loda .round{border-color:#9C905C} body.loda h3{border-bottom:1px solid #9C905C;padding-bottom:6px}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;height:100%;overflow:hidden;background:#12293d;}
   body{font-family:'Baloo 2',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--cream);-webkit-user-select:none;user-select:none;}
