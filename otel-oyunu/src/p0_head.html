@@ -28,6 +28,7 @@
   .bubble.req{outline:3px solid var(--gold);animation:pulse 1s ease-in-out infinite;}
   .bubble.warn{background:#fff0ec;outline:3px solid var(--red);}
   .bubble.small{font-size:15px;padding:0 6px 1px;}
+  .bubble.txt{white-space:normal;width:max-content;max-width:260px;text-align:center;overflow-wrap:anywhere;line-height:1.15;padding:2px 8px 3px;} @media (max-width:440px){ .bubble.txt{max-width:200px;} }
   @keyframes pulse{50%{scale:1.12;}}
   .padtag{background:rgba(18,40,60,.9);border:2px solid var(--green);border-radius:12px;padding:0 9px 1px;text-align:center;font-weight:800;font-size:13px;line-height:1.15;}
   .padtag .p{display:block;color:var(--gold2);font-size:16px;}
@@ -205,7 +206,7 @@
   .btn.gold{background:linear-gradient(#ffd45a,#f2a51d);color:#4a2a00;box-shadow:0 3px 0 #b06200;}
   .btn.ghost{background:#2a4d6d;color:var(--cream);box-shadow:0 3px 0 #173048;}
   .btn.red{background:linear-gradient(#f07a70,#d24c42);color:#fff;box-shadow:0 3px 0 #8a2620;}
-  .btn.wide{width:100%;margin-top:6px;min-height:46px;font-size:16px;}
+  .btn.wide{width:100%;margin-top:6px;min-height:46px;font-size:16px;white-space:normal;line-height:1.2;padding:6px 12px;overflow-wrap:anywhere;}
   .pips{display:flex;gap:3px;margin-top:4px;}
   .pips i{width:15px;height:6px;border-radius:3px;background:#3b5d7c;}
   .pips i.on{background:var(--gold2);}

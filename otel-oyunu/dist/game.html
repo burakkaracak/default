@@ -28,6 +28,7 @@
   .bubble.req{outline:3px solid var(--gold);animation:pulse 1s ease-in-out infinite;}
   .bubble.warn{background:#fff0ec;outline:3px solid var(--red);}
   .bubble.small{font-size:15px;padding:0 6px 1px;}
+  .bubble.txt{white-space:normal;width:max-content;max-width:260px;text-align:center;overflow-wrap:anywhere;line-height:1.15;padding:2px 8px 3px;} @media (max-width:440px){ .bubble.txt{max-width:200px;} }
   @keyframes pulse{50%{scale:1.12;}}
   .padtag{background:rgba(18,40,60,.9);border:2px solid var(--green);border-radius:12px;padding:0 9px 1px;text-align:center;font-weight:800;font-size:13px;line-height:1.15;}
   .padtag .p{display:block;color:var(--gold2);font-size:16px;}
@@ -205,7 +206,7 @@
   .btn.gold{background:linear-gradient(#ffd45a,#f2a51d);color:#4a2a00;box-shadow:0 3px 0 #b06200;}
   .btn.ghost{background:#2a4d6d;color:var(--cream);box-shadow:0 3px 0 #173048;}
   .btn.red{background:linear-gradient(#f07a70,#d24c42);color:#fff;box-shadow:0 3px 0 #8a2620;}
-  .btn.wide{width:100%;margin-top:6px;min-height:46px;font-size:16px;}
+  .btn.wide{width:100%;margin-top:6px;min-height:46px;font-size:16px;white-space:normal;line-height:1.2;padding:6px 12px;overflow-wrap:anywhere;}
   .pips{display:flex;gap:3px;margin-top:4px;}
   .pips i{width:15px;height:6px;border-radius:3px;background:#3b5d7c;}
   .pips i.on{background:var(--gold2);}
@@ -5071,7 +5072,7 @@ function askUi(){
   if(askEl) return askEl;
   const st=document.createElement('style'); st.textContent=`#deskAsk{position:fixed;left:50%;bottom:calc(118px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:40;width:min(420px,calc(100vw - 24px));background:rgba(22,26,40,.94);border:1px solid rgba(255,215,120,.45);border-radius:16px;padding:10px 12px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);transition:.25s;font-size:14px}
 #deskAsk.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}#deskAsk .q{margin-bottom:8px;line-height:1.35}#deskAsk .q small{display:block;color:#b9c0d6;font-size:12px}
-#deskAsk .bt{display:flex;gap:6px}#deskAsk .bt button{flex:1;padding:8px 4px;font-size:13px;line-height:1.2}#deskAsk .tm{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}#deskAsk .tm i{display:block;height:100%;background:var(--gold2,#ffd24a)}
+#deskAsk .bt{display:flex;gap:6px}#deskAsk .bt button{flex:1;padding:8px 4px;font-size:13px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}#deskAsk .tm{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}#deskAsk .tm i{display:block;height:100%;background:var(--gold2,#ffd24a)}
 #deskAsk .al{display:block;margin-top:6px;font-size:12px;color:#b9c0d6;text-align:center;cursor:pointer;text-decoration:underline}`;
   document.head.appendChild(st); askEl=document.createElement('div'); askEl.id='deskAsk'; document.body.appendChild(askEl);
   askEl.addEventListener('pointerdown',e=>e.stopPropagation()); return askEl;
@@ -6668,8 +6669,8 @@ function renderTags(){
         else if(s.tip>0) html='<div class="bubble small">💵</div>';
         else show=false; break; }
       case 'desk':{ x=L.desk.x; y=2.0; z=L.desk.z; f=0;
-        if(deskState.noPower) html='<div class="bubble warn small">⚡ Elektrik yok!</div>';
-        else if(deskState.noRoom) html='<div class="bubble warn small">🛏️ Hazır oda yok!</div>';
+        if(deskState.noPower) html='<div class="bubble warn small txt">⚡ Elektrik yok!</div>';
+        else if(deskState.noRoom) html='<div class="bubble warn small txt">🛏️ Hazır oda yok!</div>';
         else if(deskState.p>0) html=`<div class="ring" style="--p:${deskState.p.toFixed(2)}"><span>🛎️</span></div>`;
         else if(queue[0]&&queue[0].state==='queue'&&!deskState.server) html='<div class="bubble req">🛎️</div>';
         else show=false; break; }
