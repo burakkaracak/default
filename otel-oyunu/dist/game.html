@@ -249,7 +249,7 @@
       <div class="minis"><button class="round mini q2" id="fpBtn" aria-label="Göz kamerası" title="Göz kamerası (V)">🎥</button><button class="round mini q2" id="spdBtn" aria-label="Oyun hızı" title="Oyun hızı (x2)">⏩</button><button class="round mini" id="logBtn" aria-label="Olay geçmişi" title="Olay geçmişi">🔔<span class="dot" id="logDot"></span></button></div>
     </div>
     <div id="floors"></div>
-    <div id="camCtl"><button class="round mini" data-cam="l" aria-label="Sola çevir">⟲</button><button class="round mini" data-cam="r" aria-label="Sağa çevir">⟳</button><button class="round mini" data-cam="i" aria-label="Yakınlaş">＋</button><button class="round mini" data-cam="o" aria-label="Uzaklaş">－</button></div>
+    <div id="camCtl"><button class="round mini" data-cam="l" aria-label="Sola çevir">⟲</button><button class="round mini" data-cam="r" aria-label="Sağa çevir">⟳</button><button class="round mini" data-cam="i" aria-label="Yakınlaş">＋</button><button class="round mini" data-cam="o" aria-label="Uzaklaş">－</button><button class="round mini" data-photo aria-label="Fotoğraf çek" title="Fotoğraf çek">📸</button></div>
     <div id="carry"></div>
     <div id="elevUI"></div>
     <div id="hint"></div>
@@ -323,6 +323,8 @@ const GTYPES={
   grumpy:  {name:'Huysuz',   e:'😤',w:1.2,stars:1,pat:24,pay:1.1, want:0,nights:[1,2],tip:2.2,req:1.4},
   dog:     {name:'Köpekli',  e:'🐶',w:1.2,stars:2,pat:45,pay:1.35,want:1,nights:[1,3],tip:1.2,req:1},
   million: {name:'Turist',   e:'🎒',w:.35,stars:3,pat:50,pay:1,   want:0,nights:[1,2],tip:1,  req:1},  // gizli milyoner: turist kılığında
+  team:    {name:'Spor takımı',e:'🏆',w:.7,stars:3,pat:42,pay:1.3,want:1,nights:[1,2],tip:1.3,req:.9,likes:'gym'},
+  film:    {name:'Film ekibi',e:'🎬',w:.5,stars:4,pat:30,pay:3,  want:2,nights:[1,1],tip:2,  req:1.1,likes:'roof',rep:2},
   insp:    {name:'Müfettiş',  e:'🕵️',w:0,  stars:9,pat:38,pay:1,   want:1,nights:[1,1],tip:1.5,req:1.3,special:true}};
 const STAFF={
   rec:  {name:'Resepsiyonist',e:'🛎️',max:1,cost:[300],               wage:40,desc:'Sen yokken misafirleri karşılar'},
@@ -451,7 +453,7 @@ function freshState(cityIx,prestige){
     tut:0, tips:{}, sound:true, music:true, gfx:null, adsUntil:0, earned:0, served:0, done:false,
     player:{x:-4.2,z:3.8,f:0}, today:blankToday(), quests:null, lux:{}, xp:0, lvl:1, ach:{}, stats:{}, lastSeen:0, vol:{sfx:.55,music:.45}, log:[], gfxAuto:true,
     custom:{name:rand(HOTEL_NAMES),skin:0xf0c49c,hair:0x3a2618,hs:'quiff',top:0x1f3450,tie:0xe0a93a,hat:'none',cat:rand(CAT_NAMES)},
-    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:50, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, prj:{}, charity:0, morning:null, shown:{}, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
+    keys:0, legacy:{}, hist:[], reviews:[], reports:[], offer:null, event:null, breakroom:false, eotd:null, price:1, loyal:[], skills:{}, mgrs:{}, crew:{}, week:null, pass:null, lowFx:false, seenVer:51, rules:{dog:true,booze:true}, ezan:'on', lastVakit:null, live:null, repHist:[], inv:{}, diff:'auto', flow:0, streak:null, album:{}, introDone:null, news:null, newsPlan:null, prj:{}, charity:0, morning:null, shown:{}, diffDays:{}, filmBoost:0, shops:{}, priceWar:0, priceWarAsked:0, kitchen:null, book:null, obIx:0, morale:70, nightShift:false, strike:0, leaveDay:null, tier:0, league:null, leagueWins:0, mgr:null, mgrOffer:null, floors:{}, sp:null, stayPol:'ask', parties:0, partyDay:0, loan:null, rival:null, stock:null, order:null, autoOrder:false, catOn:false, catPetDay:-1, catPets:0, mess:null, messDue:false, crisis:null, crisisDue:null, lastCrisis:0, inspDue:false, busDue:false, lastInsp:0, lastBus:0};
 }
 function loadState(){
   try{
@@ -1855,6 +1857,8 @@ const LOOKS={
     if(tp==='tourist'){ o.hat=Math.random()<.5?'sun':'cap'; o.hatC=rand([0xf2b632,0xe0574f,0x2e86c1,0xffffff]); o.pack=true; }
     if(tp==='family'){ o.child=true; }
     if(tp==='million'){ o.hat=Math.random()<.5?'sun':'cap'; o.hatC=rand([0xf2b632,0xe0574f,0x2e86c1,0xffffff]); o.pack=true; }
+    if(tp==='team'){ o.top=0xe0574f; o.bottom=0x2b2f3a; o.hat='cap'; o.hatC=0xf2c14e; o.bag=0xf2c14e; o.hs='short'; o.scale=1.08; }
+    if(tp==='film'){ o.top=0x1a1a1a; o.bottom=0x1a1a1a; o.hat='beret'; o.hatC=0x2b2b2b; o.shades=true; o.bag=0x3b3b3b; o.hs='pony'; }
     if(tp==='athlete'){ const c=rand([0xe0574f,0x2e86c1,0x27ae60,0xff8c1a]); o.top=c; o.bottom=0x2b2f3a; o.hat='cap'; o.hatC=0xffffff; o.bag=null; o.hs=rand(['short','pony']); o.scale=rnd(1.0,1.08); }
     if(tp==='grumpy'){ o.top=rand([0x6d6d6d,0x5a5048,0x4a5560]); o.bottom=0x3a3a3a; o.glasses=Math.random()<.4; o.hs=rand(['bald','short']); o.hunch=true; o.bag=0x3a3a3a; }
     if(tp==='dog'){ o.dog=rand([0xc8894a,0x3b2a1e,0xf1e3c8,0x8a8a8a]); o.bag=null; }
@@ -2147,7 +2151,7 @@ function spawnGuest(type,from,tour,fl){
   const p=qPos(g.qk); if(!g.goTo(0,p.x,p.z,()=>{ g.tRot=Math.PI; })) g.place(p.x,p.z,0);
   g.tag=tagAdd({kind:'patience',ent:g,y:1.95});
   if(!type&&g.type!=='insp'&&anyThemed()&&Math.random()<0.3) g.pref=rand(Object.keys(RTHEMES));
-  if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
+  if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3; if(g.type==='team'&&!tour) teamArrive(g);
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
   if(!type&&g.type!=='dog'&&g.type!=='insp'&&state.tut>=TUT.length&&Math.random()<0.06) g.booze=true;
   return g;
@@ -2192,7 +2196,7 @@ function guestLeave(g){
   if(!g.goTo(0,ex.x,ex.z,()=>g.remove())) g.remove();
 }
 function checkout(g){
-  standUp(g); const id=g.room, s=state.rooms[id], R=RT(id);
+  standUp(g); teamCheckout(g); const id=g.room, s=state.rooms[id], R=RT(id);
   const mood=g.sat>=68?'happy':g.sat>=42?'neutral':'unhappy', mult=g.T.rep||1;
   const tip=mood==='unhappy'?0:Math.round(roomRate(id)*0.45*(g.sat/70)*g.T.tip*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
   if(tip>0){ s.tip+=tip; state.today.tips+=tip; }
@@ -2235,7 +2239,7 @@ function tryAmenity(g){
 function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
   const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
-  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen');
+  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen'); if(a==='roof') filmShoot(g);
   if(g.visitor){ const x=Math.round(fee*0.5); state.piles[a]+=x; state.today.amen+=x; fxEmoji(g.x,g.y+2.1,g.z,g.f,'👋'); guestLeave(g); return; }
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';
@@ -2538,9 +2542,9 @@ function updateDesk(dt){
 // TIME, DAY END, SPAWNING, BREAKDOWNS
 // =====================================================================
 function updateTime(dt){ state.t+=dt/DAY_SEC; if(state.t>=1){ state.t-=1; endDay(); } }
-function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
+function wageScale(){ return diffWageMul()*city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
 function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*nightWageMul()*(1-0.12*skillLv('o4')); }
-function wagesToday(){ let w=crewPremium(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
+function wagesToday(){ let w=crewPremium()+traitWageDelta(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
   repDrift(state.today); const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
   const rep=Object.assign({},state.today), day=state.day, repNow=state.rep;
@@ -2548,7 +2552,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd();
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
@@ -2676,7 +2680,7 @@ function updateSpawner(dt){
 let brkT=70;
 function updateBreakdowns(dt){
   brkT-=dt; if(brkT>0) return; brkT=rnd(55,95);
-  const ids=roomsWhere(id=>!state.rooms[id].broken); if(ids.length<3||Math.random()>0.55) return;
+  const ids=roomsWhere(id=>!state.rooms[id].broken); if(ids.length<3||Math.random()>0.55*diffBreakMul()) return;
   const id=rand(ids); state.rooms[id].broken=true; applyRoomState(id);
   toast(`🔧 Oda ${id} arızalandı!`,'bad'); sfx('fail'); tutEvent('broken'); markSave();
 }
@@ -4142,9 +4146,9 @@ function staffPost(e){
 
 // ---------- staff energy + employee of the day ----------
 const STAFF_NAMES=['Ayşe','Fatma','Ali','Veli','Hasan','Zehra','Emine','Murat','Ömer','Hülya','Serkan','Yasemin','Levent','Nazlı'];
-function staffEnergyMul(e){ if(onLeave(e)) return 0.001; return ((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e))*(e.rushUntil>gtime?1.3:1); }
+function staffEnergyMul(e){ if(onLeave(e)) return 0.001; return traitSpd(e)*((e.energy??100)<30?0.7:(e.star?1.15:1))*(1+0.07*rankOf(e))*(e.rushUntil>gtime?1.3:1); }
 function staffWorked(e){
-  careerWorked(e); e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7));
+  careerWorked(e); e.jobs=(e.jobs||0)+1; e.energy=Math.max(0,(e.energy??100)-(state.breakroom?4:7)*traitEnergy(e));
   if(e.energy<30&&!e.tiredShown){ e.tiredShown=true; fxEmoji(e.x,e.y+2.1,e.z,e.f,'😓'); }
 }
 function staffRest(e,dt){ if(state.breakroom&&(e.energy??100)<100){ e.energy=Math.min(100,(e.energy??100)+dt*3); if(e.energy>=40) e.tiredShown=false; } }
@@ -4276,7 +4280,7 @@ function rivalDayEnd(){
     state.rival={name:rand(RIVAL_NAMES),q:Math.round(38+stars()*7+rnd(-4,6)),price:1,promo:0,bought:false}; buildRival();
     setTimeout(()=>{ banner(`🏢 Rakip otel açıldı: ${state.rival.name}`,'Hemen yanı başında! Misafirlerini kapmaya çalışacak · Yönetim › Otel'); sfx('alarm'); },3600); return; }
   const r=state.rival; if(!rivalOn()) return;
-  r.q=Math.round(clamp(r.q+(state.rep*0.8+22-r.q)*0.15+rnd(-3,4),25,95)); r.price=rand([0.85,0.9,1,1,1.1]);
+  r.q=Math.round(clamp(r.q+(state.rep*0.8+22+diffRivalQ()-r.q)*0.15+rnd(-3,4),25,95)); r.price=rand([0.85,0.9,1,1,1.1]);
   if(Math.random()<0.2){ r.promo=state.day+1;   // rivalDayEnd gün artmadan önce çalışır: indirim YENİ güne
     setTimeout(()=>toast(`📉 ${r.name} bugün büyük indirimde! Misafir kaybın artabilir`,'bad'),4000); }
 }
@@ -4427,9 +4431,9 @@ function chainHtml(){
 // ---------- staff careers ----------
 const RANKS=['Çaylak','Deneyimli','Kıdemli','Uzman'], RANK_XP=[0,25,70,160];
 function crewRec(kind){ state.crew=state.crew||{}; const list=state.crew[kind]=state.crew[kind]||[]; const i=staffEnts.filter(x=>x.kind===kind).length;
-  return list[i]||(list[i]={n:rand(STAFF_NAMES),xp:0}); }
+  return list[i]||(list[i]={n:rand(STAFF_NAMES),xp:0,tr:rand(Object.keys(TRAITS))}); }   // aday seçilmeden alındıysa (bot/eski yol) rastgele kişilik
 function rankOf(e){ const x=e.rec?e.rec.xp:0; let r=0; for(let i=1;i<RANK_XP.length;i++) if(x>=RANK_XP[i]) r=i; return r; }
-function careerWorked(e){ if(!e.rec) return; const r0=rankOf(e); e.rec.xp++; const r1=rankOf(e);
+function careerWorked(e){ if(!e.rec) return; const r0=rankOf(e); e.rec.xp+=traitXp(e); const r1=rankOf(e);
   if(r1>r0){ fxEmoji(e.x,e.y+2.3,e.z,e.f,'⭐'); toast(`⭐ ${e.name} terfi etti: ${RANKS[r1]} ${STAFF[e.kind].name} · %${7*r1} hızlı, maaşı +%${8*r1}`); sfx('sparkle'); markSave(); } }
 function crewPremium(){ let w=0; staffEnts.forEach(e=>{ w+=staffWage(e.kind)*0.08*rankOf(e); }); return w; }
 function crewNames(k){ const L0=staffEnts.filter(e=>e.kind===k); return L0.length?`<small>${L0.map(e=>`${escH(e.name)} <span style="color:var(--gold2)">${RANKS[rankOf(e)]}</span>${(e.energy??100)<30?' 😓':''}`).join(' · ')}</small>`:''; }
@@ -4936,9 +4940,12 @@ const GUIDE=[
     ['😊','Personel morali ve grev','Yorgunluk, eksi bakiye ve reddedilen izin morali düşürür; mola odası ve prim yükseltir. 3★ sonrası moral çok düşerse grev olur.',()=>built('staff')],
     ['🌙','Gece vardiyası ve gece mutfağı','Kapalıysa personel gece yarı hızla çalışır; açıksa maaşlar +%25 ama mutfak gece de oda servisi pişirir (Personel).',()=>built('staff')],
     ['☀️','Sabah brifingi','Müdür kartı, izin talebi, fiyat savaşı ve grev tek kartta gelir; kapatırsan Otel › Genel\'den yeniden açılır.',()=>state.day>=3],
+    ['🧬','Personel kişilikleri','İşe alırken iki aday arasından seçersin; kişilik kalıcıdır (hız, maaş, moral, yorgunluk, terfi). Personel sekmesinde Ekip listesi.',()=>built('staff')],
     ['🧠','Misafir hafızası','Sadık misafir eski odasını hatırlar: resepsiyonda odası parlar, aynı odayı verirsen sevinir.',()=>(state.loyal||[]).length>0]]],
   ['🌍 Şehir ve dünya',[['🏛️','Şehrin otel planı','Her şehrin kendi oda planı var; boş yerlerde şehre özgü köşeler küçük gelir ve memnuniyet getirir.',()=>true],
     ['📆','Takvim ve haberler','Sezon, bayram, ramazan (iftar/sahur), maç-konser-fuar günleri misafir sayısını ve tipini değiştirir. Üstteki takvim şeridi 3 gün önceden gösterir.',()=>state.day>=2],
+    ['🔥','Efsane zorluk','Otel › Genel › Oyun temposu: misafir daha çok ve sabırsız, maaş +%25, arıza +%50. Şehrin %80\'ini Efsane\'de oynarsan taşınma anahtarları ×1,5.',()=>state.day>=2],
+    ['📸','Foto modu','Kamera düğmelerindeki 📸: otelin adı, şehir, gün ve yıldızla çerçeveli fotoğraf; indir ve paylaş.',()=>true],
     ['📉','Fiyat savaşı','Rakip indirim yaparsa karşılık ver (bugün −%10) ya da misafir kaybet.',()=>!!state.rival],
     ['🥨','Esnaf ortaklıkları','Karşı sokaktaki simitçi, taksi, hediyelik, dondurmacı: günlük gelir ve misafir bonusu (Otel › Şehir).',()=>state.day>=3],
     ['🍸','Çatı gece barı','Çatı açıksa geceleri misafirler çatı barına çıkar: ekstra gelir.',()=>built('roof')]]],
@@ -4960,11 +4967,11 @@ function openGuide(){
 }
 
 // ---------- what's new (once per version) ----------
-const GAME_VER=50;
+const GAME_VER=51;
 function whatsNew(){
   if(state.tut<TUT.length||(state.seenVer||0)>=GAME_VER) return; state.seenVer=GAME_VER; markSave();
   setTimeout(()=>openModal(`<h3>🆕 Neler yeni?</h3><p class="sub">Otelin büyüdü! Öne çıkanlar:</p>
-    ${[['☀️','Sabah brifingi: günün kararları (müdür kartı, izin, fiyat savaşı, grev) artık tek kartta · sayfayı yenilesen de kaybolmaz'],['📉','Fiyat savaşı gerçekten çalışıyor: rakip indirim yapınca karşılık verebilirsin'],['🌙','Sahurda misafirler uyanıp oda servisi istiyor · gece vardiyası açıksa mutfak gece de çalışır'],['🏖️','İzindeki personel artık gerçekten izinde: işi bırakır, ertesi gün döner'],['🚚','Taşınırken ayarların ve zincir müdürlerin seninle gelir'],['🗽','Anıt ve bağışlar ün hedefine kalıcı bonus verir'],['🥯','Esnaf ortaklıkları daha kârlı (~9 günde geri döner)'],['💼','Fuar günü misafirler fiyata daha az bakıyor'],['🏆','5★ sonrası prestij projeleri: şehir parkı, otel müzesi, anıt · hayır vakfına sınırsız bağış'],['🏙️','Dış görünüm: kat çubuğundaki 🏙️ ile otelin tamamını gör'],['🌃','Gece iç mekân daha loş ve sıcak'],['🌙','Bayram artık ramazanın hemen ardından geliyor'],['🔇','Uygulamadan çıkınca sesler susuyor'],['🌙','Gece artık gerçekten kararıyor: sokak lambaları, pencereler, çatı ampulleri ve yıldızlar'],['👨‍🍳','Yeni personel: Aşçı · oda servisini 1,5 kat hızlı pişirir'],['🗓️','Üstte takvim şeridi: bayram, ramazan, maç, konser günlerini 2 gün önceden gör'],['🍸','Çatı gece barı: akşamları misafirler çatıya çıkar, gelir +%50'],['🏰','Her şehrin çatı silüeti: kubbeli kule, mansard, peribacaları, gökdelen kulesi'],['🧠','Sadık misafirin eski odası resepsiyonda pembe halkayla parlar'],['📘','Rehber yenilendi · menü bölümleri açılır-kapanır · maaş uyarıları'],['🔒','Rezervasyon ve grev artık 3★\'dan sonra açılıyor'],['🏛️','Her şehrin kendi otel planı: 30–36 oda yeri, boş yerlerde şehre özgü köşeler, girişte şehrin mimarisi'],['🍳','Mutfak: yemekler pişip tezgâha gelir · çamaşırhane havluyu depoya taşır'],['📅','Rezervasyonlar ve overbooking: kapora al, gelmeyen/yersiz kalan misafire tazminat'],['😤','Personel morali: prim, izin, gece vardiyası, grev'],['🧠','Misafir hafızası: sadık misafir aynı odasını ister, kötü deneyimi unutmaz'],['🌙','Yaşayan takvim: sezon, bayram, ramazan iftar/sahur, maç-konser-fuar haberleri'],['🏙️','Rakip otel büyür, fiyat savaşı açar · karşı sokakta esnaf ortaklıkları'],['💡','Gece sokak lambası ışıkları, yağmurda sıçramalar, karda ayak izleri, araba sesi, şehir açılış sinematiği'],['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
+    ${[['🧬','Personel kişilikleri: işe alırken iki aday, her birinin kalıcı bir huyu var (Çalışkan, Gece kuşu, Tutumlu, Sakar…)'],['🔥','Efsane zorluk: daha çok ve sabırsız misafir, pahalı maaş, sık arıza · şehri Efsane zorlukta bitirirsen taşınma anahtarları ×1,5'],['📸','Foto modu: kamera düğmelerindeki 📸 ile otelinin çerçeveli fotoğrafını indir'],['🏆','Spor takımı: kaptan + 2 sporcu birlikte gelir, hepsi mutlu ayrılırsa takım fotoğrafı (+1 ün)'],['🎬','Film ekibi (4★): çatıya çıkınca çekim yapar · +1 ün, ertesi gün misafir +%20'],['☀️','Sabah brifingi: günün kararları (müdür kartı, izin, fiyat savaşı, grev) artık tek kartta · sayfayı yenilesen de kaybolmaz'],['📉','Fiyat savaşı gerçekten çalışıyor: rakip indirim yapınca karşılık verebilirsin'],['🌙','Sahurda misafirler uyanıp oda servisi istiyor · gece vardiyası açıksa mutfak gece de çalışır'],['🏖️','İzindeki personel artık gerçekten izinde: işi bırakır, ertesi gün döner'],['🚚','Taşınırken ayarların ve zincir müdürlerin seninle gelir'],['🗽','Anıt ve bağışlar ün hedefine kalıcı bonus verir'],['🥯','Esnaf ortaklıkları daha kârlı (~9 günde geri döner)'],['💼','Fuar günü misafirler fiyata daha az bakıyor'],['🏆','5★ sonrası prestij projeleri: şehir parkı, otel müzesi, anıt · hayır vakfına sınırsız bağış'],['🏙️','Dış görünüm: kat çubuğundaki 🏙️ ile otelin tamamını gör'],['🌃','Gece iç mekân daha loş ve sıcak'],['🌙','Bayram artık ramazanın hemen ardından geliyor'],['🔇','Uygulamadan çıkınca sesler susuyor'],['🌙','Gece artık gerçekten kararıyor: sokak lambaları, pencereler, çatı ampulleri ve yıldızlar'],['👨‍🍳','Yeni personel: Aşçı · oda servisini 1,5 kat hızlı pişirir'],['🗓️','Üstte takvim şeridi: bayram, ramazan, maç, konser günlerini 2 gün önceden gör'],['🍸','Çatı gece barı: akşamları misafirler çatıya çıkar, gelir +%50'],['🏰','Her şehrin çatı silüeti: kubbeli kule, mansard, peribacaları, gökdelen kulesi'],['🧠','Sadık misafirin eski odası resepsiyonda pembe halkayla parlar'],['📘','Rehber yenilendi · menü bölümleri açılır-kapanır · maaş uyarıları'],['🔒','Rezervasyon ve grev artık 3★\'dan sonra açılıyor'],['🏛️','Her şehrin kendi otel planı: 30–36 oda yeri, boş yerlerde şehre özgü köşeler, girişte şehrin mimarisi'],['🍳','Mutfak: yemekler pişip tezgâha gelir · çamaşırhane havluyu depoya taşır'],['📅','Rezervasyonlar ve overbooking: kapora al, gelmeyen/yersiz kalan misafire tazminat'],['😤','Personel morali: prim, izin, gece vardiyası, grev'],['🧠','Misafir hafızası: sadık misafir aynı odasını ister, kötü deneyimi unutmaz'],['🌙','Yaşayan takvim: sezon, bayram, ramazan iftar/sahur, maç-konser-fuar haberleri'],['🏙️','Rakip otel büyür, fiyat savaşı açar · karşı sokakta esnaf ortaklıkları'],['💡','Gece sokak lambası ışıkları, yağmurda sıçramalar, karda ayak izleri, araba sesi, şehir açılış sinematiği'],['🌅','Yeni grafikler: bulutlu gökyüzü, dalgalı parlayan su ve kostik ışık, dokulu mermer-ahşap-taş, karakterlerde kenar ışığı'],['⚡','Çok daha akıcı: karakterler ve odalar birleştirildi, çizim yükü ~%70 azaldı'],['🔊','Gerçek sesler: bozuk para, inşaat, şehir ambiyansı, adım sesi, yeni arayüz sesleri'],['🕌','Mescit katı: çatının üstünde, İstanbul vakitlerinde ezan, imam ve cemaat, Cuma kalabalık + hutbe'],['📖','Misafir albümü: her misafir tipini topla, ödül al (Görevler › Albüm)'],['💎','5★ sonrası Elmas ve Platin kademeleri · haftalık Yılın Oteli ligi'],['🗂️','Müdür masası: her sabah günün stratejisini seç (4★)'],['🏢','Kat temaları ve kat salonu · şehre özel tesis (Boğaz turu, balon, safari…)'],['🚪','Dolu odanın kapısı kapalı: istekleri kapıdan teslim et'],['📺','Misafirler odada TV izliyor, uzanıyor, okuyor, çalışıyor, banyoya giriyor'],['🎯','Tek Görevler ekranı: Bugün / Bu hafta / Kalıcı sekmeleri'],['🏨','Otel menüsü alt sekmelere bölündü: Genel, Ekonomi, Etkinlik, Kural, Şehir'],['🪟','Pencereler artık üst üste binmez, sırayla gelir'],['⭐','Ün artık son 3 günün performansı: kötü gün yıldız kaybettirebilir'],['🧐','Yıldız arttıkça misafirler titizleşir (manzara, hız, bekleme)'],['🏗️','4★ sonrası büyük yatırımlar · taşınırken paranın %10\'u gelir'],['⚠️','Etkinliklerde kapora ve canlı arızalar: koş, düzelt!'],['🎤','Canlı etkinlikler: düğün, konser ve konferansı sahnede izle, yanında durup coşkuyu artır'],['🚪','Lobiden restorana, çamaşırhane/spa, havuz ve spor salonuna yan kapılar'],['🛎️','Uzun konaklamada resepsiyon onay ister · köpek ve alkol kuralı'],['⏳','Dolu odaya yükseltme sırası, bakım modu, MAX satın alma'],['🏊','Havuz, spor salonu ve spaya günübirlik ziyaretçiler'],['🔥','Günlük giriş serisi, otomatik tempo, yeni sesler ve yağmur']].map(([e,t])=>`<div class="row"><div class="ic">${e}</div><div class="tx">${t}</div></div>`).join('')}
     <button class="btn gold wide" id="wnGuide">📘 Rehberi aç</button><button class="btn ghost wide" id="wnOk">Oynamaya devam</button>`,m=>{ m.querySelector('#wnOk').onclick=closeModal; m.querySelector('#wnGuide').onclick=openGuide; }),2200);
 }
 
@@ -5359,7 +5366,7 @@ function updateAmenLife(dt){
 
 // ---------- akış dengeleyici ----------
 // flow −1 (zorlanıyor → misafir biraz daha sabırlı, daha seyrek) … +1 (rahat → daha çok misafir, daha çok kazanç ve iş)
-const DIFF={easy:{n:'Rahat',v:-0.6},auto:{n:'Otomatik',v:null},hard:{n:'Zorlu',v:0.75}};
+const DIFF={easy:{n:'Rahat',v:-0.6},auto:{n:'Otomatik',v:null},hard:{n:'Zorlu',v:0.75},legend:{n:'🔥 Efsane',v:1.2}};
 function flowV(){ const d=DIFF[state.diff||'auto']; return d.v!=null?d.v:(state.flow||0); }
 function flowSpawnMul(){ return 1-0.2*flowV(); }            // spawnT çarpanı
 function flowPatMul(){ return 1+0.16*flowV(); }             // sabır tükenme hızı çarpanı
@@ -5385,7 +5392,7 @@ function flowLabel(){ const v=flowV(); return v<=-0.4?'😌 sakin':v>=0.4?'🔥 
 function flowHtml(){
   const k=state.diff||'auto';
   return `<div class="row"><div class="ic">🎚️</div><div class="tx">Oyun temposu · şu an ${flowLabel()}<small>Otomatik: zorlanırsan misafirler sabırlı olur, rahatlarsan daha çok misafir ve kazanç gelir</small></div></div>
-    <div style="display:flex;gap:6px;margin:-4px 0 10px">${Object.keys(DIFF).map(d=>`<button class="btn ${k===d?'gold':'ghost'}" data-diff="${d}" style="flex:1">${DIFF[d].n}</button>`).join('')}</div>`;
+    <div style="display:flex;gap:6px;margin:-4px 0 10px">${Object.keys(DIFF).map(d=>`<button class="btn ${k===d?'gold':'ghost'}" data-diff="${d}" style="flex:1">${DIFF[d].n}</button>`).join('')}</div>`+diffHtml();
 }
 function bindFlow(root){ root.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{ state.diff=b.dataset.diff; sfx('click'); markSave(); renderSheet(); }); }
 
@@ -5439,7 +5446,7 @@ function repDrift(t){
 function repTrendHtml(){ const tg=repTarget(); if(tg==null) return ''; const d=tg-state.rep; return ` <small style="font-size:11px;color:${d>2?'#9dffc0':d<-2?'#ff9d8f':'var(--muted)'}">${d>2?'↑':d<-2?'↓':'→'} ${Math.round(tg)}</small>`; }
 
 // ---------- titiz misafir ----------
-function expectPen(){ return (stars()-1)*2; }                          // 5★: −8 memnuniyet (dekor/tema ile telafi)
+function expectPen(){ return (stars()-1)*2+diffExpect(); }                          // 5★: −8 memnuniyet (dekor/tema ile telafi)
 function waitGrace(){ return Math.max(4,10-(stars()-1)*1.5); }           // bekleme toleransı
 function reqTime(){ return Math.round(48*(1-0.07*(stars()-1))); }       // istek süresi (5★: ~35 sn)
 function wantsView(g){ return stars()>=3&&(g.type==='vip'||g.type==='couple'||g.type==='influencer'||g.type==='business'&&stars()>=4); }
@@ -6339,7 +6346,7 @@ function nightStaffMul(){ return isNight()&&!state.nightShift?0.5:1; }
 function nightWageMul(){ return state.nightShift?1.25:1; }
 function moraleDay(){
   if(!built('staff')||!staffEnts.length) return; let d=0; const avgE=staffEnts.reduce((a,e)=>a+(e.energy??100),0)/staffEnts.length;
-  d+=state.breakroom?2:0; d+=avgE<40?-5:1; d+=state.money<0?-6:0; d+=state.nightShift?-1:0; if(state.leaveDenied===state.day-1) d-=6;
+  d+=state.breakroom?2:0; d+=traitMoraleDelta(); d+=avgE<40?-5:1; d+=state.money<0?-6:0; d+=state.nightShift?-1:0; if(state.leaveDenied===state.day-1) d-=6;
   state.morale=clamp(morale()+d,0,100);
   if(stars()<3||state.sandbox) return;   // grev ve izin talepleri 3★'dan sonra
   if(morale()<25&&Math.random()<0.5){ state.strike=60; banner('✊ Personel grevde!','Moral çok düştü · sabah brifinginden prim verebilirsin'); morningAdd({k:'strike'}); }
@@ -6428,7 +6435,7 @@ function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; const P=sta
 function newsFor(d){ const k=(state.newsPlan||{})[d]; return k?NEWS.find(x=>x.k===k):null; }
 function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
 // ---------- toplam etkiler ----------
-function worldDemand(){ let f=prjDemand(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
+function worldDemand(){ let f=prjDemand()*filmDemand(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
 function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') w*=({family:1.8,elderly:1.4})[k]||1; if(st) w*=st.w[k]||1; if(N) w*=N.w[k]||1; return w; }
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
 // gece mutfağı: sahurda ya da gece vardiyası açıkken oda servisi pişer
@@ -6639,6 +6646,91 @@ function bootEndgame(){ try{ buildPrj(); }catch(e){ console.warn('endgame',e); }
 function updateEndgame(dt){ updateExtView(); }
 
 // =====================================================================
+// MG10 · BİR ÜST SEVİYE: personel kişilikleri (işe alımda aday seçimi),
+// Efsane zorluk (anahtar bonusu), foto modu, yeni misafirler (Spor takımı
+// grubu, Film ekibi çatı çekimi)
+// =====================================================================
+
+// ---------- 1) personel kişilikleri ----------
+// her çalışanın kaydında (state.crew[kind][i].tr) bir kişilik: işe alırken iki aday arasından seçersin
+const TRAITS={
+  calisan:{e:'⚡',n:'Çalışkan',d:'%12 daha hızlı çalışır',spd:1.12},
+  neseli: {e:'😄',n:'Neşeli',d:'Her sabah ekip moraline +1',morale:1},
+  gece:   {e:'🦉',n:'Gece kuşu',d:'Gece vardiyası kapalıyken bile gece tam hız',night:true},
+  dayanikli:{e:'🧱',n:'Dayanıklı',d:'İş başına yarı yorulur',energy:0.5},
+  tutumlu:{e:'💰',n:'Tutumlu',d:'Maaşı %15 düşük, %4 daha yavaş',wage:0.85,spd:0.96},
+  yetenekli:{e:'🌟',n:'Yetenekli',d:'İki kat hızlı terfi eder',xp:2},
+  sakar:  {e:'🤕',n:'Sakar',d:'Maaşı %20 düşük ama %8 daha yavaş',wage:0.8,spd:0.92}};
+function traitOf(e){ return e&&e.rec&&e.rec.tr?TRAITS[e.rec.tr]:null; }
+function traitSpd(e){ const t=traitOf(e); let m=t&&t.spd||1; if(t&&t.night&&isNight()&&!state.nightShift) m*=2; return m; }   // ×2, staffSpeedMul'daki 0.5 gece cezasını siler
+function traitEnergy(e){ const t=traitOf(e); return t&&t.energy||1; }
+function traitXp(e){ const t=traitOf(e); return t&&t.xp||1; }
+function traitMoraleDelta(){ let d=0; staffEnts.forEach(e=>{ const t=traitOf(e); if(t&&t.morale) d+=t.morale; }); return Math.min(3,d); }
+function traitWageDelta(){ let d=0; staffEnts.forEach(e=>{ const t=traitOf(e); if(t&&t.wage) d+=staffWage(e.kind)*(t.wage-1); }); return d; }
+// işe alım: iki aday, kişilikleri görünür; seçilen kayıt crew listesine yazılır, sonra normal hireStaff
+function makeCandidate(){ const ks=Object.keys(TRAITS); return {n:rand(STAFF_NAMES),xp:0,tr:rand(ks)}; }
+function hireCandidates(k){
+  const c=staffHireCost(k); if(!built('staff')||c==null||state.money<c) return;
+  let a=makeCandidate(), b=makeCandidate(); if(a.tr===b.tr) b.tr=rand(Object.keys(TRAITS).filter(x=>x!==a.tr));
+  const card=(cd,i)=>{ const t=TRAITS[cd.tr]; return `<button class="btn ${i?'':'gold'} wide" data-cand="${i}" style="text-align:left;line-height:1.3">${t.e} <b>${escH(cd.n)}</b> · ${t.n}<br><small style="font-weight:600;opacity:.85">${t.d}</small></button>`; };
+  openModal(`<h3>${STAFF[k].e} ${STAFF[k].name} adayları</h3><p class="sub">${fmt(c)} ₺ · birini seç, kişiliği kalıcıdır</p>${card(a,0)}${card(b,1)}<button class="btn ghost wide" id="cdN">Vazgeç</button>`,m=>{
+    m.querySelectorAll('[data-cand]').forEach(x=>x.onclick=()=>{ const cd=x.dataset.cand==='0'?a:b; state.crew=state.crew||{}; const L0=state.crew[k]=state.crew[k]||[]; const i=staffEnts.filter(e=>e.kind===k).length; L0[i]=cd; closeModal(); hireStaff(k); });
+    m.querySelector('#cdN').onclick=closeModal; });
+}
+function crewHtml(){
+  if(!staffEnts.length) return '';
+  return `<div class="ugh">🧬 Ekip</div>`+staffEnts.map(e=>{ const t=traitOf(e); return `<div class="row"><div class="ic">${STAFF[e.kind].e}</div><div class="tx">${escH(e.name||'')} <small style="display:inline">${RANKS[rankOf(e)]} ${STAFF[e.kind].name}</small><small>${t?`${t.e} ${t.n} · ${t.d}`:'Kişiliği yok (eski çalışan)'}${e.leaveNow?' · 🏖️ bugün izinli':''}</small></div></div>`; }).join('');
+}
+
+// ---------- 2) Efsane zorluk ----------
+// DIFF.legend p88'de: misafir daha çok ve sabırsız; burada ek çarpanlar + gün sayacı + anahtar bonusu
+function isLegend(){ return state.diff==='legend'; }
+function diffWageMul(){ return isLegend()?1.25:state.diff==='hard'?1.1:1; }
+function diffBreakMul(){ return isLegend()?1.5:1; }
+function diffRivalQ(){ return isLegend()?10:0; }
+function diffExpect(){ return isLegend()?3:0; }
+function diffDayEnd(){ const D=state.diffDays=state.diffDays||{}; const k=state.diff||'auto'; D[k]=(D[k]||0)+1; }
+// oyunun en az %80'i Efsane'de oynandıysa taşınma anahtarları ×1.5, Zorlu'da ×1.2
+function diffKeyMul(){ const D=state.diffDays||{}, tot=Object.values(D).reduce((a,b)=>a+b,0)||1; if((D.legend||0)/tot>=0.8) return 1.5; if(((D.legend||0)+(D.hard||0))/tot>=0.8) return 1.2; return 1; }
+function diffBadge(){ const m=diffKeyMul(); return m>=1.5?'🔥 Efsane':m>1?'💪 Zorlu':''; }
+function diffHtml(){ return `<div class="row"><div class="ic">🔥</div><div class="tx">Efsane zorluk<small>Misafir daha çok ve sabırsız, maaşlar +%25, arızalar +%50, rakip güçlü, beklentiler yüksek · şehri en az %80 Efsane'de bitirirsen taşınma anahtarları ×1,5 (Zorlu ×1,2)${state.diffDays?` · şu an ${diffBadge()||'bonus yok'}`:''}</small></div></div>`; }
+
+// ---------- 3) foto modu ----------
+async function photoMode(){
+  if(fpMode&&!player) return; const cv=renderer.domElement; let url=null;
+  try{ renderFrame(); url=cv.toDataURL('image/png'); }catch(e){ toast('Bu görünümde fotoğraf çekilemiyor','bad'); return; }
+  const img=new Image(); await new Promise(r=>{ img.onload=r; img.onerror=r; img.src=url; });
+  const W=img.width||cv.width, H=img.height||cv.height, bar=Math.round(H*0.11), c=document.createElement('canvas'); c.width=W; c.height=H+bar; const x=c.getContext('2d');
+  x.drawImage(img,0,0); x.fillStyle='#1b2a3a'; x.fillRect(0,H,W,bar); x.fillStyle='#f2c14e'; x.fillRect(0,H,W,Math.max(2,Math.round(bar*0.06)));
+  const nm=(state.custom&&state.custom.name)||'Otel Ustası', fs=Math.round(bar*0.36);
+  x.fillStyle='#fff'; x.font=`800 ${fs}px "Baloo 2", sans-serif`; x.textBaseline='middle'; x.fillText(`${nm} · ${'★'.repeat(stars())}`,Math.round(W*0.03),H+bar*0.42);
+  x.fillStyle='#cfd8e3'; x.font=`600 ${Math.round(fs*0.7)}px "Baloo 2", sans-serif`; x.fillText(`${city().e||''} ${city().name} · ${state.day}. gün · ${fmt(state.served)} misafir`,Math.round(W*0.03),H+bar*0.78);
+  x.fillStyle='#f2c14e'; x.textAlign='right'; x.font=`800 ${Math.round(fs*0.8)}px "Baloo 2", sans-serif`; x.fillText('🏨 Otel Ustası',Math.round(W*0.97),H+bar*0.5);
+  const out=c.toDataURL('image/png'); sfx('sparkle'); { const fx=document.getElementById('flashFx'); if(fx&&!state.lowFx){ fx.style.opacity=.9; setTimeout(()=>fx.style.opacity=0,120); } }
+  openModal(`<h3>📸 Fotoğraf</h3><img src="${out}" style="width:100%;border-radius:12px;display:block;margin:6px 0 10px" alt="Otel fotoğrafı"><button class="btn gold wide" id="phD">⬇️ İndir</button><button class="btn ghost wide" id="phX">Kapat</button>`,m=>{
+    m.querySelector('#phX').onclick=closeModal; m.querySelector('#phD').onclick=async()=>{ const fn=`otel-${state.day}.gun.png`;
+      if(typeof dlCap!=='undefined'&&dlCap){ try{ await dlCap.save({filename:fn,data:out,encoding:'dataURL'}); toast('📸 Fotoğraf indirildi'); return; }catch(e){ if(e&&e.code==='declined') return; } }
+      try{ const a=document.createElement('a'); a.href=out; a.download=fn; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),500); toast('📸 Fotoğraf indirildi'); }catch(e){ toast('Bu görünümde dosya indirilemiyor','bad'); } }; });
+  onGameEvent('photo',1);
+}
+
+// ---------- 4) yeni misafirler ----------
+// Spor takımı: kaptan + 2 sporcu birlikte gelir; hepsi mutlu ayrılırsa "takım fotoğrafı" (+1 ün)
+// Film ekibi: yönetmen; çatıya çıkınca çekim olur (çatıdaki misafirler +5, +1 ün, ertesi gün misafir +%20)
+function teamArrive(g){ if(g.type!=='team'||g.teamed) return; g.teamed=true; const from=g.x<0?L.spawnL:L.spawnR;
+  for(let i=0;i<2;i++){ const m=spawnGuest('athlete',from); m.teamOf=g; m.name=rand(NAMES_M)+' '+rand(SURN); } fxEmoji(g.x,2.5,g.z,0,'🏆'); toast(`🏆 Spor takımı geldi: ${escH(g.name)} ve 2 sporcu`); }
+function teamCheckout(g){ const cap=g.teamOf||(g.type==='team'?g:null); if(!cap) return; cap.teamSat=(cap.teamSat||[]).concat([g.sat>=68]);
+  if(cap.teamSat.length>=3){ if(cap.teamSat.every(x=>x)){ changeRep(1); if(!state.lowFx) confettiAt(L.desk.x,1.8,L.desk.z,40); banner('🏆 Takım fotoğrafı!','Bütün takım mutlu ayrıldı · +1 ün'); onGameEvent('team',1); } } }
+function filmShoot(g){ if(g.type!=='film'||g.shot) return; g.shot=true; state.filmBoost=state.day+1; markSave();
+  guests.forEach(o=>{ if(o!==g&&o.f===ROOF&&o.state==='amen'){ o.sat=clamp(o.sat+5,0,100); fxEmoji(o.x,o.y+2.1,o.z,o.f,'🤩'); } });
+  changeRep(1); if(!state.lowFx&&typeof fireworksAt==='function') fireworksAt(g.x,ROOF*FH+5,g.z); sfx('star');
+  banner('🎬 Çatıda çekim!',`${escH(g.name)} otelini filme çekiyor · yarın misafir +%20, +1 ün`); onGameEvent('film',1); }
+function filmDemand(){ return state.filmBoost===state.day?1.2:1; }
+
+function nextDayEnd(){ diffDayEnd(); }
+function bootNext(){ try{ const b=document.querySelector('[data-photo]'); if(b) b.onclick=()=>{ sfx('click'); photoMode(); }; }catch(e){ console.warn('next',e); } }
+
+// =====================================================================
 // WORLD-PINNED TAGS (DOM)
 // =====================================================================
 const tagsEl=$('tags'), tags=[];
@@ -6824,7 +6916,7 @@ function renderSheet(){
           ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
           ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>${(()=>{ const M=staffLvlMaxInfo(k); return M.n>1?`<button class="btn" data-lvlmax="${k}">MAX +${M.n} · ${fmt(M.c)}</button>`:''; })()}`:''}
         </div></div>`; }
-    h+=staffHtml2()+staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
+    h+=staffHtml2()+staffExtraHtml()+crewHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
     for(const k of upgOrder()){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
@@ -6854,7 +6946,7 @@ function renderSheet(){
   sheet.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ mgmtTab=b.dataset.tab; sfx('click'); renderSheet(); });
   sheet.querySelectorAll('details[data-fold]').forEach(d=>d.ontoggle=()=>{ if(foldOpen[d.dataset.fold]!==d.open) foldOpen[d.dataset.fold]=d.open; });
   sheet.querySelectorAll('[data-hsub]').forEach(b=>b.onclick=()=>{ hotelSub=b.dataset.hsub; sfx('click'); renderSheet(); sheet.scrollTop=0; });
-  sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
+  sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireCandidates(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));
   sheet.querySelectorAll('[data-upg]').forEach(b=>b.onclick=()=>buyUpg(b.dataset.upg));
   sheet.querySelectorAll('[data-upgmax]').forEach(b=>b.onclick=()=>buyUpgMax(b.dataset.upgmax));
@@ -6894,7 +6986,8 @@ function progressHtml(next){
 }
 function moveKeys(){
   const d=state.day, speed=d<=15?3:d<=22?2:d<=30?1:0, guests=Math.min(3,Math.floor((state.served||0)/60)), st=stars()>=5?1:0;
-  return {base:3,speed,guests,st,total:3+speed+guests+st};
+  const raw=3+speed+guests+st, legend=Math.round(raw*(diffKeyMul()-1));
+  return {base:3,speed,guests,st,legend,total:raw+legend};
 }
 function legacyCost(k){ const lv=(state.legacy||{})[k]||0; return lv>=LEGACY[k].max?null:LEGACY_COST[lv]; }
 function applyLegacyStart(s){
@@ -6928,13 +7021,13 @@ function confirmMove(){
   const next=CITIES[(state.city+1)%CITIES.length], K=moveKeys();
   const line=(t,v)=>v?`<div class="row" style="padding:4px 8px"><div class="tx">${t}</div><b>+${v} 🗝️</b></div>`:'';
   openModal(`<h3>🚚 ${next.e||''} ${next.name}'ya taşın</h3><p class="sub">Yeni şehirde sıfırdan bir otel kuracaksın: gelirler x${next.mult}, kalıcı +%15 gelir ve miras bonusların seninle gelir. Paranın %10'u (${fmt(moveCarry())} ₺) sermaye olarak taşınır.</p>
-    ${line('Otel tamamlandı',K.base)}${line(`Hızlı bitirdin (${state.day}. gün)`,K.speed)}${line(`${fmt(state.served)} misafir ağırladın`,K.guests)}${line('5 yıldız',K.st)}
+    ${line('Otel tamamlandı',K.base)}${line(`Hızlı bitirdin (${state.day}. gün)`,K.speed)}${line(`${fmt(state.served)} misafir ağırladın`,K.guests)}${line('5 yıldız',K.st)}${line(diffBadge()+' zorluk bonusu',K.legend)}
     <div class="row" style="padding:4px 8px;border:2px solid var(--gold2)"><div class="tx"><b>Toplam</b></div><b>🗝️ ${K.total}</b></div>
     <button class="btn wide" id="mvYes">Taşın!</button><button class="btn ghost wide" id="mvNo">Vazgeç</button>`,m=>{
     m.querySelector('#mvNo').onclick=closeModal;
     m.querySelector('#mvYes').onclick=()=>{ const ni=state.city+1, s=freshState(ni,state.prestige+1); s.sound=state.sound; s.music=state.music; s.custom=Object.assign({},state.custom); s.vol=state.vol; s.gfx=state.gfx; s.lvl=state.lvl; s.xp=state.xp; s.ach=state.ach; s.stats=state.stats; s.tut=TUT.length; s.tips=state.tips;
       ['lowFx','ezan','diff','gfxAuto','stayPol','rules','mgrs','streak','leagueWins','charity','seenVer','sandbox'].forEach(k=>{ if(state[k]!==undefined&&k!=='sandbox') s[k]=JSON.parse(JSON.stringify(state[k])); });   // ayarlar, zincir müdürleri, seri, unvan taşınır
-      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.album=state.album; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
+      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.album=state.album; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served,diff:diffBadge()}]); applyLegacyStart(s);
       state=s; save(); location.reload(); };
   });
 }
@@ -7284,7 +7377,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); bootGfx4(); bootEndgame(); bootBriefing(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); bootGfx4(); bootEndgame(); bootBriefing(); bootNext(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

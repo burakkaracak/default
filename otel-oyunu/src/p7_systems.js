@@ -180,9 +180,9 @@ function updateDesk(dt){
 // TIME, DAY END, SPAWNING, BREAKDOWNS
 // =====================================================================
 function updateTime(dt){ state.t+=dt/DAY_SEC; if(state.t>=1){ state.t-=1; endDay(); } }
-function wageScale(){ return city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
+function wageScale(){ return diffWageMul()*city().mult*(1+0.35*(stars()-1))*(1+Math.floor(nRoomsAll()/6)*0.2); }
 function staffWage(k){ const s=state.staff[k]; return STAFF[k].wage*(1+0.3*(s.lvl-1))*wageScale()*invWage()*nightWageMul()*(1-0.12*skillLv('o4')); }
-function wagesToday(){ let w=crewPremium(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
+function wagesToday(){ let w=crewPremium()+traitWageDelta(); for(const k in STAFF) w+=state.staff[k].n*staffWage(k); return Math.round(w); }
 function endDay(){
   repDrift(state.today); const w=wagesToday(); state.money-=w; state.today.wages=w; depthDayEnd();
   const rep=Object.assign({},state.today), day=state.day, repNow=state.rep;
@@ -190,7 +190,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd();
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }
@@ -318,7 +318,7 @@ function updateSpawner(dt){
 let brkT=70;
 function updateBreakdowns(dt){
   brkT-=dt; if(brkT>0) return; brkT=rnd(55,95);
-  const ids=roomsWhere(id=>!state.rooms[id].broken); if(ids.length<3||Math.random()>0.55) return;
+  const ids=roomsWhere(id=>!state.rooms[id].broken); if(ids.length<3||Math.random()>0.55*diffBreakMul()) return;
   const id=rand(ids); state.rooms[id].broken=true; applyRoomState(id);
   toast(`🔧 Oda ${id} arızalandı!`,'bad'); sfx('fail'); tutEvent('broken'); markSave();
 }

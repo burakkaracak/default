@@ -185,7 +185,7 @@ function renderSheet(){
           ${hc==null?'<button class="btn" disabled>Dolu</button>':!built('staff')?'<button class="btn" disabled>🔒 Personel<br>odası gerekli</button>':!needOk?`<button class="btn" disabled>🔒 Önce<br>${PADMAP[S.needs]?PADMAP[S.needs].label:S.needs}</button>`:`<button class="btn" data-hire="${k}" ${state.money<hc?'disabled':''}>İşe al<br>${fmt(hc)} ₺</button>`}
           ${s.n>0&&lc!=null?`<button class="btn gold" data-lvl="${k}" ${state.money<lc?'disabled':''}>Hız ↑ ${fmt(lc)}</button>${(()=>{ const M=staffLvlMaxInfo(k); return M.n>1?`<button class="btn" data-lvlmax="${k}">MAX +${M.n} · ${fmt(M.c)}</button>`:''; })()}`:''}
         </div></div>`; }
-    h+=staffHtml2()+staffExtraHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
+    h+=staffHtml2()+staffExtraHtml()+crewHtml()+`<p class="note">Maaşlar her sabah 07:00'de ödenir.</p>`;
   } else if(mgmtTab==='me'){
     let lastG=-1;
     for(const k of upgOrder()){ const U=UPG[k], lv=state.up[k], c=upgCost(k), max=U.costs.length;
@@ -215,7 +215,7 @@ function renderSheet(){
   sheet.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ mgmtTab=b.dataset.tab; sfx('click'); renderSheet(); });
   sheet.querySelectorAll('details[data-fold]').forEach(d=>d.ontoggle=()=>{ if(foldOpen[d.dataset.fold]!==d.open) foldOpen[d.dataset.fold]=d.open; });
   sheet.querySelectorAll('[data-hsub]').forEach(b=>b.onclick=()=>{ hotelSub=b.dataset.hsub; sfx('click'); renderSheet(); sheet.scrollTop=0; });
-  sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireStaff(b.dataset.hire));
+  sheet.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>hireCandidates(b.dataset.hire));
   sheet.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>staffLvl(b.dataset.lvl));
   sheet.querySelectorAll('[data-upg]').forEach(b=>b.onclick=()=>buyUpg(b.dataset.upg));
   sheet.querySelectorAll('[data-upgmax]').forEach(b=>b.onclick=()=>buyUpgMax(b.dataset.upgmax));
@@ -255,7 +255,8 @@ function progressHtml(next){
 }
 function moveKeys(){
   const d=state.day, speed=d<=15?3:d<=22?2:d<=30?1:0, guests=Math.min(3,Math.floor((state.served||0)/60)), st=stars()>=5?1:0;
-  return {base:3,speed,guests,st,total:3+speed+guests+st};
+  const raw=3+speed+guests+st, legend=Math.round(raw*(diffKeyMul()-1));
+  return {base:3,speed,guests,st,legend,total:raw+legend};
 }
 function legacyCost(k){ const lv=(state.legacy||{})[k]||0; return lv>=LEGACY[k].max?null:LEGACY_COST[lv]; }
 function applyLegacyStart(s){
@@ -289,13 +290,13 @@ function confirmMove(){
   const next=CITIES[(state.city+1)%CITIES.length], K=moveKeys();
   const line=(t,v)=>v?`<div class="row" style="padding:4px 8px"><div class="tx">${t}</div><b>+${v} 🗝️</b></div>`:'';
   openModal(`<h3>🚚 ${next.e||''} ${next.name}'ya taşın</h3><p class="sub">Yeni şehirde sıfırdan bir otel kuracaksın: gelirler x${next.mult}, kalıcı +%15 gelir ve miras bonusların seninle gelir. Paranın %10'u (${fmt(moveCarry())} ₺) sermaye olarak taşınır.</p>
-    ${line('Otel tamamlandı',K.base)}${line(`Hızlı bitirdin (${state.day}. gün)`,K.speed)}${line(`${fmt(state.served)} misafir ağırladın`,K.guests)}${line('5 yıldız',K.st)}
+    ${line('Otel tamamlandı',K.base)}${line(`Hızlı bitirdin (${state.day}. gün)`,K.speed)}${line(`${fmt(state.served)} misafir ağırladın`,K.guests)}${line('5 yıldız',K.st)}${line(diffBadge()+' zorluk bonusu',K.legend)}
     <div class="row" style="padding:4px 8px;border:2px solid var(--gold2)"><div class="tx"><b>Toplam</b></div><b>🗝️ ${K.total}</b></div>
     <button class="btn wide" id="mvYes">Taşın!</button><button class="btn ghost wide" id="mvNo">Vazgeç</button>`,m=>{
     m.querySelector('#mvNo').onclick=closeModal;
     m.querySelector('#mvYes').onclick=()=>{ const ni=state.city+1, s=freshState(ni,state.prestige+1); s.sound=state.sound; s.music=state.music; s.custom=Object.assign({},state.custom); s.vol=state.vol; s.gfx=state.gfx; s.lvl=state.lvl; s.xp=state.xp; s.ach=state.ach; s.stats=state.stats; s.tut=TUT.length; s.tips=state.tips;
       ['lowFx','ezan','diff','gfxAuto','stayPol','rules','mgrs','streak','leagueWins','charity','seenVer','sandbox'].forEach(k=>{ if(state[k]!==undefined&&k!=='sandbox') s[k]=JSON.parse(JSON.stringify(state[k])); });   // ayarlar, zincir müdürleri, seri, unvan taşınır
-      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.album=state.album; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served}]); applyLegacyStart(s);
+      s.keys=(state.keys||0)+K.total; s.money+=moveCarry(); s.album=state.album; s.legacy=Object.assign({},state.legacy); s.hist=(state.hist||[]).concat([{city:state.city,days:state.day,stars:stars(),served:state.served,diff:diffBadge()}]); applyLegacyStart(s);
       state=s; save(); location.reload(); };
   });
 }
@@ -645,7 +646,7 @@ function boot(){
   player.place(state.player.x,state.player.z,Math.min(state.player.f,floorsBuilt()-1)); unstick(player);
   cam.tx=player.x; cam.tz=player.z-0.8; cam.ty=player.y;
   for(const k in STAFF) for(let i=0;i<state.staff[k].n;i++) spawnStaff(k,false);
-  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); bootGfx4(); bootEndgame(); bootBriefing(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
+  tagAdd({kind:'desk'}); tagAdd({kind:'work'}); bootExtras(); bootDepth(); bootDepth2(); bootGfx2(); bootPolish3(); streakCheck(); bootContent(); bootMescit(); bootCity(); bootWorld(); bootGfx4(); bootEndgame(); bootBriefing(); bootNext(); try{ mergeOutdoorStatic(); }catch(e){ console.warn(e); } bootGfx3();
   updateCarryUI(); updateHUD(); applyFloorVis();
   requestAnimationFrame(t=>{ last=t; frame(t); });
   setTimeout(()=>{ const b=$('boot'); b.style.opacity='0'; setTimeout(()=>b.remove(),500);

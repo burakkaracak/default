@@ -61,7 +61,7 @@ function nightStaffMul(){ return isNight()&&!state.nightShift?0.5:1; }
 function nightWageMul(){ return state.nightShift?1.25:1; }
 function moraleDay(){
   if(!built('staff')||!staffEnts.length) return; let d=0; const avgE=staffEnts.reduce((a,e)=>a+(e.energy??100),0)/staffEnts.length;
-  d+=state.breakroom?2:0; d+=avgE<40?-5:1; d+=state.money<0?-6:0; d+=state.nightShift?-1:0; if(state.leaveDenied===state.day-1) d-=6;
+  d+=state.breakroom?2:0; d+=traitMoraleDelta(); d+=avgE<40?-5:1; d+=state.money<0?-6:0; d+=state.nightShift?-1:0; if(state.leaveDenied===state.day-1) d-=6;
   state.morale=clamp(morale()+d,0,100);
   if(stars()<3||state.sandbox) return;   // grev ve izin talepleri 3★'dan sonra
   if(morale()<25&&Math.random()<0.5){ state.strike=60; banner('✊ Personel grevde!','Moral çok düştü · sabah brifinginden prim verebilirsin'); morningAdd({k:'strike'}); }

@@ -16,6 +16,7 @@ with sync_playwright() as p:
     pg.evaluate("state.money=500"); pg.wait_for_timeout(600)
     print('3) para 500 oldu (panel hâlâ açık):',btn())
     pg.click('#sheet [data-hire=clean]'); pg.wait_for_timeout(300)
+    print('   aday penceresi:',pg.evaluate("modal.querySelectorAll('[data-cand]').length"),'aday'); pg.click('#modal [data-cand="0"]'); pg.wait_for_timeout(300)   # MG10: önce iki aday, biri seçilir
     print('4) işe alındı:',pg.evaluate('state.staff.clean.n'),'temizlikçi, para',pg.evaluate('state.money'))
     print('ERRORS:',errs)
     b.close()
