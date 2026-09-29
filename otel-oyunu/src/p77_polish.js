@@ -155,8 +155,8 @@ function trackFps(rawDt){
   if(document.hidden||rawDt>0.5) return; fpsWarm+=rawDt; if(fpsWarm<8) return;
   fpsAcc+=rawDt; fpsN++;
   if(fpsAcc>=4){ const fps=fpsN/fpsAcc; fpsAcc=0; fpsN=0;
-    if(state.gfxAuto!==false&&fps<27){ const q=gfxLevel(); const nq=q==='high'?'mid':q==='mid'?'low':null;
-      if(nq){ state.gfx=nq; applyGfx(); fpsWarm=0; toast(`⚙️ Daha akıcı oyun için grafik ${nq==='mid'?'Orta':'Düşük'} kaliteye alındı`); save(); } } }
+    if(state.gfxAuto!==false&&fps<27){ const q=gfxLevel(); const nq=q==='ultra'?'high':q==='high'?'mid':q==='mid'?'low':null;
+      if(nq){ state.gfx=nq; applyGfx(); fpsWarm=0; toast(`⚙️ Daha akıcı oyun için grafik ${nq==='high'?'Yüksek':nq==='mid'?'Orta':'Düşük'} kaliteye alındı`); save(); } } }
 }
 
 // ---------- save export / import ----------

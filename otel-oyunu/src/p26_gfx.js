@@ -53,7 +53,7 @@ function updateClouds(t,dayF){
 // ---------- instanced grass tufts on the lawns ----------
 let grassMesh=null;
 function buildGrass(){
-  const n=gfxLevel()==='high'?2600:gfxLevel()==='mid'?1300:0; if(!n) return;
+  const n=gfxHigh()?2600:gfxLevel()==='mid'?1300:0; if(!n) return;
   const blade=new THREE.ConeGeometry(0.035,0.2,3); blade.translate(0,0.1,0);
   const parts=[]; for(let k=0;k<3;k++){ const b=blade.clone(); b.rotateZ((k-1)*0.35); b.rotateY(k*2.1); b.translate((k-1)*0.03,0,(k%2)*0.03); parts.push(b.toNonIndexed()); }
   const geo=mergeGeos(parts);
@@ -80,7 +80,7 @@ function updateGrassSeason(){
 // ---------- post-processing (high quality only) ----------
 const POST_BASE='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/';
 const POST_FILES=['shaders/CopyShader.js','postprocessing/EffectComposer.js','postprocessing/RenderPass.js','postprocessing/ShaderPass.js',
-  'shaders/LuminosityHighPassShader.js','postprocessing/UnrealBloomPass.js','shaders/SAOShader.js','shaders/DepthLimitedBlurShader.js','shaders/UnpackDepthRGBAShader.js','postprocessing/SAOPass.js','objects/Reflector.js','objects/Lensflare.js'];
+  'shaders/LuminosityHighPassShader.js','postprocessing/UnrealBloomPass.js','shaders/SAOShader.js','shaders/DepthLimitedBlurShader.js','shaders/UnpackDepthRGBAShader.js','postprocessing/SAOPass.js','objects/Reflector.js','objects/Lensflare.js','shaders/BokehShader.js','postprocessing/BokehPass.js','shaders/SMAAShader.js','postprocessing/SMAAPass.js'];
 let postState='none', composer=null, saoPass=null, bloomPass=null, gradePass=null;
 function loadPost(){
   if(postState!=='none') return; postState='loading'; let i=0;
@@ -89,9 +89,9 @@ function loadPost(){
   next();
 }
 const GradeShader={
-  uniforms:{tDiffuse:{value:null},vig:{value:0.35},sat:{value:1.1},con:{value:1.1},tilt:{value:1.0},res:{value:new THREE.Vector2(1,1)},warm:{value:0.0},tint:{value:new THREE.Vector3(1,1,1)}},
+  uniforms:{tDiffuse:{value:null},vig:{value:0.35},sat:{value:1.1},con:{value:1.1},tilt:{value:1.0},res:{value:new THREE.Vector2(1,1)},warm:{value:0.0},tint:{value:new THREE.Vector3(1,1,1)},grain:{value:0.0},time:{value:0.0}},
   vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-  fragmentShader:`uniform sampler2D tDiffuse; uniform float vig,sat,con,tilt,warm; uniform vec2 res; uniform vec3 tint; varying vec2 vUv;
+  fragmentShader:`uniform sampler2D tDiffuse; uniform float vig,sat,con,tilt,warm,grain,time; uniform vec2 res; uniform vec3 tint; varying vec2 vUv;
     void main(){
       vec3 c=texture2D(tDiffuse,vUv).rgb;
       float d=abs(vUv.y-0.46); float b=smoothstep(0.2,0.62,d)*tilt;
@@ -101,6 +101,7 @@ const GradeShader={
         c=acc/wsum; }
       float l=dot(c,vec3(.2126,.7152,.0722)); c=mix(vec3(l),c,sat);
       c=(c-0.18)*con+0.18; c=max(c,0.)*tint;
+      if(grain>0.){ float n=fract(sin(dot(vUv*res+vec2(time,time*1.7),vec2(12.9898,78.233)))*43758.5453); c+=(n-0.5)*grain; }   // ultra: film greni
       vec2 q=vUv-0.5; q.x*=res.x/res.y*0.7; float v=smoothstep(0.95,0.25,length(q)); c*=mix(1.,v,vig);
       gl_FragColor=LinearTosRGB(vec4(c,1.));
     }`};
@@ -116,29 +117,31 @@ function buildComposer(){
   Object.assign(saoPass.params,{saoBias:0.9,saoIntensity:0.04,saoScale:9,saoKernelRadius:40,saoMinResolution:0,saoBlur:true,saoBlurRadius:6,saoBlurStdDev:3.5,saoBlurDepthCutoff:0.008});
   composer.addPass(saoPass);
   bloomPass=new THREE.UnrealBloomPass(new THREE.Vector2(w/2,h/2),0.25,0.55,0.86); composer.addPass(bloomPass);
+  bokehPass=ultraBokeh(); if(bokehPass) composer.addPass(bokehPass);   // ultra: FP alan derinliği (renderFrame'de açılır)
   gradePass=new THREE.ShaderPass(GradeShader); gradePass.uniforms.res.value.set(w,h); composer.addPass(gradePass);
+  smaaPass=ultraSmaa(w,h,ms); if(smaaPass) composer.addPass(smaaPass);   // ultra: MSAA yoksa SMAA
 }
 function resizeComposer(){
   if(!composer) return; const pr=renderer.getPixelRatio(), w=Math.floor(window.innerWidth*pr), h=Math.floor(window.innerHeight*pr);
-  composer.setSize(w,h); gradePass.uniforms.res.value.set(w,h);
+  composer.setSize(w,h); gradePass.uniforms.res.value.set(w,h); if(smaaPass&&smaaPass.setSize) smaaPass.setSize(w,h);
 }
 function renderFrame(){
-  if(composer&&gfxLevel()==='high'){
+  if(composer&&gfxHigh()){
     const nf=typeof nightF==='number'?nightF:0;
     bloomPass.strength=0.2+nf*0.25; bloomPass.threshold=0.97-nf*0.12;
-    gradePass.uniforms.tilt.value=fpMode?0:1; gradePass.uniforms.tint.value.copy(seasonTint);
+    gradePass.uniforms.tilt.value=fpMode?0:1; gradePass.uniforms.tint.value.copy(seasonTint); ultraFrame();
     composer.render();
   } else renderer.render(scene,camera);
 }
 // ---------- apply the chosen level ----------
 function applyGfx(){
   const q=gfxLevel();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,q==='low'?1:q==='mid'?1.75:1.6));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,q==='low'?1:q==='mid'?1.75:q==='ultra'?2:1.6));
   renderer.setSize(window.innerWidth,window.innerHeight,false);
   const sm=q==='low'?1024:q==='mid'?2048:4096;
   if(sun.shadow.mapSize.x!==sm){ sun.shadow.mapSize.set(sm,sm); if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map=null; } }
   if(q==='low'){ if(scene.environment){ scene.environment=null; envMats.forEach(m=>m.needsUpdate=true); } }
   else if(!scene.environment){ scene.environment=buildEnvMap().texture; scanEnvMats(); envMats.forEach(m=>m.needsUpdate=true); envF=-1; }
-  if(q==='high'){ if(postState==='none') loadPost(); else if(postState==='ready'){ buildComposer(); resizeComposer(); } }
+  if(q==='high'||q==='ultra'){ if(postState==='none') loadPost(); else if(postState==='ready'){ buildComposer(); resizeComposer(); } }
 }
 function bootGfx(){ buildCloudShadows(); buildGrass(); updateGrassSeason(); applyGfx(); }

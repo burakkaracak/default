@@ -84,7 +84,7 @@ function upgradeCharMat(){
 // ---------- lobide ışık huzmesinde toz ----------
 let dustPts=null;
 function buildDust(){
-  if(dustPts||gfxLevel()!=='high') return; const n=160, pos=new Float32Array(n*3); for(let i=0;i<n;i++){ pos[i*3]=rnd(-6.5,6.5); pos[i*3+1]=rnd(0.3,2.6); pos[i*3+2]=rnd(3,7.3); }
+  if(dustPts||!gfxHigh()) return; const n=160, pos=new Float32Array(n*3); for(let i=0;i<n;i++){ pos[i*3]=rnd(-6.5,6.5); pos[i*3+1]=rnd(0.3,2.6); pos[i*3+2]=rnd(3,7.3); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
   dustPts=new THREE.Points(g,new THREE.PointsMaterial({color:0xfff1c4,size:0.035,transparent:true,opacity:0.5,depthWrite:false,blending:THREE.AdditiveBlending})); floorRoot(0).add(dustPts);
 }

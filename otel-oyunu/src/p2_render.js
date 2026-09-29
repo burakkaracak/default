@@ -6,6 +6,8 @@ const gameEl=$('game');
 const LOWQ=Math.min(window.innerWidth,window.innerHeight)<560;
 const GFX_DEFAULT=(IS_TOUCH||LOWQ)?'mid':'high';
 function gfxLevel(){ return state.gfx||GFX_DEFAULT; }
+function gfxHigh(){ const q=gfxLevel(); return q==='high'||q==='ultra'; }   // post/yansıma/gece ışığı: high VE ultra
+function gfxUltra(){ return gfxLevel()==='ultra'; }
 const GFX0=gfxLevel();
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,GFX0==='low'?1:LOWQ?1.75:2));
