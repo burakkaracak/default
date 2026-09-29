@@ -30,8 +30,8 @@ function renderTags(){
         else if(s.tip>0) html='<div class="bubble small">💵</div>';
         else show=false; break; }
       case 'desk':{ x=L.desk.x; y=2.0; z=L.desk.z; f=0;
-        if(deskState.noPower) html='<div class="bubble warn small">⚡ Elektrik yok!</div>';
-        else if(deskState.noRoom) html='<div class="bubble warn small">🛏️ Hazır oda yok!</div>';
+        if(deskState.noPower) html='<div class="bubble warn small txt">⚡ Elektrik yok!</div>';
+        else if(deskState.noRoom) html='<div class="bubble warn small txt">🛏️ Hazır oda yok!</div>';
         else if(deskState.p>0) html=`<div class="ring" style="--p:${deskState.p.toFixed(2)}"><span>🛎️</span></div>`;
         else if(queue[0]&&queue[0].state==='queue'&&!deskState.server) html='<div class="bubble req">🛎️</div>';
         else show=false; break; }

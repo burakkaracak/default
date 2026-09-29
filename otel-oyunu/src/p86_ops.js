@@ -48,7 +48,7 @@ function askUi(){
   if(askEl) return askEl;
   const st=document.createElement('style'); st.textContent=`#deskAsk{position:fixed;left:50%;bottom:calc(118px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:40;width:min(420px,calc(100vw - 24px));background:rgba(22,26,40,.94);border:1px solid rgba(255,215,120,.45);border-radius:16px;padding:10px 12px;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);transition:.25s;font-size:14px}
 #deskAsk.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}#deskAsk .q{margin-bottom:8px;line-height:1.35}#deskAsk .q small{display:block;color:#b9c0d6;font-size:12px}
-#deskAsk .bt{display:flex;gap:6px}#deskAsk .bt button{flex:1;padding:8px 4px;font-size:13px;line-height:1.2}#deskAsk .tm{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}#deskAsk .tm i{display:block;height:100%;background:var(--gold2,#ffd24a)}
+#deskAsk .bt{display:flex;gap:6px}#deskAsk .bt button{flex:1;padding:8px 4px;font-size:13px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}#deskAsk .tm{height:3px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}#deskAsk .tm i{display:block;height:100%;background:var(--gold2,#ffd24a)}
 #deskAsk .al{display:block;margin-top:6px;font-size:12px;color:#b9c0d6;text-align:center;cursor:pointer;text-decoration:underline}`;
   document.head.appendChild(st); askEl=document.createElement('div'); askEl.id='deskAsk'; document.body.appendChild(askEl);
   askEl.addEventListener('pointerdown',e=>e.stopPropagation()); return askEl;
