@@ -3,7 +3,7 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 CHROME=os.environ.get('CHROME') or (sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))+['chromium'])[0]
 import sys
 SP=HERE+'/'
-P=['p1_core','p2_render','p26_gfx','p3_world','p4_nav','p5_chars','p6_ents','p7_systems','p75_extras','p76_features','p77_polish','p78_mega','p79_mega2','p80_depth','p81_depth2','p82_events','p83_gfx2','p84_ai2','p85_polish3','p86_ops','p87_live','p88_flow','p89_econ','p90_ui','p91_real','p92_view','p93_content','p94_mescit','p95_perf','p96_gfx3','p97_city','p98_ops2','p99_world','p9a_gfx4','p9b_endgame','p9c_next','p9d_gfx5','p9e_loda','p9f_curve','p8_ui']
+P=['p1_core','p2_render','p26_gfx','p3_world','p4_nav','p5_chars','p6_ents','p7_systems','p75_extras','p76_features','p77_polish','p78_mega','p79_mega2','p80_depth','p81_depth2','p82_events','p83_gfx2','p84_ai2','p85_polish3','p86_ops','p87_live','p88_flow','p89_econ','p90_ui','p91_real','p92_view','p93_content','p94_mescit','p95_perf','p96_gfx3','p97_city','p98_ops2','p99_world','p9a_gfx4','p9b_endgame','p9c_next','p9d_gfx5','p9e_loda','p9f_curve','p9g_story','p8_ui']
 # güvenlik: parçalar tek script'te birleştiği için aynı adlı iki üst düzey `function` sessizce birbirini ezer
 # (v46-47'de p96 updateSky gece aydınlatmasını böyle bozmuştu) -> build durur
 import re as _re, collections as _col

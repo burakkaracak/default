@@ -12,6 +12,7 @@ window.botBuy=()=>{ state.stayPol='yes'; state.obIx=1; if(morale()<35&&state.mon
   for(const k of ['speed','cap','magnet']){ const M=upgMaxInfo(k); if(M.n>=2&&state.money>M.c*3) buyUpgMax(k); } if(stars()>=4) for(const k in INV){ const c=invCost(k); if(c!=null&&state.money>c*2.5&&!wageShort(c)){ buyInv(k,true); break; } }
   if(stars()>=3&&!galOn()&&state.money>galCost()*2.5&&!wageShort(galCost())) buyGallery(); if(galOn()) for(const k in VITRIN){ if(!vitOn(k)&&state.money>r10(VITRIN[k].cost*cm())*3){ buyVitrin(k); break; } }
   if(prjOpen()){ for(const k in PRJ){ const c=prjCost(k); if(c!=null&&state.money>c*2&&!wageShort(c)){ buyPrj(k,true); break; } } if(state.money>charityCost()*4&&!wageShort(charityCost())) donate(); }
+  if(state.saga&&state.saga.pend) sagaChoose(Math.random()<0.6?'a':'b');
   if(state.quests) state.quests.list.forEach((q,i)=>{ if(q.done&&!q.claimed) claimQuest(i); });
   if(built('staff')){
     const plan=[['clean',1],['rec',1],['bell',1],['clean',2],['tech',1],['clean',3],['bell',2],['clean',4],['tech',2],['bell',3],['cook',1],['spaT',1],['laundry',1]];
