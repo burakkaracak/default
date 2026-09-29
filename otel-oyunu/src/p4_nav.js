@@ -8,7 +8,7 @@ const navDirty=[true,true,true,true,true];
 function rebuildColIndex(){ colByFloor.forEach(a=>a.length=0); for(const t in COLS) for(const c of COLS[t]) colByFloor[c[0]].push(c); }
 function addCols(tag,list){ if(COLS[tag]) COLS[tag].forEach(c=>navDirty[c[0]]=true); COLS[tag]=list; list.forEach(c=>navDirty[c[0]]=true); rebuildColIndex(); }
 function removeCols(tag){ if(!COLS[tag]) return; COLS[tag].forEach(c=>navDirty[c[0]]=true); delete COLS[tag]; rebuildColIndex(); }
-function walkRects(f){ return f===4?[[-6.88,6.88,-6.2,2.62],[4.92,6.28,2.45,4.12]]:f===0?[[-17.3,17.3,BACK-0.12,12.75]]:[[-6.88,6.88,BACK+0.1,2.62],[4.92,6.28,2.45,4.12]]; }
+function walkRects(f){ return f===4?[[-6.88,6.88,-6.2,2.62],[4.92,6.28,2.45,4.12]]:f===0?[[-17.3,17.3,BACK-0.12,12.75],[-1.3,1.3,12.6,18.9],[-30,30,17.5,18.9],[GAL.x-4.1,GAL.x+4.1,17.5,GAL.z-2.05]]:[[-6.88,6.88,BACK+0.1,2.62],[4.92,6.28,2.45,4.12]]; }
 function inWalk(f,x,z,m=0){ for(const r of walkRects(f)) if(x>=r[0]+m&&x<=r[1]-m&&z>=r[2]+m&&z<=r[3]-m) return true; return false; }
 function blockedAt(f,x,z,r){
   if(!inWalk(f,x,z,0.05)) return true;
@@ -22,7 +22,7 @@ function blockedAt(f,x,z,r){
 const CELL=0.3, NAV_R=0.22;
 const grids=[];
 function gridFor(f){
-  if(!grids[f]){ const r=f===0?[-17.4,17.4,BACK-0.3,12.85]:[-7,7,BACK-0.1,4.25];
+  if(!grids[f]){ const r=f===0?[-30.5,30.5,BACK-0.3,25.2]:[-7,7,BACK-0.1,4.25];
     const w=Math.ceil((r[1]-r[0])/CELL), h=Math.ceil((r[3]-r[2])/CELL), n=w*h;
     grids[f]={f,x0:r[0],z0:r[2],w,h,b:new Uint8Array(n),gs:new Float32Array(n),from:new Int32Array(n),seen:new Uint32Array(n),closed:new Uint32Array(n),stamp:0}; }
   const g=grids[f];

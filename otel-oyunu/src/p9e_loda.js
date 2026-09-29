@@ -56,30 +56,43 @@ function buyVitrin(k){ if(!galOn()||vitOn(k)||!spend(r10(VITRIN[k].cost*cm()))) 
 function lodaCheckout(g){ if(!galOn()||state.sandbox||g.sat<68||Math.random()>galChance()) return; const amt=r10(roomRate(g.room)*incomeMult()*rnd(0.6,1.4)); state.money+=amt; state.today.amen+=amt; state.loda.sales=(state.loda.sales||0)+1; state.loda.rev=(state.loda.rev||0)+amt;
   fxEmoji(g.x,g.y+2.3,g.z,g.f,'🛋️'); if(state.loda.sales%5===0) toast(`LODA Gallery: ${state.loda.sales}. satış · toplam ${fmt(state.loda.rev)} ₺`); onGameEvent('loda',1); }
 let galG=null;
+const GAL_D=4.2, GAL_W=7.2; function galDoor(){ return {x:GAL.x,z:GAL.z-GAL_D/2-0.9,f:0}; }
 function buildGallery(){
-  if(galG){ outdoor.remove(galG); galG=null; } if(!galOn()) return; const g=new THREE.Group(), X=GAL.x, Z=GAL.z, W=7.2, D=4.2, wall=mat(0xf4f4f4,{roughness:.7}), blk=mat(LODA.black,{roughness:.5}), gold=mat(LODA.gold,{metalness:.6,roughness:.35});
-  g.add(mesh(box(W+1,0.06,D+1.4),tmat('paving',4,3),X,0.02,Z));                                       // ön kaldırım
-  // içi boş gövde: zemin + arka duvar + yan duvarlar + tavan (vitrin cam cepheden içerisi görünsün)
-  g.add(mesh(box(W,0.1,D),mat(0x2a2a2a,{roughness:.4,metalness:.1}),X,0.05,Z)); g.add(mesh(box(W,3.0,0.15),wall,X,1.5,Z-D/2+0.075,true));
+  if(galG){ outdoor.remove(galG); galG=null; removeCols('gal'); } if(!galOn()) return; const g=new THREE.Group(), X=GAL.x, Z=GAL.z, W=GAL_W, D=GAL_D, F=Z-D/2, wall=mat(0xf4f4f4,{roughness:.7}), blk=mat(LODA.black,{roughness:.5}), gold=mat(LODA.gold,{metalness:.6,roughness:.35});
+  g.add(mesh(box(W+1.2,0.06,D+2.6),tmat('paving',4,3),X,0.02,Z-0.6));                                   // ön avlu (caddeye doğru)
+  // içi boş gövde: zemin + arka duvar (+z) + yan duvarlar + tavan; CAM CEPHE CADDEYE (−z) BAKAR
+  g.add(mesh(box(W,0.1,D),mat(0x2a2a2a,{roughness:.4,metalness:.1}),X,0.05,Z)); g.add(mesh(box(W,3.0,0.15),wall,X,1.5,Z+D/2-0.075,true));
   [-1,1].forEach(s=>g.add(mesh(box(0.15,3.0,D),wall,X+s*(W/2-0.075),1.5,Z,true))); g.add(mesh(box(W,0.15,D),wall,X,2.93,Z));
   g.add(mesh(box(W+0.2,0.25,D+0.2),blk,X,3.1,Z,true));    // siyah çatı bandı
-  g.add(mesh(box(W-0.6,0.9,0.06),wall,X,2.55,Z+D/2+0.02)); // vitrin üstü alın
-  g.add(mesh(box(W-0.6,2.2,0.06),M.glass,X,1.2,Z+D/2+0.02));                                          // cam vitrin cephe
-  g.add(mesh(box(W,0.5,0.1),blk,X,2.55,Z+D/2+0.05)); const sg=signPlane('LODA',2.4,0.44,{bg:'#111111',fg:'#9C905C',font:'700 92px Montserrat, "Baloo 2", sans-serif',fit:true}); sg.position.set(X,2.55,Z+D/2+0.12); g.add(sg);
-  g.add(mesh(box(W,0.04,0.12),gold,X,2.28,Z+D/2+0.06));                                                 // ince altın çizgi
-  // vitrin içi: koleksiyon parçaları (oda tasarımcısındakiyle aynı çizim, 1.6 ölçek)
-  const show=(k,fin,x,rot=0)=>{ const G0=new THREE.Group(); G0.position.set(X+x,0.08,Z+D/2-0.9); G0.scale.setScalar(1.6); G0.rotation.y=rot; g.add(G0); buildLodaFurn(G0,{k,fin}); };
-  show('l_savana','walnut',-2.4); show('l_sophia','ivory',-0.9,Math.PI*0.1); if(vitOn('domo')) show('l_domo','mink',0.5); if(vitOn('nova')) show('l_nova','oak',1.9); if(vitOn('dali')) show('l_dali','antra',0.6,0);
-  for(let i=0;i<3;i++) g.add(mesh(cyl(0.08,0.08,0.06,12),M.lampOn,X-2.4+i*2.4,2.9,Z+D/2-0.6));           // vitrin spotları
+  g.add(mesh(box(W-0.6,0.9,0.06),wall,X,2.55,F-0.02)); // vitrin üstü alın
+  [-1,1].forEach(s=>g.add(mesh(box((W-0.6)/2-0.6,2.2,0.06),M.glass,X+s*((W-0.6)/4+0.3),1.2,F-0.02)));  // cam vitrinler (kapının iki yanı)
+  g.add(mesh(box(1.2,2.2,0.05),M.glass,X,1.1,F-0.02)); g.add(mesh(box(1.3,0.06,0.1),gold,X,2.22,F-0.03)); [-0.62,0.62].forEach(dx=>g.add(mesh(box(0.06,2.2,0.1),gold,X+dx,1.1,F-0.03))); g.add(mesh(cyl(0.02,0.02,0.5,8),gold,X+0.22,1.05,F-0.09));   // altın çerçeveli cam kapı + kol
+  g.add(mesh(box(W,0.5,0.1),blk,X,2.55,F-0.05)); const sg=signPlane('LODA',2.4,0.44,{bg:'#111111',fg:'#9C905C',font:'700 92px Montserrat, "Baloo 2", sans-serif',fit:true}); sg.position.set(X,2.55,F-0.12); sg.rotation.y=Math.PI; g.add(sg);
+  g.add(mesh(box(W,0.04,0.12),gold,X,2.28,F-0.06));                                                 // ince altın çizgi
+  // vitrin içi: koleksiyon parçaları caddeye dönük (oda tasarımcısındakiyle aynı çizim, 1.6 ölçek)
+  const show=(k,fin,x,rot=0)=>{ const G0=new THREE.Group(); G0.position.set(X+x,0.08,F+0.9); G0.scale.setScalar(1.6); G0.rotation.y=rot+Math.PI; g.add(G0); buildLodaFurn(G0,{k,fin}); };
+  show('l_savana','walnut',-2.4); show('l_sophia','ivory',-1.2,Math.PI*0.1); if(vitOn('domo')) show('l_domo','mink',1.2); if(vitOn('nova')) show('l_nova','oak',2.4); if(vitOn('dali')) show('l_dali','antra',-2.4+0.001,0);
+  for(let i=0;i<3;i++) g.add(mesh(cyl(0.08,0.08,0.06,12),M.lampOn,X-2.4+i*2.4,2.9,F+0.6));           // vitrin spotları
   bakeStatic(g); outdoor.add(g); galG=g;
+  addCols('gal',[[0,X-W/2,X+W/2,Z-D/2,Z+D/2]]);   // duvarlar yürünmez; kapı önü ön avluda
 }
+// yaya geçidi: otel kapısından karşı kaldırıma (x ±1.3) — prestij projeleri ve galeri için yol
+let zebraG=null;
+function buildCrosswalk(){ if(zebraG) return; zebraG=new THREE.Group(); const w=mat(0xf2efe6,{roughness:.9}); for(let i=0;i<8;i++) zebraG.add(mesh(box(2.6,0.012,0.3),w,0,0.03,13.25+i*0.56)); outdoor.add(zebraG); }   // çizgiler yolun enine, geçiş yönü z
+// ziyaret: kapı önünde durunca galeri paneli açılır
+let galVisit=false, galTag=null;
+function visitGallery(){ lastUserT=performance.now(); openModal(`<h3>🛋️ LODA Gallery <button class="xbtn" id="gvX" aria-label="Kapat">✖</button></h3><p class="sub">Loda Mobilya showroomu · İstanbul ${LODA.founded} · 250 çalışan, 15.000 m² üretim</p>${galleryHtml()}<p class="note">Mutlu ayrılan misafirler buradan mobilya alır; vitrin ekledikçe satış şansı artar. 4★'dan sonra ihracat bayileri otelde konaklar.</p>`,m=>{ m.querySelector('#gvX').onclick=closeModal; bindLoda(m); }); }
+function updateGalVisit(){ if(!galOn()||player.f!==0){ galVisit=false; return; } const D=galDoor(), d=Math.hypot(player.x-D.x,player.z-D.z);
+  if(d<1.1&&!galVisit){ galVisit=true; if(!modalWrap.classList.contains('show')) visitGallery(); sfx('click'); } else if(d>2.4) galVisit=false; }
+function goGallery(){ const D=galDoor(); closeSheet&&closeSheet(); closeModal(); if(player.goTo(0,D.x,D.z)) toast('🛋️ Galeriye yürünüyor · yaya geçidinden karşıya'); else toast('Şu an yol bulunamadı','bad'); }
 function galleryHtml(){ const L0=state.loda||{};
   let h=`<div class="ugh"><span style="color:#9C905C">LODA</span> Gallery${galOn()?'':' · 🔒 3★'}</div>`;
   if(!galOn()) return h+`<div class="row"><div class="ic">🛋️</div><div class="tx">Loda Gallery aç<small>Caddenin karşısında Loda Mobilya showroomu (İstanbul ${LODA.founded}): mutlu ayrılan misafirlerin %22'si mobilya alır, satış payı sana · ihracat bayileri otele gelmeye başlar</small></div><button class="btn gold" data-gal ${stars()<3||state.money<galCost()?'disabled':''}>${fmt(galCost())} ₺</button></div>`;
+  h+=`<div class="row"><div class="ic">🚶</div><div class="tx">Showroomu ziyaret et<small>Caddenin karşısında, sol tarafta · yaya geçidinden geç</small></div><button class="btn gold" data-galgo>Yürü</button></div>`;
   h+=`<div class="row"><div class="ic">🛋️</div><div class="tx">Satış şansı %${Math.round(galChance()*100)}<small>${L0.sales||0} satış · ${fmt(L0.rev||0)} ₺ · bayi siparişi ${L0.orders||0}</small></div></div>`;
   for(const k in VITRIN){ const V=VITRIN[k]; h+=`<div class="row"><div class="ic">${V.e}</div><div class="tx">${V.n}<small>Satış şansı +%${Math.round(V.p*100)}</small></div>${vitOn(k)?'<button class="btn" disabled>Var ✓</button>':`<button class="btn gold" data-vit="${k}" ${state.money<r10(V.cost*cm())?'disabled':''}>${fmt(r10(V.cost*cm()))} ₺</button>`}</div>`; }
   return h; }
-function bindLoda(root){ const b=root.querySelector('[data-gal]'); if(b) b.onclick=buyGallery; root.querySelectorAll('[data-vit]').forEach(x=>x.onclick=()=>buyVitrin(x.dataset.vit)); const t=root.querySelector('[data-lodaui]'); if(t) t.onclick=()=>{ state.lodaUI=!state.lodaUI; applyLodaUI(); save(); openSettings(); }; }
+function bindLoda(root){ const b=root.querySelector('[data-gal]'); if(b) b.onclick=buyGallery; const gg=root.querySelector('[data-galgo]'); if(gg) gg.onclick=goGallery; root.querySelectorAll('[data-vit]').forEach(x=>x.onclick=()=>buyVitrin(x.dataset.vit)); const t=root.querySelector('[data-lodaui]'); if(t) t.onclick=()=>{ state.lodaUI=!state.lodaUI; applyLodaUI(); save(); openSettings(); }; }
 
 // ---------- ihracat bayisi ziyareti (Fargotex, AlmiDécor) ----------
 const DEALERS=[{n:'Fargotex alıcısı',c:'Fargotex',e:'🇵🇱'},{n:'AlmiDécor alıcısı',c:'AlmiDécor',e:'🇵🇱'}];
@@ -91,9 +104,9 @@ function dealerCheckout(g){ if(!g.dealer) return; const D=g.dealer; if(g.sat>=68
   else toast(`${D.e} ${D.c} bayisi memnun kalmadı · sipariş çıkmadı`,'bad'); }
 function lodaDayEnd(t){ const L0=state.loda; if(!L0) return; (L0.pend||[]).slice().forEach(o=>{ if(state.day>=o.day){ state.money+=o.amt; t.amen+=o.amt; L0.pend.splice(L0.pend.indexOf(o),1); setTimeout(()=>toast(`📦 ${o.c} teslimatı tamamlandı: +${fmt(o.amt)} ₺`),3000); } }); }
 let dealerT=30;
-function updateLoda(dt){ dealerT-=dt; if(dealerT<=0){ dealerT=45; const h=hourNow(); if(h>=10&&h<=16&&dealerDue()&&!guests.some(g=>g.dealer)) spawnDealer(); } }
+function updateLoda(dt){ updateGalVisit(); dealerT-=dt; if(dealerT<=0){ dealerT=45; const h=hourNow(); if(h>=10&&h<=16&&dealerDue()&&!guests.some(g=>g.dealer)) spawnDealer(); } }
 
 // ---------- Loda tasarım dili (arayüz teması) ----------
 function applyLodaUI(){ document.body.classList.toggle('loda',!!state.lodaUI); }
 function lodaUiHtml(){ return `<button class="btn ghost wide" data-lodaui>◆ Loda tasarım dili: ${state.lodaUI?'Açık':'Kapalı'}</button>`; }
-function bootLoda(){ try{ buildGallery(); applyLodaUI(); }catch(e){ console.warn('loda',e); } }
+function bootLoda(){ buildCrosswalk(); galTag=tagAdd({kind:'spot',get:()=>galOn()?{x:GAL.x,z:GAL.z-GAL_D/2,f:0}:null,iconF:()=>'🛋️',cls:'',y:3.4}); try{ buildGallery(); applyLodaUI(); }catch(e){ console.warn('loda',e); } }

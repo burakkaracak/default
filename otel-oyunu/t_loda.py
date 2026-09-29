@@ -15,6 +15,9 @@ A="""(()=>{ const out=[]; try{ state.tut=99; spawnT=1e9; ADMIN.allOpen(); state.
   let ok=true; try{ buildRoomVisual(id,false); }catch(e){ ok=false; out.push('build err '+e); } out.push('room build no-throw:'+ok);
   // 2) galeri + vitrin
   Object.keys(state.rooms).slice(0,8).forEach(k=>{ const R=RT(+k); if(R.guest){ standUp(R.guest); checkout(R.guest); } upgradeRoomMax(+k); }); state.rep=Math.max(state.rep,85); out.push('stars:'+stars()+' galCost:'+galCost()); const m0=state.money; buyGallery(); out.push('gallery:'+galOn()+' spent:'+(m0-state.money)); buyVitrin('nova'); out.push('vitrin nova:'+vitOn('nova')+' chance:'+galChance().toFixed(2)+' html:'+/LODA<\/span> Gallery/.test(galleryHtml()));
+  // 2b) yol: lobiden yaya geçidiyle galeri kapısına gidilebilir; galeri duvarı yürünmez; Yürü düğmesi var
+  player.x=-4.2; player.z=3.8; player.f=0; player.path=null; const D=galDoor(); out.push('door:'+JSON.stringify(D)+' goTo:'+!!player.goTo(0,D.x,D.z)+' pathLen:'+(player.path?player.path.length:0)+' wall blocked:'+blockedAt(0,GAL.x,GAL.z,0.2)+' crosswalk:'+!!zebraG+' walkBtn:'+/data-galgo/.test(galleryHtml()));
+  player.path=null; player.x=D.x; player.z=D.z; galVisit=false; closeModal(); updateGalVisit(); out.push('visit modal:'+/LODA Gallery/.test(modal.innerHTML)+' open:'+modalWrap.classList.contains('show')); closeModal(); player.x=-4.2; player.z=3.8;
   // 3) satış: mutlu misafir çıkışında gelir
   const g=spawnGuest('tourist'); g.f=0; checkIn(g,id); g.sat=90; Math.random=()=>0.01; const m1=state.money; lodaCheckout(g); Math.random=r0; out.push('sale:'+(state.money>m1)+' sales:'+state.loda.sales);
   // 4) bayi: sipariş + 3 gün sonra teslimat
