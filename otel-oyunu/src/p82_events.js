@@ -65,8 +65,8 @@ let emerg=null;
 function startEmergency(k){
   if(emerg) return;
   if(k==='thief'){ const e=new Ent({skin:rand(SKINS),hair:0x1a1a1a,hs:'short',top:0x1a1a1a,bottom:0x2b2b2b,hat:'cap',hatC:0x1a1a1a,shades:true,bag:0x2b2b2b});
-    e.place(0.3,8.9,0); e.speed=1.6; e.goTo(0,L.piles.desk.x+0.6,L.piles.desk.z+0.8); emerg={k,e,t:32,x:0,z:0};
-    banner('🦹 Lobide hırsız var!','Kasaya ulaşmadan yakala: yanına koş'); sfx('alarm'); camShake(0.15); }
+    e.place(0.3,8.9,0); e.speed=1.6; e.goTo(0,L.piles.desk.x+0.6,L.piles.desk.z+0.8); emerg={k,e,t:32,x:0,z:0,phase:'grab',stolen:0};
+    banner('🦹 Lobide hırsız var!','Kasaya ulaşmadan yakala; kasayı boşaltırsa kaçarken yakala, para geri gelir'); sfx('alarm'); camShake(0.15); }
   else { const spots=[[10.2,7.9],[-12,7.9],[-4.3,9.0],[5.5,10.4]], [x,z]=rand(spots);
     const e=new Ent({skin:rand(SKINS),hair:rand(HAIRC),hs:rand(['short','bun','pony']),top:rand(TOPS),bottom:rand(BOTTOMS),scale:0.62}); e.place(x,z,0);
     emerg={k,e,t:70,carry:false}; banner('😢 Kayıp çocuk!','Çocuğu bul, resepsiyona getir'); sfx('req'); }
@@ -74,8 +74,9 @@ function startEmergency(k){
 }
 function endEmergency(win){
   const m=emerg; if(!m) return; emerg=null; tagRemove(m.tag);
-  if(m.k==='thief'){ if(win){ const b=r10(90*cm()); addMoney(b,m.e.x,1,m.e.z,0,true); changeRep(2); banner('👮 Hırsız yakalandı!',`+2 ün · ${fmt(b)} ₺ ödül`); sfx('star'); confettiAt(m.e.x,1.5,m.e.z,40); onGameEvent('hero',1); m.e.remove(); }
-    else { const s=Math.round(state.piles.desk*0.6); state.piles.desk-=s; pileChanged('desk'); changeRep(-2); banner('🦹 Hırsız kaçtı!',`Kasadan ${fmt(s)} ₺ çalındı · −2 ün`); sfx('fail'); m.e.goTo(0,-16.9,12.15,()=>m.e.remove()); } }
+  if(m.k==='thief'){ if(win){ const b=r10(90*cm()); if(m.stolen>0){ state.piles.desk+=m.stolen; pileChanged('desk'); } addMoney(b,m.e.x,1,m.e.z,0,true); changeRep(2);
+      banner('👮 Hırsız yakalandı!',`${m.stolen>0?'Çalınan '+fmt(m.stolen)+' ₺ kasaya geri kondu · ':''}+2 ün · ${fmt(b)} ₺ ödül`); sfx('star'); confettiAt(m.e.x,1.5,m.e.z,40); onGameEvent('hero',1); m.e.remove(); }
+    else { const s=m.stolen; changeRep(-2); banner('🦹 Hırsız kaçtı!',`Kasadan ${fmt(s)} ₺ çalındı · −2 ün`); sfx('fail'); m.e.remove(); } }
   else { if(win){ const b=r10(60*cm()); addMoney(b,L.serve.cx,1,L.serve.cz,0,true); changeRep(1.5); banner('🤗 Çocuk ailesine kavuştu!',`+1.5 ün · ${fmt(b)} ₺ teşekkür`); sfx('star'); onGameEvent('hero',1); }
     else { changeRep(-2); toast('😢 Çocuğu başka biri buldu · −2 ün','bad'); } m.e.remove(); }
   markSave();
@@ -85,14 +86,18 @@ function updateEmergency(dt){
   const m=emerg, e=m.e; m.t-=dt;
   if(m.k==='thief'){
     if(player.f===0&&d2(player.x,player.z,e.x,e.z)<0.95*0.95){ endEmergency(true); return; }
-    if(!e.path||m.t<=0) endEmergency(false); }
+    if(m.phase==='grab'&&!e.path){   // kasaya ulaştı: parayı alır ve KAÇAR — kaçarken yakalanırsa para geri gelir
+      m.phase='flee'; m.stolen=Math.round(state.piles.desk*0.6); state.piles.desk-=m.stolen; pileChanged('desk'); m.t=Math.max(m.t,24);
+      e.speed=2.0; if(!e.goTo(0,-16.9,12.15,()=>{ if(emerg===m) endEmergency(false); })) endEmergency(false);
+      banner('🦹 Hırsız kasayı boşalttı!',`${fmt(m.stolen)} ₺ ile kaçıyor · çıkışa varmadan yakala`); sfx('alarm'); camShake(0.1); return; }
+    if(m.phase==='flee'&&(!e.path||m.t<=0)) endEmergency(false); }
   else { if(!m.carry){ if(Math.random()<dt*0.6) fxEmoji(e.x,1.3,e.z,0,'😢'); if(player.f===0&&d2(player.x,player.z,e.x,e.z)<0.9*0.9){ m.carry=true; fxEmoji(e.x,1.4,e.z,0,'🙂'); sfx('pick'); } }
     else { e.x+=(player.x-0.5-e.x)*Math.min(1,dt*6); e.z+=(player.z-0.4-e.z)*Math.min(1,dt*6); e.tRot=player.rot; e.moving=player.moving;
       if(player.f===0&&d2(player.x,player.z,L.serve.cx,L.serve.cz)<1.3*1.3){ endEmergency(true); return; } }
     if(m.t<=0) endEmergency(false); }
 }
 function emergencyGoal(){ const m=emerg; if(!m) return null;
-  if(m.k==='thief') return {icon:'🦹',text:`Hırsızı yakala! (${Math.ceil(m.t)} sn)`,target:{x:m.e.x,y:0,z:m.e.z,f:0},crisis:true};
+  if(m.k==='thief') return {icon:'🦹',text:m.phase==='flee'?`Hırsız kaçıyor, ${fmt(m.stolen)} ₺ geri al! (${Math.ceil(m.t)} sn)`:`Hırsızı kasaya varmadan yakala!`,target:{x:m.e.x,y:0,z:m.e.z,f:0},crisis:true};
   return m.carry?{icon:'🧒',text:'Çocuğu resepsiyona getir',target:{x:L.serve.cx,y:0,z:L.serve.cz,f:0},crisis:true}:{icon:'😢',text:`Kayıp çocuğu bul (${Math.ceil(m.t)} sn)`,target:{x:m.e.x,y:0,z:m.e.z,f:0},crisis:true}; }
 
 // ---------- cleaning quality ----------
