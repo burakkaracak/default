@@ -5,7 +5,7 @@
 
 // ---------- akış dengeleyici ----------
 // flow −1 (zorlanıyor → misafir biraz daha sabırlı, daha seyrek) … +1 (rahat → daha çok misafir, daha çok kazanç ve iş)
-const DIFF={easy:{n:'Rahat',v:-0.6},auto:{n:'Otomatik',v:null},hard:{n:'Zorlu',v:0.75}};
+const DIFF={easy:{n:'Rahat',v:-0.6},auto:{n:'Otomatik',v:null},hard:{n:'Zorlu',v:0.75},legend:{n:'🔥 Efsane',v:1.2}};
 function flowV(){ const d=DIFF[state.diff||'auto']; return d.v!=null?d.v:(state.flow||0); }
 function flowSpawnMul(){ return 1-0.2*flowV(); }            // spawnT çarpanı
 function flowPatMul(){ return 1+0.16*flowV(); }             // sabır tükenme hızı çarpanı
@@ -31,7 +31,7 @@ function flowLabel(){ const v=flowV(); return v<=-0.4?'😌 sakin':v>=0.4?'🔥 
 function flowHtml(){
   const k=state.diff||'auto';
   return `<div class="row"><div class="ic">🎚️</div><div class="tx">Oyun temposu · şu an ${flowLabel()}<small>Otomatik: zorlanırsan misafirler sabırlı olur, rahatlarsan daha çok misafir ve kazanç gelir</small></div></div>
-    <div style="display:flex;gap:6px;margin:-4px 0 10px">${Object.keys(DIFF).map(d=>`<button class="btn ${k===d?'gold':'ghost'}" data-diff="${d}" style="flex:1">${DIFF[d].n}</button>`).join('')}</div>`;
+    <div style="display:flex;gap:6px;margin:-4px 0 10px">${Object.keys(DIFF).map(d=>`<button class="btn ${k===d?'gold':'ghost'}" data-diff="${d}" style="flex:1">${DIFF[d].n}</button>`).join('')}</div>`+diffHtml();
 }
 function bindFlow(root){ root.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{ state.diff=b.dataset.diff; sfx('click'); markSave(); renderSheet(); }); }
 

@@ -91,7 +91,7 @@ function spawnGuest(type,from,tour,fl){
   const p=qPos(g.qk); if(!g.goTo(0,p.x,p.z,()=>{ g.tRot=Math.PI; })) g.place(p.x,p.z,0);
   g.tag=tagAdd({kind:'patience',ent:g,y:1.95});
   if(!type&&g.type!=='insp'&&anyThemed()&&Math.random()<0.3) g.pref=rand(Object.keys(RTHEMES));
-  if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3;
+  if(g.type==='elderly') g.speed*=0.72; if(g.type==='athlete') g.speed*=1.3; if(g.type==='team'&&!tour) teamArrive(g);
   if(!type&&state.tut>=TUT.length&&!state.sandbox&&Math.random()<0.025){ g.lucky=true; }
   if(!type&&g.type!=='dog'&&g.type!=='insp'&&state.tut>=TUT.length&&Math.random()<0.06) g.booze=true;
   return g;
@@ -136,7 +136,7 @@ function guestLeave(g){
   if(!g.goTo(0,ex.x,ex.z,()=>g.remove())) g.remove();
 }
 function checkout(g){
-  standUp(g); const id=g.room, s=state.rooms[id], R=RT(id);
+  standUp(g); teamCheckout(g); const id=g.room, s=state.rooms[id], R=RT(id);
   const mood=g.sat>=68?'happy':g.sat>=42?'neutral':'unhappy', mult=g.T.rep||1;
   const tip=mood==='unhappy'?0:Math.round(roomRate(id)*0.45*(g.sat/70)*g.T.tip*incomeMult()*(1+0.15*state.up.charm)*(1+0.15*skillLv('g2')));
   if(tip>0){ s.tip+=tip; state.today.tips+=tip; }
@@ -179,7 +179,7 @@ function tryAmenity(g){
 function endAmenity(g){
   const seat=g.seat, a=seat.amen; seat.busy=null; g.seat=null; g.unpose(); g.x=seat.x; g.z=seat.z;
   const fee=Math.round(AMEN_FEE[a]*incomeMult()*amenBonus(a)); if(amenBonus(a)>1) g.sat=clamp(g.sat+5,0,100); state.piles[a]+=fee; pileChanged(a); state.today.amen+=fee;
-  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen');
+  g.sat=clamp(g.sat+(g.T.likes===a?11:7),0,100); g.amenUsed=(g.amenUsed||[]).concat([a]); qEv('amen'); if(a==='roof') filmShoot(g);
   if(g.visitor){ const x=Math.round(fee*0.5); state.piles[a]+=x; state.today.amen+=x; fxEmoji(g.x,g.y+2.1,g.z,g.f,'👋'); guestLeave(g); return; }
   if(g.stay<=0){ checkout(g); return; }
   const sp=roomSpots(g.room); g.state='toRoom';

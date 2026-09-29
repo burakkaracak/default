@@ -39,9 +39,9 @@ function chainHtml(){
 // ---------- staff careers ----------
 const RANKS=['Çaylak','Deneyimli','Kıdemli','Uzman'], RANK_XP=[0,25,70,160];
 function crewRec(kind){ state.crew=state.crew||{}; const list=state.crew[kind]=state.crew[kind]||[]; const i=staffEnts.filter(x=>x.kind===kind).length;
-  return list[i]||(list[i]={n:rand(STAFF_NAMES),xp:0}); }
+  return list[i]||(list[i]={n:rand(STAFF_NAMES),xp:0,tr:rand(Object.keys(TRAITS))}); }   // aday seçilmeden alındıysa (bot/eski yol) rastgele kişilik
 function rankOf(e){ const x=e.rec?e.rec.xp:0; let r=0; for(let i=1;i<RANK_XP.length;i++) if(x>=RANK_XP[i]) r=i; return r; }
-function careerWorked(e){ if(!e.rec) return; const r0=rankOf(e); e.rec.xp++; const r1=rankOf(e);
+function careerWorked(e){ if(!e.rec) return; const r0=rankOf(e); e.rec.xp+=traitXp(e); const r1=rankOf(e);
   if(r1>r0){ fxEmoji(e.x,e.y+2.3,e.z,e.f,'⭐'); toast(`⭐ ${e.name} terfi etti: ${RANKS[r1]} ${STAFF[e.kind].name} · %${7*r1} hızlı, maaşı +%${8*r1}`); sfx('sparkle'); markSave(); } }
 function crewPremium(){ let w=0; staffEnts.forEach(e=>{ w+=staffWage(e.kind)*0.08*rankOf(e); }); return w; }
 function crewNames(k){ const L0=staffEnts.filter(e=>e.kind===k); return L0.length?`<small>${L0.map(e=>`${escH(e.name)} <span style="color:var(--gold2)">${RANKS[rankOf(e)]}</span>${(e.energy??100)<30?' 😓':''}`).join(' · ')}</small>`:''; }

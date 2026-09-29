@@ -22,7 +22,7 @@ function repDrift(t){
 function repTrendHtml(){ const tg=repTarget(); if(tg==null) return ''; const d=tg-state.rep; return ` <small style="font-size:11px;color:${d>2?'#9dffc0':d<-2?'#ff9d8f':'var(--muted)'}">${d>2?'↑':d<-2?'↓':'→'} ${Math.round(tg)}</small>`; }
 
 // ---------- titiz misafir ----------
-function expectPen(){ return (stars()-1)*2; }                          // 5★: −8 memnuniyet (dekor/tema ile telafi)
+function expectPen(){ return (stars()-1)*2+diffExpect(); }                          // 5★: −8 memnuniyet (dekor/tema ile telafi)
 function waitGrace(){ return Math.max(4,10-(stars()-1)*1.5); }           // bekleme toleransı
 function reqTime(){ return Math.round(48*(1-0.07*(stars()-1))); }       // istek süresi (5★: ~35 sn)
 function wantsView(g){ return stars()>=3&&(g.type==='vip'||g.type==='couple'||g.type==='influencer'||g.type==='business'&&stars()>=4); }

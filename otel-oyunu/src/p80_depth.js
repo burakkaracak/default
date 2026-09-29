@@ -40,7 +40,7 @@ function rivalDayEnd(){
     state.rival={name:rand(RIVAL_NAMES),q:Math.round(38+stars()*7+rnd(-4,6)),price:1,promo:0,bought:false}; buildRival();
     setTimeout(()=>{ banner(`🏢 Rakip otel açıldı: ${state.rival.name}`,'Hemen yanı başında! Misafirlerini kapmaya çalışacak · Yönetim › Otel'); sfx('alarm'); },3600); return; }
   const r=state.rival; if(!rivalOn()) return;
-  r.q=Math.round(clamp(r.q+(state.rep*0.8+22-r.q)*0.15+rnd(-3,4),25,95)); r.price=rand([0.85,0.9,1,1,1.1]);
+  r.q=Math.round(clamp(r.q+(state.rep*0.8+22+diffRivalQ()-r.q)*0.15+rnd(-3,4),25,95)); r.price=rand([0.85,0.9,1,1,1.1]);
   if(Math.random()<0.2){ r.promo=state.day+1;   // rivalDayEnd gün artmadan önce çalışır: indirim YENİ güne
     setTimeout(()=>toast(`📉 ${r.name} bugün büyük indirimde! Misafir kaybın artabilir`,'bad'),4000); }
 }
