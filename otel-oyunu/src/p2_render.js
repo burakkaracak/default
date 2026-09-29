@@ -199,11 +199,11 @@ function signPlane(text,w,h,o){ const m=new THREE.Mesh(plane(w,h),new THREE.Mesh
 // =====================================================================
 function mergeGeos(geos){
   let n=0; geos.forEach(g=>n+=g.attributes.position.count);
-  const pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2); let o=0;
+  const pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2), hasCol=geos.some(g=>g.attributes.color), col=hasCol?new Float32Array(n*3).fill(1):null; let o=0;
   geos.forEach(g=>{ const c=g.attributes.position.count; pos.set(g.attributes.position.array,o*3); nor.set(g.attributes.normal.array,o*3);
-    if(g.attributes.uv) uv.set(g.attributes.uv.array,o*2); o+=c; g.dispose(); });
+    if(g.attributes.uv) uv.set(g.attributes.uv.array,o*2); if(col&&g.attributes.color) col.set(g.attributes.color.array,o*3); o+=c; g.dispose(); });
   const bg=new THREE.BufferGeometry();
-  bg.setAttribute('position',new THREE.BufferAttribute(pos,3)); bg.setAttribute('normal',new THREE.BufferAttribute(nor,3)); bg.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  bg.setAttribute('position',new THREE.BufferAttribute(pos,3)); bg.setAttribute('normal',new THREE.BufferAttribute(nor,3)); bg.setAttribute('uv',new THREE.BufferAttribute(uv,2)); if(col) bg.setAttribute('color',new THREE.BufferAttribute(col,3));   // köşe rengi (bakeFlat) korunur
   bg.computeBoundingSphere(); return bg;
 }
 function bake(root){

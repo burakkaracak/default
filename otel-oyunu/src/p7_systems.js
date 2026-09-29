@@ -190,7 +190,7 @@ function endDay(){
   if(seasonIx()!==oldS){ setTimeout(()=>seasonFlash(),700); applySeason(); }
   state.weather=rollWeather(); applyWeather();
   state.today=blankToday(); state.today.rep0=state.rep;
-  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd(); lodaDayEnd(rep);
+  rollEvents(); newQuests(); endDayExtras(); contentDayEnd(rep); ops2DayEnd(rep); worldDayEnd(rep); nextDayEnd(); lodaDayEnd(rep); curveDayEnd(rep);
   try{ localStorage.setItem(SAVE_KEY+'_bak',JSON.stringify(state)); }catch(e){}
   showReport(day,rep,repNow); save();
 }

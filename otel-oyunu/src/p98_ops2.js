@@ -88,6 +88,7 @@ function briefItemHtml(it){
   if(it.k==='mgr'){ const O=state.mgrOffer; if(!O||O.day!==state.day) return ''; return `<div class="row"><div class="ic">🗂️</div><div class="tx">Müdür masası<small>Bugünün stratejisi için ${O.ks.length} kart</small></div><button class="btn gold" data-bf="mgr">Seç</button></div>`; }
   if(it.k==='leave') return `<div class="row"><div class="ic">🏖️</div><div class="tx">İzin talebi<small>${escH(it.name||'Bir çalışan')} (${(STAFF[it.kind]||{}).name||''}) yarın izin istiyor · ver: moral +6, reddet: moral −6</small></div><button class="btn gold" data-bf="leaveY">Ver</button><button class="btn ghost" data-bf="leaveN">Reddet</button></div>`;
   if(it.k==='war'){ const r=state.rival; if(!rivalOn()) return ''; return `<div class="row"><div class="ic">📉</div><div class="tx">Fiyat savaşı<small>${escH(r.name)} bugün indirimde · karşılık verirsen bugün fiyatlar −%10 ama misafir kaybı büyük ölçüde durur</small></div><button class="btn gold" data-bf="warY">Karşılık ver</button><button class="btn ghost" data-bf="warN">Boş ver</button></div>`; }
+  { const x=curveBriefHtml(it); if(x) return x; }
   if(it.k==='strike'){ if(!strikeOn()) return ''; return `<div class="row"><div class="ic">✊</div><div class="tx">Grev<small>Moral çok düştü, personel iş bıraktı · yaklaşık ${Math.ceil(state.strike/60*7.5)} oyun saati sürer</small></div><button class="btn gold" data-bf="strike" ${state.money<bonusCost()?'disabled':''}>Prim ${fmt(bonusCost())} ₺</button></div>`; }
   return ''; }
 function openBriefing(){
@@ -101,6 +102,7 @@ function openBriefing(){
       if(a==='warY'){ state.priceWar=state.day; toast('⚔️ Fiyat savaşına girdin: bugün −%10'); morningDone('war'); }
       if(a==='warN'){ morningDone('war'); }
       if(a==='strike'){ giveBonus(); morningDone('strike'); }
+      curveBriefAct(a,it);
       sfx('click'); markSave(); closeModal(); if(morningQ().some(x=>briefItemHtml(x))) setTimeout(openBriefing,250); }); }); }
 function briefingHtml(){ const n=morningQ().filter(it=>briefItemHtml(it)).length; if(!n) return ''; return `<div class="row"><div class="ic">☀️</div><div class="tx">Sabah brifingi<small>${n} karar bekliyor</small></div><button class="btn gold" data-brief>Aç</button></div>`; }
 function bootBriefing(){ if(strikeOn()) morningAdd({k:'strike'}); else if(morningQ().length) briefT=setTimeout(()=>{ briefT=null; openBriefing(); },3500); }

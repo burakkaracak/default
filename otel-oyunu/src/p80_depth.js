@@ -20,7 +20,7 @@ const RIVAL_NAMES=['Gri Kule Otel','Ekonomik Palas','Neon Suites','Beton Rezidan
 let rivalVis=null;
 function rivalOn(){ return !!state.rival&&!state.rival.bought; }
 function rivalPull(){ const r=state.rival; if(!rivalOn()) return 0;
-  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0),0,0.42)*(1-0.3*skillLv('m3'))*priceWarPull(); }
+  return clamp(0.1+(r.q-state.rep)/250+(priceMult()-r.price)*0.35+(r.promo===state.day?0.12:0)+rivalAdPull(),0,0.5)*(1-0.3*skillLv('m3'))*priceWarPull(); }
 function rivalBuyCost(){ const r=state.rival; return r?Math.round(22000*cm()*(r.q/60)):0; }
 function buildRival(){
   if(rivalVis){ rivalVis.parent.remove(rivalVis); rivalVis=null; } const r=state.rival; if(!r) return;
@@ -123,6 +123,7 @@ function depthHtml(){
     if(r.bought) h+=`<div class="row"><div class="ic">🤝</div><div class="tx">${escH(hotelName())} Annex<small>Rakibi satın aldın · tüm gelirler +%10</small></div></div>`;
     else h+=`<div class="row"><div class="ic">🏢</div><div class="tx">${escH(r.name)} · kalite ${r.q}<small>Fiyatı %${Math.round(r.price*100)}${r.promo===state.day?' · bugün indirimde!':''} · senden kaçan misafir ~%${Math.round(rivalPull()*100)} · ünün yükseldikçe ve fiyatın düştükçe azalır</small></div>
       <button class="btn gold" data-rivalbuy ${stars()<4||state.money<rivalBuyCost()?'disabled':''}>${stars()<4?'4★ gerekli':'Satın al<br>'+fmt(rivalBuyCost())+' ₺'}</button></div>`; }
+  h+=curveHtml();
   if(built('depo')){ const s=state.stock||{paper:25,towel:25}, c=stockCap();
     h+=`<div class="ugh">📦 Tedarik</div><div class="row"><div class="ic">📦</div><div class="tx">Depo: 🧻 ${s.paper}/${c} · 🧺 ${s.towel}/${c}<small>${state.order?'🚚 Kamyon yolda…':'Stok bitince misafir isteklerini karşılayamazsın'}</small></div>
       <div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-order ${state.order||state.money<orderCost()?'disabled':''}>Sipariş<br>${fmt(orderCost())} ₺</button>
@@ -131,7 +132,7 @@ function depthHtml(){
     :`<div class="row"><div class="ic">🏦</div><div class="tx">Kredi çek: ${fmt(loanOffer())} ₺<small>Hızlı büyümek için · günlük %3 faiz</small></div><button class="btn" data-loan>Çek</button></div>`);
   return h;
 }
-function bindDepth(sh){
+function bindDepth(sh){ bindCurve(sh);
   sh.querySelectorAll('[data-price]').forEach(b=>b.onclick=()=>setPrice(+b.dataset.price));
   const q=s=>sh.querySelector(s);
   if(q('[data-rivalbuy]')) q('[data-rivalbuy]').onclick=buyRival;

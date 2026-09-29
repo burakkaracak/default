@@ -10,6 +10,19 @@ function bakeInPlace(g){ if(!g||!g.children.length) return; const par=g.parent, 
   const b=bake(g); if(b!==g){ while(g.children.length) g.remove(g.children[0]); b.children.slice().forEach(m=>g.add(m)); }
   g.position.copy(pos); g.rotation.copy(rot); g.scale.copy(sc); g.visible=vis; if(par) par.add(g); }
 
+// MG11-D2: dokusuz, saydam olmayan, ışımasız MeshStandard parçaları renkleri köşe rengine (vertex color) yazarak TEK ağa indir
+// (malzeme sayısı kadar çizim yerine 1 çizim; pürüzlülük farkı kaybolur). Diğer parçalar (doku, saydam, ışıma) olduğu gibi kalır.
+let flatMat=null;
+function flatOk(o){ const m=o.material; return o.isMesh&&m&&m.isMeshStandardMaterial&&!m.map&&!m.normalMap&&!m.emissiveMap&&!m.transparent&&(m.metalness||0)<0.5&&(!m.emissive||m.emissive.getHex()===0)&&!m.vertexColors&&o.geometry&&o.geometry.attributes&&o.geometry.attributes.normal; }
+function bakeFlat(g){ try{ if(!g||!g.children.length) return; const list=[]; g.updateMatrixWorld(true); g.traverse(o=>{ if(o!==g&&flatOk(o)) list.push(o); }); if(list.length<2) return;
+  const inv=new THREE.Matrix4().copy(g.matrixWorld).invert(); let n=0; const geos=list.map(o=>{ const ge=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); ge.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)); n+=ge.attributes.position.count; return ge; });
+  const pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2), col=new Float32Array(n*3); let off=0, cast=false;
+  geos.forEach((ge,i)=>{ const c=ge.attributes.position.count, m=list[i].material; pos.set(ge.attributes.position.array,off*3); nor.set(ge.attributes.normal.array,off*3); if(ge.attributes.uv) uv.set(ge.attributes.uv.array,off*2);
+    for(let k=0;k<c;k++){ col[(off+k)*3]=m.color.r; col[(off+k)*3+1]=m.color.g; col[(off+k)*3+2]=m.color.b; } off+=c; cast=cast||list[i].castShadow; ge.dispose(); });
+  const bg=new THREE.BufferGeometry(); bg.setAttribute('position',new THREE.BufferAttribute(pos,3)); bg.setAttribute('normal',new THREE.BufferAttribute(nor,3)); bg.setAttribute('uv',new THREE.BufferAttribute(uv,2)); bg.setAttribute('color',new THREE.BufferAttribute(col,3)); bg.computeBoundingSphere();
+  flatMat=flatMat||new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,metalness:0}); const m=new THREE.Mesh(bg,flatMat); m.castShadow=cast; m.receiveShadow=true; m.userData.flat=true;
+  list.forEach(o=>{ if(o.parent) o.parent.remove(o); }); g.add(m); }catch(e){ console.warn('bakeFlat',e); } }
+
 // bir grubun (dönüşümsüz kabul edilir) hareketsiz çocuklarını tek partide birleştir
 function bakeStatic(G,exclude){ try{ if(!G) return; const keep=exclude||new Set(), list=G.children.filter(o=>!keep.has(o)&&!(o.isMesh&&o.material&&o.material.transparent)); if(list.length<3) return;
   const cont=new THREE.Group(); list.forEach(o=>{ G.remove(o); cont.add(o); }); cont.updateMatrixWorld(true); const b=bake(cont);
@@ -20,7 +33,7 @@ const floorBatch={}, batchIds={}, batchDue={};
 function perfRoomPrep(G,win){ const st=G.children[0]; if(!st) return; if(win&&win.parent===st) G.add(win); G.userData.static=st; }
 function perfRoomPost(id){
   const R=RT(id), P=R.parts, f=roomInfo(id).f; if(!P) return;
-  ['made','messy','tip'].forEach(k=>bakeInPlace(P[k]));
+  ['made','messy','tip'].forEach(k=>{ bakeFlat(P[k]); bakeInPlace(P[k]); });   // önce düz renkliler tek ağa, kalanlar malzemeye göre
   if(floorBatch[f]&&batchIds[f]&&batchIds[f].has(id)) rebatchFloor(f,id);   // eski kopyayı hemen partiden çıkar
   batchDue[f]=1.4;
 }

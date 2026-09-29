@@ -26,7 +26,7 @@ function cellFree(id,i,j){ const c=cellCenter(i,j), hw=FG.cw*0.45, hh=FG.ch*0.45
 function designSat(s){ const f=s.furn||[]; if(!f.length) return 0; const kinds=new Set(f.map(x=>x.k)).size; return Math.min(10,f.reduce((a,x)=>a+FURN[x.k].sat,0))+Math.min(2,kinds-1)+lodaSetBonus(s); }
 function migrateFurn(s){ (s.furn||[]).forEach(f=>{ if(f.g===2) return; const x=-1.5+(f.i+0.5)*0.5, z=-1.4+(f.j+0.5)*(2.8/6); f.i=clamp(Math.floor((x-FG.x0)/FG.cw),0,FG.cols-1); f.j=clamp(Math.floor((z-FG.z0)/FG.ch),0,FG.rows-1); f.g=2; }); }
 function buildFurn(S,s,cols){ migrateFurn(s); // eşyalar hücre merkezinde 0.8 ölçekli grup içine kurulur
-  (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), G0=new THREE.Group(); G0.position.set(c.x,0,c.z); G0.scale.setScalar(0.8); S.add(G0); const x=0, z=0, S0=S; S=G0;
+  (s.furn||[]).forEach(f=>{ const c=cellCenter(f.i,f.j), G0=new THREE.Group(); G0.position.set(c.x,0,c.z); G0.scale.setScalar(LODA_FURN[f.k]?1.5:0.8); /* Loda parçaları gerçek ölçüye yakın */ S.add(G0); const x=0, z=0, S0=S; S=G0;
     if(f.k==='lamp'){ S.add(mesh(cyl(0.12,0.14,0.03,12),M.dark,x,0.015,z)); S.add(mesh(cyl(0.015,0.015,1.1,6),M.gold,x,0.56,z)); S.add(mesh(cone(0.16,0.2,12),M.lampOn,x,1.15,z)); }
     else if(f.k==='plant2') bigPlant(S,x,z,0.55);
     else if(f.k==='chair'){ const m=mat(0xb0736a,{roughness:.95}); S.add(mesh(rbox(0.42,0.24,0.4,.08),m,x,0.2,z,true)); S.add(mesh(rbox(0.42,0.4,0.1,.05),m,x,0.42,z-0.16,true)); }

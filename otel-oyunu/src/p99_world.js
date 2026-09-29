@@ -22,7 +22,7 @@ function rollNews(){ if(state.tut<TUT.length||state.sandbox) return; const P=sta
 function newsFor(d){ const k=(state.newsPlan||{})[d]; return k?NEWS.find(x=>x.k===k):null; }
 function newsToday(){ const N=state.news; return N&&N.day===state.day?NEWS.find(x=>x.k===N.k):null; }
 // ---------- toplam etkiler ----------
-function worldDemand(){ let f=prjDemand()*filmDemand(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
+function worldDemand(){ let f=prjDemand()*filmDemand()*adDemandMul(); const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') f*=1.4; if(st) f*=st.dem; if(N) f*=N.dem; return f; }
 function worldTypeW(k){ let w=1; const ph=calPhase(), st=seasonTourism(), N=newsToday(); if(ph==='bayram') w*=({family:1.8,elderly:1.4})[k]||1; if(st) w*=st.w[k]||1; if(N) w*=N.w[k]||1; return w; }
 function worldPriceTol(){ const N=newsToday(); return N&&N.price||1; }
 // gece mutfağı: sahurda ya da gece vardiyası açıkken oda servisi pişer
