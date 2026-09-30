@@ -6,3 +6,5 @@ vis.html
 t3/
 *.png
 __pycache__/
+/loda_sophia.glb
+/loda_sophia.json
