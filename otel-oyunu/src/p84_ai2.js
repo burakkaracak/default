@@ -44,7 +44,7 @@ function openDesigner(id){
   openModal(`<h3>🛋️ Oda ${id} tasarımı <button class="xbtn" id="dsX" aria-label="Kapat">✖</button></h3>
     <p class="sub">Tasarım puanı: +${designSat(s)} memnuniyet · en fazla 4 eşya · çeşit bonus verir${busy?' · <b>misafir varken değiştirilemez</b>':''}</p>
     <div class="dgrid">${grid}</div><p class="note">⬆ Oda kuşbakışı: üstte yatak ve banyo, altta kapı. Seçili eşyayı boş kareye koy; eşyaya dokunursan kaldırılır (yarı fiyat iade).</p>
-    <div class="agrid">${Object.keys(FURN).map(k=>`<button class="btn ${designSel===k?'':'ghost'} abtn" data-fk="${k}" ${FURN[k].loda?'style="border:1px solid #9C905C"':''}>${FURN[k].e} ${FURN[k].name} · ${fmt(furnCost(k))} ₺</button>`).join('')}</div>${lodaFinHtml()}`,m=>{
+    <div class="agrid">${Object.keys(FURN).filter(k=>!FURN[k].hidden).map(k=>`<button class="btn ${designSel===k?'':'ghost'} abtn" data-fk="${k}" ${FURN[k].loda?'style="border:1px solid #9C905C"':''}>${FURN[k].e} ${FURN[k].name} · ${fmt(furnCost(k))} ₺</button>`).join('')}</div>${lodaFinHtml()}`,m=>{
     m.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{ designFin=b.dataset.fin; sfx('click'); openDesigner(id); });
     m.querySelector('#dsX').onclick=closeModal;
     m.querySelectorAll('[data-fk]').forEach(b=>b.onclick=()=>{ designSel=b.dataset.fk; sfx('click'); openDesigner(id); });

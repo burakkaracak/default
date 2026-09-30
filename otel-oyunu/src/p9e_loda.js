@@ -13,11 +13,11 @@ const LODA={brand:'Loda',founded:2000,city:'İstanbul',parent:'TD Tech Design Mo
   fins:{ivory:{n:'Ivory lake',c:0xf1ece1,wood:false},mink:{n:'Mink lake',c:0x9a8a7c,wood:false},antra:{n:'Antrasit lake',c:0x3a3d42,wood:false},oak:{n:'Meşe kaplama',c:0xc9a274,wood:true},walnut:{n:'Ceviz kaplama',c:0x6e4a32,wood:true},ash:{n:'Dişbudak kaplama',c:0xd8c6a6,wood:true}}};
 // oda tasarımcısına eklenen Loda parçaları (FURN'a birleştirilir; gerçek ölçüler cm → oyun birimi ≈ ölçek 0.8 hücrede)
 const LODA_FURN={
-  l_savana:{e:'▫️',name:'LODA Savana orta sehpa',cost:320,sat:3,loda:true,dim:'120×30×120'},
-  l_domo:  {e:'⚪',name:'LODA Domo sehpa',      cost:340,sat:3,loda:true,dim:'Ø90×35'},
-  l_nova:  {e:'▬',name:'LODA Nova konsol',      cost:520,sat:4,loda:true,dim:'230×50×80'},
-  l_dali:  {e:'▤',name:'LODA Dali TV ünitesi',  cost:700,sat:5,loda:true,dim:'200×45×60 · fluting'},
-  l_sophia:{e:'🛋',name:'LODA Sophia berjer',   cost:380,sat:3,loda:true,dim:'83×90×105'}};
+  l_savana:{hidden:true,e:'▫️',name:'LODA Savana orta sehpa',cost:320,sat:3,loda:true,dim:'120×30×120'},
+  l_domo:  {hidden:true,e:'⚪',name:'LODA Domo sehpa',      cost:340,sat:3,loda:true,dim:'Ø90×35'},
+  l_nova:  {hidden:true,e:'▬',name:'LODA Nova konsol',      cost:520,sat:4,loda:true,dim:'230×50×80'},
+  l_dali:  {hidden:true,e:'▤',name:'LODA Dali TV ünitesi',  cost:700,sat:5,loda:true,dim:'200×45×60 · fluting'},
+  l_sophia:{hidden:true,e:'🛋',name:'LODA Sophia berjer',   cost:380,sat:3,loda:true,dim:'83×90×105'}};
 Object.assign(FURN,LODA_FURN);
 let designFin='ivory';
 function lodaFin(f){ return LODA.fins[f&&f.fin]||LODA.fins.ivory; }
@@ -69,9 +69,10 @@ function buildGallery(){
   g.add(mesh(box(1.2,2.2,0.05),M.glass,X,1.1,F-0.02)); g.add(mesh(box(1.3,0.06,0.1),gold,X,2.22,F-0.03)); [-0.62,0.62].forEach(dx=>g.add(mesh(box(0.06,2.2,0.1),gold,X+dx,1.1,F-0.03))); g.add(mesh(cyl(0.02,0.02,0.5,8),gold,X+0.22,1.05,F-0.09));   // altın çerçeveli cam kapı + kol
   g.add(mesh(box(W,0.5,0.1),blk,X,2.55,F-0.05)); const sg=signPlane('LODA',2.4,0.44,{bg:'#111111',fg:'#9C905C',font:'700 92px Montserrat, "Baloo 2", sans-serif',fit:true}); sg.position.set(X,2.55,F-0.12); sg.rotation.y=Math.PI; g.add(sg);
   g.add(mesh(box(W,0.04,0.12),gold,X,2.28,F-0.06));                                                 // ince altın çizgi
-  // vitrin içi: koleksiyon parçaları caddeye dönük (oda tasarımcısındakiyle aynı çizim, 1.6 ölçek)
-  const show=(k,fin,x,rot=0)=>{ const G0=new THREE.Group(); G0.position.set(X+x,0.08,F+0.9); G0.scale.setScalar(1.6); G0.rotation.y=rot+Math.PI; g.add(G0); buildLodaFurn(G0,{k,fin}); };
-  show('l_savana','walnut',-2.4); show('l_sophia','ivory',-1.2,Math.PI*0.1); if(vitOn('domo')) show('l_domo','mink',1.2); if(vitOn('nova')) show('l_nova','oak',2.4); if(vitOn('dali')) show('l_dali','antra',-2.4+0.001,0);
+  // vitrin içi: GERÇEK Sophia üçlü koltuk 1:1 (model yüklenince yeniden kurulur), önünde küçük podyum
+  g.add(mesh(box(2.6,0.08,1.3),mat(0x1b1b1b,{roughness:.6}),X,0.09,F+1.35));
+  const sofa=lodaSofaMesh(vitOn('nova')?'mink':'ivory'); if(sofa){ sofa.position.set(X,0.13,F+1.45); sofa.rotation.y=Math.PI; g.add(sofa); } else loadLodaModel(()=>buildGallery());
+  const plaque=signPlane('SOPHIA · 262 cm',1.2,0.22,{bg:'#111111',fg:'#9C905C',font:'600 60px Montserrat, "Baloo 2", sans-serif',fit:true}); plaque.position.set(X,0.55,F+0.55); plaque.rotation.y=Math.PI; g.add(plaque);
   for(let i=0;i<3;i++) g.add(mesh(cyl(0.08,0.08,0.06,12),M.lampOn,X-2.4+i*2.4,2.9,F+0.6));           // vitrin spotları
   bakeStatic(g); outdoor.add(g); galG=g;
   addCols('gal',[[0,X-W/2,X+W/2,Z-D/2,Z+D/2]]);   // duvarlar yürünmez; kapı önü ön avluda
@@ -88,11 +89,12 @@ function goGallery(){ const D=galDoor(); closeSheet&&closeSheet(); closeModal();
 function galleryHtml(){ const L0=state.loda||{};
   let h=`<div class="ugh"><span style="color:#9C905C">LODA</span> Gallery${galOn()?'':' · 🔒 3★'}</div>`;
   if(!galOn()) return h+`<div class="row"><div class="ic">🛋️</div><div class="tx">Loda Gallery aç<small>Caddenin karşısında Loda Mobilya showroomu (İstanbul ${LODA.founded}): mutlu ayrılan misafirlerin %22'si mobilya alır, satış payı sana · ihracat bayileri otele gelmeye başlar</small></div><button class="btn gold" data-gal ${stars()<3||state.money<galCost()?'disabled':''}>${fmt(galCost())} ₺</button></div>`;
+  h+=sofaHtml();
   h+=`<div class="row"><div class="ic">🚶</div><div class="tx">Showroomu ziyaret et<small>Caddenin karşısında, sol tarafta · yaya geçidinden geç</small></div><button class="btn gold" data-galgo>Yürü</button></div>`;
   h+=`<div class="row"><div class="ic">🛋️</div><div class="tx">Satış şansı %${Math.round(galChance()*100)}<small>${L0.sales||0} satış · ${fmt(L0.rev||0)} ₺ · bayi siparişi ${L0.orders||0}</small></div></div>`;
   for(const k in VITRIN){ const V=VITRIN[k]; h+=`<div class="row"><div class="ic">${V.e}</div><div class="tx">${V.n}<small>Satış şansı +%${Math.round(V.p*100)}</small></div>${vitOn(k)?'<button class="btn" disabled>Var ✓</button>':`<button class="btn gold" data-vit="${k}" ${state.money<r10(V.cost*cm())?'disabled':''}>${fmt(r10(V.cost*cm()))} ₺</button>`}</div>`; }
   return h; }
-function bindLoda(root){ const b=root.querySelector('[data-gal]'); if(b) b.onclick=buyGallery; const gg=root.querySelector('[data-galgo]'); if(gg) gg.onclick=goGallery; root.querySelectorAll('[data-vit]').forEach(x=>x.onclick=()=>buyVitrin(x.dataset.vit)); const t=root.querySelector('[data-lodaui]'); if(t) t.onclick=()=>{ state.lodaUI=!state.lodaUI; applyLodaUI(); save(); openSettings(); }; }
+function bindLoda(root){ const b=root.querySelector('[data-gal]'); if(b) b.onclick=buyGallery; const gg=root.querySelector('[data-galgo]'); if(gg) gg.onclick=goGallery; root.querySelectorAll('[data-sofa]').forEach(x=>x.onclick=()=>buyLodaSofa(x.dataset.sofa)); root.querySelectorAll('[data-vit]').forEach(x=>x.onclick=()=>buyVitrin(x.dataset.vit)); const t=root.querySelector('[data-lodaui]'); if(t) t.onclick=()=>{ state.lodaUI=!state.lodaUI; applyLodaUI(); save(); openSettings(); }; }
 
 // ---------- ihracat bayisi ziyareti (Fargotex, AlmiDécor) ----------
 const DEALERS=[{n:'Fargotex alıcısı',c:'Fargotex',e:'🇵🇱'},{n:'AlmiDécor alıcısı',c:'AlmiDécor',e:'🇵🇱'}];
@@ -106,7 +108,30 @@ function lodaDayEnd(t){ const L0=state.loda; if(!L0) return; (L0.pend||[]).slice
 let dealerT=30;
 function updateLoda(dt){ updateGalVisit(); dealerT-=dt; if(dealerT<=0){ dealerT=45; const h=hourNow(); if(h>=10&&h<=16&&dealerDue()&&!guests.some(g=>g.dealer)) spawnDealer(); } }
 
+
+// ---------- GERÇEK MODEL: LODA Sophia üçlü koltuk (Drive: loda_sophia_koltuk_uclu_fix3.fbx → GLB, 66k üçgen) ----------
+// ölçek: FBX cm; oyun birimi ≈ 125 cm (yatak 1.25 birim = 156 cm). Kumaş: MeshPhysical sheen, taban/ayak: pirinç.
+const LODA_SOFA={url:'loda_sophia.json',cm:[262,80,99],cost:9000,fabric:{ivory:{n:'Ivory bukle',c:0xe8e1d2},mink:{n:'Mink kadife',c:0x8f7d6b},antra:{n:'Antrasit keten',c:0x3b3e44},sage:{n:'Adaçayı yeşili',c:0x8a9a86}}};
+const CM=1/125;
+let lodaGltf=null, lodaGltfState='none', lodaWaiters=[];
+function loadLodaModel(cb){ if(cb) lodaWaiters.push(cb); if(lodaGltf){ lodaWaiters.splice(0).forEach(f=>f(lodaGltf)); return; } if(lodaGltfState!=='none') return; lodaGltfState='loading';
+  const b64buf=s=>{ const bin=atob(s), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; };
+  const src=()=>window.__LODA_GLB?Promise.resolve(b64buf(window.__LODA_GLB)):fetch(LODA_SOFA.url).then(r=>r.json()).then(j=>b64buf(j.glb));
+  const go=()=>{ try{ src().then(buf=>new THREE.GLTFLoader().parse(buf,'',g=>{ lodaGltf=g.scene; lodaGltf.traverse(o=>{ if(o.isMesh){ try{ o.geometry.deleteAttribute('normal'); o.geometry.computeVertexNormals(); }catch(e){ window.__lodaErr=String(e); } o.geometry.computeBoundingBox(); const b=o.geometry.boundingBox; o.userData.role=b.max.y<18?'base':'fabric'; } }); lodaGltfState='ready'; lodaWaiters.splice(0).forEach(f=>{ try{ f(lodaGltf); }catch(e){ window.__lodaErr=String(e&&e.stack||e); } }); },()=>{ lodaGltfState='failed'; })).catch(()=>{ lodaGltfState='failed'; }); }catch(e){ lodaGltfState='failed'; } };
+  if(typeof THREE.GLTFLoader==='function') go(); else { const s=document.createElement('script'); s.src=POST_BASE+'loaders/GLTFLoader.js'; s.onload=go; s.onerror=()=>{ lodaGltfState='failed'; }; document.head.appendChild(s); } }
+let sofaMats={};
+function sofaMat(fin){ const F=LODA_SOFA.fabric[fin]||LODA_SOFA.fabric.ivory; if(!sofaMats[fin]){ sofaMats[fin]=new THREE.MeshStandardMaterial({color:F.c,roughness:.9,metalness:0,envMapIntensity:0.6}); }/* r128 sheen speküleri beyazlatıyor → düz kumaş */ return sofaMats[fin]; }
+function lodaSofaMesh(fin){ if(!lodaGltf) return null; const g=lodaGltf.clone(true), brass=mat(0xb08d57,{metalness:.85,roughness:.32}), fab=sofaMat(fin);
+  g.traverse(o=>{ if(o.isMesh){ o.material=o.userData.role==='base'?brass:fab; o.castShadow=true; o.receiveShadow=true; } }); g.scale.setScalar(CM); return g; }
+// lobi: Sophia üçlü koltuk varsayılan koltuğun yerine (2.7, 5.5 lounge grubu), sırtı girişe, yüzü lobiye
+let lobbySofaLoda=null;
+function sofaOn(){ return !!(state.loda&&state.loda.sofa); }
+function buildLobbySofa(){ if(lobbySofaLoda&&lobbySofaLoda.parent) lobbySofaLoda.parent.remove(lobbySofaLoda); lobbySofaLoda=null; if(lobbySofaG) lobbySofaG.visible=!sofaOn(); if(!sofaOn()||!lobbyLoungeG) return;
+  const m=lodaSofaMesh(state.loda.sofa); if(!m){ loadLodaModel(()=>buildLobbySofa()); return; } m.position.set(2.7,0,5.5+0.45); m.rotation.y=Math.PI; floorRoot(0).add(m); lobbySofaLoda=m; }   // canlı köke eklenir (lounge grubu bake sonrası sahnede değil)
+function buyLodaSofa(fin){ if(!galOn()||!LODA_SOFA.fabric[fin]) return; const c=sofaOn()?r10(800*cm()):r10(LODA_SOFA.cost*cm()); if(!spend(c)) return; state.loda.sofa=fin; buildLobbySofa(); sfx('build'); if(!state.lowFx) confettiAt(2.7,1.5,5.5,50); banner(sofaOn()?'🛋️ LODA Sophia lobide':'🛋️ Kumaş değişti',`Sophia üçlü koltuk · ${LODA_SOFA.fabric[fin].n} · 262×99×80 cm · lobideki her misafire +2 memnuniyet`); onGameEvent('lodaFurn',1); save(); renderSheet(); }
+function lodaLobbySat(){ return sofaOn()?2:0; }
+function sofaHtml(){ if(!galOn()) return ''; const cur=state.loda.sofa; return `<div class="row" style="flex-wrap:wrap"><div class="ic">🛋️</div><div class="tx">Sophia üçlü koltuk (gerçek model)<small>${cur?'Lobide · '+LODA_SOFA.fabric[cur].n+' · kumaş değişimi '+fmt(r10(800*cm()))+' ₺':'Loda tasarım dosyasından birebir · 262×99×80 cm · lobideki koltuğun yerine · her misafire +2 memnuniyet · '+fmt(r10(LODA_SOFA.cost*cm()))+' ₺'}</small></div><div style="display:flex;gap:4px;flex-wrap:wrap;width:100%;justify-content:flex-end">${Object.keys(LODA_SOFA.fabric).map(k=>`<button class="btn ${cur===k?'':'ghost'}" style="padding:4px 8px;min-height:32px;font-size:12px" data-sofa="${k}" ${cur===k?'disabled':''}><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:#${LODA_SOFA.fabric[k].c.toString(16).padStart(6,'0')};vertical-align:-1px;margin-right:4px"></span>${LODA_SOFA.fabric[k].n}</button>`).join('')}</div></div>`; }
 // ---------- Loda tasarım dili (arayüz teması) ----------
 function applyLodaUI(){ document.body.classList.toggle('loda',!!state.lodaUI); }
 function lodaUiHtml(){ return `<button class="btn ghost wide" data-lodaui>◆ Loda tasarım dili: ${state.lodaUI?'Açık':'Kapalı'}</button>`; }
-function bootLoda(){ buildCrosswalk(); galTag=tagAdd({kind:'spot',get:()=>galOn()?{x:GAL.x,z:GAL.z-GAL_D/2,f:0}:null,iconF:()=>'🛋️',cls:'',y:3.4}); try{ buildGallery(); applyLodaUI(); }catch(e){ console.warn('loda',e); } }
+function bootLoda(){ buildCrosswalk(); loadLodaModel(()=>{ if(galOn()) buildGallery(); buildLobbySofa(); }); buildLobbySofa(); galTag=tagAdd({kind:'spot',get:()=>galOn()?{x:GAL.x,z:GAL.z-GAL_D/2,f:0}:null,iconF:()=>'🛋️',cls:'',y:3.4}); try{ buildGallery(); applyLodaUI(); }catch(e){ console.warn('loda',e); } }

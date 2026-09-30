@@ -238,7 +238,7 @@ function makeBird(){
 // =====================================================================
 // HOTEL SHELL (ground floor) + LOBBY
 // =====================================================================
-let doorL, doorR, deskGroup, deskMonitor, logoSign, canopySign, sunPatchM=null, lobbySofaM=null, lobbyCushM=null, canopyM=null;
+let doorL, doorR, deskGroup, deskMonitor, logoSign, canopySign, sunPatchM=null, lobbySofaM=null, lobbyCushM=null, canopyM=null, lobbySofaG=null, lobbyLoungeG=null;
 function hotelName(){ return (state.custom&&state.custom.name)||'Otel Ustası'; }
 // yan kapılar: lobiden restorana, çamaşırhane/spa ara yoluna, havuza ve spor salonuna kısa yol
 const SIDE_DOORS={L:[[1.05,2.35],[-3.55,-2.25]],R:[[1.05,2.35],[-8.15,-6.85]]};
@@ -282,12 +282,14 @@ function buildShell(){
   // lounge
   const lg=new THREE.Group(); lg.position.set(2.7,0,5.5); S.add(lg);
   const sofaM=new THREE.MeshStandardMaterial({color:0x3f5a7a,roughness:.95}), cush=new THREE.MeshStandardMaterial({color:0xe8dcc0,roughness:.95}); lobbySofaM=sofaM; lobbyCushM=cush;
-  lg.add(mesh(rbox(2.0,0.34,0.8,.12),sofaM,0,0.24,0.35,true)); lg.add(mesh(rbox(2.0,0.6,0.22,.1),sofaM,0,0.45,0.72,true));
-  [-1.02,1.02].forEach(x=>lg.add(mesh(rbox(0.22,0.46,0.8,.1),sofaM,x,0.33,0.35,true)));
-  [-0.5,0,0.5].forEach(x=>lg.add(mesh(rbox(0.5,0.28,0.2,.1),cush,x*1.3,0.55,0.55)));
+  const sg=new THREE.Group(); sg.position.copy(lg.position); G.add(sg); lobbySofaG=sg; lobbyLoungeG=lg;   // varsayılan koltuk: kabuk bake'ine GİRMEZ (canlı grup) → LODA Sophia kurulunca gizlenebilir (p9e)
+  sg.add(mesh(rbox(2.0,0.34,0.8,.12),sofaM,0,0.24,0.35,true)); sg.add(mesh(rbox(2.0,0.6,0.22,.1),sofaM,0,0.45,0.72,true));
+  [-1.02,1.02].forEach(x=>sg.add(mesh(rbox(0.22,0.46,0.8,.1),sofaM,x,0.33,0.35,true)));
+  [-0.5,0,0.5].forEach(x=>sg.add(mesh(rbox(0.5,0.28,0.2,.1),cush,x*1.3,0.55,0.55)));
   lg.add(mesh(cyl(0.5,0.5,0.05,24),tmat('marble'),0,0.44,-0.55,true)); lg.add(mesh(cyl(0.06,0.12,0.42,10),M.gold,0,0.21,-0.55));
   lg.add(mesh(cyl(0.08,0.06,0.2,10),M.white,0,0.56,-0.55)); lg.add(mesh(sph(0.12,10,8),mat(0xe0574f),0,0.72,-0.55));
   lg.add(mesh(box(2.7,0.015,2.0),tmat('rugGreen'),0,0.024,0.05));
+  if(typeof buildLobbySofa==='function') buildLobbySofa();   // lobi yeniden kurulunca LODA Sophia koltuğu da yeniden yerleşir (p9e)
   bigPlant(S,-6.45,3.0,1.1); bigPlant(S,1.55,7.05,1); bigPlant(S,3.9,7.05,1); bigPlant(S,6.5,4.65,1.05);
   // wall clock
   const clk=new THREE.Group(); clk.position.set(-6.86,2.35,5.9); clk.rotation.y=Math.PI/2; S.add(clk);

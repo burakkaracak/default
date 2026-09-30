@@ -10,7 +10,7 @@ window.botBuy=()=>{ state.stayPol='yes'; state.obIx=1; if(morale()<35&&state.mon
   if(stars()>=3&&!(state.sp&&state.sp.built)&&state.money>spCost()*3) buySpecial();
   for(let f=1;f<Math.min(floorsBuilt(),3);f++){ const F=(state.floors||{})[f]||{}; if(!F.theme&&state.money>floorThemeCost(f)*4) buyFloorTheme(f,'royal'); else if(F.theme&&!F.lounge&&state.money>loungeCost(f)*4) buyLounge(f); }
   for(const k of ['speed','cap','magnet']){ const M=upgMaxInfo(k); if(M.n>=2&&state.money>M.c*3) buyUpgMax(k); } if(stars()>=4) for(const k in INV){ const c=invCost(k); if(c!=null&&state.money>c*2.5&&!wageShort(c)){ buyInv(k,true); break; } }
-  if(stars()>=3&&!galOn()&&state.money>galCost()*2.5&&!wageShort(galCost())) buyGallery(); if(galOn()) for(const k in VITRIN){ if(!vitOn(k)&&state.money>r10(VITRIN[k].cost*cm())*3){ buyVitrin(k); break; } }
+  if(stars()>=3&&!galOn()&&state.money>galCost()*2.5&&!wageShort(galCost())) buyGallery(); if(galOn()&&!sofaOn()&&state.money>r10(LODA_SOFA.cost*cm())*2.5) buyLodaSofa('ivory'); if(galOn()) for(const k in VITRIN){ if(!vitOn(k)&&state.money>r10(VITRIN[k].cost*cm())*3){ buyVitrin(k); break; } }
   if(prjOpen()){ for(const k in PRJ){ const c=prjCost(k); if(c!=null&&state.money>c*2&&!wageShort(c)){ buyPrj(k,true); break; } } if(state.money>charityCost()*4&&!wageShort(charityCost())) donate(); }
   if(state.saga&&state.saga.pend) sagaChoose(Math.random()<0.6?'a':'b');
   if(state.quests) state.quests.list.forEach((q,i)=>{ if(q.done&&!q.claimed) claimQuest(i); });

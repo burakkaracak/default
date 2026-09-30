@@ -35,7 +35,13 @@ open(SP+'dist/game.html','w').write(html)
 three=open(SP+'three.min.js').read().replace('</script','<\\/script')
 import base64,shutil
 shutil.copy(SP+'src/ezan.mp3',SP+'dist/ezan.mp3')
+gl=SP+'src/loda_sophia.glb'
+if os.path.exists(gl):
+    _b=base64.b64encode(open(gl,'rb').read()).decode(); _j='{"glb":"'+_b+'"}'
+    open(SP+'dist/loda_sophia.json','w').write(_j); open(SP+'loda_sophia.json','w').write(_j)   # artifact .glb sunmaz → base64 json (dist/ yayınlanır, kök vis için)
+    glb='<script>window.__LODA_GLB="'+_b+'"</script>'
+else: glb=''
 ez='<script>window.__EZAN="data:audio/mpeg;base64,'+base64.b64encode(open(SP+'src/ezan.mp3','rb').read()).decode()+'"</script>'
-off=html.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>','<script>'+three+'</script>'+ez)
+off=html.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>','<script>'+three+'</script>'+ez+glb)
 assert off!=html
 open(SP+'dist/game-offline.html','w').write(off)
