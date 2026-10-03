@@ -32,6 +32,8 @@ await build({
 const models = {};
 for (const f of readdirSync('models').filter(f => f.endsWith('.glb')).sort())
   models[f.replace('.glb', '')] = readFileSync('models/' + f).toString('base64');
+// karakter dokusu ayrı (data: URI ile yüklenir; korumalı sayfada blob: resimleri engellenebiliyor)
+models.__colormap = readFileSync('models/colormap.png').toString('base64');
 writeFileSync('dist/models.json', JSON.stringify(models));
 
 const html = readFileSync('index.html', 'utf8');
