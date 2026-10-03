@@ -195,7 +195,7 @@ async function boot() {
   setInterval(() => Cloud.Push(), 15000);
   requestAnimationFrame(frame);
   // test ve hata ayıklama için
-  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE, Quality, Wedding, Photo };
+  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE, Quality, Wedding, Photo, Social };
   window.__ready = true;
 }
 boot().catch(e => { console.error(e); const ld = document.getElementById('loading'); if (ld) ld.innerHTML = '<div style="color:#fff;padding:20px">Yüklenemedi: ' + e.message + '</div>'; });
