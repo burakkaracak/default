@@ -46,7 +46,7 @@ class GameManager extends Behaviour {
   get UIScale() { return GUI.scale; }
   // Kameranın gezebileceği alan (açılan alanlara göre genişler)
   get CamMinX() { return this.pool != null && this.pool.Open ? -19 : -9; }
-  get CamMaxX() { return this.wingOpen ? 27 : 9; }
+  get CamMaxX() { return this.wingOpen ? 27 : this.restaurant && this.restaurant.Open ? 21 : 9; }
   get CanHireCleaner() { return this.cleaners.length < Eco.CleanerCost.length; }
 
   // ================= KURULUM =================
@@ -75,7 +75,10 @@ class GameManager extends Behaviour {
     this.Wall('DuvarBati', V(-15.25, 0.6, -6.225), V(0.4, 1.2, 12.45), wallM, trim);
     this.Wall('DuvarBati', V(-15.25, 0.6, 6.4), V(0.4, 1.2, 8.8), wallM, trim);
     const westFill = this.WallGroup('BatiKapiKapali', V(-15.25, 0.6, 1.0), V(0.4, 1.2, 2.0), wallM, trim);
-    this.Wall('DuvarDogu', V(15.25, 0.6, -6.525), V(0.4, 1.2, 11.85), wallM, trim);
+    // doğu duvarı: restoran kapısı (z -3.4..-1.4) ayrı parça, restoran açılınca kalkar
+    this.Wall('DuvarDogu', V(15.25, 0.6, -7.925), V(0.4, 1.2, 9.05), wallM, trim);
+    this.restDoorFill = this.WallGroup('RestoranKapiKapali', V(15.25, 0.6, -2.4), V(0.4, 1.2, 2.0), wallM, trim);
+    this.Wall('DuvarDogu', V(15.25, 0.6, -1.0), V(0.4, 1.2, 0.8), wallM, trim);
     this.Wall('DuvarDogu', V(15.25, 0.6, 7.35), V(0.4, 1.2, 6.9), wallM, trim);
     this.eastDoorFill = this.WallGroup('DoguKapiKapali', V(15.25, 0.6, 1.65), V(0.4, 1.2, 4.5), wallM, trim);
     this.Wall('DuvarGuneySol', V(-8.7, 0.45, -12.25), V(13.1, 0.9, 0.4), wallM, trim);
@@ -118,6 +121,7 @@ class GameManager extends Behaviour {
     // Kafe (doğu) ve havuz (batı)
     this.cafe = new Cafe(); this.cafe.Build(world, wood);
     this.pool = new Pool(); this.pool.Build(world, westFill);
+    this.restaurant = new Restaurant(); this.restaurant.Build(world, wood);
 
     // Bekleme salonu (batı): iki sıra koltuk karşılıklı
     this.BuildLounge(wood);
@@ -126,9 +130,11 @@ class GameManager extends Behaviour {
     this.Ob(U.Furn('coatRackStanding', world, V(-9, 0, -11.5), 0, 2.2, V(0.4, 1.7, 0.4), wood));
 
     // İçecek makinesi
-    U.Box('Makine', world, V(14.5, 1, -2.5), V(0.9, 2, 1.2), C(0.85, 0.2, 0.25));
-    U.Prim('MakineCam', world, V(14.04, 1.2, -2.5), V(0.04, 1.2, 0.8), U.Glow(C(0.7, 0.9, 1), 0.8));
-    this.AddObstacle(14, -3.15, 15, -1.85);
+    this.drinkMachine = U.Pivot(world, V(), 'IcecekMakinesi');
+    U.Box('Makine', this.drinkMachine, V(14.5, 1, -2.5), V(0.9, 2, 1.2), C(0.85, 0.2, 0.25));
+    U.Prim('MakineCam', this.drinkMachine, V(14.04, 1.2, -2.5), V(0.04, 1.2, 0.8), U.Glow(C(0.7, 0.9, 1), 0.8));
+    this.drinkObs = Rect.MinMaxRect(14, -3.15, 15, -1.85);
+    this.obstacles.push(this.drinkObs);
 
     this.Painting(V(-15.03, 0.85, -9.2), C(0.35, 0.6, 0.85));
     this.Painting(V(15.03, 0.85, -3.9), C(0.95, 0.6, 0.35));
@@ -615,6 +621,7 @@ class GameManager extends Behaviour {
     if (this.reception.HasStaff) a.push(this.reception.stats);
     for (const c of this.cleaners) a.push(c.stats);
     if (this.cafe.HasBarista) a.push(this.cafe.stats);
+    if (this.restaurant.HasWaiter) a.push(this.restaurant.stats);
     return a;
   }
 
@@ -799,6 +806,20 @@ class GameManager extends Behaviour {
     this.Save();
   }
 
+  OpenRestaurant() { if (this.restaurant.Open || !this.Pay(Eco.RestaurantCost)) return; this.restaurant.SetOpen(true, true); this.Save(); }
+  HireWaiter() {
+    if (!this.restaurant.Open || this.restaurant.HasWaiter || !this.Pay(Eco.WaiterCost)) return;
+    this.restaurant.HireWaiter(this.RandomName(), true);
+    Sfx.Play('unlock');
+    this.Save();
+  }
+  // Restoran açıkken lobinin doğu duvarında kapı açılır, önündeki içecek makinesi kalkar
+  SetRestaurantDoor(open) {
+    if (this.restDoorFill) this.restDoorFill.visible = !open;
+    if (this.drinkMachine) this.drinkMachine.visible = !open;
+    arrRemove(this.obstacles, this.drinkObs);
+    if (!open && this.drinkObs) this.obstacles.push(this.drinkObs);
+  }
   OpenCafe() { if (this.cafe.Open || !this.Pay(Eco.CafeCost)) return; this.cafe.SetOpen(true, true); this.Save(); }
   OpenPool() { if (this.pool.Open || !this.Pay(Eco.PoolCost)) return; this.pool.SetOpen(true, true); this.Save(); }
   OpenFloor2() { if (this.floor2Open || !this.Pay(Eco.Floor2Cost)) return; this.SetFloor2(true, true); this.Save(); }
@@ -874,7 +895,7 @@ class GameManager extends Behaviour {
   SetSound(on) { this.sound = on; Sfx.SetVolume(on ? 1 : 0); }
 
   RandomName() {
-    const used = new Set([this.reception.staffName, this.cafe.baristaName]);
+    const used = new Set([this.reception.staffName, this.cafe.baristaName, this.restaurant.waiterName]);
     for (const c of this.cleaners) used.add(c.staffName);
     for (let k = 0; k < 30; k++) { const n = Eco.Names[Random.RangeInt(0, Eco.Names.length)]; if (!used.has(n)) return n; }
     return Eco.Names[Random.RangeInt(0, Eco.Names.length)];

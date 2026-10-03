@@ -6,6 +6,7 @@ class Player extends Behaviour {
     this.id = 1; this.speed = 5.5; this.dragging = false; this.Moved = false;
     this.dragStart = { x: 0, y: 0 }; this.dragNow = { x: 0, y: 0 };
     this.linen = 0; this.carryItems = []; this.shownLinen = -1; this.noLinenCd = 0;
+    this.plates = 0; this.plateItems = []; this.shownPlates = -1;
     this.rig = Rig.Model(this.go, 'character-male-d');
     this.nameTag = U.Text(null, V(), '', 0.06, C(1, 0.86, 0.42), true);
     this.ring = U.Flat('Halka', this.go, V(0, 0.02, 0), V(1.1, 0.01, 1.1), C(1, 1, 1), 'Cylinder');
@@ -63,6 +64,18 @@ class Player extends Behaviour {
   }
 
   UpdateCarry() {
+    // tabaklar çarşafların üstünde durur
+    if (this.plates !== this.shownPlates || this.linen !== this.shownLinen) {
+      this.shownPlates = this.plates;
+      while (this.plateItems.length < Math.min(this.plates, 8)) {
+        const p = U.Pivot(this.carry, V(), 'Tabak');
+        U.Box('TabakAlt', p, V(), V(0.34, 0.03, 0.34), Col.white, 'Cylinder');
+        U.Box('Yemek', p, V(0, 0.06, 0), V(0.2, 0.08, 0.2), this.plateItems.length % 2 ? C(0.45, 0.7, 0.3) : C(0.9, 0.55, 0.2), 'Sphere');
+        this.plateItems.push(p);
+      }
+      const base = Math.min(this.linen, 12) * 0.11;
+      for (let i = 0; i < this.plateItems.length; i++) { const p = this.plateItems[i]; p.visible = i < this.plates; p.position.set(0, base + i * 0.13, 0); }
+    }
     if (this.linen === this.shownLinen) return;
     this.shownLinen = this.linen;
     while (this.carryItems.length < Math.min(this.linen, 12)) {
@@ -85,6 +98,7 @@ class Player extends Behaviour {
     for (const r of gm.rooms) if ((r.state === Room.State.Dirty || r.HasRequest) && U.FlatDist(pos, r.CleanSpot) < 0.95) return true;
     if (gm.cafe.Open && gm.cafe.queue.length > 0 && U.FlatDist(pos, Cafe.ServeSpot) < 0.8) return true;
     if (gm.reception.queue.length > 0 && U.FlatDist(pos, gm.reception.servicePos) < 0.85) return true;
+    if (gm.restaurant.Open && this.plates > 0) for (const t of gm.restaurant.tables) if (t.seats.some(x => x.state === 2) && U.FlatDist(pos, t.serve) < 0.95) return true;
     return false;
   }
 

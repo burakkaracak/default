@@ -35,6 +35,7 @@ class Menu extends Behaviour {
     this.hotelEdit = '';
     this.recepEdit = '';
     this.baristaEdit = '';
+    this.waiterEdit = '';
     this.managerEdit = '';
     this.p2Edit = '';
     this.cleanerEdit = new Array(8).fill(null);
@@ -52,6 +53,7 @@ class Menu extends Behaviour {
       this.hotelEdit = G.hotelName;
       this.recepEdit = G.reception.staffName;
       this.baristaEdit = G.cafe.baristaName;
+      this.waiterEdit = G.restaurant.waiterName;
       this.managerEdit = G.managerName;
       this.p2Edit = G.p2Name;
       for (let i = 0; i < G.cleaners.length && i < this.cleanerEdit.length; i++) this.cleanerEdit[i] = G.cleaners[i].staffName;
@@ -145,7 +147,7 @@ class Menu extends Behaviour {
     const G = this.G, title = this.title, sub = this.sub, btn = this.btn, small = this.small;
     const Gold = Menu.Gold, Green = Menu.Green, Grey = Menu.Grey, Card = Menu.Card;
     const rh = 112 * s;
-    const areaRows = 4;
+    const areaRows = 5;
     const priceH = 170 * s;
     const view = new Rect(0, 0, b.width - 30 * s, priceH + rh * (G.rooms.length + areaRows) + 60 * s);
     this.scroll = GUI.BeginScrollView(b, this.scroll, view);
@@ -170,9 +172,11 @@ class Menu extends Behaviour {
       G.cafe.Open, Eco.CafeCost, () => G.OpenCafe(), s);
     this.AreaRow(new Rect(0, rh, view.width, rh - 12 * s), 'Havuz', 'Misafirler çıkışta yüzmeye gider ve ücret bırakır. Otelin batısına kurulur.',
       G.pool.Open, Eco.PoolCost, () => G.OpenPool(), s);
-    this.AreaRow(new Rect(0, rh * 2, view.width, rh - 12 * s), 'Yeni Kanat', 'Doğuya 4 odalı yeni bir bina (Oda 107-110).',
+    this.AreaRow(new Rect(0, rh * 2, view.width, rh - 12 * s), 'Restoran', 'Misafirler çıkışta yemek yer. Mutfaktan tabakları alıp masalara götür. Kafenin arkasına kurulur.',
+      G.restaurant.Open, Eco.RestaurantCost, () => G.OpenRestaurant(), s);
+    this.AreaRow(new Rect(0, rh * 3, view.width, rh - 12 * s), 'Yeni Kanat', 'Doğuya 4 odalı yeni bir bina (Oda 107-110).',
       G.wingOpen, Eco.WingCost, () => G.OpenWing(), s);
-    this.AreaRow(new Rect(0, rh * 3, view.width, rh - 12 * s), '2. Kat', 'Asansörle çıkılan yeni kat: 6 oda (201-206). Lobideki asansörde bekle, yukarı çık.',
+    this.AreaRow(new Rect(0, rh * 4, view.width, rh - 12 * s), '2. Kat', 'Asansörle çıkılan yeni kat: 6 oda (201-206). Lobideki asansörde bekle, yukarı çık.',
       G.floor2Open, Eco.Floor2Cost, () => G.OpenFloor2(), s);
 
     let y0 = rh * areaRows + 10 * s;
@@ -322,7 +326,7 @@ class Menu extends Behaviour {
   StaffTab(b, s) {
     const G = this.G, title = this.title, sub = this.sub;
     const rh = 158 * s;
-    const rows = 2 + G.cleaners.length + (G.CanHireCleaner ? 1 : 0) + 1;
+    const rows = 3 + G.cleaners.length + (G.CanHireCleaner ? 1 : 0) + 1;
     const view = new Rect(0, 0, b.width - 30 * s, rh * rows + 60 * s);
     this.staffScroll = GUI.BeginScrollView(b, this.staffScroll, view);
     let y = 0;
@@ -356,6 +360,14 @@ class Menu extends Behaviour {
     else
       this.HireRow(new Rect(0, y, view.width, rh - 12 * s), 'Barista', G.cafe.Open ? 'Kafede kahveleri senin yerine hazırlar.' : 'Önce Otel sekmesinden kafeyi aç.',
         Eco.BaristaCost, G.cafe.Open, () => { G.HireBarista(); this.baristaEdit = G.cafe.baristaName; }, s);
+    y += rh;
+
+    // Garson
+    if (G.restaurant.HasWaiter)
+      this.waiterEdit = this.StaffRow(new Rect(0, y, view.width, rh - 12 * s), 'Garson', G.restaurant.stats, this.waiterEdit, n => G.restaurant.Rename(n), 'Restoranda tabakları masalara o götürür.', s, 'waiterName');
+    else
+      this.HireRow(new Rect(0, y, view.width, rh - 12 * s), 'Garson', G.restaurant.Open ? 'Mutfaktan tabakları alıp masalara senin yerine götürür.' : 'Önce Otel sekmesinden restoranı aç.',
+        Eco.WaiterCost, G.restaurant.Open, () => { G.HireWaiter(); this.waiterEdit = G.restaurant.waiterName; }, s);
     y += rh;
 
     // Dinlenme odasi

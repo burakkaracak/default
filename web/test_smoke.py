@@ -23,6 +23,8 @@ tryit('upgrade', () => { for (let i = 0; i < 16; i++) { gm.UpgradeRoom(i); gm.Up
 tryit('recep', () => gm.HireReceptionist());
 tryit('cleaners', () => { gm.HireCleaner(); gm.HireCleaner(); gm.HireCleaner(); });
 tryit('barista', () => gm.HireBarista());
+tryit('restoran', () => { gm.OpenRestaurant(); gm.HireWaiter(); });
+tryit('yeni misafir', () => { const G = g.Customer.G; for (const t of [5,6,7,8,9]) gm.QueueSpawn({type:t,vip:false,celebrity:false,inspector:false,regular:null,reservation:null}); });
 tryit('ups', () => { for (let u = 0; u < 11; u++) gm.BuyUpgrade(u); });
 tryit('decor', () => { for (let s = 0; s < 6; s++) gm.BuyDecor(s, 1); });
 tryit('theme', () => { gm.BuyTheme(0, 1); gm.BuyTheme(1, 2); gm.BuyTheme(2, 3); gm.BuyTheme(3, 4); });
