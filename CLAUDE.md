@@ -12,7 +12,9 @@ Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oy
   - Derleme: `cd web && npm i && node build.mjs` → `dist/index.html` (artifact sayfası), `dist/game.js`, `dist/models.json`, `dist/play.html` (yerel deneme).
   - Testler (başsız Chromium): `python3 test_boot.py çıktı.png 1280 800 saniye "js"`, `test_smoke.py` (tüm sistemler + menü sekmeleri), `test_click.py çıktı 390 844 1` (telefon dokunma).
     Hata ayıklama: `window.__game` (GameManager, Popups, Store...), `window.__sub = 8` mantığı hızlandırır.
-- `eski-oyun-fikirleri.md`: Silinen eski web oyunundan fikirler.
+- Unity'de olmayan, sonradan eklenenler: restoran + garson (`web/src/64_restaurant.js`), yeni misafir türleri Köpekli/Fenomen/Emekli/Öğrenci/Sporcu (`33_customer.js`, köpek: `Dog`).
+  Hırsız olayı İSTENMİYOR (Elif sevmedi).
+- `eski-oyun-fikirleri.md`: Silinen eski web oyunundan fikirler (kalanlar: spa, spor salonu, çatı barı, yeni şehirler, etkinlikler, başarımlar, albüm).
 
 ## Yayın
 - Artifact: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu — hep aynı adres: `Artifact` publish, file_path `web/dist/index.html`,

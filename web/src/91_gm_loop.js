@@ -18,6 +18,9 @@ Object.assign(GameManager.prototype, {
     Store.SetInt(K + 'cafe', this.cafe.Open ? 1 : 0);
     Store.SetString(K + 'barista', this.cafe.HasBarista ? this.cafe.baristaName : '');
     Store.SetInt(K + 'pool', this.pool.Open ? 1 : 0);
+    Store.SetInt(K + 'rest', this.restaurant.Open ? 1 : 0);
+    Store.SetString(K + 'waiter', this.restaurant.HasWaiter ? this.restaurant.waiterName : '');
+    if (this.restaurant.HasWaiter) this.restaurant.stats.Save(K + 'st_wai');
     Store.SetInt(K + 'wing', this.wingOpen ? 1 : 0);
     Store.SetInt(K + 'floor2', this.floor2Open ? 1 : 0);
     Decor.Save(K);
@@ -78,6 +81,9 @@ Object.assign(GameManager.prototype, {
     const bn = Store.GetString(K + 'barista', '');
     if (this.cafe.Open && bn) this.cafe.HireBarista(bn, false);
     this.pool.SetOpen(Store.GetInt(K + 'pool', 0) === 1, false);
+    this.restaurant.SetOpen(Store.GetInt(K + 'rest', 0) === 1, false);
+    const wn = Store.GetString(K + 'waiter', '');
+    if (this.restaurant.Open && wn) { this.restaurant.HireWaiter(wn, false); this.restaurant.stats.Load(K + 'st_wai'); }
     this.dayNight.day = Store.GetInt(K + 'day', 1);
     this.dayNight.time = Store.GetFloat(K + 'time', 0.3);
     const rs = Store.GetString(K + 'ratings', '');
@@ -223,6 +229,7 @@ Object.assign(GameManager.prototype, {
     let ok = p.x > -15 + r && p.x < 15 - r && p.z > -12 + r && p.z < 3.9 - r;
     if (!ok && this.wingOpen && p.x > 14.6 && p.x < 35.25 - r && p.z > -0.8 + r && p.z < 3.9 - r) ok = true;
     if (!ok && this.pool.InArea(p, r)) ok = true;
+    if (!ok && this.restaurant.InArea(p, r)) ok = true;
     if (!ok && this.floor2Open && p.x > -15 + r && p.x < 15 - r && p.z > Elevator.Floor2Z - 0.55 + r && p.z < Elevator.Floor2Z + 3.9 - r) ok = true;
     if (!ok) {
       for (const room of this.rooms) {
@@ -234,7 +241,7 @@ Object.assign(GameManager.prototype, {
     }
     if (!ok) return false;
     for (const o of this.obstacles) if (p.x > o.xMin - r && p.x < o.xMax + r && p.z > o.yMin - r && p.z < o.yMax + r) return false;
-    if (this.cafe.Blocked(p, r) || this.pool.Blocked(p, r) || Decor.Blocked(p, r)) return false;
+    if (this.cafe.Blocked(p, r) || this.pool.Blocked(p, r) || this.restaurant.Blocked(p, r) || Decor.Blocked(p, r)) return false;
     for (const room of this.rooms)
       if (p.z > room.Z(4) && p.z < room.Z(11) && Math.abs(p.x - room.x) < 2.6 && room.Blocked(p, r)) return false;
     return true;

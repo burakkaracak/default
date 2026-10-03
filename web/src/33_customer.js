@@ -1,7 +1,8 @@
 // Müşteri: gelir, bekler, odada uyur, istek yapar; çıkışta kafe ya da havuza uğrayabilir
 class Customer extends Behaviour {
-  static S = { Queue: 0, Seat: 1, ToRoom: 2, Sleeping: 3, Cafe: 4, CafeSeat: 5, Swim: 6, Leaving: 7 };
-  static G = { Normal: 0, Is: 1, Turist: 2, Balayi: 3, Aile: 4 };
+  static S = { Queue: 0, Seat: 1, ToRoom: 2, Sleeping: 3, Cafe: 4, CafeSeat: 5, Swim: 6, Leaving: 7, Rest: 8 };
+  static G = { Normal: 0, Is: 1, Turist: 2, Balayi: 3, Aile: 4, Kopekli: 5, Fenomen: 6, Emekli: 7, Ogrenci: 8, Sporcu: 9 };
+  static TypeNames = ['', 'İş insanı', 'Turist', 'Balayı çifti ♥', 'Aile', 'Köpekli misafir', 'Fenomen', 'Emekli', 'Öğrenci', 'Sporcu'];
   static get Entrance() { return V(0, 0, -11); }
   static get Sidewalk() { return V(0, 0, -14); }
   static get LoungeGate() { return V(-8.6, 0, -9.15); }
@@ -41,7 +42,10 @@ class Customer extends Behaviour {
         const b2 = b1 + (love ? 0.1 : 0.1) * ha;
         const b3 = b2 + ((love ? 0.15 : 0.2) + bz) * hi;
         const b4 = b3 + (love ? 0.15 : 0.2) * ht;
+        // yeni misafir türleri
+        const b5 = b4 + 0.07, b6 = b5 + 0.07, b7 = b6 + 0.06, b8 = b7 + 0.06, b9 = b8 + (gm.Stars >= 3.5 ? 0.05 : 0);
         if (r < b1) this.type = G.Balayi; else if (r < b2) this.type = G.Aile; else if (r < b3) this.type = G.Is; else if (r < b4) this.type = G.Turist;
+        else if (r < b5) this.type = G.Emekli; else if (r < b6) this.type = G.Ogrenci; else if (r < b7) this.type = G.Kopekli; else if (r < b8) this.type = G.Sporcu; else if (r < b9) this.type = G.Fenomen;
       }
     }
     // Bütçe: herkes en iyi odayı istemez; böylece bazıları daha iyi oda ister (yükseltme isteği)
@@ -52,6 +56,10 @@ class Customer extends Behaviour {
     else if (t === G.Balayi) this.budget = bq < 0.2 ? 1 : bq < 0.6 ? 2 : 3;
     else if (t === G.Aile) this.budget = bq < 0.4 ? 1 : bq < 0.8 ? 2 : 3;
     else if (t === G.Turist) this.budget = bq < 0.55 ? 1 : bq < 0.9 ? 2 : 3;
+    else if (t === G.Ogrenci) this.budget = bq < 0.8 ? 1 : 2;
+    else if (t === G.Emekli) this.budget = bq < 0.3 ? 1 : bq < 0.7 ? 2 : 3;
+    else if (t === G.Fenomen) this.budget = bq < 0.25 ? 2 : 3;
+    else if (t === G.Sporcu) this.budget = bq < 0.35 ? 1 : bq < 0.75 ? 2 : 3;
     else this.budget = bq < 0.45 ? 1 : bq < 0.8 ? 2 : 3;
     if (this.regular != null) this.budget = 3;
 
@@ -61,13 +69,17 @@ class Customer extends Behaviour {
     this.rig = Rig.Model(this.go, look);
     this.mood = U.Text(null, V(), '', 0.12, Col.white, true);
     SetActive(this.mood.gameObject, false);
-    const pt = t === G.Is ? 0.7 : t === G.Aile ? 0.85 : t === G.Turist ? 1.1 : 1;
+    const pt = t === G.Is ? 0.7 : t === G.Aile ? 0.85 : t === G.Turist ? 1.1 : t === G.Fenomen ? 0.75 : t === G.Emekli ? 1.5 : t === G.Ogrenci ? 1.2 : t === G.Sporcu ? 0.9 : 1;
     this.patience = (this.vip ? 35 : 45) * pt * Eco.PatienceMul;
     if (this.regular != null) this.patience *= 1.3;
     if (this.reservation != null) this.patience *= 1.25;
     if (this.celebrity) this.patience = 28 * Eco.PatienceMul;
 
     if (t === G.Turist) U.Box('SirtCantasi', this.go, V(0, 1.05, -0.42), V(0.5, 0.6, 0.28), C(0.95, 0.55, 0.2));
+    if (t === G.Ogrenci) U.Box('SirtCantasi', this.go, V(0, 1.05, -0.42), V(0.46, 0.55, 0.26), C(0.3, 0.5, 0.9));
+    if (t === G.Fenomen) U.Box('Telefon', this.go, V(0.32, 1.35, 0.3), V(0.1, 0.2, 0.03), C(0.12, 0.12, 0.15));
+    if (t === G.Sporcu) U.Box('Bandana', this.go, V(0, 1.98, 0), V(0.62, 0.08, 0.62), C(0.95, 0.3, 0.3), 'Cylinder');
+    if (t === G.Kopekli) this.dog = Dog.Make(this);
     if (t === G.Balayi) {
       const partner = this.regular != null && this.regular.partner != null ? this.regular.partner : Rig.Guests[Random.RangeInt(0, Rig.Guests.length)];
       this.follower = Follower.Make(this, partner, 1);
@@ -77,8 +89,8 @@ class Customer extends Behaviour {
     else if (this.reservation != null) this.typeTag = U.Text(null, V(), 'Rezervasyon · ' + this.reservation.name, 0.05, C(0.5, 0.95, 1), true);
     else if (this.celebrity) this.typeTag = U.Text(null, V(), 'Ünlü sanatçı', 0.055, C(1, 0.6, 0.9), true);
     else if (t !== G.Normal && !this.inspector) {
-      const tn = ['', 'İş insanı', 'Turist', 'Balayı çifti ♥', 'Aile'];
-      const tc = [Col.white, C(0.6, 0.85, 1), C(0.6, 1, 0.6), C(1, 0.6, 0.8), C(1, 0.8, 0.45)];
+      const tn = Customer.TypeNames;
+      const tc = [Col.white, C(0.6, 0.85, 1), C(0.6, 1, 0.6), C(1, 0.6, 0.8), C(1, 0.8, 0.45), C(0.95, 0.75, 0.55), C(1, 0.55, 0.85), C(0.85, 0.85, 1), C(0.55, 0.8, 1), C(1, 0.6, 0.45)];
       this.typeTag = U.Text(null, V(), tn[t], 0.05, tc[t], true);
     }
     if (this.vip) {
@@ -96,7 +108,8 @@ class Customer extends Behaviour {
   get Busy() { return this.s === Customer.S.Sleeping || this.sitting || this.swimming; }
   get PayMul() {
     const G = Customer.G;
-    return (this.celebrity ? 3 : this.vip ? 2 : 1) * (this.type === G.Is ? (Regulars.BusinessPerk ? 1.43 : 1.3) : this.type === G.Balayi || this.type === G.Aile ? 1.5 : 1) * (this.reservation != null ? 1.2 : 1);
+    const tm = { [G.Kopekli]: 1.25, [G.Fenomen]: 1.3, [G.Emekli]: 1.1, [G.Ogrenci]: 0.8, [G.Sporcu]: 1.15 }[this.type] || 1;
+    return (this.celebrity ? 3 : this.vip ? 2 : 1) * (this.type === G.Is ? (Regulars.BusinessPerk ? 1.43 : 1.3) : this.type === G.Balayi || this.type === G.Aile ? 1.5 : tm) * (this.reservation != null ? 1.2 : 1);
   }
   // Bu misafirin kabul edeceği en düşük oda seviyesi
   get MinLevel() { return Math.max(this.vip || this.celebrity ? 2 : 1, this.reservation != null ? this.reservation.level : 1); }
@@ -112,6 +125,11 @@ class Customer extends Behaviour {
       case G.Turist: return ['Şehir haritası?', 'Havlu lütfen!', 'Su getirir misin?'];
       case G.Balayi: return ['Gül yaprakları!', 'Şampanya lütfen!', 'Çikolata?'];
       case G.Aile: return ['Ekstra yatak!', 'Oyuncak var mı?', 'Çocuk menüsü?'];
+      case G.Kopekli: return ['Mama kabı lütfen!', 'Köpek yatağı?', 'Su kabı getirir misin?'];
+      case G.Fenomen: return ['Ring ışığı var mı?', 'Wi-Fi şifresi!', 'Çiçek buketi lütfen!'];
+      case G.Emekli: return ['Bir çay lütfen!', 'Gazete var mı?', 'Ekstra battaniye!'];
+      case G.Ogrenci: return ['Wi-Fi şifresi?', 'Atıştırmalık var mı?', 'Şarj aleti?'];
+      case G.Sporcu: return ['Protein içeceği!', 'Buz torbası?', 'Havlu lütfen!'];
     }
     return null;
   }
@@ -130,6 +148,7 @@ class Customer extends Behaviour {
     this.sitting = false;
     if (this.seat != null) this.transform.position.copy(Vec.add(this.seat.pos, Vec.mul(this.seat.fwd, 0.9)));
     else if (this.cafeSeat != null) this.transform.position.copy(Vec.add(this.cafeSeat.pos, Vec.mul(this.cafeSeat.fwd, 0.9)));
+    else if (this.restSeat != null) this.transform.position.copy(this.restSeat.Approach);
     this.rig.act = Rig.Act.None;
   }
 
@@ -215,6 +234,29 @@ class Customer extends Behaviour {
     this.actT = Random.Range(4, 6);
   }
 
+  GoToRestaurant(st) {
+    this.restSeat = st;
+    this.s = Customer.S.Rest;
+    this.path.length = 0;
+    this.ToLobby(this.transform.position.clone());
+    const p = this.path.length > 0 ? this.path[this.path.length - 1] : this.transform.position;
+    if (p.x < -6) this.path.push(V(-9, 0, -1));
+    const a = st.Approach;
+    this.path.push(Restaurant.LobbySide, Restaurant.Door, V(a.x, 0, Restaurant.AisleZ), a);
+  }
+
+  // Restorandan kalkış: yediyse mutlu, yemek gelmediyse üzgün
+  RestDone(ate) {
+    const st = this.restSeat;
+    this.StandUp();
+    this.restSeat = null;
+    this.s = Customer.S.Leaving;
+    const a = st.Approach;
+    this.ExitPath(Restaurant.LobbySide);
+    this.path.unshift(V(a.x, 0, Restaurant.AisleZ), Restaurant.Door, Restaurant.LobbySide);
+    GameManager.I.FloatText(Vec.add(this.transform.position, V(0, 2.6, 0)), ate ? '♥' : '☹', ate ? C(1, 0.45, 0.6) : C(0.7, 0.7, 0.75), 0.14);
+  }
+
   GoSwim(sp) {
     this.swimSpot = sp;
     this.s = Customer.S.Swim;
@@ -247,6 +289,11 @@ class Customer extends Behaviour {
     if (this.type === G.Balayi) sat += lv >= 3 ? 0.8 : lv <= 1 ? -0.5 : 0;
     if (this.type === G.Aile && lv >= 2) sat += 0.4;
     if (this.type === G.Is && this.waited > 20) sat -= 0.4;
+    if (this.type === G.Kopekli) sat += lv >= 2 ? 0.3 : -0.2;            // köpekle geniş oda ister
+    if (this.type === G.Fenomen) { if (this.waited > 20) sat -= 0.5; if (room != null && room.theme > 0) sat += 0.4; } // fotoğraflık oda sever
+    if (this.type === G.Emekli) sat += 0.2;                                // kolay memnun olur
+    if (this.type === G.Ogrenci && lv <= 1) sat += 0.4;                    // ucuz oda yeter
+    if (this.type === G.Sporcu && GameManager.I.pool.Open) sat += 0.3;
     sat += GameManager.I.DecorBonus;
     if (room != null) sat += Themes.Bonus(room.theme, this.type);
     sat += Events.SatBonus;
@@ -294,6 +341,7 @@ class Customer extends Behaviour {
   destroy() {
     for (const t of [this.mood, this.zzz, this.vipTag, this.typeTag]) if (t) Destroy(t.gameObject);
     if (this.follower) Destroy(this.follower.go);
+    if (this.dog) Destroy(this.dog.go);
     Destroy(this.go);
   }
 
@@ -397,6 +445,17 @@ class Customer extends Behaviour {
           }
         }
         break;
+      case S.Rest:
+        if (!this.sitting) {
+          if (U.Walk(T, this.path, Customer.Speed, rig)) {
+            this.sitting = true;
+            T.position.copy(this.restSeat.pos);
+            lookRotation(T, this.restSeat.fwd);
+            rig.act = Rig.Act.Sit;
+            gm.restaurant.Seated(this.restSeat);
+          }
+        } else rig.Tick(0);
+        break;
       case S.Leaving:
         if (U.Walk(T, this.path, Customer.Speed, rig)) { arrRemove(gm.customers, this); this.destroy(); }
         break;
@@ -415,7 +474,8 @@ class Customer extends Behaviour {
     if (this.regular != null) Regulars.OnLeave(this, sat, room, false);
     if (this.inspector) StarExam.Result(sat);
     room.SetDirty();
-    const tipMul = (0.5 + sat * 0.2) * (this.vip ? 3 : 1) * (this.celebrity ? 2 : 1) * (this.type === G.Balayi ? 1.5 : 1) * Seasons.TipMul * (1 + Regulars.TipPerk) * RoomKinds.TipMul(room.kind, this.type);
+    const typeTip = this.type === G.Emekli ? 1.4 : this.type === G.Ogrenci ? 0.6 : this.type === G.Fenomen ? 1.2 : 1;
+    const tipMul = typeTip * (0.5 + sat * 0.2) * (this.vip ? 3 : 1) * (this.celebrity ? 2 : 1) * (this.type === G.Balayi ? 1.5 : 1) * Seasons.TipMul * (1 + Regulars.TipPerk) * RoomKinds.TipMul(room.kind, this.type);
     room.tips.Add(Math.max(1, Mathf.RoundToInt(room.Tip * tipMul)));
     this.transform.position.copy(room.Inside);
     lookRotation(this.transform, Vec.back);
@@ -423,9 +483,16 @@ class Customer extends Behaviour {
     this.pauseAct = Rig.Act.Cheer;
     const face = sat >= 4.5 ? '♥♥' : sat >= 3.5 ? '♥' : sat >= 2.5 ? '☺' : '☹';
     gm.FloatText(Vec.add(this.transform.position, V(0, 2.6, 0)), face, sat >= 2.5 ? C(1, 0.45, 0.6) : C(0.7, 0.7, 0.75), 0.16);
-    // Çıkışta kafe ya da havuz
+    // Fenomen: memnunsa otel hakkında paylaşım yapar (takipçi kazandırır), değilse kötü yorum
+    if (this.type === G.Fenomen) {
+      if (sat >= 4) { Social.Add('@gezgin.fenomen', gm.hotelName + ' harika! Odanın her köşesi fotoğraflık. Takipçilerime tavsiye ederim ✨', Random.RangeInt(600, 1400), false, 1); Social.followers += 40; }
+      else if (sat < 3) Social.Add('@gezgin.fenomen', gm.hotelName + ' beklediğim gibi değildi, beklemekten yoruldum.', Random.RangeInt(300, 800), true, 1);
+    }
+    // Çıkışta restoran, kafe ya da havuz
+    const restC = 0.28 + (this.type === G.Emekli ? 0.25 : this.type === G.Sporcu ? 0.15 : this.type === G.Aile ? 0.12 : this.type === G.Balayi ? 0.1 : this.type === G.Is ? 0.05 : 0);
+    if (gm.restaurant.Open && Random.value < restC && gm.restaurant.Join(this)) return;
     const cafeC = Seasons.CafeChance + Events.CafeAdd + (this.type === G.Is ? 0.2 : this.type === G.Turist ? 0.1 : 0);
-    const poolC = Seasons.PoolChance * Events.PoolMul * (this.type === G.Turist ? 1.4 : this.type === G.Is ? 0.5 : this.type === G.Aile ? 1.2 : 1);
+    const poolC = Seasons.PoolChance * Events.PoolMul * (this.type === G.Turist ? 1.4 : this.type === G.Is ? 0.5 : this.type === G.Aile ? 1.2 : this.type === G.Sporcu ? 1.8 : this.type === G.Emekli ? 0.5 : this.type === G.Kopekli ? 0.6 : this.type === G.Ogrenci ? 1.2 : 1);
     if (gm.cafe.Open && Random.value < cafeC && gm.cafe.Join(this)) return;
     if (gm.pool.Open && Random.value < poolC) {
       const sp = gm.pool.Join(this);
@@ -494,5 +561,54 @@ class Follower extends Behaviour {
     if (dist > 0.05) { T.position.add(Vec.mul(d, Math.min(dist, sp * Time.deltaTime) / dist)); U.Face(T, d); }
     else U.Face(T, fwd);
     this.rig.Tick(dist > 0.15 ? 1 : 0);
+  }
+}
+
+// Köpekli misafirin köpeği: sahibinin yanında koşturur
+class Dog extends Behaviour {
+  static Make(owner) {
+    const d = new Dog();
+    d.go.name = 'Kopek';
+    d.owner = owner;
+    d.go.position.copy(Vec.add(owner.transform.position, V(-0.7, 0, 0)));
+    const fur = [C(0.85, 0.65, 0.4), C(0.95, 0.95, 0.92), C(0.3, 0.25, 0.22), C(0.75, 0.5, 0.3)][Random.RangeInt(0, 4)];
+    const b = d.body = U.Pivot(d.go, V(), 'Govde');
+    U.Box('Govde', b, V(0, 0.38, 0), V(0.32, 0.3, 0.62), fur);
+    U.Box('Bas', b, V(0, 0.6, 0.38), V(0.3, 0.28, 0.3), fur);
+    U.Box('Burun', b, V(0, 0.55, 0.56), V(0.14, 0.12, 0.12), Col.lerp(fur, Col.black, 0.4));
+    U.Box('BurunUc', b, V(0, 0.58, 0.63), V(0.06, 0.05, 0.03), C(0.1, 0.1, 0.1));
+    for (const x of [-0.11, 0.11]) {
+      U.Box('Kulak', b, V(x, 0.78, 0.33), V(0.08, 0.12, 0.05), Col.lerp(fur, Col.black, 0.25));
+      U.Box('Goz', b, V(x * 0.7, 0.66, 0.53), V(0.04, 0.04, 0.02), C(0.08, 0.08, 0.1));
+    }
+    d.legs = [];
+    for (const [x, z] of [[-0.1, 0.2], [0.1, 0.2], [-0.1, -0.2], [0.1, -0.2]]) d.legs.push(U.Box('Bacak', b, V(x, 0.12, z), V(0.08, 0.24, 0.08), fur));
+    d.tail = U.Box('Kuyruk', b, V(0, 0.55, -0.36), V(0.06, 0.06, 0.24), fur);
+    U.Box('Tasma', b, V(0, 0.5, 0.25), V(0.32, 0.05, 0.08), C(0.9, 0.2, 0.25));
+    d.phase = Math.random() * 6;
+    return d;
+  }
+  LateUpdate() {
+    const o = this.owner;
+    if (!o || !alive(o.go)) { Destroy(this.go); return; }
+    const hide = o.Busy;
+    this.go.visible = !hide;
+    const lt = o.transform;
+    let fwd = forwardOf(lt); fwd = Vec.norm(fwd);
+    const right = V(fwd.z, 0, -fwd.x);
+    const target = Vec.add(Vec.sub(V(lt.position.x, 0, lt.position.z), Vec.mul(fwd, 0.3)), Vec.mul(right, -0.75));
+    const T = this.transform;
+    if (hide) { T.position.copy(target); return; }
+    const d = V(target.x - T.position.x, 0, target.z - T.position.z);
+    let dist = Vec.len(d);
+    if (dist > 12) { T.position.copy(target); dist = 0; }
+    const moving = dist > 0.08;
+    if (moving) { T.position.add(Vec.mul(d, Math.min(dist, Mathf.Clamp(dist * 4, 0, 6) * Time.deltaTime) / dist)); U.Face(T, d); }
+    else U.Face(T, fwd);
+    this.phase += Time.deltaTime * (moving ? 16 : 4);
+    const sw = moving ? Math.sin(this.phase) * 0.5 : 0;
+    this.legs[0].rotation.x = sw; this.legs[3].rotation.x = sw; this.legs[1].rotation.x = -sw; this.legs[2].rotation.x = -sw;
+    this.tail.rotation.y = Math.sin(this.phase * (moving ? 0.6 : 2)) * 0.6;
+    this.body.position.y = moving ? Math.abs(Math.sin(this.phase)) * 0.04 : 0;
   }
 }
