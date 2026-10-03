@@ -24,6 +24,7 @@ tryit('recep', () => gm.HireReceptionist());
 tryit('cleaners', () => { gm.HireCleaner(); gm.HireCleaner(); gm.HireCleaner(); });
 tryit('barista', () => gm.HireBarista());
 tryit('restoran', () => { gm.OpenRestaurant(); gm.HireWaiter(); });
+tryit('spa', () => { gm.OpenSpa(); gm.HireTherapist(); });
 tryit('yeni misafir', () => { const G = g.Customer.G; for (const t of [5,6,7,8,9]) gm.QueueSpawn({type:t,vip:false,celebrity:false,inspector:false,regular:null,reservation:null}); });
 tryit('ups', () => { for (let u = 0; u < 11; u++) gm.BuyUpgrade(u); });
 tryit('decor', () => { for (let s = 0; s < 6; s++) gm.BuyDecor(s, 1); });

@@ -11,7 +11,8 @@ const Eco = {
   WingStart: 6,
 
   // ---- Alanlar ----
-  RestaurantCost: 5000, WaiterCost: 1500,
+  RestaurantCost: 5000, WaiterCost: 1500, SpaCost: 7000, TherapistCost: 1800,
+  get SpaPrice() { return Mathf.RoundToInt(32 + 8 * Eco.Stars); },
   get RestPrice() { return Mathf.RoundToInt((24 + 6 * Eco.Stars) * (1 + 0.15 * Eco.Lv(Eco.Up.Breakfast))); },
   CafeCost: 1200, PoolCost: 3000, WingCost: 8000, Floor2Cost: 30000, BaristaCost: 800,
   get CafePrice() { return Mathf.RoundToInt((14 + 3 * Eco.Stars) * (1 + 0.4 * Eco.Lv(Eco.Up.Tips) * 0.5)); },

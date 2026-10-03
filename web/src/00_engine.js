@@ -244,7 +244,7 @@ const U = {
       const t = tex.clone(); t.needsUpdate = true; t.repeat.set(tiling.x, tiling.y); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
       m.map = t;
     }
-    if (emission > 0) { m.emissive = Col.three(c); m.emissiveIntensity = emission * 0.55; }
+    if (emission > 0) { m.emissive = Col.three(c); m.emissiveIntensity = emission * 0.75; }
     if ((c.a ?? 1) < 0.999) { m.transparent = true; m.opacity = c.a; m.depthWrite = false; }
     m.userData.key = key; m.userData.color = c;
     this._matCache.set(key, m);
@@ -472,17 +472,17 @@ class TextMesh {
   }
   redraw() {
     const lines = this._text.split('\n');
-    const px = 64, font = `bold ${px}px ${UI_FONT}`;
+    const px = 96, font = `bold ${px}px ${UI_FONT}`;
     _measure.font = font;
     let w = 1; for (const l of lines) w = Math.max(w, _measure.measureText(l).width);
-    const pad = 8, lh = px * 1.15;
+    const pad = 12, lh = px * 1.15;
     const cw = Math.ceil(w + pad * 2), ch = Math.ceil(lh * lines.length + pad * 2);
     const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
     const ctx = cv.getContext('2d'); ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const c = this._color;
     lines.forEach((l, i) => {
       const y = pad + lh * (i + 0.5);
-      if (this.shadow) { ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(l, cw / 2 + 4, y + 4); }
+      if (this.shadow) { ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillText(l, cw / 2 + 6, y + 6); }
       ctx.fillStyle = Col.css(C(c.r, c.g, c.b, 1)); ctx.fillText(l, cw / 2, y);
     });
     if (this.mat.map) this.mat.map.dispose();
@@ -494,7 +494,7 @@ class TextMesh {
   }
   applyScale() {
     // Unity: fontSize 64 * characterSize / 10 ≈ satır yüksekliği (dünya birimi)
-    const k = this._size * 6.4 / 64 * this._scaleK;
+    const k = this._size * 6.4 / 96 * this._scaleK;
     this.obj.scale.set(this.cw * k, this.ch * k, 1);
   }
 }
@@ -810,6 +810,12 @@ const GUI = {
       for (const wd of words) { const t = cur ? cur + ' ' + wd : wd; if (ctx.measureText(t).width > w && cur) { lines.push(cur); cur = wd; } else cur = t; }
       lines.push(cur);
     }
+    // taşma denetimi (test için): yazı kutusuna sığmıyorsa kaydet
+    if (GUI.audit) {
+      let mw = 0; for (const l of lines) mw = Math.max(mw, ctx.measureText(l).width);
+      const tot = fs * 1.2 * lines.length;
+      if (mw > w + 2 || tot > a.height * 1.35 + 4) GUI.overflows.push({ text: text.slice(0, 60), w: Math.round(mw), boxW: Math.round(w), h: Math.round(tot), boxH: Math.round(a.height), fs });
+    }
     const lh = fs * 1.2, total = lh * lines.length;
     const al = st.alignment ?? TextAnchor.UpperLeft;
     const h = al === TextAnchor.UpperLeft || al === TextAnchor.UpperCenter || al === TextAnchor.UpperRight ? 0 : al === TextAnchor.LowerLeft || al === TextAnchor.LowerCenter || al === TextAnchor.LowerRight ? 2 : 1;
@@ -884,7 +890,7 @@ const GUI = {
     el.oninput = () => { el.dataset.edited = '1'; };
     return el.value;
   },
-  scale: 1,
+  scale: 1, audit: false, overflows: [],
 };
 const TextAnchor = { UpperLeft: 0, UpperCenter: 1, UpperRight: 2, MiddleLeft: 3, MiddleCenter: 4, MiddleRight: 5, LowerLeft: 6, LowerCenter: 7, LowerRight: 8 };
 const FontStyle = { Normal: 0, Bold: 1 };

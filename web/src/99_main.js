@@ -90,7 +90,7 @@ function setupInput() {
   addEventListener('keydown', e => { Input.keys.add(e.code); Sfx.Init(); Sfx.Resume(); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); });
   addEventListener('keyup', e => Input.keys.delete(e.code));
   addEventListener('blur', () => { Input.keys.clear(); Input.pointerDown = false; });
-  addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+  addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); Quality.Resize(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && GameManager.I) { GameManager.I.Save(); Cloud.Push(); } });
   addEventListener('pagehide', () => { if (GameManager.I) { GameManager.I.Save(); Cloud.Push(); } });
 }
@@ -163,7 +163,9 @@ function frame(now) {
   }
   applyCamera();
   applySun();
-  renderer.render(scene, camera);
+  Quality.Tick(raw);
+  Quality.Render();
+  Photo.AfterRender();
 
   // arayüz: derinliği büyük olan önce çizilir (Unity GUI.depth)
   // arayüz ölçeği: masaüstünde Unity'deki gibi (yükseklik/1080); telefonda okunur kalsın
@@ -187,11 +189,13 @@ async function boot() {
   Cloud.booted = true;
   const ld = document.getElementById('loading'); if (ld) ld.remove();
   GameManager.Boot();
+  Quality.Init();
+  Photo.Init();
   if (Cloud.restored) GameManager.I.Notify('Kayıt buluttan yüklendi');
   setInterval(() => Cloud.Push(), 15000);
   requestAnimationFrame(frame);
   // test ve hata ayıklama için
-  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE };
+  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE, Quality, Wedding, Photo };
   window.__ready = true;
 }
 boot().catch(e => { console.error(e); const ld = document.getElementById('loading'); if (ld) ld.innerHTML = '<div style="color:#fff;padding:20px">Yüklenemedi: ' + e.message + '</div>'; });
