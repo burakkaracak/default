@@ -4,4 +4,5 @@ unity/[Oo]bj/
 unity/[Ll]ogs/
 unity/[Bb]uild*/
 unity/[Uu]serSettings/
+web/node_modules/
 .DS_Store
