@@ -79,6 +79,7 @@ class DayNight extends Behaviour {
 
     // Kapalı havada lambalar erken yanar: içerisi sıcak ve aydınlık, dışarısı gri
     const eff = this.Daylight * (1 - 0.65 * gl);
+    if (scene.environment) scene.environmentIntensity = 0.06 + 0.29 * eff; // ortam yansıması gece kısılır
     const on = eff < 0.55;
     if ((on ? 1 : 0) !== this.fixLit) {
       this.fixLit = on ? 1 : 0;

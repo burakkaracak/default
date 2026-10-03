@@ -242,8 +242,14 @@ class CameraFollow extends Behaviour {
       t.z = Mathf.Clamp(t.z, Elevator.Floor2Z + 2.5, Elevator.Floor2Z + 5.5);
     } else {
       const mn = gm ? gm.CamMinX : -9, mx = gm ? gm.CamMaxX : 9;
-      t.x = Mathf.Clamp(t.x, Math.min(mn + extra, 0), Math.max(mx - extra, 0));
-      t.z = Mathf.Clamp(t.z, -10, 5.5);
+      if (Outside.IsOutside(this.target.position)) {
+        // dışarıda: kamera bahçeleri ve caddeyi de gezer
+        t.x = Mathf.Clamp(t.x, -26 + extra, 33 - extra);
+        t.z = Mathf.Clamp(t.z, -16.5, 5.5);
+      } else {
+        t.x = Mathf.Clamp(t.x, Math.min(mn + extra, 0), Math.max(mx - extra, 0));
+        t.z = Mathf.Clamp(t.z, -10, 5.5);
+      }
     }
     t.y = 0;
     this.zoom = z;
