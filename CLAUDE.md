@@ -11,6 +11,7 @@ Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oy
   - `web/models/*.glb`: Kenney karakter/mobilya modelleri (FBX'ten çevrildi; mobilyalar assimp ile, karakterler three FBXLoader ile).
   - Derleme: `cd web && npm i && node build.mjs` → `dist/index.html` (artifact sayfası), `dist/game.js`, `dist/models.json`, `dist/play.html` (yerel deneme).
   - Testler (başsız Chromium): `python3 test_boot.py çıktı.png 1280 800 saniye "js"`, `test_smoke.py` (tüm sistemler + menü sekmeleri), `test_click.py çıktı 390 844 1` (telefon dokunma), `test_text.py` (yazı taşması; 4 ekran boyutu, 0 olmalı).
+    Her değişiklikten sonra telefon dikey boyutunda da (393x660) ekran görüntüsü al ve renklere, kameraya, yazılara özellikle bak; kullanıcı iPhone 14 Pro'da Safari ile oynuyor.
     Hata ayıklama: `window.__game` (GameManager, Popups, Store...), `window.__sub = 8` mantığı hızlandırır.
 - Unity'de olmayan, sonradan eklenenler: restoran + garson (`web/src/64_restaurant.js`), yeni misafir türleri Köpekli/Fenomen/Emekli/Öğrenci/Sporcu (`33_customer.js`, köpek: `Dog`).
   Elif için: spa + terapist (`66_spa.js`, restoranın doğusu), bahçede düğün organizasyonu (`67_wedding.js`, 3. günden sonra teklif gelir),
