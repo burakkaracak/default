@@ -15,44 +15,6 @@ class Menu extends Behaviour {
     };
     inp.click();
   }
-  // Unity sürümünün kayıt dosyası (anahtar<TAB>değer satırları, Store.cs biçimi)
-  static ParseUnitySave(text) {
-    const data = {};
-    for (const line of text.split(/\r?\n/)) {
-      const t = line.indexOf('\t');
-      if (t <= 0) continue;
-      const v = line.substring(t + 1);
-      let out = '';
-      for (let i = 0; i < v.length; i++) {
-        const c = v[i];
-        if (c === '\\' && i + 1 < v.length) { const n = v[++i]; out += n === 'n' ? '\n' : n === 't' ? '\t' : n; }
-        else out += c;
-      }
-      data[line.substring(0, t)] = out;
-    }
-    return data;
-  }
-  static PickUnitySave() {
-    const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = '.txt,text/plain';
-    inp.onchange = async () => {
-      const f = inp.files && inp.files[0];
-      if (!f) return;
-      let data;
-      try { data = Menu.ParseUnitySave(await f.text()); } catch (e) { data = {}; }
-      const ok = Object.keys(data).some(k => /^o4_.*saved$/.test(k) || k === 'o4_money');
-      if (!ok) { Popups.Show('Bu dosya okunamadı', 'Seçtiğin dosya Otel Ustası kaydı gibi görünmüyor. otel_kayit.txt dosyasını seç.', 'UNITY KAYDI').Add('Tamam', null, Popups.Grey); return; }
-      const money = parseInt(data.o4_money || '0', 10) || 0, day = parseInt(data.o4_day || '1', 10) || 1;
-      Popups.Show('Unity kaydı bulundu', 'Otel: ' + (data.o4_hotel || 'Otel Ustası') + '\nGün ' + day + ' · Kasa ' + Eco.TL(money) + '\n\nBuradaki ilerleme silinip bu kayıt yüklenecek.', 'UNITY KAYDI')
-        .Add('Yükle', () => {
-          data.o4_seen = ''; // Unity'nin zaman biçimi farklı: "sen yokken" hesabı yapılmasın
-          GameManager.I.loaded = false; // eski oyun kendi kaydını yazmasın
-          Store.Load(data); Store.Save(); location.reload();
-        }, Popups.Gold)
-        .Add('Vazgeç', null, Popups.Grey);
-    };
-    inp.click();
-  }
   static Tabs = ['Otel', 'Personel', 'Geliştirmeler', 'Dekor', 'Görevler', 'Hikâye', 'Ayarlar'];
   static Dark = C(0.11, 0.13, 0.21, 1);
   static Card = C(1, 1, 1, 0.06);
@@ -773,13 +735,6 @@ class Menu extends Behaviour {
       (pc > 0 ? pc + ' fotoğraf kullanılıyor.' : 'Henüz fotoğraf yok.') + ' Otelin tablolarında senin fotoğrafların görünür.', sub);
     if (this.Button(new Rect(row.xMax - 580 * s, row.y + 22 * s, 270 * s, 64 * s), 'Fotoğraf ekle', Green, true)) Menu.PickPhotos();
     if (this.Button(new Rect(row.xMax - 290 * s, row.y + 22 * s, 270 * s, 64 * s), 'Temizle', Grey, pc > 0)) { Photos.Clear(); G.Save(); location.reload(); }
-    y += rh;
-
-    row = new Rect(0, y, view.width, rh - 12 * s);
-    GUI.Panel(row, Card);
-    GUI.Label(new Rect(row.x + 22 * s, row.y + 8 * s, 600 * s, 44 * s), 'Unity kaydını yükle', title);
-    GUI.Label(new Rect(row.x + 22 * s, row.y + 50 * s, row.width - 340 * s, 56 * s), 'Mac\'teki otel_kayit.txt dosyasını seç. Buradaki ilerlemenin yerine geçer.', sub);
-    if (this.Button(new Rect(row.xMax - 290 * s, row.y + 22 * s, 270 * s, 64 * s), 'Dosya seç', Gold, true)) Menu.PickUnitySave();
     y += rh;
 
     row = new Rect(0, y, view.width, rh - 12 * s);
