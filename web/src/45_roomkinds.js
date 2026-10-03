@@ -32,14 +32,14 @@ const RoomKinds = {
 
   Match(k, t) {
     const K = RoomKinds, G = Customer.G;
-    return (k === K.Ekonomik && t === G.Turist) || (k === K.Aile && t === G.Aile) ||
+    return (k === K.Ekonomik && (t === G.Turist || t === G.Ogrenci)) || (k === K.Aile && t === G.Aile) ||
       (k === K.Balayi && t === G.Balayi) || (k === K.Is && t === G.Is);
   },
 
   Bonus(k, t, vip) {
     const K = RoomKinds, G = Customer.G;
     switch (k) {
-      case K.Ekonomik: return t === G.Turist ? 0.6 : vip ? -0.8 : -0.15;
+      case K.Ekonomik: return t === G.Turist || t === G.Ogrenci ? 0.6 : vip ? -0.8 : -0.15;
       case K.Aile: return t === G.Aile ? 1 : 0;
       case K.Balayi: return t === G.Balayi ? 1 : 0;
       case K.Is: return t === G.Is ? 0.8 : 0;
