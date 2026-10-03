@@ -103,11 +103,25 @@ async function loadModels(onProgress) {
     const res = await fetch('models.json');
     data = await res.json();
   }
-  const names = Object.keys(data);
+  // Karakter dokusu: data: URI'den (Safari'de modelin içindeki resim blob: ile yüklenemeyebiliyor)
+  let charTex = null;
+  if (data.__colormap) {
+    const img = new Image();
+    img.src = 'data:image/png;base64,' + data.__colormap;
+    await img.decode().catch(() => { });
+    charTex = new THREE.Texture(img);
+    charTex.colorSpace = THREE.SRGBColorSpace; charTex.flipY = false; charTex.magFilter = THREE.NearestFilter; charTex.needsUpdate = true;
+  }
+  const names = Object.keys(data).filter(n => !n.startsWith('__'));
   let done = 0;
   await Promise.all(names.map(async n => {
     const bin = Uint8Array.from(atob(data[n]), c => c.charCodeAt(0)).buffer;
     const g = await new Promise((ok, fail) => loader.parse(bin, '', ok, fail));
+    if (charTex && n.startsWith('character')) g.scene.traverse(o => {
+      if (!o.isMesh) return;
+      const ms = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of ms) if (m) { if (m.map && m.map !== charTex) m.map.dispose(); m.map = charTex; m.color.set(0xffffff); }
+    });
     U.models[n] = { scene: g.scene, animations: g.animations };
     done++; onProgress && onProgress(done / names.length);
   }));
