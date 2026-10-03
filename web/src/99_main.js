@@ -91,8 +91,8 @@ function setupInput() {
   addEventListener('keyup', e => Input.keys.delete(e.code));
   addEventListener('blur', () => { Input.keys.clear(); Input.pointerDown = false; });
   addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && GameManager.I) GameManager.I.Save(); });
-  addEventListener('pagehide', () => { if (GameManager.I) GameManager.I.Save(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && GameManager.I) { GameManager.I.Save(); Cloud.Push(); } });
+  addEventListener('pagehide', () => { if (GameManager.I) { GameManager.I.Save(); Cloud.Push(); } });
 }
 
 async function loadModels(onProgress) {
@@ -165,8 +165,14 @@ async function boot() {
   setupInput();
   const bar = document.getElementById('loadbar');
   await loadModels(p => { if (bar) bar.style.width = Math.round(p * 100) + '%'; });
+  // bulut kaydı (en fazla 6 sn beklenir)
+  const msg = document.querySelector('#loading p'); if (msg) msg.textContent = 'Kayıt yükleniyor…';
+  await Promise.race([Cloud.Init(), new Promise(r => setTimeout(r, 6000))]);
+  Cloud.booted = true;
   const ld = document.getElementById('loading'); if (ld) ld.remove();
   GameManager.Boot();
+  if (Cloud.restored) GameManager.I.Notify('Kayıt buluttan yüklendi');
+  setInterval(() => Cloud.Push(), 15000);
   requestAnimationFrame(frame);
   // test ve hata ayıklama için
   window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE };
