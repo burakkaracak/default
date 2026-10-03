@@ -266,5 +266,8 @@ class CameraFollow extends Behaviour {
     CamState.rot = { x: U.CamRot.x, y: 0 };
     CamState.pos = Vec.lerp(CamState.pos, this.Goal(), Time.deltaTime * 5);
     SunState.target = V(CamState.pos.x, 0, CamState.pos.z - CameraFollow.Offset.z * this.zoom);
+    // kamera uzaklaşınca (telefon dikey) sis de uzaklaşsın, yoksa renkler soluk görünür
+    const fd = (this.zoom - 1) * 22.3;
+    scene.fog.near = 40 + fd; scene.fog.far = 85 + fd;
   }
 }
