@@ -104,13 +104,15 @@ async function loadModels(onProgress) {
     data = await res.json();
   }
   // Karakter dokusu: data: URI'den (Safari'de modelin içindeki resim blob: ile yüklenemeyebiliyor)
+  // Karakter dokusu ham piksel olarak gömülü: çalışırken resim çözülmez (oyun paneli resim yüklemeyi engelleyebiliyor)
   let charTex = null;
   if (data.__colormap) {
-    const img = new Image();
-    img.src = 'data:image/png;base64,' + data.__colormap;
-    await img.decode().catch(() => { });
-    charTex = new THREE.Texture(img);
-    charTex.colorSpace = THREE.SRGBColorSpace; charTex.flipY = false; charTex.magFilter = THREE.NearestFilter; charTex.needsUpdate = true;
+    const c = data.__colormap;
+    const px = Uint8Array.from(atob(c.rgba), ch => ch.charCodeAt(0));
+    charTex = new THREE.DataTexture(px, c.w, c.h, THREE.RGBAFormat);
+    charTex.colorSpace = THREE.SRGBColorSpace; charTex.flipY = false;
+    charTex.magFilter = THREE.NearestFilter; charTex.minFilter = THREE.NearestFilter; charTex.generateMipmaps = false;
+    charTex.needsUpdate = true;
   }
   const names = Object.keys(data).filter(n => !n.startsWith('__'));
   let done = 0;
