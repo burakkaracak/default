@@ -26,7 +26,7 @@ const Quality = {
 
   Apply() {
     const L = this.level;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, L === 2 ? 2 : L === 1 ? 1.5 : 1));
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, L === 2 ? 2 : L === 1 ? 1.75 : 1.25));
     renderer.shadowMap.enabled = L > 0;
     sunLight.castShadow = L > 0;
     sunLight.shadow.mapSize.set(L === 2 ? 4096 : 2048, L === 2 ? 4096 : 2048);
