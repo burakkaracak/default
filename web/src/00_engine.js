@@ -198,6 +198,7 @@ const U = {
       case 'Cylinder': g = new THREE.CylinderGeometry(0.5, 0.5, 2, 24); break;
       case 'Capsule': g = new THREE.CapsuleGeometry(0.5, 1, 6, 16); break;
       case 'Quad': g = new THREE.PlaneGeometry(1, 1); break;
+      case 'CubeSeg': g = new THREE.BoxGeometry(1, 1, 1, 24, 1, 24); break;
       default: g = new THREE.BoxGeometry(1, 1, 1);
     }
     return this._geo[type] = g;
@@ -262,6 +263,8 @@ const U = {
 
   // ---- Nesneler ----
   Prim(name, parent, pos, scale, mat, type = 'Cube') {
+    // çok büyük düz kutular parçalı çizilir (bazı ekran kartlarında derinlik hatası olmasın)
+    if (type === 'Cube' && Math.max(scale.x, scale.z) > 25) type = 'CubeSeg';
     const m = new THREE.Mesh(U.geo(type), mat);
     m.name = name;
     m.castShadow = true; m.receiveShadow = true;
@@ -436,7 +439,7 @@ const _measure = document.createElement('canvas').getContext('2d');
 class TextMesh {
   constructor(parent, pos, s, size, c, shadow) {
     this._text = s || ''; this._size = size; this._color = c; this.shadow = shadow; this.flat = false;
-    this.mat = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, fog: false });
+    this.mat = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, fog: false });
     this.obj = new THREE.Sprite(this.mat);
     this.obj.name = 'Yazi'; this.obj.renderOrder = 10;
     this.obj.userData.ownMat = true; this.obj.userData.text = this;

@@ -35,6 +35,8 @@ for (const f of readdirSync('models').filter(f => f.endsWith('.glb')).sort())
 writeFileSync('dist/models.json', JSON.stringify(models));
 
 const html = readFileSync('index.html', 'utf8');
-writeFileSync('dist/index.html', html);
+writeFileSync('dist/index.html', html); // artifact sayfası (iskeleti yayın sırasında eklenir)
+// yerel deneme için tam belge
+writeFileSync('dist/play.html', '<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}</style></head><body>' + html + '</body></html>');
 console.log('tamam:', files.length, 'dosya,', (readFileSync('dist/game.js').length / 1024).toFixed(0), 'KB oyun,',
   (JSON.stringify(models).length / 1024 / 1024).toFixed(1), 'MB model');
