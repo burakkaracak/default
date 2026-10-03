@@ -1,0 +1,7 @@
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Ll]ogs/
+unity/[Bb]uild*/
+unity/[Uu]serSettings/
+.DS_Store
