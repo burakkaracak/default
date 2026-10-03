@@ -1,0 +1,4 @@
+{ "name": "otel-ustasi-web", "private": true, "version": "1.0.0",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": { "three": "0.186.1" },
+  "devDependencies": { "esbuild": "^0.25.0" } }
