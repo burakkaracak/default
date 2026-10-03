@@ -9,7 +9,7 @@ function setupRenderer() {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1.12;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -23,7 +23,7 @@ function setupRenderer() {
   W = new THREE.Group(); W.name = 'UnityUzayi'; W.scale.z = -1;
   scene.add(W);
 
-  camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.3, 200);
+  camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 3, 160);
   scene.add(camera);
 
   hemiLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1);
@@ -113,18 +113,7 @@ async function loadModels(onProgress) {
   }));
 }
 
-let _last = 0;
-function frame(now) {
-  requestAnimationFrame(frame);
-  const raw = Math.min(0.1, Math.max(0, (now - (_last || now)) / 1000));
-  _last = now;
-  Time.unscaledDeltaTime = raw;
-  Time.deltaTime = raw * Time.timeScale;
-  Time.time += Time.deltaTime;
-  Time.unscaledTime += raw;
-  Time.frameCount++;
-
-  // davranışlar
+function tickLogic() {
   for (let i = 0; i < behaviours.length; i++) {
     const b = behaviours[i];
     if (b.go.userData.destroyed) { behaviours.splice(i, 1); i--; continue; }
@@ -137,13 +126,33 @@ function frame(now) {
   for (let i = lateTasks.length - 1; i >= 0; i--) if (lateTasks[i].step(Time.deltaTime || 0)) lateTasks.splice(i, 1);
   for (const r of Rig.all) { if (r.go.userData.destroyed) { Rig.all.delete(r); continue; } r.update(Time.deltaTime); }
   Particles.update(Time.deltaTime);
+}
 
+let _last = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const raw = Math.min(0.1, Math.max(0, (now - (_last || now)) / 1000));
+  _last = now;
+  Time.unscaledDeltaTime = raw;
+  Time.deltaTime = raw * Time.timeScale;
+  Time.time += Time.deltaTime;
+  Time.unscaledTime += raw;
+  Time.frameCount++;
+
+  // test için: bir karede birden çok mantık adımı (window.__sub)
+  const sub = window.__sub || 1;
+  for (let k = 0; k < sub; k++) {
+    if (k > 0) { Time.deltaTime = raw * Time.timeScale; Time.time += Time.deltaTime; }
+    tickLogic();
+  }
   applyCamera();
   applySun();
   renderer.render(scene, camera);
 
   // arayüz: derinliği büyük olan önce çizilir (Unity GUI.depth)
-  GUI.scale = Math.min(innerHeight / 1080, innerWidth / 1000);
+  // arayüz ölçeği: masaüstünde Unity'deki gibi (yükseklik/1080); telefonda okunur kalsın
+  GUI.scale = innerWidth >= innerHeight ? Math.max(innerHeight / 1080, Math.min(0.55, innerWidth / 1500))
+    : Math.min(innerWidth / 740, innerHeight / 1080);
   GUI.begin();
   onGUIs.sort((a, b) => b.depth - a.depth);
   for (const g of onGUIs) { try { GUI.color = C(1, 1, 1, 1); g.fn(); } catch (e) { console.error(e); } }
@@ -159,6 +168,8 @@ async function boot() {
   const ld = document.getElementById('loading'); if (ld) ld.remove();
   GameManager.Boot();
   requestAnimationFrame(frame);
+  // test ve hata ayıklama için
+  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE };
   window.__ready = true;
 }
 boot().catch(e => { console.error(e); const ld = document.getElementById('loading'); if (ld) ld.innerHTML = '<div style="color:#fff;padding:20px">Yüklenemedi: ' + e.message + '</div>'; });
