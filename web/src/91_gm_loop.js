@@ -341,12 +341,13 @@ GameManager.prototype.OnGUI = function () {
   const s = this.UIScale, SW = Screen.width, SH = Screen.height, P = (r, c) => GUI.Panel(r, c);
   const { bigStyle, smallStyle, titleStyle, bannerStyle, btnStyle } = this;
 
-  // Dikey ekranda para paneli ikinci satıra iner, altındaki kartlar da aşağı kayar
-  const narrow = SW < SH, dy = narrow ? 100 * s : 0;
+  // Dikey ekranda: para paneli bilgi panelinin altına (solda) iner, görev ve rezervasyon kartları ekranın altına geçer;
+  // böylece üstteki odalar ve sağdaki düğmeler açıkta kalır
+  const narrow = SW < SH;
   // Para paneli
-  const r = narrow ? new Rect(SW / 2 - 170 * s, 194 * s, 340 * s, 84 * s) : new Rect(SW / 2 - 170 * s, 22 * s, 340 * s, 84 * s);
+  const r = narrow ? new Rect(20 * s, 196 * s, 340 * s, 76 * s) : new Rect(SW / 2 - 170 * s, 22 * s, 340 * s, 84 * s);
   P(r, C(0.1, 0.12, 0.2, 0.72));
-  const coin = new Rect(r.x + 16 * s, r.y + 14 * s, 56 * s, 56 * s);
+  const coin = new Rect(r.x + 16 * s, r.center.y - 28 * s, 56 * s, 56 * s);
   GUI.color = C(0.85, 0.6, 0.1); GUI.DrawTexture(coin, 'circle');
   GUI.color = C(1, 0.82, 0.25); GUI.DrawTexture(new Rect(coin.x + 5 * s, coin.y + 5 * s, coin.width - 10 * s, coin.height - 10 * s), 'circle');
   GUI.color = Col.white;
@@ -372,11 +373,12 @@ GameManager.prototype.OnGUI = function () {
   GUI.Label(new Rect(info.x + 20 * s, info.y + 118 * s, info.width - 30 * s, 34 * s), seasonTxt, titleStyle);
   titleStyle.normal.textColor = Col.white;
 
+  const buff = Events.BuffText;
   // Görev kartı
   const q = Quests.Current;
   this.questBtn = Rect.zero;
   if (q != null && !this.MenuOpen) {
-    const qr = new Rect(20 * s, 196 * s + dy, 500 * s, 104 * s);
+    const qr = narrow ? new Rect(20 * s, SH - 124 * s, 500 * s, 104 * s) : new Rect(20 * s, 196 * s, 500 * s, 104 * s);
     const done = Quests.CurrentDone;
     P(qr, done ? C(0.25, 0.55, 0.3, 0.9) : C(0.1, 0.12, 0.2, 0.62));
     titleStyle.fontSize = Mathf.RoundToInt(18 * s); titleStyle.normal.textColor = C(1, 0.86, 0.42);
@@ -401,7 +403,8 @@ GameManager.prototype.OnGUI = function () {
   // Bugünün rezervasyonları
   if (!this.MenuOpen && Reservations.Pending > 0) {
     const n = Math.min(3, Reservations.Pending);
-    const rr = new Rect(20 * s, (q != null ? 312 : 196) * s + dy, 500 * s, (46 + n * 30) * s);
+    const rh = (46 + n * 30) * s;
+    const rr = narrow ? new Rect(20 * s, SH - (q != null ? 136 * s : 20 * s) - rh, 500 * s, rh) : new Rect(20 * s, (q != null ? 312 : 196) * s, 500 * s, rh);
     P(rr, C(0.08, 0.24, 0.3, 0.72));
     titleStyle.fontSize = Mathf.RoundToInt(18 * s); titleStyle.normal.textColor = C(0.55, 0.95, 1);
     GUI.Label(new Rect(rr.x + 20 * s, rr.y + 6 * s, rr.width - 30 * s, 30 * s), 'BUGÜNÜN REZERVASYONLARI', titleStyle);
@@ -415,6 +418,11 @@ GameManager.prototype.OnGUI = function () {
     }
   }
 
+  // iPhone testi bu kutuların birbirine binip binmediğine bakar
+  this.hudRects = { bilgi: info, para: r, menu: new Rect(SW - 210 * s, 22 * s, 190 * s, 72 * s), otelgram: Social.Button(s) };
+  if (q != null && !this.MenuOpen) this.hudRects.gorev = narrow ? new Rect(20 * s, SH - 124 * s, 500 * s, 104 * s) : new Rect(20 * s, 196 * s, 500 * s, 104 * s);
+  if (buff && !this.MenuOpen) this.hudRects.etki = narrow ? new Rect(20 * s, 282 * s, 340 * s, 40 * s) : new Rect(SW / 2 - 170 * s, 112 * s, 340 * s, 40 * s);
+
   // Menü düğmesi (hazır ödül varsa rozet)
   this.menuBtn = new Rect(SW - 210 * s, 22 * s, 190 * s, 72 * s);
   P(this.menuBtn, C(1, 0.72, 0.2, 0.95));
@@ -422,9 +430,8 @@ GameManager.prototype.OnGUI = function () {
   if (GUI.Button(this.menuBtn, '☰  MENÜ', btnStyle)) { this.menu.Toggle(); Sfx.Play('pop', 0.6); }
   Social.DrawButton(this, s, btnStyle);
   Social.DrawFeed(this, s);
-  const buff = Events.BuffText;
   if (buff && !this.MenuOpen) {
-    const bf = new Rect(SW / 2 - 170 * s, 112 * s + (narrow ? 172 * s : 0), 340 * s, 40 * s);
+    const bf = narrow ? new Rect(20 * s, 282 * s, 340 * s, 40 * s) : new Rect(SW / 2 - 170 * s, 112 * s, 340 * s, 40 * s);
     P(bf, C(0.1, 0.12, 0.2, 0.6));
     smallStyle.fontSize = Mathf.RoundToInt(19 * s); smallStyle.normal.textColor = C(1, 0.9, 0.6);
     GUI.Label(bf, buff, smallStyle);
@@ -466,7 +473,7 @@ GameManager.prototype.OnGUI = function () {
   // İpucu
   if (this.hintT > 0 && !this.MenuOpen) {
     const a = Mathf.Clamp01(this.hintT);
-    const hw = Math.min(760 * s, SW - 24), hr = new Rect(SW / 2 - hw / 2, SH - 90 * s, hw, 58 * s);
+    const hw = Math.min(760 * s, SW - 24), hr = new Rect(SW / 2 - hw / 2, SH - 90 * s - (narrow && q != null ? 124 * s : 0), hw, 58 * s);
     P(hr, C(0.1, 0.12, 0.2, 0.55 * a));
     smallStyle.fontSize = Mathf.RoundToInt(23 * s); smallStyle.normal.textColor = C(1, 1, 1, a);
     GUI.Label(hr, ('ontouchstart' in window ? 'Hareket: ekranda parmağını sürükle' : 'Hareket: WASD / ok tuşları ya da ekranda sürükle') + '  ·  Satın almalar MENÜ\'de', smallStyle);
