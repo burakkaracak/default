@@ -235,7 +235,9 @@ class CameraFollow extends Behaviour {
     // dar ekranda (telefon dikey) biraz uzaklaş
     const aspect = innerWidth / innerHeight;
     if (aspect < 1.2) z *= Mathf.Lerp(1.9, 1, Mathf.InverseLerp(0.45, 1.2, aspect));
-    const extra = (z - 1) * 8;
+    // görünen yarı genişlik, yatay ekrandaki (16:10) ile kıyaslanır: dar ekranda kamera yanlara daha çok kayabilir
+    const halfW = 22.4 * z * Math.tan(21 * Mathf.Deg2Rad) * aspect;
+    const extra = halfW - 13.8;
     if (aspect < 1) t.z += 2.5 * (1 - aspect); // dikey ekranda odalar daha çok görünsün
     if (t.z > 20) {
       t.x = Mathf.Clamp(t.x, -9 + extra, 9 - extra);
