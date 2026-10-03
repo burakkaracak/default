@@ -112,7 +112,8 @@ const Store = (() => {
     HasKey: k => { ensure(); return k in data; },
     DeleteKey: k => { ensure(); if (k in data) { delete data[k]; dirty = true; } },
     DeleteAll: () => { data = {}; dirty = true; Store.Save(); },
-    Save: () => { if (!dirty || !data) return; try { localStorage.setItem(KEY, JSON.stringify(data)); dirty = false; } catch (e) { } },
+    // force: bulut kaydını olduğu gibi yaz (zaman damgasını değiştirme)
+    Save: (force) => { if (!dirty || !data) return; if (!force) data.__savedAt = String(Date.now()); try { localStorage.setItem(KEY, JSON.stringify(data)); dirty = false; } catch (e) { } },
     Raw: () => { ensure(); return data; },
     Load: obj => { data = obj || {}; dirty = true; },
   };

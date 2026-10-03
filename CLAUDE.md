@@ -17,4 +17,7 @@ Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oy
 ## Yayın
 - Artifact: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu — hep aynı adres: `Artifact` publish, file_path `web/dist/index.html`,
   files `{"game.js": "dist/game.js", "models.json": "dist/models.json"}` (çalışma dizini web/ iken), url ile güncelle.
-- Kayıt tarayıcının localStorage'ında (`otel_ustasi_kayit_v1`); cihazlar arası ortak değil.
+- capabilities `{db:{}, user:{}}` korunsun (redeploy'da capabilities verme ya da aynısını ver).
+- Kayıt: localStorage (`otel_ustasi_kayit_v1`) + bulut (`web/src/98_cloud.js`, db `data/users/<id>/kayit`, kişiye özel).
+  Açılışta yeni olan (`__savedAt`) kullanılır, 15 sn'de bir ve sayfa gizlenince buluta yazılır. Test: `test_cloud.py`.
+  Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor (Katkıda bulunan) yetkisi gerekir.
