@@ -31,9 +31,10 @@ class Report {
     for (const cl of G.cleaners) c.wages += cl.stats.Wage;
     if (G.cafe.HasBarista) c.wages += G.cafe.stats.Wage;
     if (G.restaurant.HasWaiter) c.wages += G.restaurant.stats.Wage;
+    if (G.spa.HasTherapist) c.wages += G.spa.stats.Wage;
     let rooms = 0, levels = 0;
     for (const r of G.rooms) if (r.Unlocked) { rooms++; levels += r.level; }
-    c.power = 8 * rooms + (G.cafe.Open ? 25 : 0) + (G.pool.Open ? 45 : 0) + (G.restaurant.Open ? 40 : 0) + (G.wingOpen ? 20 : 0) + (G.floor2Open ? 35 : 0);
+    c.power = 8 * rooms + (G.cafe.Open ? 25 : 0) + (G.pool.Open ? 45 : 0) + (G.restaurant.Open ? 40 : 0) + (G.spa.Open ? 40 : 0) + (G.wingOpen ? 20 : 0) + (G.floor2Open ? 35 : 0);
     c.upkeep = 4 * levels + Decor.OwnedCount() * 3;
     c.laundry = Laundry.I ? Laundry.I.washesToday * 4 : 0;
     c.other = Report.other;

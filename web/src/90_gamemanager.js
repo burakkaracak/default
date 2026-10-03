@@ -122,6 +122,7 @@ class GameManager extends Behaviour {
     this.cafe = new Cafe(); this.cafe.Build(world, wood);
     this.pool = new Pool(); this.pool.Build(world, westFill);
     this.restaurant = new Restaurant(); this.restaurant.Build(world, wood);
+    this.spa = new Spa(); this.spa.Build(world);
 
     // Bekleme salonu (batı): iki sıra koltuk karşılıklı
     this.BuildLounge(wood);
@@ -168,6 +169,7 @@ class GameManager extends Behaviour {
     this.BuildSpecialDecor();
     this.BuildStarDecor();
     this.BuildLamps();
+    Outside.Build();
 
     // Oyuncu
     this.player = new Player();
@@ -221,10 +223,10 @@ class GameManager extends Behaviour {
     this.lowGrass = grassM;
     Seasons.RegisterGrass(grassM);
     const walkM = U.Mat(C(0.86, 0.84, 0.8), U.TileTex, { x: 30, y: 1.4 }, 0.2, 0).clone();
-    U.Prim('Kaldirim', world, V(0, -0.08, -14), V(70, 0.1, 3.2), walkM);
-    U.Box('KaldirimTasi', world, V(0, -0.04, -15.65), V(70, 0.12, 0.2), C(0.7, 0.7, 0.7));
+    U.Prim('Kaldirim', world, V(0, -0.08, -14), V(120, 0.1, 3.2), walkM);
+    U.Box('KaldirimTasi', world, V(0, -0.04, -15.65), V(120, 0.12, 0.2), C(0.7, 0.7, 0.7));
     const roadM = U.Mat(C(0.3, 0.31, 0.34)).clone();
-    U.Prim('Asfalt', world, V(0, -0.1, -19.5), V(70, 0.05, 7.5), roadM);
+    U.Prim('Asfalt', world, V(0, -0.1, -19.5), V(120, 0.05, 7.5), roadM);
     // Yağmurda dış zeminler koyulaşır ve parlar, birikintiler oluşur
     Events.RegisterWet(grassM, 0.8, 0.45);
     Events.RegisterWet(walkM, 0.72, 0.82);
@@ -239,7 +241,7 @@ class GameManager extends Behaviour {
       U.NoShadow(pd);
       Events.RegisterPuddle(pd);
     }
-    for (let i = -16; i <= 16; i++) U.Flat('Serit', world, V(i * 2.2, -0.07, -19.5), V(1.1, 0.02, 0.15), C(0.95, 0.95, 0.9));
+    for (let i = -27; i <= 27; i++) U.Flat('Serit', world, V(i * 2.2, -0.07, -19.5), V(1.1, 0.02, 0.15), C(0.95, 0.95, 0.9));
     U.Flat('GirisYolu', world, V(0, -0.07, -12.9), V(4.2, 0.06, 1.3), C(0.86, 0.84, 0.8));
 
     for (const x of [-24, -16, -8, 8, 16, 24]) this.Green(V(x, 0, -16.6), 1 + Math.abs(x) * 0.008);
@@ -249,8 +251,13 @@ class GameManager extends Behaviour {
     for (let x = 4; x <= 14; x += 2.5) { this.Bush(V(x, 0, -12.95)); this.Bush(V(-x, 0, -12.95)); }
     this.LampPost(V(-4.2, 0, -15.2));
     this.LampPost(V(4.2, 0, -15.2));
-    this.Car(V(-11, 0, -18), C(0.3, 0.55, 0.85));
-    this.Car(V(12, 0, -18), C(0.95, 0.75, 0.3));
+    // Trafik: iki şeritte hareket eden arabalar (Unity'de sabit duruyordu)
+    this.traffic = new Traffic();
+    this.traffic.Add(this.Car(V(-11, 0, -18), C(0.3, 0.55, 0.85)), 1);
+    this.traffic.Add(this.Car(V(12, 0, -18), C(0.95, 0.75, 0.3)), 1);
+    this.traffic.Add(this.Car(V(30, 0, -21.2), C(0.85, 0.25, 0.3)), -1);
+    this.traffic.Add(this.Car(V(-25, 0, -21.2), C(0.95, 0.95, 0.95)), -1);
+    this.traffic.Add(this.Car(V(-38, 0, -18), C(0.35, 0.7, 0.45)), 1);
     if (city === 1) this.BuildBodrum();
     if (city === 2) this.BuildKapadokya();
   }
@@ -604,6 +611,7 @@ class GameManager extends Behaviour {
     Events.NewDay(dn.day);
     Regulars.NewDay(dn.day);
     Reservations.NewDay(dn.day);
+    Wedding.NewDay(dn.day);
     for (const st of this.AllStaff()) st.NewDay();
     const S = Seasons.S;
     if (Seasons.Current !== prev && dn.day > 1)
@@ -622,6 +630,7 @@ class GameManager extends Behaviour {
     for (const c of this.cleaners) a.push(c.stats);
     if (this.cafe.HasBarista) a.push(this.cafe.stats);
     if (this.restaurant.HasWaiter) a.push(this.restaurant.stats);
+    if (this.spa.HasTherapist) a.push(this.spa.stats);
     return a;
   }
 
@@ -767,15 +776,25 @@ class GameManager extends Behaviour {
     if (Photos.All.length === 0) U.Box('ResimGunes', world, Vec.add(p, V(west ? 0.04 : -0.04, 0.1, 0.25)), V(0.02, 0.18, 0.18), C(1, 0.9, 0.5), 'Sphere');
   }
 
+  // Araba: tek grup olarak kurulur (trafik hareket ettirir); ön tarafı +x
   Car(p, c) {
-    const world = this.world;
-    U.Box('Kasa', world, Vec.add(p, V(0, 0.55, 0)), V(3.6, 0.6, 1.7), c);
-    U.Box('Kabin', world, Vec.add(p, V(-0.2, 1.05, 0)), V(2, 0.5, 1.5), Col.lerp(c, Col.white, 0.2));
-    U.Prim('CamOn', world, Vec.add(p, V(0.82, 1.05, 0)), V(0.05, 0.42, 1.4), U.Mat(C(0.55, 0.75, 0.95), 0.9));
-    for (const x of [-1.2, 1.2]) for (const z of [-0.8, 0.8])
-      setEuler(U.Box('Teker', world, Vec.add(p, V(x, 0.32, z)), V(0.65, 0.12, 0.65), C(0.15, 0.15, 0.17), 'Cylinder'), 90, 0, 0);
-    U.Prim('Far', world, Vec.add(p, V(1.81, 0.6, 0.55)), V(0.04, 0.15, 0.3), U.Glow(C(1, 0.95, 0.8), 1.5));
-    U.Prim('Far', world, Vec.add(p, V(1.81, 0.6, -0.55)), V(0.04, 0.15, 0.3), U.Glow(C(1, 0.95, 0.8), 1.5));
+    const g = U.Pivot(this.world, p, 'Araba');
+    U.Box('Kasa', g, V(0, 0.55, 0), V(3.6, 0.6, 1.7), c);
+    U.Box('Kabin', g, V(-0.2, 1.05, 0), V(2, 0.5, 1.5), Col.lerp(c, Col.white, 0.2));
+    U.Prim('CamOn', g, V(0.82, 1.05, 0), V(0.05, 0.42, 1.4), U.Mat(C(0.55, 0.75, 0.95), 0.9));
+    U.Prim('CamArka', g, V(-1.22, 1.05, 0), V(0.05, 0.4, 1.4), U.Mat(C(0.55, 0.75, 0.95), 0.9));
+    g.userData.wheels = [];
+    for (const x of [-1.2, 1.2]) for (const z of [-0.8, 0.8]) {
+      const w = U.Box('Teker', g, V(x, 0.32, z), V(0.65, 0.12, 0.65), C(0.15, 0.15, 0.17), 'Cylinder');
+      setEuler(w, 90, 0, 0);
+      U.Box('Jant', w, V(0, z > 0 ? -0.6 : 0.6, 0), V(0.5, 0.2, 0.5), C(0.75, 0.77, 0.8), 'Cylinder');
+      g.userData.wheels.push(w);
+    }
+    U.Prim('Far', g, V(1.81, 0.6, 0.55), V(0.04, 0.15, 0.3), U.Glow(C(1, 0.95, 0.8), 1.5));
+    U.Prim('Far', g, V(1.81, 0.6, -0.55), V(0.04, 0.15, 0.3), U.Glow(C(1, 0.95, 0.8), 1.5));
+    U.Prim('Stop', g, V(-1.81, 0.6, 0.55), V(0.04, 0.12, 0.28), U.Glow(C(1, 0.15, 0.15), 1.2));
+    U.Prim('Stop', g, V(-1.81, 0.6, -0.55), V(0.04, 0.12, 0.28), U.Glow(C(1, 0.15, 0.15), 1.2));
+    return g;
   }
 
   // ================= SATIN ALMALAR =================
@@ -806,6 +825,13 @@ class GameManager extends Behaviour {
     this.Save();
   }
 
+  OpenSpa() { if (this.spa.Open || !this.Pay(Eco.SpaCost)) return; this.spa.SetOpen(true, true); this.Save(); }
+  HireTherapist() {
+    if (!this.spa.Open || this.spa.HasTherapist || !this.Pay(Eco.TherapistCost)) return;
+    this.spa.HireTherapist(this.RandomName(), true);
+    Sfx.Play('unlock');
+    this.Save();
+  }
   OpenRestaurant() { if (this.restaurant.Open || !this.Pay(Eco.RestaurantCost)) return; this.restaurant.SetOpen(true, true); this.Save(); }
   HireWaiter() {
     if (!this.restaurant.Open || this.restaurant.HasWaiter || !this.Pay(Eco.WaiterCost)) return;
@@ -895,7 +921,7 @@ class GameManager extends Behaviour {
   SetSound(on) { this.sound = on; Sfx.SetVolume(on ? 1 : 0); }
 
   RandomName() {
-    const used = new Set([this.reception.staffName, this.cafe.baristaName, this.restaurant.waiterName]);
+    const used = new Set([this.reception.staffName, this.cafe.baristaName, this.restaurant.waiterName, this.spa.therapistName]);
     for (const c of this.cleaners) used.add(c.staffName);
     for (let k = 0; k < 30; k++) { const n = Eco.Names[Random.RangeInt(0, Eco.Names.length)]; if (!used.has(n)) return n; }
     return Eco.Names[Random.RangeInt(0, Eco.Names.length)];

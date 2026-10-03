@@ -1,6 +1,6 @@
 // Müşteri: gelir, bekler, odada uyur, istek yapar; çıkışta kafe ya da havuza uğrayabilir
 class Customer extends Behaviour {
-  static S = { Queue: 0, Seat: 1, ToRoom: 2, Sleeping: 3, Cafe: 4, CafeSeat: 5, Swim: 6, Leaving: 7, Rest: 8 };
+  static S = { Queue: 0, Seat: 1, ToRoom: 2, Sleeping: 3, Cafe: 4, CafeSeat: 5, Swim: 6, Leaving: 7, Rest: 8, Spa: 9 };
   static G = { Normal: 0, Is: 1, Turist: 2, Balayi: 3, Aile: 4, Kopekli: 5, Fenomen: 6, Emekli: 7, Ogrenci: 8, Sporcu: 9 };
   static TypeNames = ['', 'İş insanı', 'Turist', 'Balayı çifti ♥', 'Aile', 'Köpekli misafir', 'Fenomen', 'Emekli', 'Öğrenci', 'Sporcu'];
   static get Entrance() { return V(0, 0, -11); }
@@ -257,6 +257,27 @@ class Customer extends Behaviour {
     GameManager.I.FloatText(Vec.add(this.transform.position, V(0, 2.6, 0)), ate ? '♥' : '☹', ate ? C(1, 0.45, 0.6) : C(0.7, 0.7, 0.75), 0.14);
   }
 
+  // Spa: lobiden ön kapıya, kaldırımdan spa kapısına
+  GoToSpa(st) {
+    this.spaSpot = st;
+    this.s = Customer.S.Spa;
+    this.ExitPath(this.transform.position.clone());
+    this.path.pop(); // sokağa çıkış yerine spaya
+    this.path.push(Spa.Street, Spa.DoorOut, Spa.DoorIn, st.approach.clone(), st.kind === 'bed' ? V(st.pos.x, 0, st.pos.z) : st.pos.clone());
+  }
+
+  SpaDone(happy) {
+    const st = this.spaSpot;
+    this.sitting = false; this.rig.act = Rig.Act.None;
+    this.transform.position.copy(st.approach);
+    this.transform.rotation.set(0, 0, 0);
+    this.spaSpot = null;
+    this.s = Customer.S.Leaving;
+    this.path.length = 0;
+    this.path.push(Spa.DoorIn, Spa.DoorOut, Spa.Street, V(46, 0, -14));
+    GameManager.I.FloatText(Vec.add(this.transform.position, V(0, 2.6, 0)), happy ? '♥♥' : '☹', happy ? C(1, 0.5, 0.75) : C(0.7, 0.7, 0.75), 0.14);
+  }
+
   GoSwim(sp) {
     this.swimSpot = sp;
     this.s = Customer.S.Swim;
@@ -456,6 +477,18 @@ class Customer extends Behaviour {
           }
         } else rig.Tick(0);
         break;
+      case S.Spa:
+        if (!this.sitting) {
+          if (U.Walk(T, this.path, Customer.Speed, rig)) {
+            const st = this.spaSpot;
+            this.sitting = true;
+            T.position.copy(st.pos);
+            if (st.kind === 'bed') { setEuler(T, 90, 0, 0); rig.act = Rig.Act.Lie; } // yüzüstü uzanır
+            else { lookRotation(T, st.fwd); rig.act = Rig.Act.Sit; }
+            gm.spa.Arrived(st);
+          }
+        } else rig.Tick(0);
+        break;
       case S.Leaving:
         if (U.Walk(T, this.path, Customer.Speed, rig)) { arrRemove(gm.customers, this); this.destroy(); }
         break;
@@ -491,6 +524,8 @@ class Customer extends Behaviour {
     // Çıkışta restoran, kafe ya da havuz
     const restC = 0.28 + (this.type === G.Emekli ? 0.25 : this.type === G.Sporcu ? 0.15 : this.type === G.Aile ? 0.12 : this.type === G.Balayi ? 0.1 : this.type === G.Is ? 0.05 : 0);
     if (gm.restaurant.Open && Random.value < restC && gm.restaurant.Join(this)) return;
+    const spaC = 0.22 + (this.type === G.Fenomen ? 0.3 : this.type === G.Balayi ? 0.2 : this.type === G.Emekli ? 0.15 : this.type === G.Is ? 0.1 : 0);
+    if (gm.spa.Open && Random.value < spaC && gm.spa.Join(this)) return;
     const cafeC = Seasons.CafeChance + Events.CafeAdd + (this.type === G.Is ? 0.2 : this.type === G.Turist ? 0.1 : 0);
     const poolC = Seasons.PoolChance * Events.PoolMul * (this.type === G.Turist ? 1.4 : this.type === G.Is ? 0.5 : this.type === G.Aile ? 1.2 : this.type === G.Sporcu ? 1.8 : this.type === G.Emekli ? 0.5 : this.type === G.Kopekli ? 0.6 : this.type === G.Ogrenci ? 1.2 : 1);
     if (gm.cafe.Open && Random.value < cafeC && gm.cafe.Join(this)) return;
