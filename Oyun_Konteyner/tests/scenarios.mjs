@@ -1,0 +1,85 @@
+// Test senaryoları
+export async function boot({ page, shot, ev, wait }) {
+  await shot('1_menu');
+  await page.click('text=Yeni Oyun');
+  await wait(300);
+  await page.click('.slotc >> nth=0 >> text=Başla');
+  await wait(1500);
+  await shot('2_start');
+  await page.click('text=Başlayalım').catch(() => {});
+  await wait(500);
+  await shot('3_desk');
+  console.log(await ev(`JSON.stringify({day: __game.G.day, min: __game.G.min, loc: __game.G.player.loc, inbox: __game.G.inbox.length})`));
+}
+
+const START = `(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.includes('Yeni Oyun'));b.click();return 1})()`;
+async function newGame({ page, ev, wait }) {
+  await page.click('text=Yeni Oyun'); await wait(200);
+  await page.click('.slotc >> nth=0 >> text=Başla'); await wait(1200);
+  await page.click('text=Başlayalım').catch(() => {}); await wait(300);
+}
+export async function flow({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  // Masaya git ve gelen kutusunu aç
+  await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); m.rfq.target=-0.05; m.rfq.wantDays=40; return 1})()`);
+  await ev(`__game.bus.emit('ui','inbox','ic')`); await wait(300);
+  await page.click('.list-item >> nth=1'); await wait(200);
+  await shot('1_inbox');
+  await page.click('text=Teklifi hazırla'); await wait(400);
+  await shot('2_offer');
+  await page.click('text=Teklifi gönder'); await wait(500);
+  await shot('3_offer_result');
+  console.log(await ev(`JSON.stringify(__game.G.orders.map(o=>[o.id,o.status,o.total]))`));
+  await ev(`__game.modals.closeAll()`);
+  // Proforma
+  await ev(`(()=>{const o=__game.G.orders[0]; if(o){__game.bus.emit('ui','orders',o.id)} return 1})()`); await wait(300);
+  await shot('4_order');
+  await page.click('text=Proforma gönder').catch(()=>{}); await wait(200);
+  await ev(`__game.modals.closeAll()`);
+  // Fabrikaya git
+  await ev(`(()=>{__game.W.enter('factory',{x:0,z:6}); return 1})()`); await wait(800);
+  await shot('5_factory');
+  // Avans gelsin: gün atla
+  await ev(`(()=>{const G=__game.G; const o=G.orders[0]; o.advDay=G.day; __game.time.dayEnded=false; __game.bus.emit('dayStart'); return o.status})()`);
+  await ev(`__game.modals.closeAll()`);
+  await ev(`__game.bus.emit('ui','talk','semanur')`); await wait(300);
+  await shot('6_semanur');
+  await ev(`__game.modals.closeAll()`);
+  await ev(`(()=>{const o=__game.G.orders[0]; __game.bus.emit('ui','orders',o.id); return o.status})()`); await wait(200);
+  await page.click('text=ERP formunu hazırla').catch(()=>{}); await wait(300);
+  await shot('7_erp');
+  await ev(`__game.modals.closeAll()`);
+  // ERP'yi temiz doğrudan onayla
+  await ev(`(()=>{const G=__game.G; const o=G.orders[0]; o.erp={rounds:0}; __game.ORD.startProduction(o,{clean:true}); return o.status})()`);
+  // Üretimi hızlı ilerlet
+  await ev(`(()=>{for(let i=0;i<2000;i++) __game.PR.tick(5); return 1})()`);
+  await wait(400); await shot('8_factory_after');
+  console.log(await ev(`JSON.stringify({orders: __game.G.orders.map(o=>[o.id,o.status]), wos: Object.values(__game.G.factory.wos).map(w=>[w.id,w.packed,w.qty]), stock: __game.G.mat.stock})`));
+}
+
+export async function ship({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  await ev(`(()=>{const g=__game; const G=g.G; const m=G.inbox.find(m=>m.rfq);
+    const o=g.ORD.createOrder({cust:'c1',city:'baku',lines:[{fam:'kanepe',fabric:'keten',color:'bej',size:'std',qty:8,price:800},{fam:'berjer',fabric:'kadife',color:'yesil',size:'std',qty:6,price:450}],cur:'USD',incoterm:'FOB',pay:'avans30',promisedDay:30});
+    g.ORD.startProduction(o,{clean:true}); for(let i=0;i<2000;i++) g.PR.tick(5); g.W.enter('factory',{x:-12,z:4.5}); return o.status})()`);
+  await wait(500); await shot('1_dock');
+  await ev(`__game.bus.emit('ui','shipping')`); await wait(300);
+  await page.click('.list-item input[type=checkbox]'); await wait(300);
+  await shot('2_shipping');
+  await page.click('text=Kendin yükle >> nth=1').catch(async()=>{ await page.click('text=Kendin yükle'); });
+  await wait(800); await shot('3_container');
+  await page.click('text=Kalanı otomatik'); await wait(500); await shot('4_auto');
+  await page.click('text=Kapıları kapat'); await wait(4500); await shot('5_done');
+  console.log(await ev(`JSON.stringify(__game.G.shipments)`));
+}
+
+export async function phone({ page, shot, ev, wait }) {
+  await shot('0_menu');
+  await newGame({ page, ev, wait });
+  await shot('1_start');
+  await ev(`__game.bus.emit('ui','inbox','ic')`); await wait(300); await shot('2_inbox');
+  await page.click('.list-item >> nth=1'); await wait(200); await shot('3_mail');
+  await ev(`__game.modals.closeAll()`);
+  await ev(`(()=>{__game.W.enter('factory',{x:0,z:6}); return 1})()`); await wait(600); await shot('4_factory');
+  await ev(`__game.bus.emit('ui','factory')`); await wait(300); await shot('5_factorypanel');
+}

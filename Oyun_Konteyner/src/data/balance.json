@@ -1,0 +1,30 @@
+{
+  "_aciklama": "Oyun dengesi. Sayıları değiştirip yeniden derleyin (npm run build).",
+  "time": {
+    "realSecondsPerDay": 240,
+    "dayStartHour": 8,
+    "dayEndHour": 20,
+    "daysPerWeek": 5,
+    "weeksPerMonth": 2,
+    "monthsPerSeason": 3,
+    "startMonth": 2
+  },
+  "startCashTL": 2500000,
+  "freeModeCashTL": 12000000,
+  "fxStart": { "USD": 41.5, "EUR": 48.6 },
+  "fxDailyVolatility": 0.006,
+  "fxDailyDrift": 0.0009,
+  "playerSpeed": 6.2,
+  "carryCapacity": 4,
+  "autoTransferMinutes": 45,
+  "depocuTransferMinutes": 8,
+  "playerHelpBonus": 0.8,
+  "workMinutesPerDay": 720,
+  "harunDiscountLimit": 0.08,
+  "harunFakeDoneChance": 0.22,
+  "salaries": { "usta": 45000, "depocu": 35000, "kalite": 46000, "tasarimci": 70000, "satis": 55000 },
+  "loanRateMonthly": 0.035,
+  "rescueLoanTL": 1500000,
+  "offlineMaxHours": 8,
+  "showroomVisitBase": 0.35
+}

@@ -1,0 +1,56 @@
+{
+  "_aciklama": "Lokasyonlar. Koordinatlar metre; x sağa, z aşağı (ekrana doğru). travel: dakika.",
+  "travel": {
+    "store-factory": [30, 45], "store-nisantasi": [35, 50], "store-atasehir": [20, 30],
+    "factory-nisantasi": [50, 65], "factory-atasehir": [30, 40], "nisantasi-atasehir": [35, 45]
+  },
+  "list": [
+    { "id": "store", "name": "Bostancı Mağaza", "short": "Mağaza" },
+    { "id": "factory", "name": "Fabrika (Tuzla)", "short": "Fabrika" },
+    { "id": "nisantasi", "name": "Nişantaşı Şube", "short": "Nişantaşı", "branch": true },
+    { "id": "atasehir", "name": "Ataşehir Şube", "short": "Ataşehir", "branch": true }
+  ],
+  "store": {
+    "floors": [
+      { "id": 0, "name": "Zemin Kat · Giriş ve Teşhir", "open": true,
+        "slots": [[-8, -4], [-4, -4], [0, -4], [-8, 1], [-4, 1], [4, 1]] },
+      { "id": 1, "name": "1. Kat · Teşhir Galerisi", "open": false, "costTL": 1800000,
+        "slots": [[-8, -4], [-4, -4], [0, -4], [4, -4], [-8, 1], [-4, 1], [0, 1], [4, 1]] },
+      { "id": 2, "name": "2. Kat · İhracat Ofisi", "open": true },
+      { "id": 3, "name": "3. Kat · Toplantı Odası", "open": true }
+    ],
+    "elevator": [9, -5.5],
+    "desk": [-6, -3.6],
+    "oldDesk": [-1.5, -3.6],
+    "meetingRoom": [6, 1],
+    "car": [9, 9.5]
+  },
+  "factory": {
+    "stations": [
+      { "id": "ahsap", "name": "Ahşap İskelet Atölyesi", "pos": [-14, -5], "color": "#B08D63" },
+      { "id": "demir", "name": "Demirhane", "pos": [-6, -5], "color": "#7A7F87" },
+      { "id": "doseme", "name": "Döşemehane", "pos": [2, -5], "color": "#9C905C" },
+      { "id": "kumas", "name": "Kumaş Kesim", "pos": [10, -5], "color": "#C9A98A" },
+      { "id": "boya", "name": "Boyahane / Cila", "pos": [10, 3], "color": "#A7B3A0" },
+      { "id": "kalite", "name": "Kalite Kontrol", "pos": [2, 3], "color": "#7C9AA8" },
+      { "id": "paket", "name": "Paketleme", "pos": [-6, 3], "color": "#C2A878" }
+    ],
+    "dock": [-15, 4],
+    "depot": [2, 9.5],
+    "car": [15, 10.5],
+    "board": [-10, 9.5],
+    "offices": {
+      "harun": [-16, -15], "semanur": [-10, -15], "ibrahim": [-3, -15], "serkan": [8, -15]
+    },
+    "expansions": [
+      { "id": "ekhol", "name": "Ek Hol", "costTL": 2400000, "desc": "İkinci bir döşeme hattı: döşemehane ve kumaş kesim kapasitesi +%60.", "area": [21, -12, 33, 12] },
+      { "id": "depo", "name": "Hammadde Deposu", "costTL": 900000, "desc": "Depo kapasitesi 2 katına çıkar; toplu alım indirimleri açılır.", "area": [-20, 12, -6, 18] },
+      { "id": "studyo", "name": "Tasarım Stüdyosu", "costTL": 1500000, "desc": "Koleksiyon araştırması ve yeni ürün aileleri.", "area": [-33, -12, -21, 2] },
+      { "id": "ikincikat", "name": "İkinci Kat (Asma kat)", "costTL": 3200000, "desc": "Paketleme ve kalite kontrol hızlanır (+%40), satış asistanı odaları.", "area": [-33, 2, -21, 12] }
+    ]
+  },
+  "branches": {
+    "nisantasi": { "name": "Nişantaşı Şube", "color": "#E8DFD0", "slots": [[-3, -2], [2, -2], [-3, 2]], "car": [5, 6] },
+    "atasehir": { "name": "Ataşehir Şube", "color": "#E2E6E2", "slots": [[-3, -2], [2, -2], [2, 2]], "car": [5, 6] }
+  }
+}

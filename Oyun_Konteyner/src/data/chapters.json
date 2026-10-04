@@ -1,0 +1,63 @@
+{
+  "_aciklama": "Hikaye bölümleri. goals.check türleri: flag, stat (G.stats), met (karakter), custLevel (seviye, bölge, adet), regionShip (bölgeye teslim), fairs, yk, cash, strategic. unlock: açılan şehirler.",
+  "list": [
+    {
+      "id": 1, "name": "İlk Konteyner", "intro": "Bünyamin: \"Hoş geldin kuzen. Bakü'den sıcak bir müşteri var; ilk konteyneri birlikte çıkaralım. Önce masana geç, Gelen Kutusu'na bak.\"",
+      "unlock": ["baku"],
+      "goals": [
+        { "id": "inbox", "text": "Masana git (2. kat) ve Gelen Kutusu'nu aç", "check": { "type": "flag", "flag": "openedInbox" } },
+        { "id": "offer", "text": "Bünyamin'in yönlendirdiği Bakü müşterisine teklif ver", "check": { "type": "stat", "stat": "offersAccepted", "n": 1 } },
+        { "id": "proforma", "text": "Sipariş panosundan proformayı gönder", "check": { "type": "flag", "flag": "sentProforma" } },
+        { "id": "serkan", "text": "Fabrikaya git, Serkan Bey'le tanış", "check": { "type": "met", "who": "serkan" } },
+        { "id": "erp", "text": "Avans gelince ERP formunu Semanur'a teslim et", "check": { "type": "stat", "stat": "erpApproved", "n": 1 } },
+        { "id": "ship", "text": "Üretim bitince ilk konteyneri yükle ve gönder", "check": { "type": "stat", "stat": "shipped", "n": 1 } },
+        { "id": "davut", "text": "Davut Bey'e 3. kat toplantı odasında haber ver", "check": { "type": "flag", "flag": "ch1Report" } }
+      ],
+      "outro": "Davut Bey: \"İlk konteyner yolda. Hepinizi tebrik ederim. Burak, bundan sonrası senin bölgen: Kafkasya ve Balkanlar.\""
+    },
+    {
+      "id": 2, "name": "Komşu Pazarlar", "intro": "Davut Bey: \"Kafkasya ve Balkanlar senin. Komşudan başlayalım; komşu iyi olursa uzak da gelir.\"",
+      "unlock": ["tiflis", "atina", "sofya", "bukres", "belgrad"],
+      "goals": [
+        { "id": "mails", "text": "Yeni pazarlarda 4 firmaya ilk maili gönder", "check": { "type": "stat", "stat": "mailsSent", "n": 5 } },
+        { "id": "sample", "text": "Bir müşteriye numune gönder", "check": { "type": "stat", "stat": "samplesSent", "n": 1 } },
+        { "id": "first3", "text": "3 müşteriyi \"İlk sipariş\" seviyesine taşı", "check": { "type": "custLevel", "level": 3, "n": 3 } },
+        { "id": "meeting", "text": "Haftalık sabah toplantısına katıl", "check": { "type": "stat", "stat": "meetings", "n": 1 } },
+        { "id": "ships", "text": "Toplam 4 sevkiyat gönder", "check": { "type": "stat", "stat": "shipped", "n": 4 } }
+      ],
+      "outro": "Davut Bey: \"Balkanlar'da adımız duyuldu. Sırada Avrupa var; ama Avrupa fuarsız olmaz.\""
+    },
+    {
+      "id": 3, "name": "Avrupa'ya Giriş", "intro": "Bünyamin: \"Avrupa'da ilk büyük fuarımız yaklaşıyor. Rakipler de geliyor; fiyat savaşına hazır ol. Bu çeyrek YK toplantısı da var, babam sayılara bakacak.\"",
+      "unlock": ["viyana", "milano", "paris", "berlin", "amsterdam", "varsova"],
+      "goals": [
+        { "id": "fair", "text": "Büyük bir Avrupa fuarına katıl", "check": { "type": "stat", "stat": "bigFairs", "n": 1 } },
+        { "id": "eu", "text": "Avrupa'da bir müşteriyle \"İlk sipariş\" seviyesine ulaş", "check": { "type": "custLevel", "level": 3, "n": 1, "region": "avrupa" } },
+        { "id": "regular", "text": "1 düzenli müşteri kazan", "check": { "type": "custLevel", "level": 4, "n": 1 } },
+        { "id": "yk", "text": "Bir YK toplantısında sunum yap", "check": { "type": "stat", "stat": "ykMeetings", "n": 1 } }
+      ],
+      "outro": "Davut Bey: \"Avrupa kapısını araladık. Şimdi daha uzağa: Asya. Lojistik zor ama pazar büyük.\""
+    },
+    {
+      "id": 4, "name": "Asya Rotası", "intro": "Bünyamin: \"Orta Asya tır ile, Uzak Doğu gemiyle. Transit uzun; terminleri ona göre ver. Konteyneri iyi doldur, navlun pahalı.\"",
+      "unlock": ["almati", "taskent", "singapur", "seul"],
+      "goals": [
+        { "id": "ca", "text": "Orta Asya'ya bir sevkiyat teslim et", "check": { "type": "regionShip", "region": "ortaasya", "n": 1 } },
+        { "id": "fe", "text": "Uzak Doğu'ya deniz yoluyla teslim et", "check": { "type": "regionShip", "region": "uzakdogu", "n": 1 } },
+        { "id": "fill", "text": "Bir 40' konteyneri %80 üzeri doldur", "check": { "type": "flag", "flag": "fill80" } },
+        { "id": "reg5", "text": "5 düzenli müşteriye ulaş", "check": { "type": "custLevel", "level": 4, "n": 5 } }
+      ],
+      "outro": "Davut Bey: \"Artık bir ihracat şirketiyiz, mobilya da yapan. Sırada marka olmak var.\""
+    },
+    {
+      "id": 5, "name": "Global Marka", "intro": "Davut Bey: \"Stratejik ortaklar ve yurt dışında bir showroom. Live & Feel'i dünyaya taşıyalım.\"",
+      "unlock": ["tokyo"],
+      "goals": [
+        { "id": "strat", "text": "2 stratejik ortak kazan", "check": { "type": "custLevel", "level": 5, "n": 2 } },
+        { "id": "abroad", "text": "Yurt dışında showroom aç", "check": { "type": "flag", "flag": "abroadShowroom" } },
+        { "id": "rev", "text": "Toplam ₺60 milyon satış geliri", "check": { "type": "stat", "stat": "revenueTL", "n": 60000000 } }
+      ],
+      "outro": "Davut Bey: \"Burak... Amcan olarak değil, başkan olarak söylüyorum: Live & Feel artık bir dünya markası. Teşekkürler.\""
+    }
+  ]
+}

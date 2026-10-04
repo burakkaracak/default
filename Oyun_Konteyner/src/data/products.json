@@ -1,0 +1,69 @@
+{
+  "_aciklama": "Ürün aileleri. stations: [istasyon id, birim başına oyun dakikası]. box: koli ölçüsü cm (uzunluk, genişlik, yükseklik). priceUSD: liste fiyatı (standart ölçü, keten).",
+  "families": [
+    { "id": "kanepe", "name": "Kanepe", "open": true, "priceUSD": 780, "box": [220, 95, 85],
+      "materials": { "kereste": 0.14, "sunger": 11, "kumas": 9, "metal": 1.5, "cila": 0 },
+      "stations": [["ahsap", 70], ["kumas", 35], ["doseme", 95], ["kalite", 15], ["paket", 25]],
+      "styles": ["modern", "minimal", "bohem"], "model": "sofa" },
+    { "id": "berjer", "name": "Berjer", "open": true, "priceUSD": 390, "box": [90, 85, 95],
+      "materials": { "kereste": 0.05, "sunger": 4, "kumas": 4, "metal": 0.5, "cila": 0.2 },
+      "stations": [["ahsap", 40], ["kumas", 20], ["doseme", 55], ["boya", 15], ["kalite", 10], ["paket", 15]],
+      "styles": ["klasik", "modern", "luks"], "model": "armchair" },
+    { "id": "sehpa", "name": "Sehpa", "open": true, "priceUSD": 240, "box": [110, 65, 45],
+      "materials": { "kereste": 0.04, "sunger": 0, "kumas": 0, "metal": 4, "cila": 0.6 },
+      "stations": [["ahsap", 30], ["demir", 30], ["boya", 35], ["kalite", 8], ["paket", 12]],
+      "styles": ["minimal", "modern", "endustriyel"], "model": "coffee", "fabricless": true },
+    { "id": "kose", "name": "Köşe Koltuk", "open": false, "priceUSD": 1450, "box": [290, 100, 90],
+      "materials": { "kereste": 0.24, "sunger": 20, "kumas": 16, "metal": 2.5, "cila": 0 },
+      "stations": [["ahsap", 110], ["kumas", 55], ["doseme", 150], ["kalite", 20], ["paket", 35]],
+      "styles": ["modern", "minimal"], "model": "corner" },
+    { "id": "yatak", "name": "Yatak", "open": false, "priceUSD": 980, "box": [210, 170, 45],
+      "materials": { "kereste": 0.16, "sunger": 14, "kumas": 8, "metal": 3, "cila": 0.2 },
+      "stations": [["ahsap", 80], ["demir", 30], ["kumas", 30], ["doseme", 90], ["kalite", 15], ["paket", 30]],
+      "styles": ["luks", "modern", "klasik"], "model": "bed" },
+    { "id": "masa", "name": "Yemek Masası", "open": false, "priceUSD": 860, "box": [200, 105, 30],
+      "materials": { "kereste": 0.18, "sunger": 0, "kumas": 0, "metal": 6, "cila": 1.2 },
+      "stations": [["ahsap", 90], ["demir", 45], ["boya", 60], ["kalite", 12], ["paket", 20]],
+      "styles": ["minimal", "klasik", "endustriyel"], "model": "table", "fabricless": true },
+    { "id": "sandalye", "name": "Sandalye", "open": false, "priceUSD": 170, "box": [55, 55, 50],
+      "materials": { "kereste": 0.03, "sunger": 1.5, "kumas": 1.2, "metal": 1, "cila": 0.2 },
+      "stations": [["ahsap", 22], ["kumas", 8], ["doseme", 18], ["boya", 12], ["kalite", 5], ["paket", 6]],
+      "styles": ["modern", "klasik", "bohem"], "model": "chair" },
+    { "id": "tv", "name": "TV Ünitesi", "open": false, "priceUSD": 640, "box": [200, 50, 55],
+      "materials": { "kereste": 0.12, "sunger": 0, "kumas": 0, "metal": 3, "cila": 0.9 },
+      "stations": [["ahsap", 75], ["demir", 20], ["boya", 50], ["kalite", 10], ["paket", 18]],
+      "styles": ["modern", "minimal"], "model": "tv", "fabricless": true },
+    { "id": "konsol", "name": "Konsol", "open": false, "priceUSD": 560, "box": [150, 50, 90],
+      "materials": { "kereste": 0.09, "sunger": 0, "kumas": 0, "metal": 2, "cila": 0.8 },
+      "stations": [["ahsap", 60], ["demir", 25], ["boya", 45], ["kalite", 10], ["paket", 15]],
+      "styles": ["klasik", "luks", "modern"], "model": "console", "fabricless": true }
+  ],
+  "fabrics": [
+    { "id": "keten", "name": "Keten", "priceMult": 1.0, "material": "keten", "open": true },
+    { "id": "kadife", "name": "Kadife", "priceMult": 1.12, "material": "kadife", "open": true },
+    { "id": "bukle", "name": "Bukle", "priceMult": 1.22, "material": "bukle", "open": false },
+    { "id": "deri", "name": "Deri", "priceMult": 1.45, "material": "deri", "open": false }
+  ],
+  "colors": [
+    { "id": "krem", "name": "Krem", "hex": "#E9E0CF" },
+    { "id": "bej", "name": "Bej", "hex": "#CDBB9C" },
+    { "id": "antrasit", "name": "Antrasit", "hex": "#4A4D52" },
+    { "id": "yesil", "name": "Zeytin Yeşili", "hex": "#7D8A5C" },
+    { "id": "terrakota", "name": "Terrakota", "hex": "#B86A4B" },
+    { "id": "lacivert", "name": "Lacivert", "hex": "#33415E" }
+  ],
+  "sizes": [
+    { "id": "std", "name": "Standart", "priceMult": 1.0, "timeMult": 1.0 },
+    { "id": "ozel", "name": "Özel ölçü", "priceMult": 1.55, "timeMult": 1.45 }
+  ],
+  "materials": [
+    { "id": "kereste", "name": "Kereste", "unit": "m³", "priceTL": 19000, "vol": 0.07, "start": 3 },
+    { "id": "metal", "name": "Çelik profil", "unit": "kg", "priceTL": 62, "vol": 0.05, "start": 300 },
+    { "id": "sunger", "name": "Sünger", "unit": "kg", "priceTL": 145, "vol": 0.05, "start": 260 },
+    { "id": "keten", "name": "Keten kumaş", "unit": "m", "priceTL": 360, "vol": 0.03, "start": 180 },
+    { "id": "kadife", "name": "Kadife kumaş", "unit": "m", "priceTL": 430, "vol": 0.03, "start": 90 },
+    { "id": "bukle", "name": "Bukle kumaş", "unit": "m", "priceTL": 540, "vol": 0.03, "start": 0 },
+    { "id": "deri", "name": "Deri", "unit": "m²", "priceTL": 950, "vol": 0.03, "start": 0 },
+    { "id": "cila", "name": "Cila / boya", "unit": "lt", "priceTL": 410, "vol": 0.04, "start": 40 }
+  ]
+}

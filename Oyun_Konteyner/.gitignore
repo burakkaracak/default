@@ -1,0 +1,4 @@
+node_modules
+dist/*
+!dist/konteyner.html
+tests/shots
