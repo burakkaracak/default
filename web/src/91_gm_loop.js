@@ -487,6 +487,14 @@ GameManager.prototype.OnGUI = function () {
     GUI.Label(hr, ('ontouchstart' in window ? 'Hareket: ekranda parmağını sürükle' : 'Hareket: WASD / ok tuşları ya da ekranda sürükle') + '  ·  Satın almalar MENÜ\'de', smallStyle);
   }
 
+  // Klavye odağı yoksa (oyun claude.ai çerçevesinde, odak dışarıda) bilgisayarda uyarı göster
+  if (!('ontouchstart' in window) && !this.MenuOpen && !Popups.Open && typeof document.hasFocus === 'function' && !document.hasFocus()) {
+    const kw = Math.min(560 * s, SW - 24), kr = new Rect(SW / 2 - kw / 2, SH - 160 * s, kw, 54 * s);
+    P(kr, C(0.95, 0.45, 0.4, 0.92));
+    smallStyle.fontSize = Mathf.RoundToInt(22 * s); smallStyle.normal.textColor = Col.white;
+    GUI.Label(kr, 'Tuşlarla oynamak için oyunun üstüne bir kez tıkla', smallStyle);
+  }
+
   // Sanal joystick
   const pl = this.player;
   if (pl != null && pl.dragging && !this.MenuOpen) {
