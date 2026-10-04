@@ -87,7 +87,7 @@ function floor3(p) {
   p.add(models.rug(9, 4.4, '#D2C3A8'), 0, 0, -1.4);
 }
 
-function slotPedestal(p, x, z) { p.cyl(1.05, 0.12, '#E9E0CF', x, 0, z, 18); p.cyl(1.08, 0.03, '#9C905C', x, 0.12, z, 18); }
+function slotPedestal(p, x, z) { p.cyl(1.08, 0.1, '#9C905C', x, 0, z, 18); p.cyl(1.0, 0.14, '#EFE8DC', x, 0, z, 18); }
 
 export function showroomBeauty() {
   let b = 0; const seen = new Set();

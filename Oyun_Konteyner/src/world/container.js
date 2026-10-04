@@ -244,12 +244,12 @@ export function playContainer({ contType, boxes, title, onDone }) {
     update(dt) {
       if (msgT > 0) { msgT -= dt; if (msgT <= 0) msg.style.display = 'none'; }
       const gxm = ghost ? ghost.position.x : Lm / 2;
-      const span = Math.min(Lm + 0.8, portrait() ? 4.2 : 9.5);
+      const span = Math.min(Lm + 0.8, portrait() ? 6.5 : 9.5);
       const want = Lm + 0.8 <= span ? Lm / 2 : Math.max(span / 2 - 0.4, Math.min(Lm - span / 2 + 0.4, gxm));
       camX += (want - camX) * Math.min(1, dt * 4);
       const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * cam.aspect);
       const d = Math.max(4.5, (span / 2) / Math.tan(hf) + 1.5);
-      cam.position.set(camX + d * 0.12, 0.6 + d * 0.78, Wm / 2 + d * 0.62);
+      const up = portrait() ? 0.9 : 0.78; cam.position.set(camX + d * 0.12, 0.6 + d * up, Wm / 2 + d * (portrait() ? 0.42 : 0.62));
       cam.lookAt(camX, 0.5, Wm / 2 - 0.1);
       for (const m of placedG.children) if (m.scale.x < 1) m.scale.setScalar(Math.min(1, m.scale.x + dt * 5));
       if (closing > 0) {

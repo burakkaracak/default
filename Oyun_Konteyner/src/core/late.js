@@ -48,3 +48,12 @@ registerTalk((who) => {
   return out;
 });
 bus.on('monthStart', () => { if (G && G.focusRegion && Math.random() < 0.34) { G.focusRegion = null; } });
+
+// Harun'un sözlü (telefon) onayları: sonradan "ben öyle demedim" diyebilir.
+bus.on('erpApproved', (o) => {
+  if (!o.verbalDiscount || o.verbalChecked) return; o.verbalChecked = true;
+  if (Math.random() > 0.35) return;
+  addMessage({ ch: 'ic', from: 'Harun Karaçak', fromId: 'harun', subject: `${o.id} indirimi hakkında`, body: `Yeğenim, ${o.id} için o kadar indirime ben "tamam" demedim ki. "Bakarız" dedim. Bu fark nereden karşılanacak?\n\n(Sözlü onayların başına gelen bu. Bir dahakine yazılı al!)`, kind: 'uyari', order: o.id, actions: [{ label: 'Bünyamin\'den arabuluculuk iste', act: 'verbalBun', args: { order: o.id } }, { label: 'Farkı bölüm bütçesinden karşıla (%3)', act: 'verbalPay', args: { order: o.id } }] });
+});
+registerAction('verbalBun', () => { addTrust('bunyamin', -1); addTrust('harun', 1); toast('Bünyamin: "Amcamla konuştum, tatlıya bağladık. Ama bundan sonra yazılı al."', 'good', 5000); return true; });
+registerAction('verbalPay', (msg, a) => { const o = G.orders.find((x) => x.id === a.order); if (o) { spend(o.total * 0.03 * (o.cur === 'USD' ? G.fx.USD : G.fx.EUR), 'diger', 'İndirim farkı ' + o.id); } addTrust('harun', 2); return true; });

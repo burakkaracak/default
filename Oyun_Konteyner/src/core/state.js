@@ -23,7 +23,7 @@ export function freshState(mode) {
     orders: [], nextOrder: 1,
     shipments: [], nextShip: 1,
     chars: {},
-    showroom: { items: {}, stock: [], floors: { 0: true, 2: true, 3: true } },
+    showroom: { items: { '0:0': { fam: 'kanepe', fabric: 'keten', color: 'krem', q: 3 }, '0:1': { fam: 'berjer', fabric: 'kadife', color: 'yesil', q: 3 }, '0:4': { fam: 'sehpa', fabric: 'keten', color: 'bej', q: 3 } }, stock: [], floors: { 0: true, 2: true, 3: true } },
     open: { families: P.families.filter((f) => f.open || free).map((f) => f.id), fabrics: P.fabrics.filter((f) => f.open || free).map((f) => f.id) },
     stats: { shipped: 0, produced: 0, revenueTL: 0, mailsSent: 0, containers: 0 },
     month: { income: 0, expense: 0, hist: [] },

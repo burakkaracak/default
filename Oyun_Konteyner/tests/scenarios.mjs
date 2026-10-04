@@ -132,3 +132,40 @@ export async function life({ page, shot, ev, wait }) {
   for (let i = 0; i < 12; i++) { await wait(2500); console.log(await ev(`JSON.stringify({day:__game.G.day, min:Math.round(__game.G.min), cash:Math.round(__game.G.cash), hist:__game.G.month.hist.length})`)); }
   await ev(`clearInterval(window.__auto)`); await wait(300); await shot('end');
 }
+
+export async function phone2({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); __game.W.enter('store',{floor:2,x:-6,z:-2.6}); return 1})()`); await wait(300);
+  await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); __game.bus.emit('ui','inbox','ic'); return 1})()`); await wait(200);
+  await page.click('.list-item >> nth=1'); await wait(100);
+  await page.click('text=Teklifi hazırla'); await wait(300); await shot('1_offer');
+  await ev(`__game.modals.closeAll()`);
+  await ev(`(()=>{const g=__game; const o=g.ORD.createOrder({cust:'c1',city:'baku',lines:[{fam:'kanepe',fabric:'keten',color:'bej',size:'std',qty:8,price:800},{fam:'berjer',fabric:'kadife',color:'yesil',size:'std',qty:6,price:450}],cur:'USD',incoterm:'FOB',pay:'avans30',promisedDay:30}); o.status='erp'; g.bus.emit('ui','orders',o.id); return 1})()`); await wait(200);
+  await page.click('text=ERP formunu hazırla'); await wait(300); await shot('2_erp');
+  await ev(`__game.modals.closeAll()`);
+  await ev(`(()=>{const g=__game; const o=g.G.orders[0]; g.ORD.startProduction(o,{clean:true}); for(let i=0;i<2000;i++) g.PR.tick(5); g.W.enter('factory',{x:-12,z:4.5}); g.bus.emit('ui','shipping'); return 1})()`); await wait(300);
+  await page.click('.list-item input[type=checkbox]'); await wait(200);
+  await page.click('text=Kendin yükle >> nth=1'); await wait(700); await shot('3_container');
+  await page.click('text=Kalanı otomatik'); await wait(400); await shot('4_container_auto');
+  await page.click('text=Vazgeç'); await wait(300);
+  await ev(`__game.bus.emit('ui','world')`); await wait(300); await shot('5_map');
+}
+
+export async function walk({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  const p0 = await ev(`JSON.stringify([__game.G.player.x,__game.G.player.z])`);
+  await page.keyboard.down('KeyD'); await wait(800); await page.keyboard.up('KeyD');
+  const p1 = await ev(`JSON.stringify([__game.G.player.x,__game.G.player.z])`);
+  await page.keyboard.down('KeyA'); await wait(800); await page.keyboard.up('KeyA'); await wait(200);
+  await ev(`(()=>{__game.G.player.x=-6; __game.G.player.z=-2.9; return 1})()`); await wait(300);
+  await page.keyboard.press('KeyE'); await wait(300);
+  const open = await ev(`document.querySelector('#modals .ph h2')?.textContent`);
+  console.log('konum', p0, p1, 'panel:', open);
+  await shot('desk');
+  // Asansör → 3. kat
+  await ev(`__game.modals.closeAll(); __game.G.player.x=9; __game.G.player.z=-5.2`); await wait(300);
+  await page.keyboard.press('KeyE'); await wait(300);
+  await page.click('text=3. Kat'); await wait(800); await shot('floor3');
+  await ev(`__game.W.enter('store',{floor:0, x:0, z:3})`); await wait(400); await shot('floor0');
+  await ev(`__game.W.enter('nisantasi',{})`); await wait(400); await shot('branch');
+}

@@ -213,3 +213,6 @@ body.mg-on #hud, body.mg-on #tags { display: none; }
   .toast { font-size: 12px; }
   .innervoice { top: auto; bottom: calc(210px + var(--safe-b)); }
 }
+.formgrid > * { min-width: 0; }
+.formgrid select, .formgrid input { width: 100%; }
+body.mg-on #toasts { top: calc(110px + var(--safe-t)); bottom: auto; }
