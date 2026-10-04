@@ -120,10 +120,11 @@ class Chain {
     G.Save();
     Store.SetInt(Chain.Base + 'chain_cur', i);
     Store.Save();
-    Chain.switching = true;
     Popups.Clear();
     Time.timeScale = 1;
-    location.reload();
+    // önce buluta yaz (tarayıcı depolamayı silse bile ilerleme kaybolmasın), sonra yenile
+    const go = () => { Chain.switching = true; location.reload(); };
+    Promise.race([Cloud.Push(), new Promise(r => setTimeout(r, 3000))]).then(go, go);
   }
 
   // Arka planda çalışan oteller: resepsiyonisti olan ve odası açık her otel, sen başka oteldeyken de kazanır.

@@ -194,19 +194,21 @@ async function boot() {
   setupInput();
   const bar = document.getElementById('loadbar');
   await loadModels(p => { if (bar) bar.style.width = Math.round(p * 100) + '%'; });
-  // bulut kaydı (en fazla 6 sn beklenir)
   const msg = document.querySelector('#loading p'); if (msg) msg.textContent = 'Kayıt yükleniyor…';
-  await Promise.race([Cloud.Init(), new Promise(r => setTimeout(r, 6000))]);
+  // bulut kaydı (en fazla 15 sn beklenir; geç gelirse oyun sormadan üzerine yazmaz, yüklemeyi önerir)
+  await Promise.race([Cloud.Init(), new Promise(r => setTimeout(r, 15000))]);
   Cloud.booted = true;
   const ld = document.getElementById('loading'); if (ld) ld.remove();
   GameManager.Boot();
   Quality.Init();
   Photo.Init();
   if (Cloud.restored) GameManager.I.Notify('Kayıt buluttan yüklendi');
+  Cloud.OfferBackup();
   setInterval(() => Cloud.Push(), 15000);
   requestAnimationFrame(frame);
   // test ve hata ayıklama için
   window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE, Quality, Wedding, Photo, Social };
+  window.__cloud = Cloud;
   window.__ready = true;
 }
 boot().catch(e => { console.error(e); const ld = document.getElementById('loading'); if (ld) ld.innerHTML = '<div style="color:#fff;padding:20px">Yüklenemedi: ' + e.message + '</div>'; });
