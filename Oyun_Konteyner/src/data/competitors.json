@@ -1,0 +1,9 @@
+{
+  "_aciklama": "NPC rakipler. aggression: fiyat savaşı başlatma eğilimi. regions: girdikleri pazarlar. share: başlangıç pazar payı (%).",
+  "list": [
+    { "id": "ucuz", "name": "BudgetLine Mobilya", "type": "Ucuzcu", "color": "#B4583E", "priceLevel": 0.78, "quality": 2, "aggression": 0.6, "regions": ["balkanlar", "kafkasya", "ortaasya"], "share": 18, "chapter": 2, "desc": "Düşük fiyat, düşük kalite. Fiyat savaşına bayılır." },
+    { "id": "italyan", "name": "Casa Lusso Italia", "type": "Lüks İtalyan", "color": "#4F6E83", "priceLevel": 1.45, "quality": 5, "aggression": 0.15, "regions": ["avrupa", "uzakdogu", "kafkasya"], "share": 24, "chapter": 3, "desc": "Prestijli ve pahalı. Tasarım fuarlarında hep en önde." },
+    { "id": "hizli", "name": "FastNest Furniture", "type": "Hızlı üretimci", "color": "#7D8A5C", "priceLevel": 0.95, "quality": 3, "aggression": 0.35, "regions": ["avrupa", "balkanlar", "ortaasya"], "share": 15, "chapter": 3, "desc": "Kısa termin vaat eder; müşteriyi hızla kapar." },
+    { "id": "asya", "name": "Orient Home Co.", "type": "Asyalı dev", "color": "#C08A2E", "priceLevel": 0.85, "quality": 3, "aggression": 0.4, "regions": ["uzakdogu", "ortaasya"], "share": 30, "chapter": 4, "desc": "Uzak Doğu'da güçlü, lojistik avantajlı." }
+  ]
+}

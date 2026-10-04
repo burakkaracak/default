@@ -25,7 +25,10 @@ export function deskPanel() {
         big('📋', 'Sipariş panosu', 'Teklif → proforma → ERP → üretim → sevkiyat', 'orders'),
         big('🗓️', 'Günü planla', 'Bugünün işleri ve hatırlatmalar', 'plan'),
         big('📊', 'Finans', 'Kur, nakit, alacaklar', 'finance'),
-        big('🏆', 'Hedefler', 'Bölüm hedefleri, görevler, başarımlar', 'goals')));
+        big('🏆', 'Hedefler', 'Bölüm hedefleri, görevler, başarımlar', 'goals'),
+        big('🎪', 'Fuarlar', 'Stand kirala, fuarda görüş', 'fairs'),
+        big('📣', 'Pazarlama', 'Katalog, web, Instagram', 'marketing'),
+        big('🎨', 'Tasarım Stüdyosu', 'Koleksiyon araştırması, trendler', 'studio')));
     },
   });
 }

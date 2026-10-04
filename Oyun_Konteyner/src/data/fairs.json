@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Fuarlar. month: 0=Ocak. big: büyük uluslararası fuar. region: hangi pazara lead getirir. standCost: m² başına TL.",
+  "list": [
+    { "id": "koln", "name": "IMM Köln", "city": "Köln", "month": 0, "big": true, "region": "avrupa", "standCost": 52000, "chapter": 3, "leads": 7 },
+    { "id": "paris", "name": "Maison&Objet Paris", "city": "Paris", "month": 8, "big": true, "region": "avrupa", "standCost": 58000, "chapter": 3, "leads": 7 },
+    { "id": "milano", "name": "Salone del Mobile Milano", "city": "Milano", "month": 3, "big": true, "region": "avrupa", "standCost": 65000, "chapter": 3, "leads": 8 },
+    { "id": "baku", "name": "Baku Build & Interior", "city": "Bakü", "month": 9, "big": false, "region": "kafkasya", "standCost": 18000, "chapter": 1, "leads": 4 },
+    { "id": "bukres", "name": "BIFE-SIM Bükreş", "city": "Bükreş", "month": 4, "big": false, "region": "balkanlar", "standCost": 20000, "chapter": 2, "leads": 4 },
+    { "id": "almati", "name": "Interior Expo Almatı", "city": "Almatı", "month": 8, "big": false, "region": "ortaasya", "standCost": 22000, "chapter": 4, "leads": 5 },
+    { "id": "singapur", "name": "IFFS Singapur", "city": "Singapur", "month": 2, "big": true, "region": "uzakdogu", "standCost": 48000, "chapter": 4, "leads": 6 },
+    { "id": "istanbul", "name": "İstanbul Mobilya Fuarı (IIFF)", "city": "İstanbul", "month": 0, "big": false, "region": "all", "standCost": 15000, "chapter": 1, "leads": 5 }
+  ],
+  "standSizes": [ { "m2": 18, "name": "Küçük (18 m²)", "slots": 2 }, { "m2": 36, "name": "Orta (36 m²)", "slots": 4 }, { "m2": 72, "name": "Büyük (72 m²)", "slots": 6 } ],
+  "themes": [ { "id": "minimal", "name": "Minimal beyaz" }, { "id": "luks", "name": "Altın ve antrasit (lüks)" }, { "id": "bohem", "name": "Doğal ve bitkili (bohem)" }, { "id": "modern", "name": "Modern salon" } ]
+}

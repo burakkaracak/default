@@ -1,0 +1,22 @@
+{
+  "_aciklama": "Rastgele olaylar. chance: günlük olasılık. effect türleri: fxShock {drift, vol, days}, matShock {malzeme: oran}, trend, priceWar, motivation, rep. minChapter: en erken bölüm.",
+  "list": [
+    { "id": "kurSok", "chance": 0.012, "minChapter": 2, "title": "Kur dalgalanması", "text": "Piyasalarda sert hareket: TL birkaç gün hızlı değer kaybedebilir. Döviz alacakların değerlenir, ithal girdiler pahalanır.", "effect": { "fxShock": { "drift": 0.012, "vol": 2.2, "days": 6 } } },
+    { "id": "kurSakin", "chance": 0.01, "minChapter": 2, "title": "Kur sakinleşti", "text": "Merkez bankası adımlarıyla kur birkaç gün yatay seyredecek.", "effect": { "fxShock": { "drift": -0.003, "vol": 0.5, "days": 6 } } },
+    { "id": "keresteZam", "chance": 0.012, "minChapter": 1, "title": "Kereste zammı geliyor", "text": "Tedarikçiler kerestede yüzde 10-15 zam sinyali veriyor.", "effect": { "matShock": { "kereste": 0.06 } }, "warnBy": "ibrahim" },
+    { "id": "kumasKampanya", "chance": 0.01, "minChapter": 1, "title": "Kumaşta kampanya", "text": "Kumaş tedarikçisi kısa süreli kampanya yaptı: keten ve kadife ucuzladı.", "effect": { "matShock": { "keten": -0.05, "kadife": -0.05 } }, "warnBy": "ibrahim" },
+    { "id": "celikZam", "chance": 0.009, "minChapter": 2, "title": "Çelik fiyatları yükseldi", "text": "Global çelik fiyatları arttı; demirhane maliyetleri yükselecek.", "effect": { "matShock": { "metal": 0.07 } } },
+    { "id": "sungerKriz", "chance": 0.008, "minChapter": 2, "title": "Sünger tedarik sıkıntısı", "text": "Petrokimya kaynaklı sünger fiyatları sıçradı.", "effect": { "matShock": { "sunger": 0.08 } }, "warnBy": "ibrahim" },
+    { "id": "ustaMorali", "chance": 0.01, "minChapter": 1, "title": "Ustalar moralsiz", "text": "Yoğun mesai sonrası ustaların morali düştü. Küçük bir jest iyi gelir.", "effect": { "motivation": -0.08 } },
+    { "id": "piknik", "chance": 0.006, "minChapter": 1, "title": "Fabrika pikniği", "text": "Serkan Bey hafta sonu piknik düzenledi; ekip motive!", "effect": { "motivation": 0.1 } },
+    { "id": "basin", "chance": 0.006, "minChapter": 3, "title": "Tasarım dergisinde haber", "text": "Bir Avrupa tasarım dergisi Live & Feel'den bahsetti.", "effect": { "repAll": 4 } }
+  ],
+  "trends": [
+    { "id": "bukle", "name": "Bukle trendi", "fabric": "bukle", "text": "Bukle kumaş her yerde! Bukle ürünlere talep ve fiyat kabulü artıyor." },
+    { "id": "kadife", "name": "Kadife dönüşü", "fabric": "kadife", "text": "Kadife yeniden moda; özellikle zeytin yeşili ve lacivert." },
+    { "id": "keten", "name": "Doğal keten", "fabric": "keten", "text": "Sürdürülebilir, doğal dokular: keten öne çıkıyor." },
+    { "id": "deri", "name": "Deri klasikleri", "fabric": "deri", "text": "Deri berjer ve kanepeler lüks segmentte aranıyor." },
+    { "id": "yemek", "name": "Evde yemek kültürü", "fam": "masa", "text": "Yemek masası ve sandalyeye talep arttı." },
+    { "id": "kompakt", "name": "Kompakt yaşam", "fam": "berjer", "text": "Küçük daireler için berjer ve tek kişilik oturumlar popüler." }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "_aciklama": "Başarımlar. check: stat/flag ya da özel olayla (event).",
+  "list": [
+    { "id": "firstContainer", "icon": "📦", "name": "İlk Konteyner", "desc": "İlk sevkiyatı gönder.", "check": { "stat": "shipped", "n": 1 } },
+    { "id": "full40", "icon": "🧱", "name": "Tam dolu 40'", "desc": "40' konteyneri %85 üzeri doldur.", "event": true },
+    { "id": "regular10", "icon": "🤝", "name": "10 düzenli müşteri", "desc": "10 müşteriyi 'Düzenli' seviyesine taşı.", "check": { "custLevel": 4, "n": 10 } },
+    { "id": "fxCrisis", "icon": "💱", "name": "Kur krizinden kârla çık", "desc": "Kur dalgalanması sırasında döviz tahsilatı yap.", "event": true },
+    { "id": "harunCatch", "icon": "🔍", "name": "Harun'un 'bitti' dediği siparişi yakala", "desc": "Fabrikaya gidip kendi gözünle kontrol et.", "event": true },
+    { "id": "semanurPraise", "icon": "🌸", "name": "Semanur'dan takdir al", "desc": "Nadir bir övgü.", "event": true },
+    { "id": "firstInitiative", "icon": "🚀", "name": "İlk inisiyatif", "desc": "Onay beklemeden kendi yetkinle indirim ver ya da fuar ayarla.", "event": true },
+    { "id": "bunFound", "icon": "🧭", "name": "Bünyamin'i ilk denemede bul", "desc": "Bünyamin'in bulunduğu yere ilk seferde git.", "event": true },
+    { "id": "firstReply", "icon": "✉️", "name": "Yeterince iyi", "desc": "Bir ilk temas mailine cevap al.", "check": { "stat": "replies", "n": 1 } },
+    { "id": "cleanErp5", "icon": "🗂️", "name": "Temiz form ustası", "desc": "5 ERP formunu ilk seferde temiz gönder.", "check": { "stat": "erpClean", "n": 5 } },
+    { "id": "fair1", "icon": "🎪", "name": "Fuar tozu", "desc": "İlk fuarına katıl.", "check": { "stat": "fairs", "n": 1 } },
+    { "id": "beauty60", "icon": "🛋️", "name": "Göz alıcı showroom", "desc": "Showroom güzelliğini 60'a çıkar.", "event": true },
+    { "id": "strategic", "icon": "🌐", "name": "Stratejik ortak", "desc": "Bir müşteriyle stratejik ortak ol.", "check": { "custLevel": 5, "n": 1 } },
+    { "id": "family", "icon": "🌳", "name": "Aile sofrası", "desc": "Bütün aile üyeleriyle aynı gün sohbet et.", "event": true },
+    { "id": "ykClean", "icon": "🏛️", "name": "Davut Bey hata bulamadı", "desc": "YK sunumunda tek hata bırakma.", "event": true }
+  ]
+}

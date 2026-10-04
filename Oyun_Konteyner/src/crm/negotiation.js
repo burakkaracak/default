@@ -128,6 +128,7 @@ export function offerPanel(rfq, msg, onDone) {
       if (!r) return; bunReviewed = true; api.refresh(); return;
     }
     rfq.round++;
+    if (off.disc > 0 && off.disc <= freeLim && approvedDisc < off.disc) bus.emit('achv', 'firstInitiative');
     const realProd = estimateDays(rfq.lines[0].fam, rfq.lines.reduce((a, l) => a + l.qty, 0), rfq.lines[0].size);
     const tr = transitDays(rfq.city, bestMode(rfq.city));
     const ev = evaluate(rfq, off);

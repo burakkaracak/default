@@ -27,6 +27,7 @@ export function newGame(slot, mode) {
   setG(g); save.slot = slot;
   initFactory(g); initCustomers(g);
   g.chapter = mode === 'free' ? 5 : 1;
+  g.openCities = CITIES.list.filter((c) => !c.owner && c.chapter <= g.chapter).map((c) => c.id);
   g.today = { income: 0, expense: 0, produced: 0 };
   // Gün 1: Bünyamin mağazada başlar ve öğleden sonra fabrikaya geçer
   g.bunPlan = [[8, 'store'], [12.5, 'factory'], [17, 'store']];

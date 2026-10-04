@@ -12,6 +12,7 @@ export function earn(tl, cat = 'satis', note) {
   G.cash += tl; G.month.income += tl;
   (G.month.byCat ||= {})[cat] = ((G.month.byCat ||= {})[cat] || 0) + tl;
   G.today && (G.today.income += tl);
+  if (cat === 'avans' || cat === 'bakiye') G.stats.revenueTL = (G.stats.revenueTL || 0) + tl;
   bus.emit('cash', tl, note);
 }
 export function spend(tl, cat = 'diger', note) {

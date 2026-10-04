@@ -104,3 +104,31 @@ export async function crm({ page, shot, ev, wait }) {
   await ev(`__game.bus.emit('ui','inbox','musteri')`); await wait(300); await shot('6_inbox');
   console.log(await ev(`JSON.stringify({mails:__game.G.inbox.map(m=>m.subject).slice(0,10), cust:Object.values(__game.G.customers).filter(c=>c.level||c.waiting).map(c=>[c.name,c.level,c.waiting])})`));
 }
+
+export async function panels({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  const uis = ['desk','inbox','orders','factory','world','people','finance','fairs','studio','marketing','goals','gamemenu','confidence','whereBun','plan','shipping','meetingTable','decor','nostalgia','verifyBoard'];
+  for (const u of uis) { await ev(`__game.modals.closeAll(); __game.bus.emit('ui','${u}')`); await wait(150); }
+  await ev(`__game.modals.closeAll(); __game.bus.emit('ui','finance','kur')`); await wait(200); await shot('finance_kur');
+  for (const t of ['alacak','ham','kredi','pazar']) { await ev(`__game.modals.closeAll(); __game.bus.emit('ui','finance','${t}')`); await wait(120); }
+  for (const t of ['hat','is','depo','kadro','alan']) { await ev(`__game.modals.closeAll(); __game.bus.emit('ui','factory','${t}')`); await wait(120); }
+  await shot('factory_alan');
+  for (const c of ['davut','harun','ibrahim','serkan','bunyamin','busra','semanur']) { await ev(`__game.modals.closeAll(); __game.bus.emit('ui','talk','${c}')`); await wait(120); }
+  await shot('talk');
+  await ev(`__game.modals.closeAll()`);
+  // 40 günlük hızlı simülasyon
+  const r = await ev(`(()=>{const g=__game; for(let d=0; d<40; d++){ g.time.skip(800); g.modals.closeAll(); g.time.startNextDay(); g.modals.closeAll(); } return JSON.stringify({day:g.G.day, cash:Math.round(g.G.cash), inbox:g.G.inbox.length, trend:g.G.trend?.name, loans:(g.G.loans||[]).length})})()`);
+  console.log(r);
+  await ev(`__game.modals.closeAll(); __game.bus.emit('ui','finance')`); await wait(200); await shot('finance_ozet');
+}
+
+export async function life({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  await ev(`window.__auto = setInterval(()=>{ const g=__game; if(!g.G) return;
+    const btn=[...document.querySelectorAll('#modals .pf .btn.gold, #modals .choices button')].pop();
+    if(btn){ btn.click(); return; }
+    g.G.speed=3; g.time.slow=1; for(let i=0;i<20;i++) g.time.advance(0.5);
+  }, 30)`);
+  for (let i = 0; i < 12; i++) { await wait(2500); console.log(await ev(`JSON.stringify({day:__game.G.day, min:Math.round(__game.G.min), cash:Math.round(__game.G.cash), hist:__game.G.month.hist.length})`)); }
+  await ev(`clearInterval(window.__auto)`); await wait(300); await shot('end');
+}

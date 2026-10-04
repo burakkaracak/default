@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Tasarım stüdyosu araştırma ağacı. cost: araştırma puanı. needs: önce açılması gerekenler. unlock: family|fabric|bonus.",
+  "list": [
+    { "id": "bukle", "name": "Bukle kumaş tekniği", "cost": 40, "unlock": { "fabric": "bukle" }, "desc": "Bukle kumaş kullanılabilir." },
+    { "id": "sandalye", "name": "Sandalye serisi", "cost": 35, "unlock": { "family": "sandalye" }, "desc": "Sandalye ailesi açılır." },
+    { "id": "masa", "name": "Yemek masası koleksiyonu", "cost": 55, "needs": ["sandalye"], "unlock": { "family": "masa" }, "desc": "Yemek masası açılır." },
+    { "id": "kose", "name": "Modüler köşe koltuk", "cost": 60, "unlock": { "family": "kose" }, "desc": "Köşe koltuk açılır." },
+    { "id": "yatak", "name": "Yatak ve başlık serisi", "cost": 60, "needs": ["kose"], "unlock": { "family": "yatak" }, "desc": "Yatak açılır." },
+    { "id": "tv", "name": "TV ünitesi", "cost": 45, "unlock": { "family": "tv" }, "desc": "TV ünitesi açılır." },
+    { "id": "konsol", "name": "Konsol ve dresuar", "cost": 45, "needs": ["tv"], "unlock": { "family": "konsol" }, "desc": "Konsol açılır." },
+    { "id": "deri", "name": "Deri döşeme atölyesi", "cost": 70, "needs": ["bukle"], "unlock": { "fabric": "deri" }, "desc": "Deri kaplama açılır." },
+    { "id": "ergonomi", "name": "Ergonomi araştırması", "cost": 50, "unlock": { "bonus": "quality" }, "desc": "Tüm ürünlerde kalite +0,3." },
+    { "id": "koleksiyon", "name": "İmza koleksiyonu 'Live & Feel'", "cost": 90, "needs": ["ergonomi"], "unlock": { "bonus": "brand" }, "desc": "Liste fiyatları %6 yükselir (marka primi)." }
+  ]
+}

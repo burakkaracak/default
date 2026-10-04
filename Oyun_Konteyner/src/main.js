@@ -34,6 +34,14 @@ import { ext } from './ext.js';
 import { worldPanel } from './world/map.js';
 import { peoplePanel, branchDesk } from './characters/social.js';
 import './crm/outreach.js';
+import './core/events.js';
+import { financePanel } from './economy/financeUI.js';
+import './economy/competitors.js';
+import { fairsPanel } from './world/fairs.js';
+import { studioPanel } from './factory/studio.js';
+import { marketingPanel } from './crm/marketing.js';
+import { meetingTable } from './core/yk.js';
+import './core/late.js';
 
 const canvas = $('#c');
 const st = save.settings();
@@ -69,6 +77,9 @@ const UI = {
   slot: (f, i) => slotPanel(f, i), decor: decorPanel, unlockFloor: (f) => unlockFloor(f),
   plan: () => dayPlan(),
   world: (id) => worldPanel(id),
+  finance: (tab) => financePanel(tab),
+  fairs: fairsPanel, studio: studioPanel, marketing: marketingPanel, meetingTable,
+  calendar: () => dayPlan(),
   people: () => peoplePanel(),
   branchDesk: (id) => branchDesk(id),
   meetroom: () => toast('Müşteri görüşme odası: yabancı alıcı ziyaretleri burada ağırlanır (Gelen Kutusu\'nda ziyaret haberi gelir).', 'info', 5000),

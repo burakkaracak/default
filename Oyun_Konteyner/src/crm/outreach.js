@@ -77,7 +77,7 @@ export function composePanel(c) {
     const season = cc.season?.[time.seasonIndex()] ?? 1;
     const focus = G.focusRegion && G.focusRegion === cc.region ? 1.25 : 1;
     const compet = G.priceWar?.[c.city] ? 0.85 : 1;
-    const pr = clamp(TYPES[c.type].replyBase * (0.35 + score * 1.3) * (0.85 + rep(c.city) / 200) * season * focus * compet, 0.04, 0.92);
+    const pr = clamp(TYPES[c.type].replyBase * (0.35 + score * 1.3) * (0.85 + rep(c.city) / 200) * season * focus * compet * (1 + (G.mkt?.catalog || 0) * 0.08), 0.04, 0.92);
     const willReply = chance(pr);
     c.lastContact = G.day; c.waiting = { day: G.day + randi(1, 4), reply: willReply, score };
     G.stats.mailsSent = (G.stats.mailsSent || 0) + 1; bus.emit('stat', 'mailsSent'); bus.emit('mailSent', c);
