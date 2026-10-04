@@ -82,13 +82,16 @@ function setupInput() {
   const move = (x, y) => { Input.pointerPos = { x, y }; };
   const up = (x, y) => { Input.pointerDown = false; Input.pointerPos = { x, y }; Input.released = true; Input.releasePos = { x, y }; };
   const el = document.getElementById('ui');
-  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); if (document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur(); down(e.clientX, e.clientY); e.preventDefault(); });
+  el.addEventListener('pointerdown', e => { window.focus(); el.setPointerCapture(e.pointerId); if (document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur(); down(e.clientX, e.clientY); e.preventDefault(); });
   el.addEventListener('pointermove', e => { move(e.clientX, e.clientY); });
   el.addEventListener('pointerup', e => { up(e.clientX, e.clientY); });
   el.addEventListener('pointercancel', e => { up(e.clientX, e.clientY); });
   el.addEventListener('wheel', e => { Input.wheel += e.deltaY; e.preventDefault(); }, { passive: false });
   addEventListener('keydown', e => { Input.keys.add(e.code); Sfx.Init(); Sfx.Resume(); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); });
   addEventListener('keyup', e => Input.keys.delete(e.code));
+  // Artifact bir çerçeve (iframe) içinde açılır: pointerdown'da preventDefault yüzünden çerçeve klavye odağını alamıyordu.
+  // Tıklayınca ve açılışta odağı oyuna al ki WASD / ok tuşları çalışsın.
+  try { window.focus(); } catch (e) { }
   addEventListener('blur', () => { Input.keys.clear(); Input.pointerDown = false; });
   addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); Quality.Resize(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && GameManager.I) { GameManager.I.Save(); Cloud.Push(); } });
