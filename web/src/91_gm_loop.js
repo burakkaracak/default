@@ -59,6 +59,7 @@ Object.assign(GameManager.prototype, {
     Wedding.Save(K);
     Store.SetInt(K + 'weather', Events.weather);
     Store.SetString(K + 'seen', String(Date.now()));
+    Store.SetFloat(K + 'idleRate', this.IdleRate());
     Store.SetInt(K + 'saved', 1);
     Store.Save();
   },
@@ -158,6 +159,14 @@ Object.assign(GameManager.prototype, {
       .Add('Sonra (Menü > Hikâye)', null, Popups.Grey);
   },
 
+  // Resepsiyonist varken otelin sen başında değilken dakikada kazandığı yaklaşık para
+  IdleRate() {
+    if (!this.reception.HasStaff) return 0;
+    let perMin = 0;
+    for (const r of this.rooms) if (r.Unlocked) perMin += (r.Price + r.Tip) * 2 * 0.015;
+    return this.cleaners.length === 0 ? perMin * 0.5 : perMin;
+  },
+
   OfferOffline(mins) {
     if (!this.reception.HasStaff) {
       if (mins >= 15)
@@ -166,9 +175,7 @@ Object.assign(GameManager.prototype, {
       return;
     }
     const capped = Math.min(mins, 120);
-    let perMin = 0, n = 0;
-    for (const r of this.rooms) if (r.Unlocked) { perMin += (r.Price + r.Tip) * 2 * 0.015; n++; }
-    if (this.cleaners.length === 0) perMin *= 0.5;
+    const perMin = this.IdleRate(), n = this.Unlocked();
     const earned = Mathf.RoundToInt(perMin * capped);
     if (earned < 10) return;
     const guests = Math.max(1, Mathf.RoundToInt(capped * n * 0.06));
@@ -198,6 +205,7 @@ Object.assign(GameManager.prototype, {
     Regulars.Tick();
     StarExam.Tick(dt);
     Wedding.Tick(dt);
+    Chain.TickBackground();
     Reservations.Tick();
     this.storyT -= Time.unscaledDeltaTime;
     if (this.storyT <= 0) { this.storyT = 1; Story.Tick(); }
