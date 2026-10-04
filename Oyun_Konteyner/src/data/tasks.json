@@ -1,0 +1,36 @@
+{
+  "_aciklama": "Görevler. check: {stat, n} (görev verildikten sonraki artış), {beauty}, {stock:[malzeme, miktar]}, {level, n}. reward: güven (kimden), ozguven, nakit TL.",
+  "meeting": [
+    { "id": "m_ship2", "text": "2 hafta içinde 2 sevkiyat gönder", "check": { "stat": "shipped", "n": 2 }, "weeks": 2, "reward": { "trust": 5, "ozguven": 4 } },
+    { "id": "m_mail4", "text": "2 hafta içinde 4 yeni firmaya ilk maili gönder", "check": { "stat": "mailsSent", "n": 4 }, "weeks": 2, "reward": { "trust": 4, "ozguven": 5 } },
+    { "id": "m_erp", "text": "2 ERP formunu ilk seferde temiz gönder", "check": { "stat": "erpClean", "n": 2 }, "weeks": 3, "reward": { "trust": 4, "ozguven": 4 } },
+    { "id": "m_offer", "text": "3 hafta içinde 2 teklifi kabul ettir", "check": { "stat": "offersAccepted", "n": 2 }, "weeks": 3, "reward": { "trust": 5, "ozguven": 5, "cash": 150000 } },
+    { "id": "m_prod", "text": "2 hafta içinde 30 birim ürün paketle", "check": { "stat": "produced", "n": 30 }, "weeks": 2, "reward": { "trust": 4, "ozguven": 3 } },
+    { "id": "m_level", "text": "3 hafta içinde bir müşteriyi bir üst seviyeye taşı", "check": { "stat": "levelUps", "n": 1 }, "weeks": 3, "reward": { "trust": 5, "ozguven": 5 } },
+    { "id": "m_beauty", "text": "Showroom güzelliğini 40'a çıkar", "check": { "beauty": 40 }, "weeks": 3, "reward": { "trust": 4, "ozguven": 4 } }
+  ],
+  "side": {
+    "bunyamin": [
+      { "id": "s_bun1", "text": "Fuar numunesi: bukle ya da kadife 1 berjer üret (stok/showroom)", "check": { "stat": "packed_berjer", "n": 1 }, "reward": { "trust": 6, "ozguven": 4 }, "intro": "Fuara götürmek için güzel bir berjer numunesi lazım. Sen seçersin kumaşı, bence kadife ya da bukle." },
+      { "id": "s_bun2", "text": "Nişantaşı şubesine uğra ve vitrini gör", "check": { "stat": "visit_nisantasi", "n": 1 }, "reward": { "trust": 4, "ozguven": 3 }, "intro": "Nişantaşı şubesi vitrini yeniledi. Bir uğra, ihracat kataloğu için fikir verir." }
+    ],
+    "busra": [
+      { "id": "s_bus1", "text": "Toplantı sunumu için showroom'a en az 3 ürün yerleştir", "check": { "showroomItems": 3 }, "reward": { "trust": 6, "ozguven": 3 }, "intro": "Davut Bey'in sunumunda showroom fotoğrafları olacak. 3 ürün yerleştirirsen fotoğrafçıyı çağırırım." }
+    ],
+    "ibrahim": [
+      { "id": "s_ibr1", "text": "Kereste stoğunu 6 m³'e çıkar", "check": { "stock": ["kereste", 6] }, "reward": { "trust": 5, "ozguven": 3 }, "intro": "Kereste ay sonu pahalanacak. Biraz stok yapsak iyi olur oğlum." }
+    ],
+    "serkan": [
+      { "id": "s_ser1", "text": "Kalite kontrol istasyonuna bir kontrolcü al", "check": { "stat": "hired_kalite", "n": 1 }, "reward": { "trust": 7, "ozguven": 3 }, "intro": "Kalite kontrolde kimse yok, ürünler kontrolsüz çıkıyor. Bir kontrolcü alsak?" }
+    ],
+    "semanur": [
+      { "id": "s_sem1", "text": "Bir ERP formunu ilk seferde temiz teslim et", "check": { "stat": "erpClean", "n": 1 }, "reward": { "trust": 6, "ozguven": 4 }, "intro": "Bir kere, sadece bir kere, formu eksiksiz getir. Görelim." }
+    ],
+    "harun": [
+      { "id": "s_har1", "text": "Peşin ya da %30 avanslı bir sipariş kapat", "check": { "stat": "advanceOrders", "n": 1 }, "reward": { "trust": 5, "ozguven": 3 }, "intro": "Vadeyle uğraşma yeğenim. Bana avanslı bir sipariş getir, gönlümü yap." }
+    ],
+    "davut": [
+      { "id": "s_dav1", "text": "Çeyrek sonuna kadar kasayı ₺3 milyonun üstünde tut", "check": { "cash": 3000000 }, "reward": { "trust": 6, "ozguven": 4 }, "intro": "Nakit, şirketin nefesidir. Bu çeyrek kasayı rahat tut." }
+    ]
+  }
+}

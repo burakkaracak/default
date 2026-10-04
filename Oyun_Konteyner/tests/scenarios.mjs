@@ -83,3 +83,24 @@ export async function phone({ page, shot, ev, wait }) {
   await ev(`(()=>{__game.W.enter('factory',{x:0,z:6}); return 1})()`); await wait(600); await shot('4_factory');
   await ev(`__game.bus.emit('ui','factory')`); await wait(300); await shot('5_factorypanel');
 }
+
+export async function crm({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  await ev(`__game.bus.emit('ui','world')`); await wait(300); await shot('1_map');
+  await page.click('.city[data-id=baku]'); await wait(300); await shot('2_city');
+  await page.click('text=Mail yaz'); await wait(400);
+  await page.click('.mailpart >> nth=1'); await page.click('.mailpart >> nth=5'); await page.click('.mailpart >> nth=8');
+  await page.click('.mailpart >> nth=14'); await page.click('.mailpart >> nth=17'); await wait(200);
+  await shot('3_compose');
+  await page.click('text=✉️ Gönder'); await wait(300);
+  // Günleri hızla geçir
+  for (let d = 0; d < 6; d++) {
+    await ev(`(()=>{const g=__game; g.time.skip(800); g.modals.closeAll(); g.time.startNextDay(); g.modals.closeAll(); return 1})()`); await wait(50);
+  }
+  await ev(`__game.modals.closeAll()`);
+  await ev(`__game.bus.emit('ui','people')`); await wait(300); await shot('4_people');
+  await page.click('text=Aile ağacı'); await wait(200); await shot('5_family');
+  await ev(`__game.modals.closeAll()`);
+  await ev(`__game.bus.emit('ui','inbox','musteri')`); await wait(300); await shot('6_inbox');
+  console.log(await ev(`JSON.stringify({mails:__game.G.inbox.map(m=>m.subject).slice(0,10), cust:Object.values(__game.G.customers).filter(c=>c.level||c.waiting).map(c=>[c.name,c.level,c.waiting])})`));
+}

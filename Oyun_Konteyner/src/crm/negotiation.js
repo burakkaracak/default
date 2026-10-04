@@ -18,7 +18,8 @@ import { stat } from '../core/story.js';
 export function makeRFQ(c, lines, extra = {}) {
   const cc = city(c.city);
   const ps = c.priceSens ?? 0.5;
-  return Object.assign({
+  const promised = c.nextDisc || 0; c.nextDisc = 0;
+  const r = Object.assign({
     cust: c.id, city: c.city, lines, cur: cc.cur,
     target: clamp(0.03 + ps * 0.11 + rand(-0.02, 0.03) + (G.priceWar?.[c.city] ? 0.04 : 0), 0, 0.22),
     wantDays: Math.round(20 + rand(0, 14) + (transitDays(c.city, bestMode(c.city)) || 10)),
@@ -26,6 +27,8 @@ export function makeRFQ(c, lines, extra = {}) {
     incoPref: c.type === 'distributor' ? 'EXW' : c.size === 1 || c.type === 'icmimar' ? 'CIF' : 'FOB',
     patience: 3, round: 0, created: G.day,
   }, extra);
+  if (promised) r.target = Math.max(r.target, promised);
+  return r;
 }
 export function bestMode(cityId) { const L = city(cityId)?.logistics || {}; return L.c40 ? 'c40' : L.tir ? 'tir' : Object.keys(L)[0]; }
 

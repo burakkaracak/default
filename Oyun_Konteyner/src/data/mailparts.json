@@ -1,0 +1,36 @@
+{
+  "_aciklama": "İlk temas maili parçaları. tone: resmi|samimi|notr. len: uzunluk puanı. cliche: şablon kokusu. exag: abartı. pers: kişiselleştirme. style: ürün vurgusunun tarzı. {contact} {first} {firm} {city} yer tutucuları doldurulur.",
+  "slots": [
+    { "id": "acilis", "name": "Açılış", "options": [
+      { "t": "Sayın {contact},", "tone": "resmi", "len": 1 },
+      { "t": "Merhaba {first},", "tone": "samimi", "len": 1 },
+      { "t": "Değerli iş ortağımız,", "tone": "resmi", "len": 1, "cliche": 2 },
+      { "t": "Merhaba! Umarım haftanız harika geçiyordur!!!", "tone": "samimi", "len": 2, "exag": 2 }
+    ] },
+    { "id": "tanitim", "name": "Şirket tanıtımı", "options": [
+      { "t": "Ben Burak; İstanbul'da üç kuşaktır mobilya üreten Karaçak ailesinin ihracat tarafındayım. Markamız Live & Feel.", "tone": "samimi", "len": 2, "pers": 0 },
+      { "t": "{city} pazarını yakından takip ediyoruz ve {firm} koleksiyonunuzun çizgisi bizim tasarımlarımıza çok yakın.", "tone": "notr", "len": 2, "pers": 2 },
+      { "t": "1980 yılında kurulan firmamız, 12.000 m² kapalı alanda, 140 çalışanı, ISO sertifikaları, 25 ülkeye ihracatı ve geniş ürün yelpazesiyle sektörünün öncü kuruluşlarından biri olarak faaliyetlerini sürdürmektedir.", "tone": "resmi", "len": 4, "cliche": 2 },
+      { "t": "Dünyanın en kaliteli, en şık ve en uygun fiyatlı mobilyalarını üreten, rakipsiz bir firmayız!", "tone": "samimi", "len": 2, "exag": 3 }
+    ] },
+    { "id": "urun", "name": "Ürün vurgusu", "options": [
+      { "t": "Yeni sezonda sade çizgili, keten kaplı kanepe ve berjerlerimiz öne çıkıyor.", "style": "minimal", "len": 1 },
+      { "t": "Kadife ve bukle kaplı, altın detaylı lüks oturma gruplarımız otel ve konut projelerinde çok ilgi görüyor.", "style": "luks", "len": 2 },
+      { "t": "Klasik formları modern konforla buluşturan berjer ve konsollarımız var.", "style": "klasik", "len": 1 },
+      { "t": "Doğal dokular, toprak tonları ve rahat oturumlu bohem serimiz yeni çıktı.", "style": "bohem", "len": 1 },
+      { "t": "Metal ayaklı, masif ahşap sehpa ve masalarımız endüstriyel mekânlara çok yakışıyor.", "style": "endustriyel", "len": 1 },
+      { "t": "Modern kanepe, köşe ve yatak serilerimiz farklı ölçülerde üretilebiliyor.", "style": "modern", "len": 1 }
+    ] },
+    { "id": "katalog", "name": "Katalog", "options": [
+      { "t": "Kısa bir göz atmak isterseniz kataloğumuz burada: liveandfeel.com/katalog", "len": 1, "good": 1 },
+      { "t": "Ekte 64 sayfalık kataloğumuz, fiyat listemiz, sertifikalarımız, referans listemiz ve fabrika tanıtım videomuz bulunmaktadır.", "len": 3, "cliche": 1 },
+      { "t": "İsterseniz size özel bir seçki hazırlayıp gönderebilirim.", "len": 1, "pers": 1 }
+    ] },
+    { "id": "kapanis", "name": "Kapanış", "options": [
+      { "t": "Uygunsanız önümüzdeki hafta 15 dakikalık bir görüntülü görüşme yapabilir miyiz?\n\nİyi çalışmalar,\nBurak Karaçak", "tone": "samimi", "len": 1, "good": 1 },
+      { "t": "Değerli geri dönüşlerinizi bekler, çalışmalarınızda başarılar dileriz.\n\nSaygılarımızla,\nBurak Karaçak\nİhracat Bölge Müdürü", "tone": "resmi", "len": 2, "cliche": 1 },
+      { "t": "Lütfen en kısa sürede dönüş yapın, bu fırsatı kaçırmayın!!\n\nBurak", "tone": "samimi", "len": 1, "exag": 2 },
+      { "t": "Teşekkürler,\nBurak", "tone": "notr", "len": 0 }
+    ] }
+  ]
+}

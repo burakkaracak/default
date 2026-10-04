@@ -31,6 +31,9 @@ import './world/logistics.js';
 import * as ORD from './crm/orders.js';
 import { setFlag } from './core/story.js';
 import { ext } from './ext.js';
+import { worldPanel } from './world/map.js';
+import { peoplePanel, branchDesk } from './characters/social.js';
+import './crm/outreach.js';
 
 const canvas = $('#c');
 const st = save.settings();
@@ -65,6 +68,10 @@ const UI = {
   expansion: (id) => buyExpansion(id),
   slot: (f, i) => slotPanel(f, i), decor: decorPanel, unlockFloor: (f) => unlockFloor(f),
   plan: () => dayPlan(),
+  world: (id) => worldPanel(id),
+  people: () => peoplePanel(),
+  branchDesk: (id) => branchDesk(id),
+  meetroom: () => toast('Müşteri görüşme odası: yabancı alıcı ziyaretleri burada ağırlanır (Gelen Kutusu\'nda ziyaret haberi gelir).', 'info', 5000),
 };
 Object.assign(UI, ext.ui);
 bus.on('ui', (name, ...args) => {
