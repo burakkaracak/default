@@ -140,3 +140,8 @@ src/characters karakter modelleri, portreler, rutinler, onay zinciri, kadro pane
 src/ui         HUD, paneller, menü, raporlar, grafikler
 src/data       bütün JSON verisi
 ```
+
+## Telefonda oynama (Artifact)
+`npm run build` ayrıca `dist/artifact.html` üretir; claude.ai Artifact olarak yayınlanır:
+https://claude.ai/artifact/QdCJBJ7vvd6hEwwQm96fJ6 (aynı adrese yeniden yayınlanarak güncellenir).
+Not: Artifact içinde "Kaydı dışa aktar" (dosya indirme) çalışmaz; kayıtlar o tarayıcıda otomatik tutulur.
