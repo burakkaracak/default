@@ -23,7 +23,7 @@ export async function flow({ page, shot, ev, wait }) {
   // Masaya git ve gelen kutusunu aç
   await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); m.rfq.target=-0.05; m.rfq.wantDays=40; return 1})()`);
   await ev(`__game.bus.emit('ui','inbox','ic')`); await wait(300);
-  await page.click('.list-item >> nth=1'); await wait(200);
+  await page.click('.list-item:has-text("FW: Bakü")'); await wait(200);
   await shot('1_inbox');
   await page.click('text=Teklifi hazırla'); await wait(400);
   await shot('2_offer');
@@ -78,7 +78,7 @@ export async function phone({ page, shot, ev, wait }) {
   await newGame({ page, ev, wait });
   await shot('1_start');
   await ev(`__game.bus.emit('ui','inbox','ic')`); await wait(300); await shot('2_inbox');
-  await page.click('.list-item >> nth=1'); await wait(200); await shot('3_mail');
+  await page.click('.list-item:has-text("FW: Bakü")'); await wait(200); await shot('3_mail');
   await ev(`__game.modals.closeAll()`);
   await ev(`(()=>{__game.W.enter('factory',{x:0,z:6}); return 1})()`); await wait(600); await shot('4_factory');
   await ev(`__game.bus.emit('ui','factory')`); await wait(300); await shot('5_factorypanel');
@@ -137,7 +137,7 @@ export async function phone2({ page, shot, ev, wait }) {
   await newGame({ page, ev, wait });
   await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); __game.W.enter('store',{floor:2,x:-6,z:-2.6}); return 1})()`); await wait(300);
   await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); __game.bus.emit('ui','inbox','ic'); return 1})()`); await wait(200);
-  await page.click('.list-item >> nth=1'); await wait(100);
+  await page.click('.list-item:has-text("FW: Bakü")'); await wait(100);
   await page.click('text=Teklifi hazırla'); await wait(300); await shot('1_offer');
   await ev(`__game.modals.closeAll()`);
   await ev(`(()=>{const g=__game; const o=g.ORD.createOrder({cust:'c1',city:'baku',lines:[{fam:'kanepe',fabric:'keten',color:'bej',size:'std',qty:8,price:800},{fam:'berjer',fabric:'kadife',color:'yesil',size:'std',qty:6,price:450}],cur:'USD',incoterm:'FOB',pay:'avans30',promisedDay:30}); o.status='erp'; g.bus.emit('ui','orders',o.id); return 1})()`); await wait(200);
@@ -168,4 +168,17 @@ export async function walk({ page, shot, ev, wait }) {
   await page.click('text=3. Kat'); await wait(800); await shot('floor3');
   await ev(`__game.W.enter('store',{floor:0, x:0, z:3})`); await wait(400); await shot('floor0');
   await ev(`__game.W.enter('nisantasi',{})`); await wait(400); await shot('branch');
+}
+
+export async function comms({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  console.log(await ev(`JSON.stringify(__game.G.inbox.map(m=>[m.ch,m.from,m.subject,m.body.slice(0,90)]),null,1)`));
+  await ev(`__game.bus.emit('ui','inbox','wa')`); await wait(300); await shot('wa');
+  await ev(`__game.modals.closeAll(); __game.bus.emit('ui','inbox','ic')`); await wait(300); await page.click('.list-item >> nth=0'); await wait(200); await shot('mail');
+  await ev(`__game.modals.closeAll(); __game.bus.emit('ui','people')`); await wait(300); await page.click('text=Organizasyon'); await wait(200); await shot('org');
+  await ev(`__game.modals.closeAll(); __game.bus.emit('ui','talk','semanur')`); await wait(300); await shot('semanur');
+  await page.click('text=Siparişlerin ERP durumunu sor'); await wait(200);
+  await ev(`__game.modals.closeAll(); __game.time.skip(240)`); 
+  console.log(await ev(`JSON.stringify(__game.G.inbox.slice(0,2).map(m=>[m.from,m.subject,m.body]))`));
+  await ev(`__game.modals.closeAll(); __game.bus.emit('ui','talk','harun')`); await wait(300); await shot('harun');
 }

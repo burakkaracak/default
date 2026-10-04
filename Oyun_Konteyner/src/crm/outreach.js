@@ -16,6 +16,7 @@ import { stat } from '../core/story.js';
 import { atDesk } from '../ui/desk.js';
 import { showroomBeauty } from '../locations/store.js';
 import { portraits } from '../characters/portraits.js';
+import { internal } from '../characters/comms.js';
 import MP from '../data/mailparts.json';
 
 export const rep = (cityId) => (G.reputation?.[cityOf(cityId)?.country] ?? 10);
@@ -94,7 +95,7 @@ async function protectedWarn(c) {
   addTrust('bunyamin', -15, 'korumalı hesaba dokundun'); addTrust('davut', -4);
   G.flags.touchedProtected = (G.flags.touchedProtected || 0) + 1;
   c.cooldown = G.day + 30;
-  addMessage({ ch: 'ic', from: 'Bünyamin Karaçak', fromId: 'bunyamin', subject: 'Bu benim müşterim kuzen', body: `${c.name} ile ben görüşüyorum. Bize iki farklı ses gidince müşteri kafası karışıyor. Bir dahakine önce bana sor, olur mu? Senin bölgen Avrupa ve Asya.`, kind: 'uyari' });
+  internal({ from: 'bunyamin', via: 'wa', subject: 'Korumalı hesap', body: `${c.name} benim görüştüğüm firma. İki farklı ses gidince müşterinin kafası karışıyor. Bir dahakine önce bana yaz, olur mu? Senin bölgen Avrupa ve Asya.`, kind: 'uyari' });
 }
 
 // ---------- Cevaplar ve ilişki olayları ----------
@@ -132,7 +133,7 @@ registerAction('sendPriceList', async (msg, a) => { const c = cust(msg.cust); c.
 registerAction('acceptSample', (msg) => { const c = cust(msg.cust); setLevel(c, 2, 'numune talebi'); makeRequest(c, { sample: true }); return true; });
 registerAction('complaintPay', (msg, a) => { const o = orderById(a.order); const amt = toTL(o.total * a.pct, o.cur); spend(amt, 'iade', 'İade/değişim ' + o.id); const c = cust(o.cust); addSat(c, 10); addRep(o.city, 2); toast('Müşteri jestini takdir etti.', 'good'); return true; });
 registerAction('complaintDisc', (msg, a) => { const o = orderById(a.order); const c = cust(o.cust); if (chance(0.6)) { o.total *= 1 - a.pct; addSat(c, 4); toast('Müşteri indirimi kabul etti.', 'good'); } else { const amt = toTL(o.total * a.pct * 1.6, o.cur); spend(amt, 'iade', 'İade ' + o.id); addSat(c, -4); addRep(o.city, -2); toast('Müşteri indirimi yeterli bulmadı; iade yapıldı.', 'warn'); } return true; });
-registerAction('discountReq', async (msg, a) => { const c = cust(msg.cust); const ok = await requestApproval({ who: 'harun', type: 'discount', title: `${c.name} için gelecek siparişe %${Math.round(a.pct * 100)}`, value: a.pct }); if (!ok) return false; c.nextDisc = a.pct; addSat(c, 6); toast('İndirim sözü verildi; bir sonraki teklifte hedef fiyatı düşük olacak.', 'good'); return true; });
+registerAction('discountReq', async (msg, a) => { const c = cust(msg.cust); const ok = await requestApproval({ who: 'davut', type: 'discount', title: `${c.name} için gelecek siparişe %${Math.round(a.pct * 100)}`, value: a.pct }); if (!ok) return false; c.nextDisc = a.pct; addSat(c, 6); toast('İndirim sözü verildi; bir sonraki teklifte hedef fiyatı düşük olacak.', 'good'); return true; });
 registerAction('politeNo', (msg) => { const c = cust(msg.cust); addSat(c, chance(0.6) ? 0 : -4); return true; });
 registerAction('rushYes', async (msg, a) => { const o = orderById(a.order); if (trust('serkan') < 50) { toast('Serkan: "Şu an olmaz, hat dolu." (güven 50+ gerekir)', 'warn'); return false; } for (const id of o.wos || []) { const wo = G.factory.wos[id]; if (wo) wo.prio = 2; } addTrust('serkan', -2); o.promisedDay = Math.max(G.day + 2, o.promisedDay - 3); addSat(cust(o.cust), 6); toast('Serkan işi öne aldı. Teslim 3 gün öne çekildi.', 'good'); return true; });
 
@@ -176,7 +177,7 @@ bus.on('dayStart', () => {
     const open = G.orders.some((o) => o.cust === c.id && !['kapandi', 'iptal', 'teslim', 'tahsil'].includes(o.status));
     const pRfq = (c.level >= 4 ? 0.12 : 0.06) * (cityOf(c.city).season?.[time.seasonIndex()] ?? 1) * (c.sat / 60);
     if (!open && chance(pRfq) && !(G.inbox.some((m) => m.rfq?.cust === c.id && !m.done))) makeRequest(c, { mult: c.level >= 5 ? 1.8 : c.level >= 4 ? 1.3 : 1 });
-    if (c.level >= 4 && chance(0.02) && !c.nextDisc) addMessage({ ch: 'musteri', from: c.name, fromId: c.id, cust: c.id, subject: 'İndirim talebi', body: `Uzun süredir birlikte çalışıyoruz. Bir sonraki siparişte %5 indirim yapabilir misiniz? Hacmimizi artırmayı düşünüyoruz.\n\n${c.contact}`, kind: 'indirim', actions: [{ label: '%5 indirim sözü ver (Harun onayı)', act: 'discountReq', args: { pct: 0.05 } }, { label: 'Nazikçe hayır de', act: 'politeNo' }] });
+    if (c.level >= 4 && chance(0.02) && !c.nextDisc) addMessage({ ch: 'musteri', from: c.name, fromId: c.id, cust: c.id, subject: 'İndirim talebi', body: `Uzun süredir birlikte çalışıyoruz. Bir sonraki siparişte %5 indirim yapabilir misiniz? Hacmimizi artırmayı düşünüyoruz.\n\n${c.contact}`, kind: 'indirim', actions: [{ label: '%5 ek iskonto sözü ver (Davut Bey kararı)', act: 'discountReq', args: { pct: 0.05 } }, { label: 'Nazikçe hayır de', act: 'politeNo' }] });
   }
   for (const o of G.orders) if (o.status === 'uretim' && !o.rushAsked && !o.sample && chance(0.05)) {
     o.rushAsked = true; const c = cust(o.cust);
@@ -202,7 +203,7 @@ bus.on('tick', () => {
       G.showroomBonus = 0; stat('visitsHosted');
     });
   } else {
-    addMessage({ ch: 'ic', from: 'Bünyamin Karaçak', fromId: 'bunyamin', subject: `${c.name} ziyareti`, body: 'Sen yoktun, misafirleri ben karşıladım. Showroom\'u gezdik. ' + (beauty > 40 ? 'Çok beğendiler.' : 'Teşhir biraz zayıftı.'), kind: 'ziyaret' });
+    internal({ from: 'bunyamin', via: 'wa', subject: `${c.name} ziyareti`, body: 'sen yoktun, misafirleri ben karşıladım. Showroom\'u gezdik. ' + (beauty > 40 ? 'Çok beğendiler.' : 'Teşhir biraz zayıftı.'), kind: 'ziyaret' });
     if (chance(0.15 + beauty / 300)) makeRequest(c, { visit: true });
   }
 });

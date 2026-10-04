@@ -5,7 +5,7 @@ import { bus } from './bus.js';
 import { clamp, pick } from './util.js';
 
 export const ABILITIES = [
-  { id: 'smallDiscount', at: 25, name: 'Küçük indirim yetkisi', desc: '%5\'e kadar indirimi Harun Bey\'e sormadan verebilirsin.' },
+  { id: 'smallDiscount', at: 25, name: 'Davut Bey\'den ön yetki', desc: 'Davut Bey sana güveniyor: %3\'e kadar ek iskontoyu sormadan verebilirsin (üstü yine onun kararı).' },
   { id: 'selfFair', at: 45, name: 'Kendi fuarını ayarla', desc: 'Bölgesel fuarlara Davut Bey onayı olmadan katılabilirsin.' },
   { id: 'strategy', at: 65, name: 'Bünyamin\'e strateji öner', desc: 'Bir odak bölge seç: o bölgede cevap oranı bu çeyrek %25 artar.' },
   { id: 'calm', at: 85, name: 'Sakin zihin', desc: 'Analiz Döngüsü çok daha yavaş dolar.' },

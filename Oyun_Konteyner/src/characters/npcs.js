@@ -73,7 +73,7 @@ export const npcs = {
         m.root.position.set(start[0], 0, start[1]); m.root.rotation.y = w.face || 0;
         W.root.add(m.root);
         n = { id: c.id, m, tgt: w.pos, face: w.face || 0, leaving: false };
-        n.zone = W.addZone({ id: 'npc_' + c.id, kind: 'action', x: start[0], z: start[1], r: 1.3, noSign: true, hidden: true, action: () => bus.emit('ui', 'talk', c.id), actionLabel: 'Konuş: ' + c.name.split(' ')[0] });
+        n.zone = W.addZone({ id: 'npc_' + c.id, kind: 'action', x: start[0], z: start[1], r: 1.3, noSign: true, hidden: true, action: () => bus.emit('ui', 'talk', c.id), actionLabel: (c.channels && !c.channels.includes('yuz') ? 'Mail at: ' : 'Konuş: ') + c.name.split(' ')[0] });
         const tag = (n.tag = document.createElement('div')); tag.className = 'npc-tag'; tag.textContent = c.name.split(' ')[0];
         document.getElementById('tags').appendChild(tag);
         this.list.push(n);

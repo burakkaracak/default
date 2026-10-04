@@ -38,9 +38,9 @@ Her sabah Bostancı'da masanda başlarsın ve Büşra Hanım'ın notlarıyla gü
    Kısa, doğal, firmaya uygun mailler cevap alır; uzun, şablon ve abartılı mailler almaz.
 2. **İlişkiyi ilerlet:** Soğuk → İlgili (katalog) → Numune istedi → İlk sipariş → Düzenli → Stratejik ortak.
 3. **Teklif ve pazarlık:** indirim, teslim süresi, ödeme (peşin / %30 avans / vadeli) ve teslim şekli (EXW/FOB/CIF).
-   İndirim ve vade için **Harun** onayı, büyük teklif için **Bünyamin**, termin için **Serkan** (telefonda tahmini,
-   fabrikada kesin), yatırım için **Davut** (randevu Büşra'dan), malzeme için **İbrahim**.
-4. **Sipariş akışı:** proforma → avans → **ERP formu** (eksik/hatalı alanları bul, Semanur'a elden ya da mesajla ver)
+   Ek iskonto ve vade kararı **Davut Bey**'de; maliyet, fiyat ve termin için **Serkan Bey** (telefonda tahmini,
+   fabrikada kesin); malzeme için **İbrahim Bey**; Bünyamin'le istişare edebilirsin.
+4. **Sipariş akışı:** proforma → avans (Harun Bey takip eder) → **ERP formu** (eksik/hatalı alanları bul, Semanur Hanım'a mail ile gönder)
    → üretim → sevkiyat → teslim → bakiye.
 5. **Fabrika:** istasyonların önündeki halkada durursan tezgahı sen çalıştırır, çıkan ürünleri sonraki istasyona taşırsın.
    Usta, depocu, kalite kontrolcü, tasarımcı ve satış asistanı işe alınca işler kendiliğinden yürür.
@@ -49,9 +49,21 @@ Her sabah Bostancı'da masanda başlarsın ve Büşra Hanım'ın notlarıyla gü
 7. **Harun'un "bitti" huyu:** panoda "tamamlandı" görünen sipariş gerçekten bitmemiş olabilir.
    Fabrikaya gidip sipariş panosuna ya da sevkiyat alanına kendi gözünle bak; müşteriyi önceden bilgilendir.
 
+**Şirket yapısı ve iletişim kuralları**
+- **Davut Bey** patrondur; talimatı her şeyden önce gelir (HUD'da ⭐ ile gösterilir). Ek iskonto, vade, yatırım ve fuar kararlarını o verir.
+  Burak, Bünyamin ve Büşra doğrudan ona bağlıdır.
+- **Harun Bey** üretimden ve finans-muhasebeden sorumludur: satışları ve tahsilatı takip eder, ödeme alır ve yapar. İskontoda söz hakkı yoktur.
+- **İbrahim Bey** satın almadan sorumludur; maili pek kullanmaz, telefonla ya da yüz yüze konuşmayı sever.
+- **Serkan Bey** ve **Semanur Hanım** Harun Bey'e bağlıdır ama bütün patronlar onlara iş verir.
+  Serkan Bey üretimin bel kemiğidir: maliyet, fiyatlandırma ve termin için en çok ona danışılır (telefonda yaklaşık, fabrikada kesin).
+  Semanur Hanım ERP yöneticisidir: sipariş açılış onayı ondan gelir, sipariş/stok durumu ona sorulur. **Onunla sadece mail ile görüşülür.**
+- Günlük konularda Burak ve Bünyamin istişare eder; karar gerekiyorsa Davut Bey'e gidilir.
+- **Mailde** herkes "Bey/Hanım" ile hitap eder; üst kadro (Davut, Harun, İbrahim) ilk isimle yazar.
+- **WhatsApp'ta** Bünyamin Burak'a "abi", Burak Bünyamin'e "reis" der; Büşra ile "kuzen" denir. (Gelen Kutusu → WhatsApp sekmesi)
+
 **Özgüven ve Analiz Döngüsü:** Karar ekranlarında (mail, teklif, ERP) uzun beklemek Analiz'i doldurur,
 iç sesler "Biraz daha düzelteyim mi?" der. Karar vermek, sonuç mükemmel olmasa bile Özgüven'i artırır.
-Özgüven 25: %5'e kadar onaysız indirim · 45: bölgesel fuarı kendin ayarla · 65: Bünyamin'e bölge stratejisi öner · 85: sakin zihin.
+Özgüven 25: Davut Bey'den %3'e kadar ön iskonto yetkisi · 45: bölgesel fuarı kendin ayarla · 65: Bünyamin'e bölge stratejisi öner · 85: sakin zihin.
 
 **Hikaye:** 1 İlk Konteyner (Bakü, eğitim) · 2 Komşu Pazarlar · 3 Avrupa'ya Giriş · 4 Asya Rotası · 5 Global Marka.
 Bölüm sonunda Davut Bey toplantı odasında kutlama yapar. **Serbest Mod**: bölüm yok, bütün pazarlar açık.
@@ -108,7 +120,7 @@ noktayı `spots` altında tanımla (`{ "floor": 3, "pos": [x, z], "face": 0 }`).
 4. `products.json → families[].stations` dakikaları — üretim hızı ve termin.
 5. `salaries` — aylık maaşlar; sabit gider baskısı.
 6. `autoTransferMinutes` (45) / `depocuTransferMinutes` (8) — forklift ve depocu taşıma süresi; depocunun değeri.
-7. `harunDiscountLimit` (0,08) — Harun'un onaylayacağı indirim tavanı.
+7. `discountBase` (0,07) — Davut Bey'in genelde onayladığı ek iskonto tavanı (güven yükseldikçe artar).
 8. `harunFakeDoneChance` (0,22) — Harun'un siparişi erken "tamamlandı" işaretleme sıklığı.
 9. `fxDailyDrift` / `fxDailyVolatility` — kurun yönü ve oynaklığı.
 10. `cities.json → priceLevel`, `payRel` ve `logistics` — pazarın fiyat seviyesi, ödeme güvenilirliği ve navlun.

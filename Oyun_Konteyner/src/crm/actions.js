@@ -8,7 +8,10 @@ import { erpPanel } from './erp.js';
 import { orderById } from './orders.js';
 import { cust } from './customers.js';
 import { registerTalk } from '../ui/talk.js';
-import { isHere, trust, addTrust, harunLimit } from '../characters/approvals.js';
+import { isHere, trust, addTrust, discountLimit } from '../characters/approvals.js';
+import { askCost } from './negotiation.js';
+import { toTL } from '../economy/economy.js';
+import { fmtCur, fmtTLk } from '../core/util.js';
 import { time } from '../core/time.js';
 import * as PR from '../factory/production.js';
 import { canCelebrate } from '../core/story.js';
@@ -29,7 +32,10 @@ registerTalk((who) => {
   const out = [];
   if (who === 'serkan') {
     const rfqs = (G.inbox || []).filter((m) => m.rfq && !m.done && !m.rfq.lost).map((m) => m.rfq);
-    for (const r of rfqs.slice(0, 2)) out.push({ label: `📏 Kesin termin: ${cust(r.cust).name}`, sub: r.termin?.exact ? `${r.termin.days} gün (alındı)` : 'yüz yüze · kesin', fn: () => askTermin(r, 'yuz') });
+    for (const r of rfqs.slice(0, 2)) {
+      out.push({ label: `📏 Kesin termin: ${cust(r.cust).name}`, sub: r.termin?.exact ? `${r.termin.days} gün (alındı)` : 'yüz yüze · kesin', fn: () => askTermin(r, 'yuz') });
+      out.push({ label: `💲 Maliyet ve fiyat: ${cust(r.cust).name}`, sub: r.cost?.exact ? 'kesin maliyet alındı' : 'yüz yüze · kesin', fn: () => askCost(r, 'yuz') });
+    }
     const wos = Object.values(G.factory.wos).filter((w) => w.packed < w.qty && !w.prio);
     out.push({ label: '⚡ Acil işi öne al', sub: trust('serkan') >= 55 ? 'güven yeterli' : 'güven 55+ gerekir', disabled: trust('serkan') < 55 || !wos.length, fn: async (api, say) => {
       const v = await choose('Hangi iş öne alınsın?', '', wos.map((w) => ({ label: `${w.id} · ${w.qty} ${w.fam}`, sub: w.order || w.purpose, value: w.id })));
@@ -37,12 +43,14 @@ registerTalk((who) => {
     } });
     out.push({ label: '👷 Kadro ve işe alım', sub: 'çalışanlar', fn: () => { bus.emit('ui', 'factory', 'kadro'); return true; } });
   }
-  if (who === 'semanur') {
-    for (const o of G.orders.filter((o) => o.status === 'erp' && !o.erp?.pending)) out.push({ label: `🗂️ ERP formu teslim et: ${o.id}`, sub: 'elden · tek turda düzeltme', fn: () => { erpPanel(o); return true; } });
-  }
+
   if (who === 'harun') {
     out.push({ label: '📋 Siparişler ne durumda?', sub: '', fn: (api, say) => { const f = G.orders.filter((o) => o.fakeDone); say(f.length ? `“Hepsi tamam yeğenim! ${f.map((o) => o.id).join(', ')} bitti, ERP'de de işaretledim.” <span class="muted">(Gözünle bakmak istersen sevkiyat alanı ya da sipariş panosu.)</span>` : '“Her şey yolunda. Ben buradayken iş aksamaz.”'); } });
-    out.push({ label: '💰 İndirim yetkim ne kadar?', sub: '', fn: (api, say) => say(`“Sana %${Math.round(harunLimit() * 100)}'e kadar onay veririm. Fazlası... konuşuruz.”${conf.has('smallDiscount') ? ' <span class="muted">(Özgüvenin sayesinde %5\'e kadar sormadan verebilirsin.)</span>' : ''}`) });
+    out.push({ label: '💳 Tahsilat ve ödemeler', sub: 'finans', fn: (api, say) => {
+      const open = G.orders.filter((o) => !['kapandi', 'iptal'].includes(o.status) && o.total - o.paid > 1);
+      say(open.length ? '“Bak yeğenim, defterde şunlar açık:”<br>' + open.slice(0, 6).map((o) => `• ${o.id}: ${fmtCur(o.total - o.paid, o.cur)} (≈${fmtTLk(toTL(o.total - o.paid, o.cur))}) · ${o.status === 'tahsil' ? 'bakiye bekleniyor' : o.status === 'avans' ? 'avans bekleniyor' : 'teslimde'}`).join('<br>') + '<br>“Parayı görmeden mal yüklemem, haberin olsun.”' : '“Bütün tahsilatlar tamam. Kasa rahat.”');
+    } });
+    out.push({ label: '💰 İskonto yapabilir miyiz?', sub: '', fn: (api, say) => say('“İskonto mu? Onu bana sorma yeğenim, Davut karar verir. Ben sadece paranın geldiğine bakarım.”') });
   }
   if (who === 'ibrahim') {
     out.push({ label: '🪵 Hammadde ve stok', sub: 'yüz yüze: onaysız alım', fn: () => { G.flags.ibrahimFace = G.day; bus.emit('ui', 'factory', 'depo'); return true; } });

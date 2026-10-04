@@ -5,6 +5,7 @@ import { time } from './time.js';
 import { chance, pick, clamp } from './util.js';
 import { toast, h, alertBox, confetti } from '../ui/dom.js';
 import { addMessage } from '../crm/inbox.js';
+import { internal } from '../characters/comms.js';
 import { trust } from '../characters/approvals.js';
 import { showroomBeauty } from '../locations/store.js';
 import EV from '../data/events.json';
@@ -17,7 +18,7 @@ bus.on('dayStart', () => {
     const ef = e.effect;
     // İbrahim güveni yüksekse fiyat uyarısını önceden verir
     if (e.warnBy === 'ibrahim' && trust('ibrahim') > 55 && ef.matShock) {
-      addMessage({ ch: 'ic', from: 'İbrahim Karaçak', fromId: 'ibrahim', subject: 'Fiyat haberi', body: `Oğlum, duyduğuma göre: ${e.text}\n\n${Object.values(ef.matShock)[0] > 0 ? 'Bence şimdi biraz stok al.' : 'Bu hafta alım yapmak mantıklı.'}`, kind: 'uyari' });
+      internal({ from: 'ibrahim', via: 'call', subject: 'Fiyat haberi', body: `duyduğuma göre: ${e.text} ${Object.values(ef.matShock)[0] > 0 ? 'Bence şimdi biraz stok alalım.' : 'Bu hafta alım yapmak mantıklı.'}`, kind: 'uyari' });
       G.flags.ibrahimDeal = Object.fromEntries(Object.keys(ef.matShock).map((k) => [k, G.day + 3]));
     }
     if (ef.fxShock) { G.fxShock = { ...ef.fxShock }; G.flags.fxCrisisDay = G.day; }

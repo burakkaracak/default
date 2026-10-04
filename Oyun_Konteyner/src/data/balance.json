@@ -20,7 +20,7 @@
   "depocuTransferMinutes": 8,
   "playerHelpBonus": 0.8,
   "workMinutesPerDay": 720,
-  "harunDiscountLimit": 0.08,
+  "discountBase": 0.07,
   "harunFakeDoneChance": 0.22,
   "salaries": { "usta": 45000, "depocu": 35000, "kalite": 46000, "tasarimci": 70000, "satis": 55000 },
   "loanRateMonthly": 0.035,

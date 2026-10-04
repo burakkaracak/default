@@ -1,132 +1,664 @@
 {
-  "_aciklama": "Kadro. look: model görünümü. routine: [saat, lokasyon, nokta]. lines: güven seviyesine göre (dusuk <35, orta, yuksek >70). Yeni karakter eklemek için aynı yapıyı kopyalayın.",
-  "list": [
-    {
-      "id": "burak", "name": "Burak Karaçak", "title": "İhracat Bölge Müdürü (Avrupa ve Asya)", "player": true, "born": 2000,
-      "desc": "Görev adamı; verilen işi eksiksiz yapar. Mükemmeliyetçi, inisiyatif almakta zorlanır, bazen yerinde sayar.",
-      "look": { "skin": "#E2B98F", "hair": "short", "hairColor": "#2B2118", "top": "#F2F0EB", "bottom": "#2E3647", "beard": "stubble", "extra": ["watch"] }
-    },
-    {
-      "id": "davut", "name": "Davut Karaçak", "title": "Yönetim Kurulu Başkanı", "born": 1978, "home": "store", "spot": "davut",
-      "desc": "Titiz, detaycı, gergin ama babacan. Hedefleri koyar, büyük yatırımları onaylar.",
-      "look": { "skin": "#D9AD84", "hair": "side", "hairColor": "#8E8A84", "top": "#2D3446", "bottom": "#2D3446", "jacket": true, "tie": "#9C905C", "glasses": true },
-      "routine": [[8, "store", "davut"], [12.5, "store", "davut_window"], [13.5, "store", "davut"]],
-      "trust": 45,
-      "lines": {
-        "dusuk": ["Burak, rakamlar tutmuyor. Bir daha bak, sonra gel.", "Ben 'hemen hemen' diye bir birim bilmiyorum.", "Toplantıya hazırlıksız gelinmez. Hele benim toplantıma."],
-        "orta": ["Fena değil. Ama 'fena değil' ile şirket büyümez.", "Virgülden sonrasına da bakıyorsun değil mi? Bakıyorsun. Güzel.", "Bünyamin senden memnun. Ben de... şimdilik memnunum."],
-        "yuksek": ["Aferin oğlum. Bu çeyrek iyi iş çıkardın.", "Senin raporlarını artık ikinci kez okumuyorum. Bu bir iltifat.", "Amcan olarak değil, başkan olarak söylüyorum: gurur duyuyorum."]
-      },
-      "family": "Kardeşlerin en küçüğü. Oğlu Bünyamin. İbrahim ve Harun'un kardeşi; ikisine de 'abi' der."
-    },
-    {
-      "id": "harun", "name": "Harun Karaçak", "title": "YK Üyesi (Ticari)", "born": 1975, "home": "factory", "spot": "harun",
-      "desc": "Kurnaz, laf ebesi. Fiyat politikası ve ödeme şartlarının sahibi. Biten siparişi bazen 'biraz erken' tamamlandı işaretler.",
-      "look": { "skin": "#CF9F78", "hair": "bald", "hairColor": "#3A2E26", "top": "#6B4F3A", "bottom": "#3B3B3B", "jacket": true, "mustache": true, "extra": ["phone"] },
-      "routine": [[8, "factory", "harun"], [11, "factory", "harun_hall"], [12, "factory", "harun"], [16, "factory", "harun_hall"], [17, "factory", "harun"]],
-      "trust": 40,
-      "lines": {
-        "dusuk": ["Bak yeğenim, piyasa böyle. Ben sana bir şey demedim, değil mi?", "O siparişi tamamlandı yaptım, gönül rahatlığıyla. Sayılmasa da olur.", "Yazılı mı? Aramızda yazılı mı olur Burak'cım?"],
-        "orta": ["İndirim mi? Konuşuruz. Konuşmak bedava.", "Davut her şeyi deftere yazar, ben aklıma. Aklım daha geniş.", "İbrahim abi yine sessiz, demek ki işler yolunda."],
-        "yuksek": ["Sana biraz daha esneklik tanıyorum, aramızda kalsın.", "Sen iyi pazarlık yapıyorsun, belli ki bana çekmişsin. Ha, ben amcanım.", "Bu müşteriyi bırakma, ben arkandayım. Yazılı da arkandayım, söz."]
-      },
-      "family": "Ortanca kardeş. Kızı Semanur. İbrahim'e 'abi' der."
-    },
-    {
-      "id": "ibrahim", "name": "İbrahim Karaçak", "title": "YK Üyesi (Satın Alma) · Döşemehane ve Demirhane", "born": 1972, "home": "factory", "spot": "ibrahim",
-      "desc": "Sakin, kavgaya girmez. Hammadde ve stok kararları onunla. Az konuşur, söylediği hep doğrudur. Burak'ın babası.",
-      "look": { "skin": "#D4A27C", "hair": "short", "hairColor": "#D8D4CC", "top": "#7A6A55", "bottom": "#4A4A44", "cardigan": true, "beard": "full", "beardColor": "#CFCAC0" },
-      "routine": [[8, "factory", "ibrahim"], [10, "factory", "ibrahim_doseme"], [11, "factory", "ibrahim"], [15, "factory", "ibrahim_demir"], [16, "factory", "ibrahim"]],
-      "trust": 60,
-      "lines": {
-        "dusuk": ["Hm.", "Önce bir bak, sonra karar ver oğlum.", "Acele işe şeytan karışır."],
-        "orta": ["Kereste bu ay kıpırdayacak gibi. Aklında olsun.", "Kahvaltı ettin mi?", "Harun'a kızma. O öyle."],
-        "yuksek": ["Sana güveniyorum. Annene de söyledim.", "Kumaşçı tanıdık; kampanya olursa ilk sana haber veririm.", "İyi gidiyorsun. Ama yorulma."]
-      },
-      "family": "Kardeşlerin en büyüğü. Oğlu Burak. Harun ve Davut ona 'abi' der."
-    },
-    {
-      "id": "serkan", "name": "Serkan Karaarslan", "title": "Fabrika Müdürü", "born": 1983, "home": "factory", "spot": "serkan",
-      "desc": "Kapasite, termin ve kaliteden sorumlu. Net çizim ister; eksik bilgiyle gelen işi geri çevirir. Aileden değil.",
-      "look": { "skin": "#C99470", "hair": "short", "hairColor": "#1E1A17", "top": "#3E5367", "bottom": "#2E2E2E", "vest": "#E07B2E", "helmet": "#F2C230", "extra": ["clipboard"] },
-      "routine": [[8, "factory", "serkan"], [9.5, "factory", "serkan_hall"], [11, "factory", "serkan"], [14, "factory", "serkan_hall"], [15.5, "factory", "serkan"]],
-      "trust": 45,
-      "lines": {
-        "dusuk": ["Çizim yoksa iş yok. Kusura bakma.", "Termin sözünü benden almadan verdiysen, o söz senin.", "Ustalar fazla mesaiden sıkıldı, haberin olsun."],
-        "orta": ["Hat şu an rahat, sıkıştırabiliriz.", "Ölçüyü net getirirsen, ben de net teslim ederim.", "Kalite kontrolde biri olsa ben de rahat uyurum."],
-        "yuksek": ["Senin işini araya alırım, merak etme.", "Seninle çalışmak kolay, her şey yazılı ve ölçülü.", "Ustalar seni sordu. 'Burak bey yine kahve getirir mi' dediler."]
-      },
-      "family": "Aileden değil; ama aileden daha çok fabrikada."
-    },
-    {
-      "id": "bunyamin", "name": "Bünyamin Karaçak", "title": "Koordinatör ve Satış Direktörü", "born": 1998, "home": "roam", "spot": "roam",
-      "desc": "Davut'un oğlu, Burak'ın müdürü ve kuzeni. Mantıklı, dengeli, çözüm odaklı. Mentor. Gün içinde lokasyonlar arasında dolaşır.",
-      "look": { "skin": "#DDB08A", "hair": "short", "hairColor": "#3A2A1E", "top": "#5C6B5A", "bottom": "#3A3F4A", "jacket": true, "beard": "full", "beardColor": "#3A2A1E", "extra": ["bag"] },
-      "roam": ["store", "factory", "nisantasi", "atasehir"],
-      "trust": 55,
-      "lines": {
-        "dusuk": ["Takıldığın yer varsa sor, ayıp değil.", "Bir mail at, sonra düzeltiriz. Hiç atmamaktan iyidir.", "Harun amcamla konuşurken yazılı iste, demedi deme."],
-        "orta": ["Bakü tarafı ısınıyor, iyi gidiyorsun.", "Babam sert görünür ama raporunu iki kez okuyorsa önemsiyor demektir.", "Semanur'a formu elden ver, daha az tur sürer."],
-        "yuksek": ["Senin bölgen benden iyi gidiyor, kıskanıyorum.", "Fuar standını beraber kuralım mı? Bu sefer sen sun.", "Bir müşteri ayarladım sana, mailine bak."]
-      },
-      "family": "Davut'un oğlu. Burak ve Semanur'un kuzeni."
-    },
-    {
-      "id": "busra", "name": "Büşra Karaçak", "title": "Yönetim Kurulu Başkanı Sekreteri", "born": 1996, "home": "store", "spot": "busra",
-      "desc": "Titiz, düzgün, düzenli. Davut Bey'in takvimini yönetir, toplantı ve son tarihleri hatırlatır.",
-      "look": { "skin": "#E6BC96", "hair": "bun", "hairColor": "#4A2F22", "top": "#E8DCCB", "bottom": "#3B3A3A", "glasses": true, "extra": ["tablet"], "skirt": true },
-      "routine": [[8, "store", "busra"], [12, "store", "busra_floor2"], [12.75, "store", "busra"]],
-      "trust": 50,
-      "lines": {
-        "dusuk": ["Davut Bey'in takvimi doludur. Randevu sistemini kullanalım lütfen.", "Toplantı 09:00'da. 09:01 değil.", "Bu formun kenar boşlukları neden farklı?"],
-        "orta": ["Yarın toplantın var, sunumu bir kez daha kontrol et.", "Davut Bey bugün iyi modda, şimdi gidebilirsin.", "Takvimine not düştüm, merak etme."],
-        "yuksek": ["Senin için araya bir randevu sıkıştırdım.", "Davut Bey raporunu beğendi, ben de beğendim.", "Kuzen dayanışması: yarınki toplantıda ilk sırayı sana verdim."]
-      },
-      "family": "Kardeşlerin amcası İsmail Karaçak'ın kızı."
-    },
-    {
-      "id": "semanur", "name": "Semanur Karaçak", "title": "ERP Sipariş Sorumlusu", "born": 1999, "home": "factory", "spot": "semanur",
-      "desc": "Mesafeli ve tepeden bakan. Onaylanan her sipariş ERP'ye girilmeden üretime geçemez. En küçük eksikte formu geri gönderir.",
-      "look": { "skin": "#E8C4A0", "hair": "long", "hairColor": "#1F1714", "top": "#2E2B33", "bottom": "#2E2B33", "jacket": true, "extra": ["earrings"] },
-      "routine": [[8, "factory", "semanur"]],
-      "trust": 25,
-      "lines": {
-        "dusuk": ["Form eksik. Yine.", "Çizim alanı boş bırakılmaz. Bunu da mı söylemem gerekiyor?", "Meşgulüm. Mesaj atabilirsin."],
-        "orta": ["Bu sefer... kabul edilebilir.", "ERP senin not defterin değil Burak.", "Renk kodunu doğru yazmışsın. Şaşırdım."],
-        "yuksek": ["Formların artık temiz geliyor. Bunu kimseye söyleme.", "Senin siparişini sıraya önce aldım. Tesadüf.", "İyi iş. Bir kere söyledim, tekrar bekleme."]
-      },
-      "family": "Harun'un kızı. Burak ve Bünyamin'in kuzeni."
-    }
-  ],
-  "spots": {
-    "store": {
-      "davut": { "floor": 3, "pos": [0, -4.6], "face": 0 },
-      "davut_window": { "floor": 3, "pos": [-8, -6.2], "face": 3.14 },
-      "busra": { "floor": 3, "pos": [7, 2.5], "face": -1.57 },
-      "busra_floor2": { "floor": 2, "pos": [2, 2], "face": 0 }
-    },
-    "factory": {
-      "harun": { "pos": [-16, -15], "face": 0 },
-      "harun_hall": { "pos": [-9, 0], "face": 0.6 },
-      "semanur": { "pos": [-10, -15.2], "face": 0 },
-      "ibrahim": { "pos": [-3, -15], "face": 0 },
-      "ibrahim_doseme": { "pos": [4.2, -2.6], "face": -0.5 },
-      "ibrahim_demir": { "pos": [-4, -2.6], "face": 0.5 },
-      "serkan": { "pos": [8, -15], "face": 0 },
-      "serkan_hall": { "pos": [5, -0.5], "face": 0 }
-    },
-    "nisantasi": { "roam": { "pos": [0, 1], "face": 0 } },
-    "atasehir": { "roam": { "pos": [0, 1], "face": 0 } },
-    "roam": {
-      "store": { "floor": 2, "pos": [3.5, -1.5], "face": 0.4 },
-      "factory": { "pos": [-1, 0.2], "face": 0 }
-    }
+ "_aciklama": "Kadro. look: model görünümü. routine: [saat, lokasyon, nokta]. lines: güven seviyesine göre. channels: bu kişiyle hangi kanallardan konuşulur (yuz, telefon, wa=WhatsApp, mail, randevu). reportsTo: bağlı olduğu kişi. top: üst kadro (mailde 'Bey/Hanım' kullanmaz).",
+ "list": [
+  {
+   "id": "burak",
+   "name": "Burak Karaçak",
+   "title": "İhracat Bölge Müdürü (Avrupa ve Asya)",
+   "player": true,
+   "born": 1995,
+   "desc": "Görev adamı; verilen işi eksiksiz yapar. Mükemmeliyetçi, inisiyatif almakta zorlanır, bazen yerinde sayar. Doğrudan Davut Bey'e bağlı.",
+   "look": {
+    "skin": "#E2B98F",
+    "hair": "short",
+    "hairColor": "#2B2118",
+    "top": "#F2F0EB",
+    "bottom": "#2E3647",
+    "beard": "stubble",
+    "extra": [
+     "watch"
+    ]
+   },
+   "reportsTo": "davut"
   },
-  "workerLooks": [
-    { "top": "#4F6A7A", "bottom": "#3A3F44", "hair": "short", "hairColor": "#2A211A", "skin": "#C99470" },
-    { "top": "#6A7A4F", "bottom": "#3A3F44", "hair": "cap", "hairColor": "#8B3A2E", "skin": "#D9AD84" },
-    { "top": "#7A5A4F", "bottom": "#2E3036", "hair": "short", "hairColor": "#1A1512", "skin": "#B9825E", "mustache": true },
-    { "top": "#45556A", "bottom": "#2E3036", "hair": "long", "hairColor": "#3B2A20", "skin": "#E2B98F" },
-    { "top": "#8A7A58", "bottom": "#353535", "hair": "bald", "hairColor": "#2A211A", "skin": "#CF9F78", "beard": "full", "beardColor": "#3A3A3A" }
+  {
+   "id": "davut",
+   "name": "Davut Karaçak",
+   "title": "Yönetim Kurulu Başkanı (Patron)",
+   "born": 1978,
+   "home": "store",
+   "spot": "davut",
+   "desc": "Firmanın patronu; talimatı her zaman önceliklidir. Titiz, detaycı, gergin ama babacan. Ek iskonto, vade ve yatırım kararlarını o verir. Burak, Bünyamin ve Büşra doğrudan ona bağlıdır.",
+   "look": {
+    "skin": "#D9AD84",
+    "hair": "side",
+    "hairColor": "#8E8A84",
+    "top": "#2D3446",
+    "bottom": "#2D3446",
+    "jacket": true,
+    "tie": "#9C905C",
+    "glasses": true
+   },
+   "routine": [
+    [
+     8,
+     "store",
+     "davut"
+    ],
+    [
+     12.5,
+     "store",
+     "davut_window"
+    ],
+    [
+     13.5,
+     "store",
+     "davut"
+    ]
+   ],
+   "trust": 45,
+   "lines": {
+    "dusuk": [
+     "Burak, rakamlar tutmuyor. Bir daha bak, sonra gel.",
+     "Ben 'hemen hemen' diye bir birim bilmiyorum.",
+     "Toplantıya hazırlıksız gelinmez. Hele benim toplantıma."
+    ],
+    "orta": [
+     "Fena değil. Ama 'fena değil' ile şirket büyümez.",
+     "Virgülden sonrasına da bakıyorsun değil mi? Bakıyorsun. Güzel.",
+     "Bünyamin senden memnun. Ben de... şimdilik memnunum."
+    ],
+    "yuksek": [
+     "Aferin oğlum. Bu çeyrek iyi iş çıkardın.",
+     "Senin raporlarını artık ikinci kez okumuyorum. Bu bir iltifat.",
+     "Amcan olarak değil, başkan olarak söylüyorum: gurur duyuyorum."
+    ]
+   },
+   "family": "Kardeşlerin en küçüğü. Oğlu Bünyamin. İbrahim ve Harun'un kardeşi; ikisine de 'abi' der.",
+   "top": true,
+   "channels": [
+    "yuz",
+    "telefon",
+    "mail",
+    "randevu"
+   ]
+  },
+  {
+   "id": "harun",
+   "name": "Harun Karaçak",
+   "title": "YK Üyesi · Üretim ve Finans/Muhasebe",
+   "born": 1975,
+   "home": "factory",
+   "spot": "harun",
+   "desc": "Üretimden ve finans-muhasebeden sorumlu. Satışları takip eder, ödeme alır ve yapar; iskonto konularında söz hakkı yoktur. Kurnaz, laf ebesi; bitmeyen siparişi bazen 'tamamlandı' işaretler. Serkan ve Semanur ona bağlıdır.",
+   "look": {
+    "skin": "#CF9F78",
+    "hair": "bald",
+    "hairColor": "#3A2E26",
+    "top": "#6B4F3A",
+    "bottom": "#3B3B3B",
+    "jacket": true,
+    "mustache": true,
+    "extra": [
+     "phone"
+    ]
+   },
+   "routine": [
+    [
+     8,
+     "factory",
+     "harun"
+    ],
+    [
+     11,
+     "factory",
+     "harun_hall"
+    ],
+    [
+     12,
+     "factory",
+     "harun"
+    ],
+    [
+     16,
+     "factory",
+     "harun_hall"
+    ],
+    [
+     17,
+     "factory",
+     "harun"
+    ]
+   ],
+   "trust": 40,
+   "lines": {
+    "dusuk": [
+     "Bak yeğenim, avans gelmeden ben o malı yüklemem.",
+     "O siparişi tamamlandı yaptım, gönül rahatlığıyla. Sayılmasa da olur.",
+     "İskonto mu? O Davut'un işi, beni karıştırma. Ben paranın gelip gelmediğine bakarım."
+    ],
+    "orta": [
+     "Tahsilatlar düzenli gelirse benden iyisi yok.",
+     "Davut her şeyi deftere yazar, ben kasaya.",
+     "İbrahim abi yine sessiz, demek ki işler yolunda."
+    ],
+    "yuksek": [
+     "Ödemeleri zamanında getiriyorsun, kasayı rahatlattın.",
+     "Sen müşteriyi iyi seçiyorsun, hiç batık alacak yok. Aferin.",
+     "Bu ay üretim de finans da yolunda. Ha, bir de çay söyle."
+    ]
+   },
+   "family": "Ortanca kardeş. Kızı Semanur. İbrahim'e 'abi' der.",
+   "top": true,
+   "channels": [
+    "yuz",
+    "telefon",
+    "mail"
+   ]
+  },
+  {
+   "id": "ibrahim",
+   "name": "İbrahim Karaçak",
+   "title": "YK Üyesi (Satın Alma) · Döşemehane ve Demirhane",
+   "born": 1972,
+   "home": "factory",
+   "spot": "ibrahim",
+   "desc": "Satın alma; döşemehane ve demirhane sorumlusu. Sakin, geleneksel; maili pek kullanmaz, telefonla ya da yüz yüze konuşmayı sever. Söylediği hep doğrudur. Burak'ın babası.",
+   "look": {
+    "skin": "#D4A27C",
+    "hair": "short",
+    "hairColor": "#D8D4CC",
+    "top": "#7A6A55",
+    "bottom": "#4A4A44",
+    "cardigan": true,
+    "beard": "full",
+    "beardColor": "#CFCAC0"
+   },
+   "routine": [
+    [
+     8,
+     "factory",
+     "ibrahim"
+    ],
+    [
+     10,
+     "factory",
+     "ibrahim_doseme"
+    ],
+    [
+     11,
+     "factory",
+     "ibrahim"
+    ],
+    [
+     15,
+     "factory",
+     "ibrahim_demir"
+    ],
+    [
+     16,
+     "factory",
+     "ibrahim"
+    ]
+   ],
+   "trust": 60,
+   "lines": {
+    "dusuk": [
+     "Hm.",
+     "Önce bir bak, sonra karar ver oğlum.",
+     "Acele işe şeytan karışır."
+    ],
+    "orta": [
+     "Kereste bu ay kıpırdayacak gibi. Aklında olsun.",
+     "Kahvaltı ettin mi?",
+     "Harun'a kızma. O öyle."
+    ],
+    "yuksek": [
+     "Sana güveniyorum. Annene de söyledim.",
+     "Kumaşçı tanıdık; kampanya olursa ilk sana haber veririm.",
+     "İyi gidiyorsun. Ama yorulma."
+    ]
+   },
+   "family": "Kardeşlerin en büyüğü. Oğlu Burak. Harun ve Davut ona 'abi' der.",
+   "top": true,
+   "channels": [
+    "yuz",
+    "telefon",
+    "mail"
+   ],
+   "mailSlow": true
+  },
+  {
+   "id": "serkan",
+   "name": "Serkan Karaarslan",
+   "title": "Fabrika Müdürü",
+   "born": 1983,
+   "home": "factory",
+   "spot": "serkan",
+   "desc": "Üretimin bel kemiği. Fabrikanın işleyişini ve ürünleri en iyi bilen kişi; fiyatlandırma, maliyet ve termin için en çok onunla konuşulur. Net çizim ister. Harun Bey'e bağlı ama bütün patronlar ona iş verir. Aileden değil.",
+   "look": {
+    "skin": "#C99470",
+    "hair": "short",
+    "hairColor": "#1E1A17",
+    "top": "#3E5367",
+    "bottom": "#2E2E2E",
+    "vest": "#E07B2E",
+    "helmet": "#F2C230",
+    "extra": [
+     "clipboard"
+    ]
+   },
+   "routine": [
+    [
+     8,
+     "factory",
+     "serkan"
+    ],
+    [
+     9.5,
+     "factory",
+     "serkan_hall"
+    ],
+    [
+     11,
+     "factory",
+     "serkan"
+    ],
+    [
+     14,
+     "factory",
+     "serkan_hall"
+    ],
+    [
+     15.5,
+     "factory",
+     "serkan"
+    ]
+   ],
+   "trust": 45,
+   "lines": {
+    "dusuk": [
+     "Çizim yoksa iş yok. Kusura bakma.",
+     "Termin sözünü benden almadan verdiysen, o söz senin.",
+     "Ustalar fazla mesaiden sıkıldı, haberin olsun."
+    ],
+    "orta": [
+     "Hat şu an rahat, sıkıştırabiliriz.",
+     "Ölçüyü net getirirsen, ben de net teslim ederim.",
+     "Kalite kontrolde biri olsa ben de rahat uyurum."
+    ],
+    "yuksek": [
+     "Senin işini araya alırım, merak etme.",
+     "Seninle çalışmak kolay, her şey yazılı ve ölçülü.",
+     "Ustalar seni sordu. 'Burak bey yine kahve getirir mi' dediler."
+    ]
+   },
+   "family": "Aileden değil; ama aileden daha çok fabrikada.",
+   "channels": [
+    "yuz",
+    "telefon",
+    "wa",
+    "mail"
+   ],
+   "reportsTo": "harun"
+  },
+  {
+   "id": "bunyamin",
+   "name": "Bünyamin Karaçak",
+   "title": "Koordinatör ve Satış Direktörü",
+   "born": 1998,
+   "home": "roam",
+   "spot": "roam",
+   "desc": "Davut Bey'in oğlu, Burak'ın kuzeni. Koordinatör ve Satış Direktörü; doğrudan Davut Bey'e bağlı. Günlük konularda Burak'la istişare eder. Mantıklı, dengeli, çözüm odaklı. Gün içinde lokasyonlar arasında dolaşır.",
+   "look": {
+    "skin": "#DDB08A",
+    "hair": "short",
+    "hairColor": "#3A2A1E",
+    "top": "#5C6B5A",
+    "bottom": "#3A3F4A",
+    "jacket": true,
+    "beard": "full",
+    "beardColor": "#3A2A1E",
+    "extra": [
+     "bag"
+    ]
+   },
+   "roam": [
+    "store",
+    "factory",
+    "nisantasi",
+    "atasehir"
+   ],
+   "trust": 55,
+   "lines": {
+    "dusuk": [
+     "Abi takıldığın yer varsa sor, ayıp değil.",
+     "Bir mail at, sonra düzeltiriz. Hiç atmamaktan iyidir.",
+     "Ek iskonto lazımsa babama sor, karar onun."
+    ],
+    "orta": [
+     "Bakü tarafı ısınıyor abi, iyi gidiyorsun.",
+     "Babam sert görünür ama raporunu iki kez okuyorsa önemsiyor demektir.",
+     "Semanur Hanım'a formu eksiksiz mail at, tek turda biter."
+    ],
+    "yuksek": [
+     "Senin bölgen benden iyi gidiyor abi, kıskanıyorum.",
+     "Fuar standını beraber kuralım mı? Bu sefer sen sun.",
+     "Bir müşteri ayarladım sana, mailine bak."
+    ]
+   },
+   "family": "Davut'un oğlu. Burak ve Semanur'un kuzeni.",
+   "channels": [
+    "yuz",
+    "telefon",
+    "wa",
+    "mail"
+   ],
+   "reportsTo": "davut"
+  },
+  {
+   "id": "busra",
+   "name": "Büşra Karaçak",
+   "title": "Yönetim Kurulu Başkanı Sekreteri",
+   "born": 1996,
+   "home": "store",
+   "spot": "busra",
+   "desc": "Davut Bey'in sekreteri; doğrudan ona bağlı. Titiz, düzgün, düzenli. Randevuları, toplantı takvimini ve duyuruları yönetir; unutulan son tarihleri hatırlatır.",
+   "look": {
+    "skin": "#E6BC96",
+    "hair": "bun",
+    "hairColor": "#4A2F22",
+    "top": "#E8DCCB",
+    "bottom": "#3B3A3A",
+    "glasses": true,
+    "extra": [
+     "tablet"
+    ],
+    "skirt": true
+   },
+   "routine": [
+    [
+     8,
+     "store",
+     "busra"
+    ],
+    [
+     12,
+     "store",
+     "busra_floor2"
+    ],
+    [
+     12.75,
+     "store",
+     "busra"
+    ]
+   ],
+   "trust": 50,
+   "lines": {
+    "dusuk": [
+     "Davut Bey'in takvimi doludur. Randevu sistemini kullanalım lütfen.",
+     "Toplantı 09:00'da. 09:01 değil.",
+     "Bu formun kenar boşlukları neden farklı?"
+    ],
+    "orta": [
+     "Yarın toplantın var, sunumu bir kez daha kontrol et.",
+     "Davut Bey bugün iyi modda, şimdi gidebilirsin.",
+     "Takvimine not düştüm, merak etme."
+    ],
+    "yuksek": [
+     "Senin için araya bir randevu sıkıştırdım.",
+     "Davut Bey raporunu beğendi, ben de beğendim.",
+     "Kuzen dayanışması: yarınki toplantıda ilk sırayı sana verdim."
+    ]
+   },
+   "family": "Kardeşlerin amcası İsmail Karaçak'ın kızı.",
+   "channels": [
+    "yuz",
+    "telefon",
+    "wa",
+    "mail"
+   ],
+   "reportsTo": "davut",
+   "female": true
+  },
+  {
+   "id": "semanur",
+   "name": "Semanur Karaçak",
+   "title": "ERP Yöneticisi",
+   "born": 1999,
+   "home": "factory",
+   "spot": "semanur",
+   "desc": "ERP sisteminin yöneticisi. Siparişler sistemden açıldığı için onay ondan gelir; birçok konuda onunla istişare edilir. Kibirli ve mesafeli; yakın temastan çekinir, sadece mailleşir. Harun Bey'e bağlı.",
+   "look": {
+    "skin": "#E8C4A0",
+    "hair": "long",
+    "hairColor": "#1F1714",
+    "top": "#2E2B33",
+    "bottom": "#2E2B33",
+    "jacket": true,
+    "extra": [
+     "earrings"
+    ]
+   },
+   "routine": [
+    [
+     8,
+     "factory",
+     "semanur"
+    ]
+   ],
+   "trust": 25,
+   "lines": {
+    "dusuk": [
+     "Mail atarsan bakarım.",
+     "Bunu mail ile iletir misin?",
+     "…"
+    ],
+    "orta": [
+     "Mail at.",
+     "ERP'de görürüm, mail at.",
+     "Şu an değil. Mail."
+    ],
+    "yuksek": [
+     "Maillerin artık düzgün. Yine de mail at.",
+     "…Merhaba. Mail atarsın.",
+     "Formların temiz geliyor. Mail ile devam edelim."
+    ]
+   },
+   "family": "Harun'un kızı. Burak ve Bünyamin'in kuzeni.",
+   "channels": [
+    "mail"
+   ],
+   "reportsTo": "harun",
+   "female": true
+  }
+ ],
+ "spots": {
+  "store": {
+   "davut": {
+    "floor": 3,
+    "pos": [
+     0,
+     -4.6
+    ],
+    "face": 0
+   },
+   "davut_window": {
+    "floor": 3,
+    "pos": [
+     -8,
+     -6.2
+    ],
+    "face": 3.14
+   },
+   "busra": {
+    "floor": 3,
+    "pos": [
+     7,
+     2.5
+    ],
+    "face": -1.57
+   },
+   "busra_floor2": {
+    "floor": 2,
+    "pos": [
+     2,
+     2
+    ],
+    "face": 0
+   }
+  },
+  "factory": {
+   "harun": {
+    "pos": [
+     -16,
+     -15
+    ],
+    "face": 0
+   },
+   "harun_hall": {
+    "pos": [
+     -9,
+     0
+    ],
+    "face": 0.6
+   },
+   "semanur": {
+    "pos": [
+     -10,
+     -15.2
+    ],
+    "face": 0
+   },
+   "ibrahim": {
+    "pos": [
+     -3,
+     -15
+    ],
+    "face": 0
+   },
+   "ibrahim_doseme": {
+    "pos": [
+     4.2,
+     -2.6
+    ],
+    "face": -0.5
+   },
+   "ibrahim_demir": {
+    "pos": [
+     -4,
+     -2.6
+    ],
+    "face": 0.5
+   },
+   "serkan": {
+    "pos": [
+     8,
+     -15
+    ],
+    "face": 0
+   },
+   "serkan_hall": {
+    "pos": [
+     5,
+     -0.5
+    ],
+    "face": 0
+   }
+  },
+  "nisantasi": {
+   "roam": {
+    "pos": [
+     0,
+     1
+    ],
+    "face": 0
+   }
+  },
+  "atasehir": {
+   "roam": {
+    "pos": [
+     0,
+     1
+    ],
+    "face": 0
+   }
+  },
+  "roam": {
+   "store": {
+    "floor": 2,
+    "pos": [
+     3.5,
+     -1.5
+    ],
+    "face": 0.4
+   },
+   "factory": {
+    "pos": [
+     -1,
+     0.2
+    ],
+    "face": 0
+   }
+  }
+ },
+ "workerLooks": [
+  {
+   "top": "#4F6A7A",
+   "bottom": "#3A3F44",
+   "hair": "short",
+   "hairColor": "#2A211A",
+   "skin": "#C99470"
+  },
+  {
+   "top": "#6A7A4F",
+   "bottom": "#3A3F44",
+   "hair": "cap",
+   "hairColor": "#8B3A2E",
+   "skin": "#D9AD84"
+  },
+  {
+   "top": "#7A5A4F",
+   "bottom": "#2E3036",
+   "hair": "short",
+   "hairColor": "#1A1512",
+   "skin": "#B9825E",
+   "mustache": true
+  },
+  {
+   "top": "#45556A",
+   "bottom": "#2E3036",
+   "hair": "long",
+   "hairColor": "#3B2A20",
+   "skin": "#E2B98F"
+  },
+  {
+   "top": "#8A7A58",
+   "bottom": "#353535",
+   "hair": "bald",
+   "hairColor": "#2A211A",
+   "skin": "#CF9F78",
+   "beard": "full",
+   "beardColor": "#3A3A3A"
+  }
+ ],
+ "org": [
+  [
+   "davut",
+   [
+    "burak",
+    "bunyamin",
+    "busra",
+    "harun",
+    "ibrahim"
+   ]
+  ],
+  [
+   "harun",
+   [
+    "serkan",
+    "semanur"
+   ]
   ]
+ ]
 }

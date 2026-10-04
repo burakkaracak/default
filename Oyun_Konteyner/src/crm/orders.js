@@ -8,6 +8,7 @@ import { cust, addSat, setLevel } from './customers.js';
 import { addMessage } from './inbox.js';
 import { chance, randi, rand, clamp } from '../core/util.js';
 import { city } from '../world/logistics.js';
+import { internal } from '../characters/comms.js';
 
 export const STATUS = {
   teklif: 'Teklif', proforma: 'Proforma', avans: 'Avans bekleniyor', erp: 'ERP girişi', uretim: 'Üretimde', hazir: 'Sevke hazır',
@@ -85,6 +86,7 @@ bus.on('dayStart', () => {
       const amt = o.total * share; o.paid += amt;
       earn(toTL(amt, o.cur), 'avans', o.id + ' avans');
       o.status = 'erp';
+      internal({ from: 'harun', via: 'mail', subject: `${o.id} ${share === 1 ? 'ödemesi' : 'avansı'} hesaba geçti`, body: `${o.id} için ${o.cur} ${Math.round(amt).toLocaleString('tr-TR')} hesaba geçti, muhasebeye işledim. Siparişi Semanur'a açtır, üretime alalım.`, kind: 'finans' });
       addMessage({ ch: 'musteri', from: cust(o.cust)?.name || 'Müşteri', fromId: o.cust, subject: `Ödeme yapıldı: ${o.id}`, body: `Merhaba,\n\n${o.id} için ${share === 1 ? 'ödemenin tamamını' : '%30 avansı'} gönderdik. Dekont ektedir.\n\nÜretim planını bekliyoruz.`, kind: 'odeme', order: o.id });
       bus.emit('orders');
     }
@@ -97,6 +99,7 @@ bus.on('dayStart', () => {
       earn(toTL(amt, o.cur), 'bakiye', o.id + ' bakiye');
       o.status = 'kapandi'; o.closedDay = G.day;
       log(`${o.id} bakiyesi tahsil edildi (${o.cur} ${Math.round(amt).toLocaleString('tr-TR')}). Sipariş kapandı.`, 'good');
+      internal({ from: 'harun', via: 'mail', subject: `${o.id} bakiyesi tahsil edildi`, body: `${o.id} bakiyesi geldi (${o.cur} ${Math.round(amt).toLocaleString('tr-TR')}), hesap kapandı. Böyle müşteri iyidir.`, kind: 'finans' });
       bus.emit('orderClosed', o);
     }
   }

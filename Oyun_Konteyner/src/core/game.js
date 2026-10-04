@@ -6,6 +6,7 @@ import { save } from './save.js';
 import { initFactory, tick as prodTick, monthlySalaries } from '../factory/production.js';
 import { initCustomers, cust, custByCity } from '../crm/customers.js';
 import { addMessage } from '../crm/inbox.js';
+import { internal } from '../characters/comms.js';
 import { makeRFQ } from '../crm/negotiation.js';
 import { stepFx, stepMaterials, monthEndSettle, takeLoan } from '../economy/economy.js';
 import { W } from '../locations/world3d.js';
@@ -38,12 +39,15 @@ export function newGame(slot, mode) {
 function seedTutorial() {
   const c = cust('c1'); c.level = 1; c.sat = 60;
   const rfq = makeRFQ(c, [{ fam: 'kanepe', fabric: 'keten', color: 'bej', size: 'std', qty: 8 }, { fam: 'berjer', fabric: 'kadife', color: 'yesil', size: 'std', qty: 6 }], { target: 0.04, wantDays: 26, payPref: 'avans30', incoPref: 'FOB' });
-  addMessage({ ch: 'ic', from: 'Bünyamin Karaçak', fromId: 'bunyamin', subject: 'Bakü\'den sıcak müşteri: Caspian Home', body: 'Kuzen hoş geldin!\n\nBakü\'deki eski tanıdığım Elnur Bey (Caspian Home Interiors) mağazası için **8 kanepe** (keten, bej) ve **6 berjer** (kadife, zeytin yeşili) istiyor. Seni önerdim.\n\nTeklifi masandan hazırla. Birkaç ipucu:\n• Teslim süresini vermeden önce Serkan abiden termin al (telefonda tahmini, fabrikada kesin).\n• İndirim verirsen Harun amcamın onayı lazım. Yazılı iste!\n• Mükemmel olmasını bekleme; makul bir teklif yeter.\n\nKolay gelsin,\nBünyamin', kind: 'rfq', rfq, actions: [{ label: 'Teklifi hazırla', act: 'openOffer', needDesk: true, sub: 'pazarlık ekranı' }] });
-  addMessage({ ch: 'ic', from: 'Büşra Karaçak', fromId: 'busra', subject: 'Hoş geldin + takvim', body: 'Burak Bey, hoş geldiniz.\n\n• Haftalık sabah toplantısı her Pazartesi 09:00, 3. kat.\n• Davut Bey ile görüşmek için randevuyu benden alabilirsiniz.\n• Yatırım talepleri Davut Bey onayına gider.\n\nİyi çalışmalar.', kind: 'bilgi' });
+  internal({ from: 'davut', via: 'mail', subject: 'Talimat: İlk konteyner', body: 'Hoş geldin. Bana doğrudan bağlı çalışacaksın; Avrupa ve Asya senin bölgen.\n\nBakü\'deki Caspian Home işi ilk sınavın. İlk konteyner bu ay yola çıkmalı.\n\nEk iskonto ve vade kararları bende. Fiyat, maliyet ve termin için Serkan\'la çalış. Sipariş açılışı Semanur\'dan, tahsilat Harun\'dan sorulur.', kind: 'talimat' });
+  internal({ from: 'bunyamin', via: 'mail', subject: 'FW: Bakü\'den teklif talebi · Caspian Home Interiors', body: 'Bakü\'den tanıdığım Elnur Bey (Caspian Home Interiors) mağazası için aşağıdaki ürünlere teklif istiyor:\n\n• **8 kanepe** (keten, bej)\n• **6 berjer** (kadife, zeytin yeşili)\n\nİstenen teslim: yaklaşık 26 gün. Teklifin masanızdan hazırlanmasını rica ederim.', kind: 'rfq', rfq, actions: [{ label: 'Teklifi hazırla', act: 'openOffer', needDesk: true, sub: 'pazarlık ekranı' }] });
+  internal({ from: 'bunyamin', via: 'wa', subject: 'Hoş geldin', body: 'hoş geldin! Elnur Bey\'in talebini mailine yönlendirdim. Fiyat ve termin için Serkan Bey\'i ara (telefonda tahmini, fabrikada kesin). Ek iskonto gerekirse kararı babam verir. Mükemmel olmasını bekleme, makul bir teklif yeter 😉' });
+  internal({ from: 'busra', via: 'mail', subject: 'Hoş geldiniz · takvim bilgisi', body: 'Aramıza hoş geldiniz.\n\n• Haftalık sabah toplantısı her Pazartesi 09:00, 3. kat toplantı odasında yapılır.\n• Davut Bey ile görüşmeleriniz için randevu tarafımdan ayarlanır.\n• Yatırım ve ek iskonto talepleri Davut Bey onayına sunulur.\n\nİyi çalışmalar dilerim.', kind: 'bilgi' });
+  internal({ from: 'busra', via: 'wa', subject: 'Selam', body: 'hoş geldin 🌸 Pazartesi 09:00 toplantıyı unutma, Davut Bey dakiklik sever.' });
 }
 function seedFree() {
   for (const id of ['c1', 'c6', 'c10', 'c25', 'c29']) { const c = cust(id); if (c) { c.level = 1; c.sat = 55; } }
-  addMessage({ ch: 'ic', from: 'Bünyamin Karaçak', fromId: 'bunyamin', subject: 'Serbest mod', body: 'Bütün pazarlar açık, kasa dolu. Dünya haritasından istediğin ülkeye gir, firmalara yaz, fuarlara katıl. Kolay gelsin!', kind: 'bilgi' });
+  internal({ from: 'bunyamin', via: 'wa', subject: 'Serbest mod', body: 'bütün pazarlar açık, kasa dolu. Haritadan istediğin ülkeye gir, firmalara yaz, fuarlara katıl. Kolay gelsin 💪', kind: 'bilgi' });
 }
 
 export function startLoaded() {
@@ -76,6 +80,8 @@ export function enterWorld() {
     if (G.mode === 'free') return null;
     const ch = chapter(); if (!ch) return null;
     const gs = goalsState(); const next = gs.filter((g) => !g.done).slice(0, 2);
+    const order = (G.tasks || []).find((t) => !t.closed && t.from === 'davut');
+    if (order) next.unshift({ text: '⭐ Davut Bey\'in talimatı (öncelikli): ' + order.text, done: false });
     if (!next.length) return { title: `Bölüm ${ch.id}: ${ch.name}`, items: [{ text: 'Tüm hedefler tamam! Davut Bey seni 3. katta bekliyor.', done: false }] };
     return { title: `Bölüm ${ch.id}: ${ch.name} · ${gs.filter((g) => g.done).length}/${gs.length}`, items: next };
   };
@@ -85,7 +91,7 @@ export function enterWorld() {
     alertBox('Sen yokken', `${s.awayH} saattir yoktun. Fabrika çalışmaya devam etti (en fazla ${B.offlineMaxHours} oyun saati sayılır).<br><br>• Simüle edilen süre: ${s.minutes} dk<br>• Paketlenen ürün: <b>${s.made}</b>`, 'Harika');
   } else if (G.day === 1 && G.min <= DAY_START + 5 && G.mode !== 'free' && !G.flags.introShown) {
     G.flags.introShown = true;
-    setTimeout(() => alertBox('Bölüm 1 · İlk Konteyner', `<b>Bünyamin:</b> "${'Hoş geldin kuzen! Burası Bostancı mağazamız, 2. kat ihracat ofisi. Masana geç, Gelen Kutusu\'nda seni bir müşteri bekliyor.'}"<br><br><span class="muted">Hareket: WASD/oklar ya da ekranda parmağını sürükle. Etkileşim: E ya da sağ alttaki altın düğme.</span>`, 'Başlayalım', { portrait: portraits.bunyamin }), 400);
+    setTimeout(() => alertBox('Bölüm 1 · İlk Konteyner', `<b>Bünyamin:</b> "${'Hoş geldin abi! Burası Bostancı mağazamız, 2. kat ihracat ofisi. Masana geç; babamın talimatı ve Bakü\'den bir teklif talebi Gelen Kutusu\'nda seni bekliyor.'}"<br><br><span class="muted">Hareket: WASD/oklar ya da ekranda parmağını sürükle. Etkileşim: E ya da sağ alttaki altın düğme.</span>`, 'Başlayalım', { portrait: portraits.bunyamin }), 400);
   }
 }
 
@@ -130,7 +136,7 @@ async function rescue() {
 }
 
 // Bildirimler
-bus.on('mail', (m) => { if (!m.outgoing) { bus.emit('sfx', 'mail'); toast(`${m.ch === 'ic' ? '🏢' : '✉️'} ${m.from}: ${m.subject}`, 'info'); } });
+bus.on('mail', (m) => { if (!m.outgoing) { bus.emit('sfx', 'mail'); toast(`${m.ch === 'wa' ? '💬' : m.ch === 'ic' ? '🏢' : '✉️'} ${m.from}: ${m.ch === 'wa' ? m.body.slice(0, 70) : m.subject}`, 'info'); } });
 bus.on('trust', (id, d, why) => { if (Math.abs(d) >= 2) toast(`${charDef(id).name.split(' ')[0]} güveni ${d > 0 ? '+' : ''}${Math.round(d)}${why ? ' (' + why + ')' : ''}`, d > 0 ? 'good' : 'warn', 2600); });
 bus.on('ozguven', (d, why) => { if (d >= 3) toast(`Özgüven +${d}${why ? ' · ' + why : ''}`, 'good', 2400); });
 bus.on('ability', (a) => { toast(`🌟 Yeni yetenek: ${a.name} — ${a.desc}`, 'good', 7000); bus.emit('sfx', 'success'); });

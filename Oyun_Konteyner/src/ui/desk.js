@@ -37,8 +37,9 @@ export function inboxPanel(tab = 'musteri', openId) {
   let sel = openId || null;
   const p = panel({
     id: 'inbox', title: 'Gelen Kutusu', icon: '✉️', tab,
-    tabs: () => [{ id: 'musteri', label: 'Müşteriler', badge: unread('musteri') || null }, { id: 'ic', label: 'İç Yazışmalar', badge: unread('ic') || null }],
+    tabs: () => [{ id: 'musteri', label: 'Müşteriler', badge: unread('musteri') || null }, { id: 'ic', label: 'İç Yazışmalar (mail)', badge: unread('ic') || null }, { id: 'wa', label: '💬 WhatsApp', badge: unread('wa') || null }],
     render(b, api) {
+      if (api.tab === 'wa') return waView(b, api);
       const list = (G.inbox || []).filter((m) => m.ch === api.tab);
       const left = h('div', { class: 'col', style: { gap: '0' } });
       if (!list.length) left.append(h('p', { class: 'muted' }, api.tab === 'musteri' ? 'Henüz müşteri maili yok. Dünya haritasından bir firmaya ilk maili gönder.' : 'İç yazışma yok.'));
@@ -109,3 +110,31 @@ export function orderDetail(b, api, o, back) {
   b.append(acts);
   if (o.notes?.length) b.append(h('div', { class: 'sec' }, 'Notlar'), ...o.notes.map((n) => h('div', { class: 'muted' }, '• ' + n)));
 }
+
+// WhatsApp: kişiye göre sohbet balonları
+let waSel = null;
+function waView(b, api) {
+  const msgs = (G.inbox || []).filter((m) => m.ch === 'wa');
+  const peers = [...new Set(msgs.map((m) => (m.outgoing ? m.to : m.fromId)))].filter(Boolean);
+  if (!peers.length) { b.append(h('p', { class: 'muted' }, 'WhatsApp\'ta mesaj yok. Bünyamin, Büşra ve Serkan Bey ile buradan hızlıca yazışılır.')); return; }
+  if (!waSel || !peers.includes(waSel)) waSel = peers[0];
+  const left = h('div', { class: 'col', style: { gap: '0' } });
+  for (const p of peers) {
+    const last = msgs.find((m) => (m.outgoing ? m.to : m.fromId) === p);
+    const un = msgs.filter((m) => m.fromId === p && !m.read).length;
+    left.append(h('div', { class: 'list-item' + (un ? ' unread' : ''), style: waSel === p ? { borderColor: 'var(--gold)' } : {}, onclick: () => { waSel = p; api.refresh(); } },
+      portraits[p] ? h('img', { class: 'portrait', src: portraits[p] }) : null,
+      h('div', { class: 'grow' }, h('div', { class: 't1' }, refNameWa(p)), h('div', { class: 't2' }, last ? last.body.slice(0, 60) : '')), un ? h('span', { class: 'badge', style: { position: 'static' } }, un) : null));
+  }
+  const thread = msgs.filter((m) => (m.outgoing ? m.to : m.fromId) === waSel).slice().reverse();
+  for (const m of thread) m.read = true;
+  const right = h('div', { class: 'col', style: { gap: '6px', background: '#EFE7DA', borderRadius: '14px', padding: '10px' } });
+  for (const m of thread) {
+    right.append(h('div', { style: { alignSelf: m.outgoing ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.outgoing ? '#DCEBCB' : '#fff', borderRadius: m.outgoing ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '7px 10px', fontSize: '13px', boxShadow: '0 1px 2px rgba(0,0,0,.08)' } },
+      h('div', { style: { whiteSpace: 'pre-wrap' } }, m.body), h('div', { class: 'muted', style: { fontSize: '10px', textAlign: 'right' } }, time.shortDate(m.day) + ' ' + time.clock(m.min) + (m.outgoing ? ' ✓✓' : ''))));
+    if (m.actions?.length && !m.done) for (const a of m.actions) right.append(h('button', { class: 'btn ghost sm', style: { alignSelf: 'flex-start' }, onclick: () => { runAction(m, a); setTimeout(() => api.refresh(), 30); } }, a.label));
+  }
+  bus.emit('inboxChanged');
+  b.append(h('div', { class: 'split' }, left, right));
+}
+function refNameWa(id) { return id === 'bunyamin' ? 'Bünyamin (Reis)' : id === 'busra' ? 'Büşra (Kuzen)' : (id === 'serkan' ? 'Serkan Bey' : id); }

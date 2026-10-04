@@ -6,6 +6,7 @@ import { h, panel, toast, alertBox, confetti } from '../ui/dom.js';
 import { fmtTLk, pick, shuffle, chance, randi, clamp } from './util.js';
 import { addTrust } from '../characters/approvals.js';
 import { addMessage } from '../crm/inbox.js';
+import { internal } from '../characters/comms.js';
 import { conf } from './confidence.js';
 import { stat, canCelebrate } from './story.js';
 import { portraits } from '../characters/portraits.js';
@@ -17,13 +18,14 @@ bus.on('dayStart', () => {
   G.qStart ||= qSnap();
   if (time.isQuarterEnd() && G.ykDay !== G.day) {
     G.ykDay = G.day; G.ykDone = false;
-    addMessage({ ch: 'ic', from: 'Büşra Karaçak', fromId: 'busra', subject: 'Bugün 15:00: YK toplantısı', body: 'Çeyrek sonu YK toplantısı bugün 15:00\'te, 3. kat toplantı odasında. Raporu hazırla; Davut Bey rakamları tek tek kontrol edecek.', kind: 'hatirlatma' });
+    internal({ from: 'busra', via: 'mail', subject: 'Bugün 15:00: YK toplantısı', body: 'Çeyrek sonu YK toplantısı bugün saat 15:00\'te, 3. kat toplantı odasında yapılacaktır. Davut Bey rakamları tek tek kontrol edecektir; raporunuzu hazır etmenizi rica ederim.', kind: 'hatirlatma' });
+    internal({ from: 'busra', via: 'wa', subject: 'YK', body: 'bugün 15:00 YK var, raporu iki kere kontrol et 😅', kind: 'hatirlatma' });
   }
 });
 bus.on('hour', (hr) => {
   if (!G || G.ykDay !== G.day || G.ykDone) return;
   if (hr === 14) toast('Büşra: YK toplantısı 15:00\'te. 3. kata çık.', 'warn', 6000);
-  if (hr === 17) { G.ykDone = true; addTrust('davut', -6, 'YK toplantısına gelmedin'); addMessage({ ch: 'ic', from: 'Davut Karaçak', fromId: 'davut', subject: 'YK toplantısı', body: 'Toplantıda yoktun. Raporu Bünyamin sundu. Bir dahakine bekliyorum.', kind: 'uyari' }); G.qStart = qSnap(); }
+  if (hr === 17) { G.ykDone = true; addTrust('davut', -6, 'YK toplantısına gelmedin'); internal({ from: 'davut', via: 'mail', subject: 'YK toplantısı', body: 'Toplantıda yoktun. Raporu Bünyamin sundu. Bir dahakine bekliyorum.', kind: 'uyari' }); G.qStart = qSnap(); }
 });
 export function ykAvailable() { return G.ykDay === G.day && !G.ykDone && G.min >= 14 * 60 + 30; }
 bus.on('tick', () => { if (G && G.player.loc === 'store' && G.player.floor === 3 && ykAvailable() && !G._ykRunning) runYK(); });

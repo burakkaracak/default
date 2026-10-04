@@ -42,6 +42,7 @@ import { studioPanel } from './factory/studio.js';
 import { marketingPanel } from './crm/marketing.js';
 import { meetingTable } from './core/yk.js';
 import './core/late.js';
+import { mailTo } from './characters/semanur.js';
 
 const canvas = $('#c');
 const st = save.settings();
@@ -80,6 +81,7 @@ const UI = {
   finance: (tab) => financePanel(tab),
   fairs: fairsPanel, studio: studioPanel, marketing: marketingPanel, meetingTable,
   calendar: () => dayPlan(),
+  mailTo: (id) => mailTo(id),
   people: () => peoplePanel(),
   branchDesk: (id) => branchDesk(id),
   meetroom: () => toast('Müşteri görüşme odası: yabancı alıcı ziyaretleri burada ağırlanır (Gelen Kutusu\'nda ziyaret haberi gelir).', 'info', 5000),

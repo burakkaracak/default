@@ -9,7 +9,8 @@ import { estimateDays } from '../factory/production.js';
 import { cust, LEVELS, TYPES, addSat } from './customers.js';
 import { createOrder, lineText, PAY } from './orders.js';
 import { city, INCOTERMS, MODES, transitDays } from '../world/logistics.js';
-import { requestApproval, harunLimit, isHere, addTrust, trust } from '../characters/approvals.js';
+import { requestApproval, discountLimit, isHere, addTrust, trust, registerApply } from '../characters/approvals.js';
+import { internal } from '../characters/comms.js';
 import { addMessage } from './inbox.js';
 import { conf } from '../core/confidence.js';
 import { stat } from '../core/story.js';
@@ -60,12 +61,12 @@ function counterText(rfq, parts, offer) {
 export function offerPanel(rfq, msg, onDone) {
   const c = cust(rfq.cust), cc = city(rfq.city);
   const off = Object.assign({ disc: 0, days: rfq.wantDays + 6, pay: 'avans30', inco: 'FOB', cur: rfq.cur }, rfq.lastOffer || {});
-  let reply = rfq.reply || null, approvedDisc = rfq.approvedDisc ?? -1, approvedVade = !!rfq.approvedVade, bunReviewed = !!rfq.bunReviewed;
+  let reply = rfq.reply || null, approvedDisc = rfq.approvedDisc ?? -1, approvedVade = !!rfq.approvedVade;
   const t0 = performance.now();
   conf.startDecision('offer');
   const p = panel({
     id: 'offer', title: 'Teklif ve pazarlık', icon: '💬', size: 'md', sub: `${c.name} · ${cc.flag} ${cc.name}`,
-    onClose: () => { conf.endDecision(); rfq.lastOffer = off; rfq.approvedDisc = approvedDisc; rfq.approvedVade = approvedVade; rfq.bunReviewed = bunReviewed; },
+    onClose: () => { conf.endDecision(); rfq.lastOffer = off; rfq.approvedDisc = approvedDisc; rfq.approvedVade = approvedVade; },
     render(b, api) {
       const lp = rfq.lines.map((l) => listPrice(l, rfq.city, off.cur));
       const unit = lp.map((x) => x * (1 - off.disc));
@@ -82,26 +83,27 @@ export function offerPanel(rfq, msg, onDone) {
         h('div', { class: 'card' }, h('h3', {}, 'İstenen'), ...rfq.lines.map((l) => h('div', {}, lineText(l))), h('div', { class: 'muted' }, `İstenen teslim: ~${rfq.wantDays} gün içinde`))));
       // Kalemler
       const t = h('table', { class: 't' }, h('tr', {}, h('th', {}, 'Ürün'), h('th', {}, 'Adet'), h('th', {}, 'Liste'), h('th', {}, 'Teklif'), h('th', {}, 'Maliyet')));
-      rfq.lines.forEach((l, i) => t.append(h('tr', {}, h('td', {}, family(l.fam).name + (l.size === 'ozel' ? ' (özel)' : '')), h('td', {}, l.qty), h('td', {}, fmtCur(lp[i], off.cur)), h('td', {}, h('b', {}, fmtCur(unit[i], off.cur))), h('td', { class: 'muted' }, fmtCur(unitCostTL(l) / fxr, off.cur)))));
+      rfq.lines.forEach((l, i) => t.append(h('tr', {}, h('td', {}, family(l.fam).name + (l.size === 'ozel' ? ' (özel)' : '')), h('td', {}, l.qty), h('td', {}, fmtCur(lp[i], off.cur)), h('td', {}, h('b', {}, fmtCur(unit[i], off.cur))), h('td', { class: 'muted' }, rfq.cost ? (rfq.cost.exact ? '' : '~') + fmtCur(unitCostTL(l) * (rfq.cost.exact ? 1 : rfq.cost.err) / fxr, off.cur) : '?'))));
       b.append(h('div', { class: 'sec' }, 'Kalemler (aynı para biriminde, kur bilgisiyle)'), t);
+      if (!rfq.cost) b.append(h('div', { class: 'row', style: { margin: '4px 0' } }, h('span', { class: 'muted', style: { flex: 1 } }, 'Maliyet ve fiyat için Serkan Bey\'e danış:'), h('button', { class: 'btn ghost sm', onclick: () => askCost(rfq, 'telefon', api) }, '📞 Telefon / 💬 WhatsApp (yaklaşık)'), h('button', { class: 'btn ghost sm', disabled: !isHere('serkan'), onclick: () => askCost(rfq, 'yuz', api) }, isHere('serkan') ? '🤝 Yüz yüze (kesin)' : '🤝 Kesin maliyet: fabrikada')));
       // Kontroller
-      const lim = harunLimit();
-      const freeLim = conf.has('smallDiscount') ? 0.05 : 0;
+      const lim = discountLimit();
+      const freeLim = conf.has('smallDiscount') ? 0.03 : 0;
       const ctr = h('div', { class: 'formgrid', style: { marginTop: '10px' } });
       const rng = h('input', { type: 'range', min: 0, max: 25, step: 1, value: Math.round(off.disc * 100), oninput: (e) => { off.disc = +e.target.value / 100; api.refresh(); } });
-      ctr.append(h('b', {}, `İndirim %${Math.round(off.disc * 100)}`), h('div', {}, rng, h('div', { class: 'muted' }, off.disc <= freeLim ? (freeLim ? 'Özgüven yetkinle onaysız verebilirsin' : 'İndirimsiz liste fiyatı') : approvedDisc >= off.disc ? '✓ Harun Bey onayladı' : `Harun Bey onayı gerekir (tavanı ~%${Math.round(lim * 100)})`)));
+      ctr.append(h('b', {}, `İndirim %${Math.round(off.disc * 100)}`), h('div', {}, rng, h('div', { class: 'muted' }, off.disc <= freeLim ? (freeLim ? 'Davut Bey\'in sana tanıdığı ön yetki içinde' : 'İndirimsiz liste fiyatı') : approvedDisc >= off.disc ? '✓ Davut Bey ek iskontoyu onayladı' : `Ek iskonto kararını Davut Bey verir (genelde ~%${Math.round(lim * 100)}'e kadar)`)));
       const dIn = h('input', { type: 'number', min: 5, max: 120, value: off.days, onchange: (e) => { off.days = Math.max(5, +e.target.value || 30); api.refresh(); } });
       const ter = rfq.termin;
       ctr.append(h('b', {}, 'Teslim (gün)'), h('div', {}, dIn, h('div', { class: 'muted' }, ter ? `Serkan: üretim ${ter.exact ? 'kesin' : '~tahmini'} ${ter.days} gün + yol ${tr} gün (${MODES[mode].name}) = ${ter.days + tr} gün` : `Termin bilinmiyor! Yol: ${tr} gün. Serkan Bey'e sor:`),
         h('div', { class: 'row', style: { marginTop: '4px' } }, h('button', { class: 'btn ghost sm', onclick: () => askTermin(rfq, 'telefon', api) }, '📞 Telefonla sor (tahmini)'), h('button', { class: 'btn ghost sm', disabled: !isHere('serkan'), onclick: () => askTermin(rfq, 'yuz', api) }, isHere('serkan') ? '🤝 Yüz yüze (kesin)' : '🤝 Kesin termin: fabrikada'))));
       const sel = (val, opts, fn) => { const s = h('select', { onchange: (e) => { fn(e.target.value); api.refresh(); } }); for (const [v, l] of opts) s.append(h('option', { value: v, selected: v === val }, l)); return s; };
-      ctr.append(h('b', {}, 'Ödeme'), h('div', {}, sel(off.pay, Object.entries(PAY), (v) => (off.pay = v)), off.pay === 'vade' ? h('div', { class: 'muted' }, approvedVade ? '✓ Harun Bey vadeyi onayladı' : 'Vadeli satış Harun Bey onayı ister') : null));
+      ctr.append(h('b', {}, 'Ödeme'), h('div', {}, sel(off.pay, Object.entries(PAY), (v) => (off.pay = v)), off.pay === 'vade' ? h('div', { class: 'muted' }, approvedVade ? '✓ Davut Bey vadeyi onayladı (tahsilat takibi: Harun Bey)' : 'Vadeli satış Davut Bey onayı ister') : null));
       ctr.append(h('b', {}, 'Teslim şekli'), h('div', {}, sel(off.inco, Object.entries(INCOTERMS).map(([k, v]) => [k, v.name]), (v) => (off.inco = v)), h('div', { class: 'muted' }, INCOTERMS[off.inco].desc)));
       ctr.append(h('b', {}, 'Para birimi'), sel(off.cur, [['USD', 'USD'], ['EUR', 'EUR']], (v) => (off.cur = v)));
       b.append(ctr);
       b.append(h('div', { class: 'card', style: { marginTop: '10px' } }, h('div', { class: 'row' }, h('b', { style: { flex: 1 } }, `Toplam: ${fmtCur(total, off.cur)}`), h('span', { class: 'muted' }, `≈ ${fmtTLk(total * fxr)}`)),
-        h('div', { class: 'row' }, h('span', { class: 'muted', style: { flex: 1 } }, `Tahmini kâr marjı (navlun payı dahil)`), h('b', { style: { color: margin < 0.1 ? 'var(--bad)' : 'var(--good)' } }, pct(margin))),
-        total > 40000 && off.cur === 'USD' || total > 36000 ? h('div', { class: 'muted' }, bunReviewed ? '✓ Bünyamin teklifi gözden geçirdi' : 'Büyük teklif: Bünyamin\'in gözden geçirmesi gerekir') : null));
+        h('div', { class: 'row' }, h('span', { class: 'muted', style: { flex: 1 } }, `Tahmini kâr marjı (navlun payı dahil)`), rfq.cost ? h('b', { style: { color: margin < 0.1 ? 'var(--bad)' : 'var(--good)' } }, (rfq.cost.exact ? '' : '~') + pct(margin)) : h('b', {}, '? (Serkan\'a sor)')),
+        h('div', { class: 'row', style: { marginTop: '4px' } }, h('span', { class: 'muted', style: { flex: 1 } }, rfq.bunTip ? '💬 Reis: ' + rfq.bunTip : 'Günlük konularda Bünyamin\'le istişare edebilirsin.'), rfq.bunTip ? null : h('button', { class: 'btn ghost sm', onclick: () => consultBun(rfq, api) }, '💬 Bünyamin\'e danış'))));
       if (reply) b.append(h('div', { class: 'dlg', style: { marginTop: '10px' } }, h('div', { class: 'portrait', style: { display: 'grid', placeItems: 'center', fontSize: '20px' } }, '🏬'), h('div', { class: 'say' }, h('b', {}, c.contact + ': '), reply)));
       b.append(h('div', { class: 'muted', style: { marginTop: '6px' } }, `Pazarlık turu: ${rfq.round}/3 · Müşterinin sabrı: ${'●'.repeat(rfq.patience)}${'○'.repeat(Math.max(0, 3 - rfq.patience))}`));
       api.data = { total, margin, off };
@@ -112,20 +114,15 @@ export function offerPanel(rfq, msg, onDone) {
   });
   async function send(api) {
     const { total } = api.data;
-    const freeLim = conf.has('smallDiscount') ? 0.05 : 0;
+    const freeLim = conf.has('smallDiscount') ? 0.03 : 0;
     if (off.disc > freeLim && approvedDisc < off.disc) {
-      const r = await requestApproval({ who: 'harun', type: 'discount', title: `${c.name} için %${Math.round(off.disc * 100)} indirim`, value: off.disc });
-      if (!r) return; approvedDisc = off.disc; rfq.verbal = r === 'verbal';
-      api.refresh(); return toast('İndirim onaylandı. Şimdi teklifi gönderebilirsin.', 'good');
+      const r = await requestApproval({ who: 'davut', type: 'discount', title: `${c.name} için %${Math.round(off.disc * 100)} ek iskonto`, value: off.disc, act: 'discountOk', args: { msg: msg?.id, disc: off.disc } });
+      if (!r) return; approvedDisc = off.disc;
+      api.refresh(); return toast('Davut Bey iskontoyu onayladı. Şimdi teklifi gönderebilirsin.', 'good');
     }
     if (off.pay === 'vade' && !approvedVade) {
-      const r = await requestApproval({ who: 'harun', type: 'payment', title: `${c.name} için vadeli satış`, reliable: (city(rfq.city).payRel || 0.8) > 0.9 });
-      if (!r) return; approvedVade = true; api.refresh(); return toast('Vade onaylandı.', 'good');
-    }
-    const big = off.cur === 'USD' ? total > 40000 : total > 36000;
-    if (big && !bunReviewed) {
-      const r = await requestApproval({ who: 'bunyamin', type: 'bigOffer', title: `${c.name} büyük teklif (${fmtCur(total, off.cur)})` });
-      if (!r) return; bunReviewed = true; api.refresh(); return;
+      const r = await requestApproval({ who: 'davut', type: 'payment', title: `${c.name} için vadeli satış`, reliable: (city(rfq.city).payRel || 0.8) > 0.9, act: 'vadeOk', args: { msg: msg?.id } });
+      if (!r) return; approvedVade = true; api.refresh(); return toast('Davut Bey vadeyi onayladı.', 'good');
     }
     rfq.round++;
     if (off.disc > 0 && off.disc <= freeLim && approvedDisc < off.disc) bus.emit('achv', 'firstInitiative');
@@ -136,7 +133,7 @@ export function offerPanel(rfq, msg, onDone) {
     stat('offersSent');
     if (ev.u >= 0) {
       const lines = rfq.lines.map((l) => ({ ...l, price: listPrice(l, rfq.city, off.cur) * (1 - off.disc) }));
-      const o = createOrder({ cust: c.id, city: rfq.city, lines, cur: off.cur, incoterm: off.inco, pay: off.pay, promisedDay: G.day + off.days, sample: !!rfq.sample, verbalDiscount: !!rfq.verbal, realisticDays: realProd + tr, discount: off.disc });
+      const o = createOrder({ cust: c.id, city: rfq.city, lines, cur: off.cur, incoterm: off.inco, pay: off.pay, promisedDay: G.day + off.days, sample: !!rfq.sample, realisticDays: realProd + tr, discount: off.disc });
       if (off.days < realProd + tr - 2) o.notes.push(`Uyarı: Söz verilen süre (${off.days} gün) gerçekçi termin (~${realProd + tr} gün) altında.`);
       if (off.days < realProd + tr - 2) addTrust('serkan', rfq.termin?.exact ? -4 : -2, 'gerçekçi olmayan termin');
       stat('offersAccepted'); addSat(c, 3);
@@ -170,3 +167,24 @@ export function askTermin(rfq, ch, api) {
   bus.emit('terminAsked', ch);
   api?.refresh();
 }
+
+// Serkan: fiyatlandırma ve maliyette en çok danışılan kişi
+export function askCost(rfq, ch, api) {
+  if (rfq.lines.some((l) => l.size === 'ozel' && !l.drawing)) { toast('Serkan: "Özel ölçüde çizim olmadan maliyet çıkarmam. Ölçüyü net getir."', 'warn', 5000); return; }
+  if (ch === 'yuz') { time.skip(20); rfq.cost = { exact: true }; addTrust('serkan', 3); toast('Serkan: "Reçeteye ve güncel hammadde fiyatına göre maliyet bu. Altına inme."', 'good', 5000); }
+  else { time.skip(10); rfq.cost = { exact: false, err: rand(0.85, 1.18) }; addTrust('serkan', 1); internal({ from: 'serkan', via: 'wa', subject: 'Maliyet', body: 'kabaca hesapladım, tabloya yazdım. Kesin rakam için fabrikaya gel, beraber bakalım.' }); }
+  bus.emit('costAsked', ch); api?.refresh();
+}
+// Bünyamin ile günlük istişare: müşterinin beklentisine dair ipucu (karar Davut Bey'de)
+function consultBun(rfq, api) {
+  time.skip(10);
+  const t = rfq.target;
+  rfq.bunTip = t < 0.04 ? 'bu müşteri fiyattan çok kaliteye bakar, liste fiyatı yakın tut.' : t < 0.09 ? `küçük bir iskonto (%${Math.round(t * 100 - 1)}-${Math.round(t * 100 + 2)}) bekliyor gibi. Gerekirse babama sor.` : 'fiyata çok duyarlı. Ek iskonto gerekecek; babamdan onayı baştan al.';
+  if (rfq.wantDays < 30) rfq.bunTip += ' Termini de sıkı tut.';
+  internal({ from: 'bunyamin', via: 'wa', subject: 'Teklif', body: rfq.bunTip });
+  addTrust('bunyamin', 1); api?.refresh();
+}
+
+const rfqOfMsg = (id) => (G.inbox || []).find((m) => m.id === id)?.rfq;
+registerApply('discountOk', ({ msg, disc }) => { const r = rfqOfMsg(msg); if (r) r.approvedDisc = Math.max(r.approvedDisc ?? -1, disc); });
+registerApply('vadeOk', ({ msg }) => { const r = rfqOfMsg(msg); if (r) r.approvedVade = true; });

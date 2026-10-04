@@ -2,14 +2,14 @@
   "_aciklama": "Hikaye bölümleri. goals.check türleri: flag, stat (G.stats), met (karakter), custLevel (seviye, bölge, adet), regionShip (bölgeye teslim), fairs, yk, cash, strategic. unlock: açılan şehirler.",
   "list": [
     {
-      "id": 1, "name": "İlk Konteyner", "intro": "Bünyamin: \"Hoş geldin kuzen. Bakü'den sıcak bir müşteri var; ilk konteyneri birlikte çıkaralım. Önce masana geç, Gelen Kutusu'na bak.\"",
+      "id": 1, "name": "İlk Konteyner", "intro": "Bünyamin: \"Hoş geldin abi. Bakü'den sıcak bir müşteri var; ilk konteyneri birlikte çıkaralım. Önce masana geç, Gelen Kutusu'na bak.\"",
       "unlock": ["baku"],
       "goals": [
         { "id": "inbox", "text": "Masana git (2. kat) ve Gelen Kutusu'nu aç", "check": { "type": "flag", "flag": "openedInbox" } },
-        { "id": "offer", "text": "Bünyamin'in yönlendirdiği Bakü müşterisine teklif ver", "check": { "type": "stat", "stat": "offersAccepted", "n": 1 } },
+        { "id": "offer", "text": "Bünyamin'in yönlendirdiği Bakü müşterisine teklif ver (fiyat ve termin: Serkan Bey)", "check": { "type": "stat", "stat": "offersAccepted", "n": 1 } },
         { "id": "proforma", "text": "Sipariş panosundan proformayı gönder", "check": { "type": "flag", "flag": "sentProforma" } },
         { "id": "serkan", "text": "Fabrikaya git, Serkan Bey'le tanış", "check": { "type": "met", "who": "serkan" } },
-        { "id": "erp", "text": "Avans gelince ERP formunu Semanur'a teslim et", "check": { "type": "stat", "stat": "erpApproved", "n": 1 } },
+        { "id": "erp", "text": "Avans gelince ERP formunu Semanur Hanım'a mail ile gönder", "check": { "type": "stat", "stat": "erpApproved", "n": 1 } },
         { "id": "ship", "text": "Üretim bitince ilk konteyneri yükle ve gönder", "check": { "type": "stat", "stat": "shipped", "n": 1 } },
         { "id": "davut", "text": "Davut Bey'e 3. kat toplantı odasında haber ver", "check": { "type": "flag", "flag": "ch1Report" } }
       ],

@@ -6,6 +6,7 @@ import { time } from '../core/time.js';
 import { pick } from '../core/util.js';
 import { portraits } from '../characters/portraits.js';
 import { trust, addTrust, pendingFor, resolveFace, whoName } from '../characters/approvals.js';
+import { can } from '../characters/comms.js';
 
 const EXTRA = [];
 // fn(who, api) → [{label, sub, fn}] (fn async olabilir; true dönerse panel kapanır)
@@ -16,6 +17,7 @@ export function lineFor(id) { const c = charDef(id); const t = trust(id); return
 
 export function talkTo(id, opener) {
   const c = charDef(id);
+  if (!can(id, 'yuz')) { bus.emit('ui', 'mailTo', id); return; }
   if (!G.chars[id].met) { G.chars[id].met = true; bus.emit('met', id); }
   let say = opener || lineFor(id);
   const p = panel({

@@ -4,6 +4,7 @@ import CITIES from '../data/cities.json';
 import { G, log } from './state.js';
 import { bus } from './bus.js';
 import { addMessage } from '../crm/inbox.js';
+import { internal } from '../characters/comms.js';
 
 export const CH_LIST = CHAPTERS.list;
 export const chapter = () => CH_LIST.find((c) => c.id === (G.chapter || 1));
@@ -37,7 +38,7 @@ export function evaluate() {
   const all = ch.goals.every((g) => G.goalsDone[ch.id + ':' + g.id]);
   if (all && !G.flags['chReady' + ch.id]) {
     G.flags['chReady' + ch.id] = true;
-    if (ch.id !== 1) addMessage({ ch: 'ic', from: 'Büşra Karaçak', fromId: 'busra', subject: `Davut Bey seni bekliyor: "${ch.name}" tamamlandı`, body: 'Davut Bey bölüm değerlendirmesi için seni 3. kat toplantı odasına çağırıyor. Ekibi de topladım.', kind: 'hatirlatma' });
+    if (ch.id !== 1) internal({ from: 'busra', via: 'wa', subject: `"${ch.name}" tamamlandı`, body: 'Davut Bey seni 3. kat toplantı odasına çağırıyor, ekibi de topladım. Pasta da var 🎂', kind: 'hatirlatma' });
     bus.emit('chapterReady', ch);
   }
   if (changed) bus.emit('goalsChanged');
@@ -50,7 +51,7 @@ export function finishChapter() {
   if (next) {
     G.chapter = next.id;
     log(`Yeni bölüm: ${next.name}`, 'good');
-    addMessage({ ch: 'ic', from: 'Davut Karaçak', fromId: 'davut', subject: `Bölüm ${next.id}: ${next.name}`, body: next.intro.replace(/^[^:]+: /, '') + '\n\nAçılan pazarlar: ' + next.unlock.map((id) => CITIES.list.find((c) => c.id === id)?.name).join(', '), kind: 'bolum' });
+    internal({ from: 'davut', via: 'mail', subject: `Talimat · Bölüm ${next.id}: ${next.name}`, body: next.intro.replace(/^[^:]+: /, '').replace(/^"|"$/g, '') + '\n\nAçılan pazarlar: ' + next.unlock.map((id) => CITIES.list.find((c) => c.id === id)?.name).join(', '), kind: 'bolum' });
     bus.emit('chapterStart', next);
   } else { G.flags.storyComplete = true; bus.emit('storyComplete'); }
   return { ch, next };

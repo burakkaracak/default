@@ -24,7 +24,7 @@
       { "id": "s_ser1", "text": "Kalite kontrol istasyonuna bir kontrolcü al", "check": { "stat": "hired_kalite", "n": 1 }, "reward": { "trust": 7, "ozguven": 3 }, "intro": "Kalite kontrolde kimse yok, ürünler kontrolsüz çıkıyor. Bir kontrolcü alsak?" }
     ],
     "semanur": [
-      { "id": "s_sem1", "text": "Bir ERP formunu ilk seferde temiz teslim et", "check": { "stat": "erpClean", "n": 1 }, "reward": { "trust": 6, "ozguven": 4 }, "intro": "Bir kere, sadece bir kere, formu eksiksiz getir. Görelim." }
+      { "id": "s_sem1", "text": "Bir ERP formunu ilk seferde temiz teslim et", "check": { "stat": "erpClean", "n": 1 }, "reward": { "trust": 6, "ozguven": 4 }, "intro": "(mail) Burak Bey, bir kez olsun formun eksiksiz gelmesini rica ederim." }
     ],
     "harun": [
       { "id": "s_har1", "text": "Peşin ya da %30 avanslı bir sipariş kapat", "check": { "stat": "advanceOrders", "n": 1 }, "reward": { "trust": 5, "ozguven": 3 }, "intro": "Vadeyle uğraşma yeğenim. Bana avanslı bir sipariş getir, gönlümü yap." }

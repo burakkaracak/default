@@ -1,5 +1,5 @@
 // ERP mini oyunu: sipariş formundaki eksik/hatalı alanları bulup düzelt, Semanur'a teslim et.
-// Mesajla gönderilirse birkaç saat sonra döner (eksik varsa soğuk bir notla); yüz yüze teslimde anında söyler.
+// Semanur Hanım ile sadece mail: birkaç saat sonra döner (eksik varsa soğuk bir notla).
 import { h, panel, toast, choose } from '../ui/dom.js';
 import { G, P, family, fabric, color as colorOf } from '../core/state.js';
 import { bus } from '../core/bus.js';
@@ -7,6 +7,7 @@ import { time } from '../core/time.js';
 import { chance, pick, randi, rand } from '../core/util.js';
 import { startProduction, lineText } from './orders.js';
 import { addMessage } from './inbox.js';
+import { internal } from '../characters/comms.js';
 import { isHere, addTrust, trust } from '../characters/approvals.js';
 import { portraits } from '../characters/portraits.js';
 import { conf } from '../core/confidence.js';
@@ -14,7 +15,7 @@ import { stat } from '../core/story.js';
 
 const FIELDS = ['fam', 'size', 'fabric', 'color', 'qty', 'termin', 'drawing'];
 const FNAME = { fam: 'Ürün', size: 'Ölçü', fabric: 'Kumaş', color: 'Renk', qty: 'Adet', termin: 'Termin', drawing: 'Çizim' };
-const COLD = ['Form eksik. Düzelt, tekrar gönder.', 'Çizim alanı boş bırakılmaz Burak.', 'Bunu ERP\'ye böyle giremem.', 'Yine mi eksik? Tamam. Geri gönderiyorum.', 'Alanları doldurmak bu kadar zor mu?'];
+const COLD = ['Form eksik; düzeltip tekrar gönderiniz.', 'Çizim alanı boş bırakılamaz.', 'Bu formla sistemde sipariş açamıyorum.', 'Eksik alanlar yine mevcut, formu iade ediyorum.', 'Alanların eksiksiz doldurulmasını rica ederim.'];
 
 function truth(o, i) {
   const l = o.lines[i];
@@ -59,7 +60,7 @@ export function erpPanel(o, after) {
     onClose: () => conf.endDecision(),
     render(b, api) {
       b.append(h('div', { class: 'card', style: { background: '#FBF8EE' } }, h('h3', {}, 'Müşteriyle anlaşılan (proforma)'), ...o.lines.map((l) => h('div', {}, '• ' + lineText(l))), h('div', { class: 'muted' }, `Teslim sözü: ${time.shortDate(o.promisedDay)} (${o.promisedDay}. gün) · ${o.incoterm}`)));
-      b.append(h('p', { class: 'muted' }, 'Formu proformayla karşılaştır. Boş alan Semanur\'dan döner; yanlış alan ise fark edilmeden üretime gidebilir!'));
+      b.append(h('p', { class: 'muted' }, 'Formu proformayla karşılaştır. Boş alan Semanur Hanım\'dan döner; yanlış alan ise fark edilmeden üretime gidebilir! Siparişin sistemde açılması için onay ondan gelir; Semanur Hanım ile sadece mailleşilir.'));
       form.forEach((f, i) => {
         b.append(h('div', { class: 'sec' }, `Kalem ${i + 1}`));
         const g = h('div', { class: 'formgrid' });
@@ -74,8 +75,7 @@ export function erpPanel(o, after) {
       if (o.erp.note) b.append(h('div', { class: 'dlg', style: { marginTop: '10px' } }, h('img', { class: 'portrait', src: portraits.semanur }), h('div', { class: 'say' }, o.erp.note)));
     },
     footer(f, api) {
-      f.append(h('button', { class: 'btn ghost', disabled: !isHere('semanur'), onclick: () => submit('yuz', api) }, isHere('semanur') ? '🤝 Semanur\'a elden ver' : '🤝 Elden teslim: fabrikada'),
-        h('button', { class: 'btn gold', onclick: () => submit('mesaj', api) }, '✉️ Mesajla gönder'));
+      f.append(h('button', { class: 'btn gold', onclick: () => submit('mesaj', api) }, '✉️ Semanur Hanım\'a mail ile gönder'));
     },
   });
   function review() {
@@ -115,9 +115,9 @@ export function erpPanel(o, after) {
     // Mesajla
     o.erp.pending = true; o.erp.due = G.day * 1440 + G.min + randi(120, 240) + (trust('semanur') < 30 ? 60 : 0);
     o.erp.snapshot = r;
-    addMessage({ ch: 'ic', from: 'Burak Karaçak', fromId: 'burak', to: 'semanur', toName: 'Semanur Karaçak', subject: `ERP formu: ${o.id}`, body: 'Sipariş formu ekte. Girişini rica ederim.', read: true, outgoing: true });
+    internal({ from: 'burak', to: 'semanur', via: 'mail', subject: `ERP formu: ${o.id}`, body: `${o.id} numaralı siparişin formu ektedir. Sistemde açılması için onayınızı rica ederim.` });
     conf.decided('erp');
-    api.close(); toast('Form mesajla gönderildi. Semanur birkaç saat içinde bakar.', 'info'); after?.();
+    api.close(); toast('Form mail ile gönderildi. Semanur Hanım birkaç saat içinde bakar.', 'info'); after?.();
   }
   return p;
 }
@@ -133,7 +133,7 @@ bus.on('tick', () => {
     if (r.blanks.length) {
       o.erp.rounds++; addTrust('semanur', -1);
       o.erp.note = `“${pick(COLD)}” — Eksik: ${[...new Set(r.blanks.map((x) => FNAME[x.field]))].join(', ')}.`;
-      addMessage({ ch: 'ic', from: 'Semanur Karaçak', fromId: 'semanur', subject: `İADE: ${o.id} ERP formu`, body: o.erp.note.replace(/[“”]/g, '') + '\n\nDüzeltip tekrar gönder. Elden getirirsen daha hızlı olur.', kind: 'erp', order: o.id, actions: [{ label: 'Formu aç ve düzelt', act: 'openErp', args: { order: o.id } }] });
+      internal({ from: 'semanur', via: 'mail', subject: `İADE: ${o.id} ERP formu`, body: o.erp.note.replace(/[“”]/g, '') + '\n\nDüzeltip tekrar gönderiniz.', kind: 'erp', order: o.id, actions: [{ label: 'Formu aç ve düzelt', act: 'openErp', args: { order: o.id } }] });
       bus.emit('erpReturned', o);
     } else {
       // approve() mantığının mesaj sürümü
@@ -142,7 +142,8 @@ bus.on('tick', () => {
       startProduction(o, { clean, wrong: r.wrong.filter((w) => ['fam', 'size', 'fabric', 'color'].includes(w.field)) });
       stat('erpApproved'); if (clean) stat('erpClean');
       addTrust('semanur', clean ? 3 : 1);
-      addMessage({ ch: 'ic', from: 'Semanur Karaçak', fromId: 'semanur', subject: `${o.id} ERP'ye girildi`, body: clean ? 'Girildi. Üretime aktarıldı.' : 'Girildi. Bir dahakine ilk seferde doğru gelsin.', kind: 'erp' });
+      internal({ from: 'semanur', via: 'mail', subject: `${o.id} sistemde açıldı`, body: clean ? (trust('semanur') > 60 && chance(0.5) ? 'Sipariş açıldı, üretime aktarıldı. Form temizdi. Teşekkürler.' : 'Sipariş açıldı, üretime aktarıldı.') : 'Sipariş açıldı, üretime aktarıldı. Bir dahakine ilk seferde doğru gelmesini rica ederim.', kind: 'erp' });
+      if (clean && trust('semanur') > 60) bus.emit('semanurPraise');
       bus.emit('erpApproved', o, clean);
     }
   }

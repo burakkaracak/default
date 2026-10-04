@@ -3,6 +3,7 @@ import { G, log } from '../core/state.js';
 import { bus } from '../core/bus.js';
 import { chance, pick, clamp, rand } from '../core/util.js';
 import { addMessage } from '../crm/inbox.js';
+import { internal } from '../characters/comms.js';
 import { cust } from '../crm/customers.js';
 import COMP from '../data/competitors.json';
 import CITIES from '../data/cities.json';
@@ -32,7 +33,7 @@ bus.on('monthStart', () => {
       const cities = CITIES.list.filter((x) => c.regions.includes(x.region) && !x.owner && (G.openCities || []).includes(x.id));
       if (cities.length) {
         const ct = pick(cities); G.priceWar ||= {}; G.priceWar[ct.id] = { by: c.id, until: G.day + 20 };
-        addMessage({ ch: 'ic', from: 'Bünyamin Karaçak', fromId: 'bunyamin', subject: `Fiyat savaşı: ${c.name} ${ct.name}'da`, body: `${c.name} (${c.type}) ${ct.name} pazarında fiyatları kırdı. Müşteriler bu ay daha fazla indirim bekleyecek; mail cevap oranları da düşebilir.\n\nPanik yapma: kaliteyi ve termini öne çıkar, gerekirse seçici indirim ver.`, kind: 'rakip' });
+        internal({ from: 'bunyamin', via: 'wa', subject: `Fiyat savaşı: ${ct.name}`, body: `${c.name} (${c.type}) ${ct.name}'da fiyatları kırdı. Müşteriler bu ay daha fazla iskonto isteyecek. Panik yok; kaliteyi ve termini öne çıkaralım, ek iskonto gerekirse babamla konuşuruz.`, kind: 'rakip' });
       }
     }
     // Müşteri kapma
