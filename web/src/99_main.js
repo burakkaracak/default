@@ -202,12 +202,13 @@ async function boot() {
   GameManager.Boot();
   Quality.Init();
   Photo.Init();
+  Chat.Init();
   if (Cloud.restored) GameManager.I.Notify('Kayıt buluttan yüklendi');
   Cloud.OfferBackup();
   setInterval(() => Cloud.Push(), 15000);
   requestAnimationFrame(frame);
   // test ve hata ayıklama için
-  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE, Quality, Wedding, Photo, Social };
+  window.__game = { GameManager, Popups, Store, U, Time, Customer, Room, Quests, Events, Seasons, Story, Reception, Chain, Menu, Input, GUI, CamState, W, scene, camera, renderer, Tween, Vec, V, THREE, Quality, Wedding, Photo, Social, Chat };
   window.__cloud = Cloud;
   window.__ready = true;
 }

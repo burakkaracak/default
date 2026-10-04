@@ -9,7 +9,7 @@ const Photo = {
 
   OnGUI() {
     const gm = GameManager.I;
-    if (!gm || gm.MenuOpen || Popups.Open) { this.btn = Rect.zero; return; }
+    if (!gm || gm.MenuOpen || Popups.Open || Social.open || Chat.open) { this.btn = Rect.zero; return; }
     const s = gm.UIScale, sb = Social.Button(s);
     this.btn = new Rect(sb.x, sb.yMax + 12 * s, sb.width, 62 * s);
     GUI.Panel(this.btn, C(0.35, 0.55, 0.85, 0.95));

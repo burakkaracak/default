@@ -137,8 +137,11 @@ class Social {
       Social.txt = new GUIStyle(GUI.skin.label, { wordWrap: true, alignment: TextAnchor.UpperLeft });
     }
     const head = Social.head, txt = Social.txt, feed = Social.feed;
-    const w = 470 * s, h = Mathf.Min(Screen.height - 200 * s, 760 * s);
-    const r = new Rect(Screen.width - w - 20 * s, 175 * s, w, h);
+    // dikey telefonda panel tam genişlikte, para kutusunun altından başlar
+    const narrow = Screen.width < Screen.height;
+    const w = narrow ? Screen.width - 40 * s : 470 * s, top = narrow ? 284 * s : 175 * s;
+    const h = Mathf.Min(Screen.height - top - 25 * s, 760 * s);
+    const r = new Rect(Screen.width - w - 20 * s, top, w, h);
     GUI.Panel(r, C(0.98, 0.97, 0.99, 0.98));
     GUI.Panel(new Rect(r.x, r.y, r.width, 78 * s), C(0.85, 0.35, 0.6, 1));
     head.fontSize = Mathf.RoundToInt(28 * s);
@@ -151,7 +154,9 @@ class Social {
     txt.fontSize = Mathf.RoundToInt(19 * s);
     const iw = r.width - 60 * s;
     let total = 0;
-    for (const p of feed) total += Social.CalcHeight(txt, p.text, iw) + 74 * s;
+    head.fontSize = Mathf.RoundToInt(18 * s);
+    const replyH = p => p.reply ? Social.CalcHeight(txt, '↳ ' + p.reply, iw - 20 * s) + (p.react ? Social.CalcHeight(txt, p.react, iw - 20 * s) : 0) + 16 * s : 0;
+    for (const p of feed) total += Social.CalcHeight(txt, p.text, iw) + 74 * s + replyH(p);
     const area = new Rect(r.x + 10 * s, r.y + 88 * s, r.width - 20 * s, r.height - 98 * s);
     const view = new Rect(0, 0, area.width - 20 * s, Mathf.Max(total, area.height));
     Social.scroll = GUI.BeginScrollView(area, Social.scroll, view);
@@ -161,8 +166,8 @@ class Social {
       GUI.Label(new Rect(14 * s, 10 * s, iw, 80 * s), 'Henüz paylaşım yok. Misafirlerin çok memnun kalırsa otelini paylaşırlar!', txt);
     }
     for (const p of feed) {
-      const th = Social.CalcHeight(txt, p.text, iw);
-      const card = new Rect(4 * s, y, view.width - 8 * s, th + 64 * s);
+      const th = Social.CalcHeight(txt, p.text, iw), rh = replyH(p);
+      const card = new Rect(4 * s, y, view.width - 8 * s, th + 64 * s + rh);
       GUI.Panel(card, p.bad ? C(1, 0.9, 0.9, 1) : p.kind === 2 ? C(1, 0.95, 0.8, 1) : C(0.93, 0.94, 0.98, 1));
       head.fontSize = Mathf.RoundToInt(18 * s);
       head.normal.textColor = p.kind === 2 ? C(0.75, 0.5, 0.05) : C(0.55, 0.25, 0.5);
@@ -170,7 +175,22 @@ class Social {
       txt.normal.textColor = C(0.15, 0.15, 0.2);
       GUI.Label(new Rect(card.x + 14 * s, card.y + 30 * s, iw, th), p.text, txt);
       head.normal.textColor = p.bad ? C(0.75, 0.3, 0.3) : C(0.85, 0.3, 0.45);
-      GUI.Label(new Rect(card.x + 14 * s, card.yMax - 32 * s, card.width, 28 * s), (p.bad ? '♡ ' : '♥ ') + p.likes + ' beğeni', head);
+      GUI.Label(new Rect(card.x + 14 * s, card.y + 34 * s + th, card.width, 28 * s), (p.bad ? '♡ ' : '♥ ') + p.likes + ' beğeni', head);
+      if (p.reply) {
+        // otelin yanıtı ve yorumu yazanın karşılığı
+        let ry = card.y + 66 * s + th;
+        const h1 = Social.CalcHeight(txt, '↳ ' + p.reply, iw - 20 * s);
+        GUI.Panel(new Rect(card.x + 20 * s, ry - 4 * s, card.width - 34 * s, rh - 8 * s), C(1, 1, 1, 0.7));
+        txt.normal.textColor = C(0.55, 0.25, 0.5);
+        GUI.Label(new Rect(card.x + 30 * s, ry, iw - 20 * s, h1), '↳ ' + p.reply, txt);
+        if (p.react) { txt.normal.textColor = C(0.3, 0.3, 0.38); GUI.Label(new Rect(card.x + 30 * s, ry + h1, iw - 20 * s, rh - h1), p.react, txt); }
+      } else if (p.author.startsWith('@')) {
+        const rb = new Rect(card.xMax - 130 * s, card.y + 30 * s + th, 116 * s, 32 * s);
+        GUI.Panel(rb, C(0.85, 0.35, 0.6, 1));
+        head.normal.textColor = Col.white; head.alignment = TextAnchor.MiddleCenter;
+        if (GUI.Button(rb, 'Yanıtla', head)) Chat.StartPost(p);
+        head.alignment = TextAnchor.MiddleLeft;
+      }
       y += card.height + 10 * s;
     }
     GUI.EndScrollView();
@@ -182,7 +202,7 @@ class Social {
     const parts = [];
     for (let i = 0; i < Social.feed.length && i < 15; i++) {
       const p = Social.feed[i];
-      parts.push(Social.Esc(p.author) + '\u001f' + Social.Esc(p.text) + '\u001f' + p.likes + '\u001f' + (p.bad ? 1 : 0) + '\u001f' + p.kind);
+      parts.push(Social.Esc(p.author) + '\u001f' + Social.Esc(p.text) + '\u001f' + p.likes + '\u001f' + (p.bad ? 1 : 0) + '\u001f' + p.kind + '\u001f' + Social.Esc(p.reply || '') + '\u001f' + Social.Esc(p.react || ''));
     }
     Store.SetString(K + 'soc_p', parts.join('\u001e'));
   }
@@ -200,7 +220,7 @@ class Social {
     for (const part of s.split('\u001e')) {
       const f = part.split('\u001f');
       if (f.length < 5) continue;
-      Social.feed.push({ author: f[0], text: f[1], likes: TI(f[2]), bad: f[3] === '1', kind: TI(f[4]) });
+      Social.feed.push({ author: f[0], text: f[1], likes: TI(f[2]), bad: f[3] === '1', kind: TI(f[4]), reply: f[5] || '', react: f[6] || '' });
     }
   }
 }
