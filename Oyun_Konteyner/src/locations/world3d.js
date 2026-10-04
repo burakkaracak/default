@@ -126,6 +126,17 @@ export const W = {
     this.renderer.render(this.scene, this.camera);
   },
   // Dünya koordinatını ekran pikseline çevirir (balon yazılar için)
+  // Rehberin gösterdiği hedefin üstünde zıplayan altın ok
+  setBeacon(t) {
+    if (!this.beacon) {
+      const g = new THREE.Group();
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 4), new THREE.MeshBasicMaterial({ color: '#9C905C' })); cone.rotation.x = Math.PI;
+      g.add(cone); this.beacon = g; this.scene.add(g);
+    }
+    const on = t && G && t.loc === G.player.loc && (t.loc !== 'store' || (t.floor ?? 0) === G.player.floor) && Math.hypot(t.x - G.player.x, t.z - G.player.z) > 1.5;
+    this.beacon.visible = !!on;
+    if (on) { this.beacon.position.set(t.x, 2.6 + Math.sin(performance.now() / 250) * 0.2, t.z); this.beacon.rotation.y += 0.05; }
+  },
   toScreen(x, y, z) {
     const v = new THREE.Vector3(x, y, z).project(this.camera);
     return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, vis: v.z < 1 };

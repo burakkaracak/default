@@ -42,10 +42,11 @@ export function go(to, opts = {}) {
   time.hold++;
   setTimeout(() => {
     time.hold--; time.skip(mins);
-    W.enter(to, { floor: to === 'store' ? 0 : 0 });
+    W.enter(to, { floor: opts.floor ?? 0, x: opts.x, z: opts.z });
     G.stats.trips = (G.stats.trips || 0) + 1;
     bus.emit('arrived', to, from);
     ov.style.transition = 'opacity .35s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 380);
+    if (opts.after) setTimeout(opts.after, 450);
   }, opts.fast ? 900 : 2300);
 }
 export function openElevator() {

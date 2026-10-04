@@ -91,7 +91,7 @@ export function enterWorld() {
     alertBox('Sen yokken', `${s.awayH} saattir yoktun. Fabrika çalışmaya devam etti (en fazla ${B.offlineMaxHours} oyun saati sayılır).<br><br>• Simüle edilen süre: ${s.minutes} dk<br>• Paketlenen ürün: <b>${s.made}</b>`, 'Harika');
   } else if (G.day === 1 && G.min <= DAY_START + 5 && G.mode !== 'free' && !G.flags.introShown) {
     G.flags.introShown = true;
-    setTimeout(() => alertBox('Bölüm 1 · İlk Konteyner', `<b>Bünyamin:</b> "${'Hoş geldin abi! Burası Bostancı mağazamız, 2. kat ihracat ofisi. Masana geç; babamın talimatı ve Bakü\'den bir teklif talebi Gelen Kutusu\'nda seni bekliyor.'}"<br><br><span class="muted">Hareket: WASD/oklar ya da ekranda parmağını sürükle. Etkileşim: E ya da sağ alttaki altın düğme.</span>`, 'Başlayalım', { portrait: portraits.bunyamin }), 400);
+    setTimeout(() => alertBox('Bölüm 1 · İlk Konteyner', `<b>Bünyamin:</b> "${'Hoş geldin abi! Burası Bostancı mağazamız, 2. kat ihracat ofisi. Babamın talimatı ve Bakü\'den bir teklif talebi seni bekliyor.'}"<br><br><b>Nasıl oynanır?</b> Ekranın üstündeki <b>“Sıradaki adım”</b> kartını takip et; altın düğmeye basınca seni ilgili yere götürür ve işi açar.<br><br><span class="muted">İstersen kendin de gezebilirsin: parmağını ekranda sürükle (bilgisayarda WASD), sağ alttaki altın düğmeyle etkileşim.</span>`, 'Başlayalım', { portrait: portraits.bunyamin }), 400);
   }
 }
 
@@ -110,7 +110,6 @@ bus.on('dayEnd', () => {
       G.player.loc = 'store'; G.player.floor = 2; G.player.x = -6; G.player.z = -2.2; G.player.carry = [];
       W.enter('store', { floor: 2, x: -6, z: -2.2 });
       save.write();
-      dayPlan();
     };
     if (monthEnd) { const res = monthEndSettle(monthlySalaries()); bus.emit('monthEnd', res); monthReport(res, next); } else next();
   };
@@ -136,7 +135,7 @@ async function rescue() {
 }
 
 // Bildirimler
-bus.on('mail', (m) => { if (!m.outgoing) { bus.emit('sfx', 'mail'); toast(`${m.ch === 'wa' ? '💬' : m.ch === 'ic' ? '🏢' : '✉️'} ${m.from}: ${m.ch === 'wa' ? m.body.slice(0, 70) : m.subject}`, 'info'); } });
+bus.on('mail', (m) => { if (!m.outgoing && !(m.day === 1 && m.min === DAY_START)) { bus.emit('sfx', 'mail'); toast(`${m.ch === 'wa' ? '💬' : m.ch === 'ic' ? '🏢' : '✉️'} ${m.from}: ${m.ch === 'wa' ? m.body.slice(0, 70) : m.subject}`, 'info'); } });
 bus.on('trust', (id, d, why) => { if (Math.abs(d) >= 2) toast(`${charDef(id).name.split(' ')[0]} güveni ${d > 0 ? '+' : ''}${Math.round(d)}${why ? ' (' + why + ')' : ''}`, d > 0 ? 'good' : 'warn', 2600); });
 bus.on('ozguven', (d, why) => { if (d >= 3) toast(`Özgüven +${d}${why ? ' · ' + why : ''}`, 'good', 2400); });
 bus.on('ability', (a) => { toast(`🌟 Yeni yetenek: ${a.name} — ${a.desc}`, 'good', 7000); bus.emit('sfx', 'success'); });

@@ -61,7 +61,7 @@ deskHooks.erp = (o, after) => erpPanel(o, after);
 // ---- Arayüz yönlendirici ----
 const UI = {
   desk: deskPanel,
-  inbox: (tab) => { setFlag('openedInbox'); inboxPanel(tab); },
+  inbox: (tab, id) => { setFlag('openedInbox'); inboxPanel(tab, id); },
   orders: (id) => ordersPanel(id),
   factory: (tab) => factoryPanel(tab),
   station: (sid) => stationPanel(sid),
@@ -93,6 +93,7 @@ bus.on('ui', (name, ...args) => {
 });
 bus.on('sfx', (n) => sfx[n]?.());
 bus.on('goldGlow', () => goldGlow());
+bus.on('openErp', (o) => erpPanel(o));
 bus.on('expansion', () => { if (G.player.loc === 'factory' || G.player.loc === 'store') W.enter(G.player.loc, { floor: G.player.floor, x: G.player.x, z: G.player.z }); });
 bus.on('voice', (t) => {
   document.querySelectorAll('.innervoice').forEach((e) => e.remove());

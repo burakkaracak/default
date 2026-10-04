@@ -7,6 +7,8 @@ import { fmtTLk } from '../core/util.js';
 import { whereIs, locName } from '../characters/npcs.js';
 import { unread, pendingActions } from '../crm/inbox.js';
 import { carried, capacity } from '../factory/production.js';
+import { renderGuide, guideTarget } from './guide.js';
+import { W } from '../locations/world3d.js';
 
 export const hud = {
   el: null, near: null,
@@ -21,15 +23,15 @@ export const hud = {
     this.meters = h('div', { class: 'chip meters', onclick: () => bus.emit('ui', 'confidence') });
     this.oz = h('i'); this.an = h('i');
     this.meters.append(h('div', { class: 'meter' }, 'Özgüven', h('div', { class: 'bar' }, this.oz)), h('div', { class: 'meter an' }, 'Analiz', h('div', { class: 'bar' }, this.an)));
-    top.append(this.cash, this.clock, this.speed, this.bun, this.meters);
+    top.append(this.cash, this.clock, this.speed);
     el.append(top);
-    this.obj = h('div', { class: 'objective', onclick: () => bus.emit('ui', 'goals') }); el.append(this.obj);
+    this.obj = h('div', { class: 'objective guide' }); el.append(this.obj);
     this.carry = h('div', { class: 'carryhud' }); el.append(this.carry);
     const dock = h('div', { class: 'dock' });
     const db = (icon, label, ui, badgeFn) => { const b = h('button', { onclick: () => bus.emit('ui', ui) }, h('span', { class: 'i' }, icon), label); b._badge = badgeFn; return b; };
     this.dockBtns = [
       db('✉️', 'Gelen', 'inbox', () => unread() + 0), db('📋', 'Siparişler', 'orders', () => G.orders.filter((o) => ['proforma', 'erp', 'hazir'].includes(o.status)).length),
-      db('🏭', 'Fabrika', 'factory'), db('🌍', 'Dünya', 'world'), db('👥', 'Kadro', 'people'), db('📊', 'Finans', 'finance'), db('☰', 'Menü', 'gamemenu'),
+      db('🌍', 'Dünya', 'world'), db('🏭', 'Fabrika', 'factory'), db('☰', 'Menü', 'gamemenu'),
     ];
     dock.append(...this.dockBtns); el.append(dock);
     this.act = h('button', { class: 'actbtn hidden', onclick: () => { if (this.near) this.near.action(); } }); el.append(this.act);
@@ -55,7 +57,8 @@ export const hud = {
     const c = carried();
     this.carry.classList.toggle('hidden', c === 0);
     this.carry.textContent = `Taşınan: ${c}/${capacity()} birim`;
-    this.renderObjective();
+    renderGuide(this.obj);
+    W.setBeacon(guideTarget());
   },
   renderObjective() {
     const o = this.objective?.();

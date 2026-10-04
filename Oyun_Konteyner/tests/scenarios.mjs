@@ -25,7 +25,7 @@ export async function flow({ page, shot, ev, wait }) {
   await ev(`__game.bus.emit('ui','inbox','ic')`); await wait(300);
   await page.click('.list-item:has-text("FW: Bakü")'); await wait(200);
   await shot('1_inbox');
-  await page.click('text=Teklifi hazırla'); await wait(400);
+  await page.click('.choices button:has-text("Teklifi hazırla")'); await wait(400);
   await shot('2_offer');
   await page.click('text=Teklifi gönder'); await wait(500);
   await shot('3_offer_result');
@@ -138,7 +138,7 @@ export async function phone2({ page, shot, ev, wait }) {
   await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); __game.W.enter('store',{floor:2,x:-6,z:-2.6}); return 1})()`); await wait(300);
   await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); __game.bus.emit('ui','inbox','ic'); return 1})()`); await wait(200);
   await page.click('.list-item:has-text("FW: Bakü")'); await wait(100);
-  await page.click('text=Teklifi hazırla'); await wait(300); await shot('1_offer');
+  await page.click('.choices button:has-text("Teklifi hazırla")'); await wait(300); await shot('1_offer');
   await ev(`__game.modals.closeAll()`);
   await ev(`(()=>{const g=__game; const o=g.ORD.createOrder({cust:'c1',city:'baku',lines:[{fam:'kanepe',fabric:'keten',color:'bej',size:'std',qty:8,price:800},{fam:'berjer',fabric:'kadife',color:'yesil',size:'std',qty:6,price:450}],cur:'USD',incoterm:'FOB',pay:'avans30',promisedDay:30}); o.status='erp'; g.bus.emit('ui','orders',o.id); return 1})()`); await wait(200);
   await page.click('text=ERP formunu hazırla'); await wait(300); await shot('2_erp');
@@ -181,4 +181,38 @@ export async function comms({ page, shot, ev, wait }) {
   await ev(`__game.modals.closeAll(); __game.time.skip(240)`); 
   console.log(await ev(`JSON.stringify(__game.G.inbox.slice(0,2).map(m=>[m.from,m.subject,m.body]))`));
   await ev(`__game.modals.closeAll(); __game.bus.emit('ui','talk','harun')`); await wait(300); await shot('harun');
+}
+
+export async function guide({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  await shot('1_start');
+  for (let i = 0; i < 4; i++) {
+    const t = await ev(`document.querySelector('.guide .gtxt')?.textContent`);
+    console.log('adım:', t);
+    await ev(`__game.modals.closeAll()`);
+    await page.click('.guide .btn'); await wait(3200);
+    await shot('step' + i);
+  }
+}
+
+export async function guideflow({ page, shot, ev, wait }) {
+  await newGame({ page, ev, wait });
+  await ev(`(()=>{const m=__game.G.inbox.find(m=>m.rfq); m.rfq.target=-0.05; m.rfq.wantDays=60; return 1})()`);
+  let last = '';
+  for (let i = 0; i < 40; i++) {
+    const t = await ev(`document.querySelector('.guide .gtxt')?.textContent`);
+    if (t !== last) { console.log(i, 'adım:', t); last = t; }
+    await ev(`__game.modals.closeAll()`);
+    await page.click('.guide .btn').catch(() => {}); await wait(2800);
+    for (const b of ['Teklifi gönder', 'Proforma gönder', 'mail ile gönder', 'Kalanı otomatik', 'Kapıları kapat', 'Tamam', 'Teşekkürler', 'Hadi bakalım', 'Sağ olun']) {
+      const el = await page.$(`button:has-text("${b}")`); if (el) { await el.click().catch(() => {}); await wait(b === 'Kapıları kapat' ? 4500 : 300); }
+    }
+    const k = await page.$('.list-item input[type=checkbox]'); if (k) { await k.click(); await wait(200); const y = await page.$('button:has-text("Kendin yükle")'); if (y) { await y.click(); await wait(800); } }
+    // ERP formunu düzelt
+    await ev(`(()=>{const o=__game.G.orders.find(o=>o.status==='erp'&&o.erp&&o.erp.form&&!o.erp.pending); if(o){o.erp.form=null;} return 1})()`);
+    await ev(`(()=>{const g=__game; g.modals.closeAll(); g.time.dayEnded=false; for(let k=0;k<60;k++) g.time.skip(5); if(g.time.dayEnded){ g.modals.closeAll(); g.time.startNextDay(); g.modals.closeAll(); } return 1})()`);
+    if (/haber ver/.test(t || '') && i > 3) { await shot('davut'); }
+    if (await ev(`__game.G.flags.ch1Report ? 1 : 0`)) { console.log('Bölüm 1 bitti, adım', i); break; }
+  }
+  console.log(await ev(`JSON.stringify({orders:__game.G.orders.map(o=>[o.id,o.status]), ch:__game.G.chapter})`));
 }

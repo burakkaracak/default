@@ -43,6 +43,11 @@ input, select, textarea { font: inherit; color: var(--ink); user-select: text; -
 .hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(86px + var(--safe-b)); background: rgba(43,45,47,.85); color: var(--cream); padding: 7px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; max-width: 80vw; text-align: center; pointer-events: none; }
 .carryhud { position: absolute; left: 50%; transform: translateX(-50%); top: calc(64px + var(--safe-t)); background: rgba(156,144,92,.95); color: #fff; padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; pointer-events: none; }
 .objective { position: absolute; top: calc(58px + var(--safe-t)); left: 8px; max-width: min(330px, 62vw); background: rgba(250,247,241,.94); border-radius: 12px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.1); border-left: 4px solid var(--gold); cursor: pointer; }
+.guide { display: flex; flex-direction: column; gap: 3px; cursor: default; }
+.guide .gtop { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--gold-d); font-weight: 700; cursor: pointer; }
+.guide .gtxt { font-size: 14px; font-weight: 700; line-height: 1.25; }
+.guide .gsub { font-size: 11.5px; color: var(--ink3); }
+.guide .btn { align-self: flex-start; margin-top: 4px; }
 .objective b { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--gold-d); margin-bottom: 2px; }
 .objective .done { text-decoration: line-through; opacity: .5; }
 .innervoice { position: absolute; right: 10px; top: 40%; max-width: 220px; background: #fff; border-radius: 16px 16px 4px 16px; padding: 10px 12px; font-size: 12.5px; font-style: italic; box-shadow: var(--shadow); color: var(--ink2); animation: pop .3s; z-index: 60; pointer-events: none; }

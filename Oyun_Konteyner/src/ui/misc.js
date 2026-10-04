@@ -20,18 +20,30 @@ import L from '../data/locations.json';
 
 export function gameMenu() {
   const p = panel({
-    title: 'Menü', size: 'sm', icon: '☰',
+    title: 'Menü', size: 'md', icon: '☰',
     render(b) {
-      const c = h('div', { class: 'menu-btns' });
-      c.append(
-        h('button', { class: 'btn gold', onclick: () => { save.write(); toast('Kaydedildi (Yuva ' + save.slot + ').', 'good'); } }, '💾 Kaydet'),
-        h('button', { class: 'btn ghost', onclick: () => save.exportJSON() }, '⬇️ Kaydı dışa aktar (JSON)'),
-        h('button', { class: 'btn ghost', onclick: () => slotsPanel(true) }, '🗂️ Kayıt yuvaları'),
-        h('button', { class: 'btn ghost', onclick: () => bus.emit('ui', 'goals') }, '🏆 Hedefler ve başarımlar'),
-        h('button', { class: 'btn ghost', onclick: () => settingsPanel() }, '⚙️ Ayarlar'),
-        h('button', { class: 'btn line', onclick: () => { save.write(); p.close(); bus.emit('toMenu'); } }, '⏏︎ Ana menüye dön'),
-      );
-      b.append(c, h('p', { class: 'muted' }, `Otomatik kayıt açık (30 sn'de bir ve gün sonunda). Yuva ${save.slot}.`));
+      const w = whereIs('bunyamin');
+      b.append(h('div', { class: 'row', style: { marginBottom: '10px', gap: '14px' } },
+        h('div', { style: { flex: 1, minWidth: '140px' } }, h('div', { class: 'muted' }, 'Özgüven ' + Math.round(G.player.ozguven)), progress(G.player.ozguven / 100)),
+        h('div', { style: { flex: 1, minWidth: '140px' } }, h('div', { class: 'muted' }, 'Analiz ' + Math.round(G.player.analiz)), progress(G.player.analiz / 100)),
+        h('div', { class: 'muted' }, '🧭 Bünyamin: ' + (w?.travelling ? 'yolda → ' + locName(w.to) : locName(w?.loc)))));
+      const tile = (icon, title, sub, fn) => h('button', { class: 'card', style: { textAlign: 'left', cursor: 'pointer' }, onclick: () => { p.close(); fn(); } }, h('div', { style: { fontSize: '22px' } }, icon), h('b', {}, title), h('div', { class: 'muted' }, sub));
+      const ui = (n, ...a) => () => bus.emit('ui', n, ...a);
+      b.append(h('div', { class: 'grid3' },
+        tile('👥', 'Kadro', 'Karakterler, organizasyon, aile', ui('people')),
+        tile('📊', 'Finans', 'Kasa, kur, alacaklar', ui('finance')),
+        tile('🏆', 'Hedefler', 'Bölüm, görevler, başarımlar', ui('goals')),
+        tile('🗓️', 'Günün gündemi', 'Büşra Hanım\'ın notları', ui('plan')),
+        tile('🎪', 'Fuarlar', 'Stand kirala', ui('fairs')),
+        tile('📣', 'Pazarlama', 'Katalog, web, Instagram', ui('marketing')),
+        tile('🎨', 'Tasarım Stüdyosu', 'Yeni ürünler, trendler', ui('studio')),
+        tile('🌱', 'Özgüven', 'Yetenekler', ui('confidence')),
+        tile('⚙️', 'Ayarlar', 'Grafik, ses', () => settingsPanel())));
+      b.append(h('div', { class: 'row', style: { marginTop: '12px' } },
+        h('button', { class: 'btn gold sm', onclick: () => { save.write(); toast('Kaydedildi (Yuva ' + save.slot + ').', 'good'); } }, '💾 Kaydet'),
+        h('button', { class: 'btn ghost sm', onclick: () => slotsPanel(true) }, '🗂️ Kayıt yuvaları'),
+        h('button', { class: 'btn line sm', onclick: () => { save.write(); p.close(); bus.emit('toMenu'); } }, '⏏︎ Ana menü')),
+        h('p', { class: 'muted' }, `Otomatik kayıt açık (30 sn'de bir ve gün sonunda). Yuva ${save.slot}.`));
     },
   });
 }
