@@ -18,13 +18,14 @@ Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oy
   fotoğraf modu (`68_photo.js`, `downloads` yeteneğiyle kaydeder). Dışarısı yürünebilir, trafik hareketli (`65_outside.js`).
   Grafik kalitesi Düşük/Orta/Yüksek (`97_quality.js`, FPS<40 olursa kendiliğinden düşer; Ayarlar'da seçilebilir).
   Otel zinciri (`56_chain.js`): resepsiyonisti olan diğer oteller sen başka oteldeyken de kazanır (`Chain.TickBackground`, dakikalık oran `idleRate`).
+  Sohbet (`69_chat.js`): misafirin yanında "💬 Sohbet", Otelgram'da "Yanıtla"; hazır cevaplar + `sample` ile serbest yazışma (Claude).
   Hırsız olayı İSTENMİYOR (Elif sevmedi).
 - `eski-oyun-fikirleri.md`: Silinen eski web oyunundan fikirler (kalanlar: spor salonu, çatı barı, yeni şehirler, etkinlikler, başarımlar, albüm).
 
 ## Yayın
 - Artifact: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu — hep aynı adres: `Artifact` publish, file_path `web/dist/index.html`,
   files `{"game.js": "dist/game.js", "models.json": "dist/models.json"}` (çalışma dizini web/ iken), url ile güncelle.
-- capabilities `{db:{}, user:{}, downloads:true}` korunsun (redeploy'da capabilities verme ya da aynısını ver).
+- capabilities `{db:{}, user:{}, downloads:true, sample:{}}` korunsun (redeploy'da capabilities verme ya da aynısını ver).
 - Kayıt: localStorage (`otel_ustasi_kayit_v1`) + bulut (`web/src/98_cloud.js`, db `data/users/<id>/kayit`, kişiye özel).
-  Açılışta yeni olan (`__savedAt`) kullanılır, 15 sn'de bir ve sayfa gizlenince buluta yazılır. Test: `test_cloud.py`.
+  Açılışta ilerleme puanı (gün/oda) karşılaştırılır; boş/yeni oyun buluttakini ezmez (`__base`), çakışmada ilerideki korunur, `yedek` belgesi en ilerideki kayıt. 15 sn'de bir ve sayfa gizlenince buluta yazılır. Test: `test_cloud.py` (7 senaryo).
   Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor (Katkıda bulunan) yetkisi gerekir.

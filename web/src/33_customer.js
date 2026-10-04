@@ -66,7 +66,7 @@ class Customer extends Behaviour {
     let look = Rig.Guests[Random.RangeInt(0, Rig.Guests.length)];
     if (t === G.Is) look = Random.value < 0.5 ? 'character-male-d' : 'character-female-d';
     if (this.regular != null) look = this.regular.look;
-    this.rig = Rig.Model(this.go, look);
+    this.rig = Rig.Model(this.go, look); this.look = look;
     this.mood = U.Text(null, V(), '', 0.12, Col.white, true);
     SetActive(this.mood.gameObject, false);
     const pt = t === G.Is ? 0.7 : t === G.Aile ? 0.85 : t === G.Turist ? 1.1 : t === G.Fenomen ? 0.75 : t === G.Emekli ? 1.5 : t === G.Ogrenci ? 1.2 : t === G.Sporcu ? 0.9 : 1;

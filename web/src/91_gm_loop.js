@@ -199,7 +199,7 @@ Object.assign(GameManager.prototype, {
   Update() {
     this.shownMoney = Mathf.Lerp(this.shownMoney, this.money, Time.unscaledDeltaTime * 10);
     if (Math.abs(this.shownMoney - this.money) < 0.5) this.shownMoney = this.money;
-    Time.timeScale = Popups.Open ? 0 : 1;
+    Time.timeScale = Popups.Open || Chat.open ? 0 : 1;
     const dt = Time.deltaTime;
     Events.Tick(dt);
     Regulars.Tick();
@@ -326,7 +326,7 @@ Object.assign(GameManager.prototype, {
   OverUI(p) {
     const g = { x: p.x, y: Screen.height - p.y };
     if (Social.Button(this.UIScale).Contains(g) || Social.open || Popups.Open) return true;
-    return this.menuBtn.Contains(g) || this.questBtn.Contains(g) || Photo.btn.Contains(g) || this.MenuOpen || this.celebT > 0;
+    return this.menuBtn.Contains(g) || this.questBtn.Contains(g) || Photo.btn.Contains(g) || Chat.btn.Contains(g) || Chat.open || this.MenuOpen || this.celebT > 0;
   },
 
   Panel(r, c) { GUI.Panel(r, c); },
