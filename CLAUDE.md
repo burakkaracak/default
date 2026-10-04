@@ -17,6 +17,7 @@ Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oy
   Elif için: spa + terapist (`66_spa.js`, restoranın doğusu), bahçede düğün organizasyonu (`67_wedding.js`, 3. günden sonra teklif gelir),
   fotoğraf modu (`68_photo.js`, `downloads` yeteneğiyle kaydeder). Dışarısı yürünebilir, trafik hareketli (`65_outside.js`).
   Grafik kalitesi Düşük/Orta/Yüksek (`97_quality.js`, FPS<40 olursa kendiliğinden düşer; Ayarlar'da seçilebilir).
+  Otel zinciri (`56_chain.js`): resepsiyonisti olan diğer oteller sen başka oteldeyken de kazanır (`Chain.TickBackground`, dakikalık oran `idleRate`).
   Hırsız olayı İSTENMİYOR (Elif sevmedi).
 - `eski-oyun-fikirleri.md`: Silinen eski web oyunundan fikirler (kalanlar: spor salonu, çatı barı, yeni şehirler, etkinlikler, başarımlar, albüm).
 

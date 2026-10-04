@@ -105,7 +105,7 @@ class Chain {
     Story.Track('chain');
     Sfx.Play('unlock');
     Popups.Show(Chain.Cities[i] + ' otelin hazır!',
-      name + ' kapılarını açtı. Zincirdeki her otel tüm otellerde fiyatları %5 artırır.\n\nYeni otel ' + Eco.TL(Chain.StartMoney) + ' sermaye ile küçük başlar. Menü > Hikâye sekmesinden oteller arasında geçiş yapabilir, para gönderebilirsin. Resepsiyonisti olan otel sen yokken de kazanır.',
+      name + ' kapılarını açtı. Zincirdeki her otel tüm otellerde fiyatları %5 artırır.\n\nYeni otel ' + Eco.TL(Chain.StartMoney) + ' sermaye ile küçük başlar. Menü > Hikâye sekmesinden oteller arasında geçiş yapabilir, para gönderebilirsin. Resepsiyonisti olan otel, sen başka oteldeyken ya da oyun kapalıyken de kazanır.',
       'OTEL ZİNCİRİ')
       .Add('Hemen git!', () => Chain.Switch(i), Popups.Green)
       .Add('Sonra', null, Popups.Grey);
@@ -124,6 +124,58 @@ class Chain {
     Popups.Clear();
     Time.timeScale = 1;
     location.reload();
+  }
+
+  // Arka planda çalışan oteller: resepsiyonisti olan ve odası açık her otel, sen başka oteldeyken de kazanır.
+  // Dakikalık kazanç, o otel en son kaydedilirken yazılan 'idleRate'ten (yoksa kayıttaki odalardan tahminen) gelir.
+  // Oyun kapalıyken geçen süre, "sen yokken" kuralındaki gibi en fazla 2 saat sayılır.
+  static IdleRate(i) {
+    const G = GameManager.I;
+    if (i === Chain.cur && G) return G.IdleRate();
+    const p = Chain.Prefix(i);
+    if (Store.GetString(p + 'recep', '') === '') return 0;
+    const saved = Store.GetFloat(p + 'idleRate', -1);
+    if (saved >= 0) return saved;
+    const city = i === 1 ? 1.15 : i === 2 ? 1.25 : 1;
+    let rate = 0;
+    for (let r = 0; r < 16; r++) {
+      const lv = Store.GetInt(p + 'room' + r, r === 0 ? 1 : 0);
+      if (lv <= 0) continue;
+      rate += (30 + 6 * r) * (lv <= 1 ? 1 : lv === 2 ? 1.7 : 2.6) * city * 1.25 * 2 * 0.015;
+    }
+    return Store.GetInt(p + 'cleaners', 0) === 0 ? rate * 0.5 : rate;
+  }
+
+  static bgT = 0; static carry = {}; static earned = {}; static noteT = 0;
+  static TickBackground() {
+    if (Chain.switching || !Chain.inited || Chain.Count < 2) return;
+    // gerçek saate göre (kare süresi kırpılsa da doğru sayar)
+    const now = Date.now();
+    if (now - Chain.bgT < 5000) return;
+    if (Chain.bgT > 0) Chain.noteT += (now - Chain.bgT) / 1000;
+    Chain.bgT = now;
+    for (let i = 0; i < Chain.Cities.length; i++) {
+      if (i === Chain.cur || !Chain.Owns(i)) continue;
+      const p = Chain.Prefix(i);
+      let seen = parseFloat(Store.GetString(p + 'seen', ''));
+      if (isNaN(seen) || seen > now) seen = now;
+      const mins = Math.min((now - seen) / 60000, 120);
+      Store.SetString(p + 'seen', String(now));
+      const amt = Chain.IdleRate(i) * mins + (Chain.carry[i] || 0);
+      const whole = Math.floor(amt);
+      Chain.carry[i] = amt - whole;
+      if (whole <= 0) continue;
+      Store.SetInt(p + 'money', Store.GetInt(p + 'money', 0) + whole);
+      Chain.earned[i] = (Chain.earned[i] || 0) + whole;
+    }
+    // birkaç dakikada bir kısa bilgi
+    if (Chain.noteT >= 180) {
+      Chain.noteT = 0;
+      const parts = [];
+      for (const k of Object.keys(Chain.earned)) if (Chain.earned[k] > 0) parts.push(Chain.HotelName(+k) + ' +' + Eco.TL(Chain.earned[k]));
+      Chain.earned = {};
+      if (parts.length && GameManager.I) GameManager.I.Notify(parts.join('  ·  '));
+    }
   }
 
   // Bu otelin kasasindan baska bir otele para gonder

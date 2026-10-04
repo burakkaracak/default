@@ -1014,7 +1014,7 @@ class Menu extends Behaviour {
       GUI.Label(new Rect(row.x + 22 * s, row.y + 8 * s, row.width - 340 * s, 40 * s), Chain.Cities[i] + (own ? ' · ' + Chain.HotelName(i) : '') + (here ? '   (buradasın)' : ''), title);
       if (own) {
         GUI.Label(new Rect(row.x + 22 * s, row.y + 54 * s, row.width - 340 * s, 100 * s),
-          'Gün ' + Chain.Day(i) + ' · ' + Chain.Rooms(i) + ' oda · Kasa ' + Eco.TL(Chain.Money(i)) + '\n' + Chain.CityDesc[i], sub);
+          'Gün ' + Chain.Day(i) + ' · ' + Chain.Rooms(i) + ' oda · Kasa ' + Eco.TL(Chain.Money(i)) + '\n' + Menu.ChainLine(i), sub);
         if (!here) {
           if (this.Button(new Rect(row.xMax - 290 * s, row.y + 18 * s, 270 * s, 60 * s), 'Bu otele git', Green)) switchTo = ci;
           const amt = Mathf.Max(100, Mathf.RoundToInt(G.money * 0.1 / 100) * 100);
@@ -1094,7 +1094,7 @@ class Menu extends Behaviour {
       const name = Chain.Cities[i] + (own ? ' · ' + Chain.HotelName(i) : '') + (here ? '   (buradasın)' : '');
       const panel = here ? C(0.3, 0.6, 0.4, 0.25) : Menu.Card;
       if (own) {
-        y += this.NRow(0, y, W, panel, name, 'Gün ' + Chain.Day(i) + ' · ' + Chain.Rooms(i) + ' oda · Kasa ' + Eco.TL(Chain.Money(i)) + '\n' + Chain.CityDesc[i], here ? 60 * s : 130 * s, s);
+        y += this.NRow(0, y, W, panel, name, 'Gün ' + Chain.Day(i) + ' · ' + Chain.Rooms(i) + ' oda · Kasa ' + Eco.TL(Chain.Money(i)) + '\n' + Menu.ChainLine(i), here ? 60 * s : 130 * s, s);
         if (!here) {
           if (this.Button(new Rect(this.cx, this.cy, this.cw, 60 * s), 'Bu otele git', Green)) switchTo = ci;
           const amt = Mathf.Max(100, Mathf.RoundToInt(G.money * 0.1 / 100) * 100);
@@ -1111,6 +1111,14 @@ class Menu extends Behaviour {
     this._vh.story = y + 20 * s;
     GUI.EndScrollView();
     if (switchTo >= 0) Chain.Switch(switchTo);
+  }
+
+  // Sahip olunan otelin altındaki satır: burası değilse arka planda kazanıp kazanmadığı
+  static ChainLine(i) {
+    if (i === Chain.cur) return Chain.CityDesc[i];
+    const r = Chain.IdleRate(i);
+    return r > 0 ? 'Sen burada değilken de çalışıyor: dakikada yaklaşık ' + Eco.TL(Mathf.RoundToInt(r)) + ' kazanıyor.'
+      : 'Resepsiyonisti yok, sen burada değilken kazanmıyor. Gidip bir resepsiyonist tut.';
   }
 
   // ---------------- AYARLAR ----------------
