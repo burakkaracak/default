@@ -94,6 +94,7 @@ const Cam = {
     el.addEventListener('contextmenu', e => e.preventDefault());
     el.addEventListener('wheel', e => { this.Zoom(e.deltaY > 0 ? 1.12 : 0.9); e.preventDefault(); }, { passive: false });
     addEventListener('keydown', e => {
+      const t = e.target; if (t && t.closest && t.closest('input, textarea, [contenteditable]')) return; // yazarken oyun tuşları çalışmasın
       Input.keys.add(e.code); Sfx.Init(); Sfx.Resume();
       if (e.code === 'KeyQ') this.Rotate(-1); if (e.code === 'KeyE') this.Rotate(1);
       if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();

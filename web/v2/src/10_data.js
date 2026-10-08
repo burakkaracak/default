@@ -62,7 +62,7 @@ const Data = {
     { id: 'service', name: 'Oda servisi', icon: '🍽', tip: 26 },
   ],
   Names: {
-    f: ['Ayşe', 'Zeynep', 'Selin', 'Deniz', 'Ece', 'Melis', 'İrem', 'Derya', 'Nehir', 'Burcu', 'Defne', 'Ceren', 'Yasemin', 'Gül', 'Elif'],
+    f: ['Ayşe', 'Zeynep', 'Selin', 'Deniz', 'Ece', 'Melis', 'İrem', 'Derya', 'Nehir', 'Burcu', 'Defne', 'Ceren', 'Yasemin', 'Gül'],
     m: ['Mehmet', 'Can', 'Emre', 'Murat', 'Kerem', 'Oğuz', 'Arda', 'Tolga', 'Barış', 'Ali', 'Kaan', 'Efe', 'Mert', 'Selim', 'Hakan'],
   },
   Weather: { sunny: '☀ Güneşli', cloudy: '☁ Bulutlu', rainy: '🌧 Yağmurlu', snowy: '❄ Karlı' },

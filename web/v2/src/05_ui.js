@@ -10,7 +10,8 @@ const UI = {
     // arayüze dokunulunca sahneye gitmesin
     this.root.addEventListener('pointerdown', e => { if (e.target !== this.root && e.target !== this.labels) e.stopPropagation(); });
   },
-  get Blocking() { return this.dialogs.length > 0; },
+  overlay: false, // sohbet gibi tam ekran pencereler oyunu durdurur
+  get Blocking() { return this.dialogs.length > 0 || this.overlay; },
 
   // ---- HUD ----
   Hud(s) {

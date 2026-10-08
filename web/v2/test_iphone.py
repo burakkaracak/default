@@ -27,6 +27,10 @@ SCENES = [
     ('11_dekor_secim', "(()=>{const g=window.__game; g.Decor.Buy('loungeChair'); return 1})()"),
     ('12_lobi_dekor', "(()=>{const g=window.__game; g.Decor.Exit(); g.Decor.Enter('lobi'); return 1})()"),
     ('13_personel', "(()=>{const g=window.__game; g.Decor.Exit(); g.Game.MenuSheet('personel'); return 1})()"),
+    ('14_sohbet', "(()=>{const g=window.__game,G=g.Game; g.UI.CloseSheet(); g.UI.ClearDialogs(); const r=g.Hotel.Room(11); const x=G.Spawn('turist'); x.path=[]; x.room=r; r.guest=x; r.state='occupied'; x.floor=1; x.pos.set(r.inside.x, g.Hotel.FloorY(1), r.inside.z); x.EnterRoom(); g.Chat.StartGuest(x); g.Chat.Say(true,'Evet, her köşesiyle biz ilgileniyoruz. Hoş geldiniz!'); g.Chat.Say(false,'Ne güzel, insan bunu hissediyor. Teşekkürler!'); g.Chat.Render(); return 1})()"),
+    ('15_sohbet_yazma', "(()=>{const g=window.__game; g.Social.sample={json:async()=>({reply:'x',mood:1})}; g.Chat.Render(); return 1})()"),
+    ('16_otelgram', "(()=>{const g=window.__game,G=g.Game; g.Chat.Close(); g.Social.sample=null; g.Social.Add('@ayse_gezgin','Oda 102 manzarası ve dekorasyonu çok şık. 10/10',33,false,0); g.Social.Add('@kotu.yorum','Oda biraz tozluydu, beklentimin altında kaldı.',20,true,0); g.UI.ClearDialogs(); g.Social.Open('akis'); return 1})()"),
+    ('17_mektup', "(()=>{const g=window.__game,G=g.Game; g.Social.AddLetter({type:g.Data.Guests.find(q=>q.id==='balayi'),name:'Ece'}, null, 4.8); g.UI.ClearDialogs(); g.Social.Open('mektup'); return 1})()"),
 ]
 COLOR_JS = r'''async (b64) => { const im = new Image(); im.src = 'data:image/png;base64,' + b64; await im.decode();
   const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
@@ -35,9 +39,9 @@ COLOR_JS = r'''async (b64) => { const im = new Image(); im.src = 'data:image/png
     const mx = Math.max(r,g,bb), mn = Math.min(r,g,bb); sat += mx ? (mx - mn) / mx : 0; lum += (mx + mn) / 2; n++; }
   return { sat: sat / n, lum: lum / n }; }'''
 # Arayüz denetimi: görünür HUD kutuları birbirine biniyor mu, ekran dışına taşıyor mu, yazı kutusundan taşıyor mu
-UI_JS = r'''(()=>{const bad=[]; const els=[...document.querySelectorAll('#ui .card, #ui button, #ui .pill, #ui .sheet, #ui .dialog')].filter(e=>e.offsetParent!==null && !e.closest('.sheet .body') && !e.closest('.dialog .btns'));
+UI_JS = r'''(()=>{const bad=[]; const els=[...document.querySelectorAll('#ui .card, #ui button, #ui .pill, #ui .sheet, #ui .dialog, #ui .chat')].filter(e=>e.offsetParent!==null && !e.closest('.sheet .body') && !e.closest('.dialog .btns') && !e.closest('.chat .msgs'));
   const R=els.map(e=>({e,r:e.getBoundingClientRect(),n:(e.id||e.className||e.tagName)+':'+(e.textContent||'').trim().slice(0,18)}));
-  const ov=e=>e.classList.contains('sheet')||e.classList.contains('dialog')||e.closest('.sheet, .dialog');
+  const ov=e=>e.classList.contains('sheet')||e.classList.contains('dialog')||e.classList.contains('chat')||e.closest('.sheet, .dialog, .chat');
   for(let i=0;i<R.length;i++) for(let j=i+1;j<R.length;j++){const a=R[i],b=R[j]; if(a.e.contains(b.e)||b.e.contains(a.e)||ov(a.e)||ov(b.e)) continue; if(a.r.left<b.r.right-2&&b.r.left<a.r.right-2&&a.r.top<b.r.bottom-2&&b.r.top<a.r.bottom-2) bad.push('binişme: '+a.n+' / '+b.n);}
   for(const a of R){ if(a.r.left<-1||a.r.top<-1||a.r.right>innerWidth+1||a.r.bottom>innerHeight+1) bad.push('taşma: '+a.n); }
   for(const e of document.querySelectorAll('#ui .card *, #ui .sheet .body *, #ui .dialog *')){ if(e.children.length) continue; if(e.scrollWidth>e.clientWidth+2 && getComputedStyle(e).overflow!=='auto' && getComputedStyle(e).whiteSpace==='nowrap') bad.push('yazı taşıyor: '+(e.textContent||'').trim().slice(0,30)); }

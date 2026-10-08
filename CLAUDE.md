@@ -13,6 +13,7 @@ Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENM
   - `30_camera.js` kamera + dokunma hareketleri (sürükle=joystick, dokun=git/seç, iki parmak=yakınlaş/döndür, sağ fare=döndür, Q/E)
   - `35_player.js` · `40_guest.js` (Guest/Follower) · `45_staff.js` (resepsiyonist, temizlikçi, kat görevlisi) · `60_game.js` (durum, kayıt, görevler, öğretici, menüler)
   - `58_life.js` (Life): yıldız şartları (`st.stars`, düşmez) ve misafir puanı (`st.recent` son 20), mevsimler (7 gün), hava + yağmur/kar efekti, günlük olaylar (`st.event`), oda arızası (`state 'broken'`).
+  - `57_talks.js` (TalkData: sohbet metinleri, eski oyundan taşındı) · `59_social.js` (Social: Otelgram akışı `st.feed`, takipçi, mektuplar `st.letters` ve küçük hikâyeler `st.arcs`; Chat: tam ekran sohbet penceresi, `UI.overlay` ile oyunu durdurur). Serbest yazışma `sample` yeteneğiyle (yoksa düğme gizli); gizli misafirler (`disguise`) sıradan tür gibi konuşur. Yazarken oyun tuşları kapalı (30_camera keydown). Test: `test_social.py`.
   - `70_cloud.js` bulut · `80_quality.js` grafik + fotoğraf · `99_main.js` açılış/döngü.
   - Modeller `models/*.glb` (Kenney karakter 12, mobilya 30, kasaba paketi 15, bulut/bayrak) + ham dokular `characters.rgba.json`, `city.rgba.json`
     (`python3 ../tools_png2rgba.py png çıktı.json [--noflip]`; kasaba dokusu --noflip). build.mjs GLB'lerden doku başvurularını çıkarır, çalışırken DataTexture takılır.
@@ -25,5 +26,5 @@ Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENM
 
 ## Yayın
 - Eski oyun: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu (web/dist). capabilities `{db:{}, user:{}, downloads:true, sample:{}}`.
-- Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true}`.
+- Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true, sample:{}}` (sample: serbest sohbet; eksik bırakılırsa yetenek iptal olur, hep tam seti ver).
 - Kullanıcı iPhone 14 Pro (Safari) ve M2 MacBook Air'de oynuyor. Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor yetkisi gerekir.
