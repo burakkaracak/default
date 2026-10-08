@@ -69,7 +69,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   const raw = Math.min(0.1, Math.max(0, (now - (_last || now)) / 1000));
   _last = now;
-  Time.timeScale = UI.Blocking ? 0 : 1;
+  Time.timeScale = (UI.Blocking || window.__pause) ? 0 : 1;
   Time.unscaledDeltaTime = raw; Time.deltaTime = raw * Time.timeScale; Time.time += Time.deltaTime; Time.unscaledTime += raw; Time.frameCount++;
   const sub = window.__sub || 1;
   for (let k = 0; k < sub; k++) { if (k > 0) { Time.deltaTime = raw * Time.timeScale; Time.time += Time.deltaTime; } tickLogic(); }

@@ -314,7 +314,7 @@ const Game = {
       else if (r.state === 'dirty') UI.Label('dt' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), '🧹 Temizle', '', () => this.player.GoTo(r.inside, r.floor));
     }
     if (f === 0 && this.queue.length && !this.staff.find(s => s.role === 'receptionist')) UI.Label('desk', V(0, 2.6, -3.6), '🛎 ' + this.queue.length + ' misafir bekliyor', 'need', () => this.player.GoTo(Hotel.Lobby.deskBack, 0));
-    if (f === Hotel.floors + 1) UI.Label('roof', V(0, Hotel.FloorY(f) + 1.5, 0), '🌿 Çatı (yakında çatı barı)', '');
+    if (f === Hotel.floors + 1 && !Data.Facilities.some(d => d.floor === 'roof' && Facilities.Built(d.id))) UI.Label('roof', V(0, Hotel.FloorY(f) + 1.5, 0), '🌿 Çatı · İnşa → Tesisler', '', () => this.BuildSheet('tesis'));
   },
   OnViewChanged() { this.RefreshFloors(); },
   RefreshFloors() {
