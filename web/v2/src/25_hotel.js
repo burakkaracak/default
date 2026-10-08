@@ -217,7 +217,7 @@ const Hotel = {
     if (!r) return false;
     if (r.level < 0) return false;
     const lx = p.x - r.x, lz = Math.abs(p.z);
-    if (lz < 1.95) return Math.abs(lx - 0.15) < 0.55; // kapı boşluğu
+    if (lz < 1.95) return Math.abs(lx - 0.15) < 0.65; // kapı boşluğu
     return Math.abs(lx) < 1.75 && lz < 6.7;
   },
   // Katta iki nokta arasında yol (noktalar y'siz; kat yüksekliği eklenir)

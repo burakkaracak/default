@@ -51,8 +51,8 @@ class Player extends Behaviour {
     this.rig.Tick(0);
   }
   // Asansör yolculuğu: kapı açılır → karakter kabine girer → kabin (ve kamera) katlar boyunca kayar → kapı açılır, karakter çıkar
-  StartLift(f) {
-    this.path = []; this.liftFrom = this.floor; this.liftTo = f;
+  StartLift(f, clearPath = false) {
+    if (clearPath) this.path = []; this.liftFrom = this.floor; this.liftTo = f;
     this.liftDur = 1.4 + 0.35 * Math.abs(f - this.floor); this.liftT = this.liftDur; this.liftPhase = 0;
     Hotel.LiftDoor(this.floor, true); Sfx.Play('tick', 0.6);
     UI.Toast((f === 0 ? 'Lobi' : f > Hotel.floors ? 'Çatı' : f + '. kat') + (f > this.floor ? ' ↑' : ' ↓'), 'info');
@@ -80,21 +80,27 @@ class Player extends Behaviour {
   }
   RideLift(f) {
     if (!Hotel.InLift(this.go.position) || f === this.floor || this.liftT > 0) return false;
-    this.StartLift(f); return true;
+    this.StartLift(f, true); return true;
   }
   TryMove(step) {
+    // büyük adımlar duvardan geçmesin: 0.2 m'lik parçalar
+    const n = Math.max(1, Math.ceil(Math.hypot(step.x, step.z) / 0.2));
+    const part = V(step.x / n, 0, step.z / n);
+    for (let i = 0; i < n; i++) this.TryMovePart(part);
+  }
+  TryMovePart(step) {
     const p = this.go.position, f = this.floor;
     const nx = V(p.x + step.x, p.y, p.z), nz = V(p.x, p.y, p.z + step.z);
     if (Hotel.Walkable(V(p.x + step.x, p.y, p.z + step.z), f)) { p.x += step.x; p.z += step.z; return; }
     let moved = false;
-    if (Hotel.Walkable(nx, f)) { p.x += step.x; moved = true; }
-    if (Hotel.Walkable(nz, f)) { p.z += step.z; moved = true; }
+    if (step.x && Hotel.Walkable(nx, f)) { p.x += step.x; moved = true; }
+    if (step.z && Hotel.Walkable(nz, f)) { p.z += step.z; moved = true; }
     if (moved || f < 1 || f > Hotel.floors) return;
     // kapı yardımı: odaya doğru itiliyorsa ve kapıya yakınsa kapı hizasına kay
     const side = Math.sign(step.z); if (!side || Math.abs(step.z) < Math.abs(step.x) * 0.5) return;
     const r = Hotel.RoomAt(V(p.x, p.y, side * 2.5), f); if (!r || r.level < 0) return;
-    const dx = (r.x + 0.15) - p.x; if (Math.abs(dx) > 1.3) return;
-    p.x += Mathf.Clamp(dx, -1, 1) * Math.abs(step.z) * 1.5;
+    const dx = (r.x + 0.15) - p.x; if (Math.abs(dx) > 1.6) return;
+    p.x += Mathf.Clamp(dx, -Math.abs(step.z) * 1.5, Math.abs(step.z) * 1.5);
     const nz2 = V(p.x, p.y, p.z + step.z); if (Hotel.Walkable(nz2, f)) p.z += step.z;
   }
   Near(pt, r = 1.8) { const p = this.go.position; return Math.abs(p.y - pt.y) < 1.5 && Math.hypot(p.x - pt.x, p.z - pt.z) < r; }

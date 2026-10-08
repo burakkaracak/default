@@ -108,7 +108,6 @@ const Game = {
     if (!this.Pay(cost)) return false;
     this.st.floors = Hotel.floors + 1;
     Hotel.AddFloor(this.st);
-    Hotel.SetView(Hotel.floors);
     U.Burst(V(0, Hotel.FloorY(Hotel.floors) + 1.5, 0), C(1, 0.85, 0.3), C(1, 0.5, 0.7), 160, 7);
     Sfx.Play('unlock', 0.8); UI.Toast((Hotel.floors) + '. kat açıldı! Yeni odalar hazır', 'good'); this.Save(); this.RefreshFloors();
     if (UI.SheetOpen) UI.RenderSheet();
@@ -317,15 +316,24 @@ const Game = {
     if (f === Hotel.floors + 1 && !Data.Facilities.some(d => d.floor === 'roof' && Facilities.Built(d.id))) UI.Label('roof', V(0, Hotel.FloorY(f) + 1.5, 0), '🌿 Çatı · İnşa → Tesisler', '', () => this.BuildSheet('tesis'));
   },
   OnViewChanged() { this.RefreshFloors(); },
+  // Resepsiyona git: hangi katta olursa olsun asansörle lobiye iner, bankonun arkasına yürür
+  GoReception() {
+    const P = this.player; if (!P) return;
+    if (P.floor === 0 && P.Near(Hotel.Lobby.deskBack, 1.2)) { UI.Hint('Zaten resepsiyondasın', 2); return; }
+    P.GoTo(Hotel.Lobby.deskBack, 0); Sfx.Play('tap', 0.4);
+    UI.Hint(P.floor === 0 ? 'Resepsiyona gidiliyor' : 'Asansörle lobiye inip resepsiyona gidiliyor', 3);
+  },
   RefreshFloors() {
     const list = [{ i: 0, label: 'Z', name: 'Zemin' }];
     for (let f = 1; f <= Hotel.floors; f++) list.push({ i: f, label: String(f), name: f + '. kat' });
     list.push({ i: Hotel.floors + 1, label: '⌂', name: 'Çatı' });
     if (Hotel.floors < Data.Floor.Max) list.push({ i: -1, label: '+', name: 'Yeni kat', locked: true });
+    list.unshift({ i: -2, label: '🛎', name: 'Resepsiyona git', desk: true });
     UI.Floors(list, Hotel.view, i => {
-      if (i < 0) { this.BuildSheet('kat'); return; }
+      if (i === -1) { this.BuildSheet('kat'); return; }
+      if (i === -2) { this.GoReception(); return; }
       Hotel.SetView(i);
-      if (this.player.floor !== i && i <= Hotel.floors + 1) { if (!this.player.RideLift(i)) this.player.GoTo(Hotel.Lift(i), i); }
+      if (this.player.floor !== i && i <= Hotel.floors + 1) { if (!this.player.RideLift(i)) this.player.GoTo(Hotel.Lift(i), i); UI.Hint('Elif asansörle ' + (i === 0 ? 'lobiye' : i > Hotel.floors ? 'çatıya' : i + '. kata') + ' geliyor', 3); }
       Sfx.Play('tap', 0.4);
     });
   },
@@ -347,7 +355,7 @@ const Game = {
         const next = this.NextRoom();
         const it = document.createElement('div'); it.className = 'item';
         it.innerHTML = next ? `<div class="ic">➕</div><div class="tx"><b>Yeni oda: ${next.number}</b><small>${next.floor}. katta standart oda. Sırayla açılır.</small></div>` : `<div class="ic">🏢</div><div class="tx"><b>Bu katlar dolu</b><small>Yeni oda için yeni kat aç.</small></div>`;
-        if (next) { const b = document.createElement('button'); b.className = 'mint'; b.textContent = UI.fmt(this.NextRoomCost()); b.addEventListener('click', () => { this.BuyRoom(next); Hotel.SetView(next.floor); }); it.appendChild(b); }
+        if (next) { const b = document.createElement('button'); b.className = 'mint'; b.textContent = UI.fmt(this.NextRoomCost()); b.addEventListener('click', () => { this.BuyRoom(next); }); it.appendChild(b); }
         body.appendChild(it);
         for (const r of this.OpenRooms()) {
           const lv = Data.RoomLevels[r.level]; const d = document.createElement('div'); d.className = 'item';

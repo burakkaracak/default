@@ -27,7 +27,7 @@ const UI = {
   Floors(list, cur, onPick) {
     const el = this.byId('floors'); el.innerHTML = '';
     for (const f of list.slice().reverse()) {
-      const d = document.createElement('div'); d.className = 'pill' + (f.i === cur ? ' on' : '') + (f.locked ? ' locked' : ''); d.textContent = f.label; d.title = f.name;
+      const d = document.createElement('div'); d.className = 'pill' + (f.i === cur ? ' on' : '') + (f.locked ? ' locked' : '') + (f.desk ? ' desk' : ''); d.textContent = f.label; d.title = f.name;
       d.addEventListener('pointerdown', e => { e.stopPropagation(); onPick(f.i); });
       el.appendChild(d);
     }
