@@ -211,7 +211,7 @@ const Hotel = {
       return true;
     }
     if (f > this.floors) return Math.abs(p.x) < Wd && Math.abs(p.z) < Dd; // çatı
-    if (Math.abs(p.x) <= Wd && Math.abs(p.z) <= 1.45) return true; // koridor
+    if (Math.abs(p.x) <= Wd && Math.abs(p.z) < 1.6) return true; // koridor (oda bölgesi 1.6'da başlar; arada boşluk kalmasın)
     const r = this.RoomAt(p, f);
     if (!r) return false;
     if (r.level < 0) return false;

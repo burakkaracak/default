@@ -67,7 +67,7 @@ function tickLogic() {
 let _last = 0;
 function frame(now) {
   requestAnimationFrame(frame);
-  const raw = Math.min(0.1, Math.max(0, (now - (_last || now)) / 1000));
+  const raw = window.__fixedDt || Math.min(0.1, Math.max(0, (now - (_last || now)) / 1000)); // __fixedDt: testte sabit kare süresi
   _last = now;
   Time.timeScale = (UI.Blocking || window.__pause) ? 0 : 1;
   Time.unscaledDeltaTime = raw; Time.deltaTime = raw * Time.timeScale; Time.time += Time.deltaTime; Time.unscaledTime += raw; Time.frameCount++;

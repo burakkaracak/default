@@ -43,7 +43,7 @@ const Decor = {
     1: [['bedDouble', 0, 1, 0], ['nightstand', 3, 1, 0], ['tvSet', 4, 6, 180], ['chairCushion', 0, 6, 180], ['rugBlue', 1, 4, 0]],
     2: [['bedDouble', 0, 1, 0], ['nightstand', 3, 1, 0], ['tvSet', 4, 6, 180], ['loungeChairRelax', 5, 2, 0], ['bookcaseOpen', 0, 7, 180], ['rugPink', 1, 4, 0], ['vase', 5, 0, 0], ['plantSmall2', 6, 0, 0]],
   },
-  LobbyPreset: [['loungeDesignSofa', 0, 2, 0], ['loungeDesignSofa', 0, 8, 180], ['tableCoffeeGlass', 5, 5, 0], ['loungeChairRelax', 9, 2, 0], ['rugLav', 3, 4, 0], ['pottedPlant', 0, 0, 0], ['vase', 11, 0, 0]],
+  LobbyPreset: [['loungeDesignSofa', 0, 2, 0], ['loungeDesignSofa', 0, 8, 180], ['tableCoffeeGlass', 5, 5, 0], ['loungeChairRelax', 9, 4, 90], ['rugLav', 3, 4, 0], ['pottedPlant', 0, 0, 0], ['vase', 11, 0, 0]],
 
   zones: new Map(), active: null, sel: null, ghost: null, drag: null, lastZone: null,
   Def(k) { return this.Catalog.find(c => c.k === k); },
@@ -126,7 +126,9 @@ const Decor = {
   FurnishLobby(g) {
     let z = this.zones.get('lobi'); if (!z) z = this.LobbyZone(g); z.parent = g;
     const st = Game.st.lobby;
-    if (st && st.items) z.items = st.items.map(x => Object.assign({}, x));
+    const oldPreset = [['loungeDesignSofa', 0, 2, 0], ['loungeDesignSofa', 0, 8, 0], ['loungeDesignSofa', 0, 8, 180], ['tableCoffeeGlass', 5, 5, 0], ['loungeChairRelax', 9, 2, 0], ['rugLav', 3, 4, 0], ['pottedPlant', 0, 0, 0], ['vase', 11, 0, 0]];
+    const untouched = st && st.items && st.items.every(x => oldPreset.some(([k, c, r, rot]) => k === x.k && c === x.c && r === x.r && rot === (x.rot || 0)));
+    if (st && st.items && !untouched) z.items = st.items.map(x => Object.assign({}, x));
     else z.items = this.LobbyPreset.map(([k, c, r, rot]) => ({ k, c, r, rot })).filter(it => this.Fits(z, it, it));
     this.BuildZone(z);
   },
