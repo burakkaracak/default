@@ -98,7 +98,9 @@ class Player extends Behaviour {
     if (moved || f < 1 || f > Hotel.floors) return;
     // kapı yardımı: odaya doğru itiliyorsa ve kapıya yakınsa kapı hizasına kay
     const side = Math.sign(step.z); if (!side || Math.abs(step.z) < Math.abs(step.x) * 0.5) return;
-    const r = Hotel.RoomAt(V(p.x, p.y, side * 2.5), f); if (!r || r.level < 0) return;
+    // odaya girerken: ilerideki oda; odadan çıkarken: içinde olduğu oda
+    const r = Hotel.RoomAt(p, f) || Hotel.RoomAt(V(p.x, p.y, side * 2.5), f); if (!r || r.level < 0) return; // önce içinde olunan oda (çıkış), yoksa ilerideki (giriş)
+    if (Math.abs(p.z) > 3.2) return; // kapıdan uzak
     const dx = (r.x + 0.15) - p.x; if (Math.abs(dx) > 1.6) return;
     p.x += Mathf.Clamp(dx, -Math.abs(step.z) * 1.5, Math.abs(step.z) * 1.5);
     const nz2 = V(p.x, p.y, p.z + step.z); if (Hotel.Walkable(nz2, f)) p.z += step.z;
