@@ -1,0 +1,146 @@
+<title>Otel Ustası</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Otel Ustası 2 · arayüz. Oyun tek görünümlü (her temada aynı): 3B sahne + üstte HTML arayüz. */
+  :root {
+    --ink: #1d2340; --ink-2: #4a5275; --paper: #ffffff; --paper-2: #f3f1ec;
+    --sky: #9ad0f3; --sand: #f6e6c6; --gold: #f5b83a; --gold-2: #ffd36b; --pink: #ef6fa3; --mint: #46c8a1; --sea: #4a9fe0; --red: #ef6161;
+    --shadow: 0 10px 30px rgba(20, 24, 60, 0.18); --radius: 18px;
+    --font: "Nunito", "Segoe UI", Arial, sans-serif;
+    color-scheme: light;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; overflow: hidden; background: var(--sky); color: var(--ink); font-family: var(--font); touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+  #vig { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(10,10,40,0.22) 100%); }
+  #ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  #ui > * { pointer-events: none; }
+  #ui button, #ui .card, #ui .sheet, #ui .dialog, #ui .pill, #ui input, #ui .tap { pointer-events: auto; }
+  button { font: inherit; font-weight: 800; border: 0; cursor: pointer; color: var(--ink); background: var(--paper); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.12), var(--shadow); transition: transform .08s ease, filter .12s ease; }
+  button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+  button:disabled { filter: grayscale(0.6); opacity: 0.6; cursor: default; }
+  button.gold { background: linear-gradient(180deg, var(--gold-2), var(--gold)); }
+  button.pink { background: linear-gradient(180deg, #ff9fc6, var(--pink)); color: #fff; }
+  button.mint { background: linear-gradient(180deg, #7fe2c4, var(--mint)); color: #0d3b2e; }
+  button.sea { background: linear-gradient(180deg, #8cc7f5, var(--sea)); color: #fff; }
+  button.red { background: linear-gradient(180deg, #ff9b9b, var(--red)); color: #fff; }
+  button.ghost { background: rgba(255,255,255,0.85); }
+  button.icon { width: 48px; height: 48px; padding: 0; font-size: 22px; border-radius: 16px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .grow { flex: 1 1 auto; min-width: 0; }
+
+  /* --- HUD --- */
+  .hud { position: absolute; display: flex; gap: 8px; }
+  .hud.tl { left: 12px; top: 12px; flex-direction: column; align-items: flex-start; max-width: 62vw; }
+  .hud.tr { right: 12px; top: 12px; flex-direction: column; align-items: flex-end; }
+  .hud.bl { left: 12px; bottom: 12px; flex-direction: column; align-items: flex-start; }
+  .hud.br { right: 12px; bottom: 12px; flex-direction: column; align-items: flex-end; }
+  .card { background: rgba(29, 35, 64, 0.78); color: #fff; border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow); backdrop-filter: blur(6px); }
+  .card.light { background: rgba(255,255,255,0.92); color: var(--ink); }
+  #hotel-card .name { font-size: 18px; font-weight: 900; color: var(--gold-2); line-height: 1.1; }
+  #hotel-card .stars { font-size: 14px; color: var(--gold-2); letter-spacing: 1px; }
+  #hotel-card .meta { font-size: 12.5px; opacity: 0.92; margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+  #money-card { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; }
+  #money-card .coin { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe79a, #e4a01f 70%); box-shadow: inset 0 0 0 3px #f7c54a; display: grid; place-items: center; font-weight: 900; color: #7a4d00; font-size: 15px; }
+  #money { font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  #rep { font-size: 12px; opacity: .9; }
+  .badge { position: absolute; top: -6px; left: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--red); color: #fff; font-size: 12px; font-weight: 900; display: grid; place-items: center; padding: 0 5px; }
+  .btnwrap { position: relative; }
+  #quest-card { max-width: min(360px, 72vw); }
+  #quest-card .k { font-size: 11px; letter-spacing: 1px; color: var(--gold-2); font-weight: 900; }
+  #quest-card .t { font-size: 14px; font-weight: 800; }
+  #quest-card .bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.2); margin-top: 6px; overflow: hidden; }
+  #quest-card .bar > i { display: block; height: 100%; width: 0; background: var(--mint); border-radius: 4px; transition: width .3s; }
+  #quest-card button { margin-top: 6px; padding: 6px 12px; font-size: 13px; }
+  .pills { display: flex; flex-direction: column; gap: 6px; }
+  .pill { width: 44px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.9); color: var(--ink); font-weight: 900; font-size: 14px; display: grid; place-items: center; box-shadow: var(--shadow); cursor: pointer; }
+  .pill.on { background: linear-gradient(180deg, var(--gold-2), var(--gold)); }
+  .pill.locked { opacity: .45; }
+  #camctl { display: flex; gap: 6px; }
+  #hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(29,35,64,0.6); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; max-width: 90vw; text-align: center; transition: opacity .3s; }
+  #toasts { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; width: max-content; max-width: 92vw; }
+  .toast { background: linear-gradient(180deg, var(--gold-2), var(--gold)); color: #4a2d00; padding: 8px 16px; border-radius: 14px; font-weight: 900; font-size: 15px; box-shadow: var(--shadow); animation: toastIn .25s ease-out; text-align: center; }
+  .toast.good { background: linear-gradient(180deg, #a6f0d8, var(--mint)); color: #0d3b2e; }
+  .toast.bad { background: linear-gradient(180deg, #ffb3b3, var(--red)); color: #fff; }
+  .toast.info { background: rgba(29,35,64,0.85); color: #fff; }
+  @keyframes toastIn { from { transform: translateY(-10px) scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+  #world-labels { position: absolute; inset: 0; overflow: hidden; }
+  .wlabel { position: absolute; transform: translate(-50%, -100%); background: rgba(255,255,255,0.95); color: var(--ink); padding: 4px 9px; border-radius: 10px; font-size: 12px; font-weight: 800; box-shadow: var(--shadow); white-space: nowrap; pointer-events: auto; }
+  .wlabel.buy { background: linear-gradient(180deg, #a6f0d8, var(--mint)); color: #0d3b2e; }
+  .wlabel.need { background: linear-gradient(180deg, #ffd9a6, #ffb24a); color: #5a3400; }
+
+  /* --- Alt sayfa (sheet) ve pencere --- */
+  .sheet { box-sizing: border-box; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: min(560px, 100vw); max-height: 84%; background: var(--paper); border-radius: 22px 22px 0 0; box-shadow: 0 -10px 40px rgba(20,24,60,0.25); display: flex; flex-direction: column; animation: sheetIn .25s ease-out; }
+  @media (min-width: 900px) { .sheet { left: auto; right: 12px; bottom: 12px; transform: none; border-radius: 22px; max-height: calc(100% - 24px); width: 440px; } }
+  @keyframes sheetIn { from { transform: translate(-50%, 30px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+  .sheet .head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 8px; }
+  .sheet .head h2 { margin: 0; font-size: 20px; font-weight: 900; flex: 1; }
+  .sheet .head .sub { font-size: 13px; color: var(--ink-2); font-weight: 700; }
+  .sheet .tabs { display: flex; gap: 6px; padding: 0 12px 8px; flex-wrap: wrap; }
+  .sheet .tabs button { padding: 7px 10px; font-size: 12.5px; border-radius: 12px; box-shadow: none; background: var(--paper-2); white-space: nowrap; }
+  .sheet .tabs button.on { background: linear-gradient(180deg, var(--gold-2), var(--gold)); }
+  .sheet .body { overflow-y: auto; padding: 4px 14px 16px; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+  .sheet .body::-webkit-scrollbar { width: 6px; } .sheet .body::-webkit-scrollbar-thumb { background: #d8d4cc; border-radius: 3px; }
+  .item { display: flex; gap: 12px; align-items: center; background: var(--paper-2); border-radius: 16px; padding: 10px 12px; margin: 8px 0; }
+  .item .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 24px; background: #fff; flex: 0 0 auto; }
+  .item .tx { flex: 1; min-width: 0; }
+  .item .tx b { display: block; font-size: 15px; }
+  .item .tx small { display: block; font-size: 12.5px; color: var(--ink-2); font-weight: 700; line-height: 1.3; }
+  .item button { padding: 8px 12px; font-size: 13px; white-space: nowrap; }
+  .item.done { background: #e6f7f0; }
+  .item.locked { opacity: .7; }
+  .stat { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 800; padding: 6px 0; border-bottom: 1px dashed #e4e1da; }
+  .meter { height: 8px; border-radius: 4px; background: #e6e3dc; overflow: hidden; } .meter > i { display: block; height: 100%; background: var(--mint); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .chip { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #fff; font-size: 12px; font-weight: 800; color: var(--ink-2); }
+  .swatches { display: flex; gap: 6px; flex-wrap: wrap; } .swatch { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #ddd; cursor: pointer; } .swatch.on { box-shadow: 0 0 0 3px var(--gold); }
+  input[type=text] { font: inherit; font-weight: 800; border: 2px solid #e4e1da; border-radius: 12px; padding: 8px 12px; width: 100%; box-sizing: border-box; background: #fff; color: var(--ink); -webkit-user-select: text; user-select: text; }
+  .dialog-wrap { position: absolute; inset: 0; background: rgba(10, 12, 30, 0.45); display: grid; place-items: center; pointer-events: auto !important; animation: fadeIn .2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .dialog { box-sizing: border-box; width: min(480px, calc(100vw - 32px)); background: var(--paper); border-radius: 22px; padding: 18px 18px 14px; box-shadow: var(--shadow); animation: popIn .25s cubic-bezier(.2,1.4,.4,1); max-height: 86vh; overflow-y: auto; }
+  @keyframes popIn { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+  .dialog .tag { font-size: 11px; letter-spacing: 1.5px; color: var(--pink); font-weight: 900; }
+  .dialog h2 { margin: 2px 0 8px; font-size: 22px; font-weight: 900; text-wrap: balance; }
+  .dialog p { margin: 0 0 12px; font-size: 15px; line-height: 1.45; color: var(--ink-2); font-weight: 700; white-space: pre-line; }
+  .dialog .btns { display: flex; flex-direction: column; gap: 8px; }
+  .dialog .btns button { padding: 12px; font-size: 15px; }
+  .dialog .big { font-size: 48px; text-align: center; margin: 4px 0 8px; }
+
+  /* dar ekran (telefon dikey): kutular küçülür */
+  @media (max-width: 480px) {
+    .card { padding: 8px 10px; border-radius: 14px; }
+    #hotel-card .name { font-size: 15px; } #hotel-card .stars { font-size: 12px; } #hotel-card .meta { font-size: 11px; gap: 6px; }
+    #money { font-size: 19px; } #rep { font-size: 11px; } #money-card .coin { width: 24px; height: 24px; font-size: 12px; }
+    .hud.tr button { padding: 8px 10px; font-size: 13px; border-radius: 12px; } button.icon { width: 40px; height: 40px; font-size: 18px; }
+    .pill { width: 38px; height: 32px; font-size: 13px; }
+    #quest-card .t { font-size: 13px; } #quest-card { max-width: 60vw; }
+    .hud.tl { max-width: 58vw; }
+  }
+  #loading { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding-inline: 16px; background: linear-gradient(var(--sky), var(--sand)); font-family: var(--font); color: var(--ink); text-align: center; }
+  #loading h1 { margin: 0; font-size: clamp(30px, 7vw, 56px); font-weight: 900; letter-spacing: 1px; text-wrap: balance; }
+  #loading p { margin: 0; font-weight: 700; opacity: .75; }
+  #loading .bar { width: min(320px, 70vw); height: 14px; border-radius: 7px; background: rgba(255,255,255,0.6); overflow: hidden; }
+  #loadbar { height: 100%; width: 0; background: var(--gold); border-radius: 7px; transition: width .2s; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+<div id="loading"><h1>Otel Ustası</h1><div class="bar"><div id="loadbar"></div></div><p>Lavanta Koyu hazırlanıyor…</p></div>
+<div id="vig"></div>
+<div id="ui">
+  <div id="world-labels"></div>
+  <div class="hud tl">
+    <div class="card" id="hotel-card"><div class="name" id="h-name">Otel</div><div class="stars" id="h-stars">☆☆☆☆☆</div><div class="meta"><span id="h-day">Gün 1 · 08:00</span><span id="h-weather">☀ Güneşli</span><span id="h-guests">Misafir 0</span></div></div>
+    <div class="card" id="money-card"><div class="coin">₺</div><div><div id="money">0</div><div id="rep">Ün 0</div></div></div>
+  </div>
+  <div class="hud tr">
+    <div class="btnwrap"><button class="gold" id="b-menu">☰ Menü</button><span class="badge" id="menu-badge" hidden>1</span></div>
+    <div class="btnwrap"><button class="mint" id="b-build">🏗 İnşa</button></div>
+    <div class="btnwrap"><button class="pink" id="b-social">📱 Otelgram</button><span class="badge" id="social-badge" hidden>1</span></div>
+    <div class="btnwrap"><button class="sea" id="b-photo">📷</button></div>
+  </div>
+  <div class="hud bl"><div class="card" id="quest-card" hidden><div class="k">GÖREV</div><div class="t" id="q-text"></div><div class="bar"><i id="q-bar"></i></div><button class="gold" id="q-claim" hidden>Ödülü al</button></div></div>
+  <div class="hud br"><div class="pills" id="floors"></div><div id="camctl"><button class="icon ghost" id="b-rotl" title="Döndür">↺</button><button class="icon ghost" id="b-rotr" title="Döndür">↻</button><button class="icon ghost" id="b-zoom" title="Yakınlaş">🔍</button></div></div>
+  <div id="toasts"></div>
+  <div id="hint"></div>
+</div>
+<script src="game.js"></script>
