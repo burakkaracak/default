@@ -27,7 +27,7 @@ class Staff extends Behaviour {
     this.go.position.set(10, 0, 4);
     this.tag = U.Text(this.go, V(0, 2.2, 0), def.icon + ' ' + this.name, 0.055, C(0.75, 0.95, 1), true);
     this.mood = U.Text(this.go, V(0, 2.65, 0), '', 0.09, Col.white, true); this.mood.obj.visible = false; this.moodT = 0;
-    if (role === 'receptionist') { this.go.position.copy(Hotel.Lobby.deskBack); setEuler(this.go, 0, 180, 0); }
+    if (role === 'receptionist') { this.go.position.copy(Hotel.Lobby.deskBack); setEuler(this.go, 0, 0, 0); }
     this.Persist();
   }
   get pos() { return this.go.position; }
@@ -64,7 +64,7 @@ class Staff extends Behaviour {
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
     if (this.moodT > 0) { this.moodT -= dt; if (this.moodT <= 0) this.mood.obj.visible = false; }
-    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
+    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); this.rig.inner.visible = this.liftT <= 0; if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
     if (this.path.length) {
       const n = this.path[0];
       if (n.lift !== undefined) { this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9; this.pos.set(n.x, this.pos.y, n.z); return; }
@@ -76,7 +76,7 @@ class Staff extends Behaviour {
     Facilities.StaffTick(this, dt);
   }
   ReceptionTick(dt) {
-    this.rig.Tick(0); setEuler(this.go, 0, 180, 0);
+    this.rig.Tick(0); setEuler(this.go, 0, 0, 0);
     const g = Game.queue[0];
     if (!g || g.slot !== 0 || Vec.flat(g.pos, Hotel.QueueSlot(0)) > 0.6) { this.work = 0; return; }
     const room = Game.FreeRoom(g);

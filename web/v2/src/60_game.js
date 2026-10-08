@@ -338,7 +338,7 @@ const Game = {
     q('b-social').addEventListener('click', () => UI.Toast('Otelgram yakında (Faz 3)', 'info'));
     q('b-photo').addEventListener('click', () => Photo.Take());
     q('q-claim').addEventListener('click', () => this.ClaimQuest());
-    q('b-rotl').addEventListener('click', () => Cam.Rotate(-1)); q('b-rotr').addEventListener('click', () => Cam.Rotate(1)); q('b-zoom').addEventListener('click', () => Cam.ZoomToggle());
+    q('b-rotl').addEventListener('click', () => Cam.Rotate(-1)); q('b-rotr').addEventListener('click', () => Cam.Rotate(1)); q('b-zin').addEventListener('click', () => Cam.Zoom(0.78)); q('b-zout').addEventListener('click', () => Cam.Zoom(1.28)); q('b-zreset').addEventListener('click', () => Cam.Reset());
   },
   BuildSheet(tab) {
     UI.Sheet({ title: 'İnşa', tabs: [{ id: 'oda', label: '🛏 Odalar' }, { id: 'kat', label: '🏢 Katlar' }, { id: 'tesis', label: '🏊 Tesisler' }], tab, render: (body, t) => {
