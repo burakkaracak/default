@@ -87,11 +87,13 @@ const Life = {
   },
   BeginEvent(ev) {
     if (ev.rep) Game.st.rep += ev.rep;
+    if (ev.id === 'gazete') Social.Share('{otel}: Lavanta Koyu\'nun en sevilen oteli seçildi! Misafirler övgüler yağdırıyor.', 2, false);
+    if (ev.id === 'festival') Social.Share('Lavanta Festivali başladı! {otel} bu hafta sonu festivalin en şık adresi.', 1, false);
     if (ev.burst) { let i = 0; for (const t in ev.burst) for (let k = 0; k < ev.burst[t]; k++) Tween.After(1 + 1.6 * i++, () => { if (Game.queue.length < 8) Game.Spawn(t); }); }
     if (ev.breakRoom) this.BreakRoom();
   },
   // olay çarpanları
-  SpawnMul() { const ev = this.Event; let k = this.Season.spawn * (1 + 0.12 * (Game.Stars - 1)); if (World.weather === 'rainy') k *= 0.85; if (World.weather === 'snowy') k *= 0.8; if (ev) { if (ev.spawn) k *= ev.spawn; if (ev.spawnFn) k *= ev.spawnFn(); } return k; },
+  SpawnMul() { const ev = this.Event; let k = this.Season.spawn * (1 + 0.12 * (Game.Stars - 1)) * (1 + Social.AdsBonus); if (World.weather === 'rainy') k *= 0.85; if (World.weather === 'snowy') k *= 0.8; if (ev) { if (ev.spawn) k *= ev.spawn; if (ev.spawnFn) k *= ev.spawnFn(); } return k; },
   NightMul() { const ev = this.Event; return ev && ev.night ? 1 : 2.5; },
   TypeMul(id) { const ev = this.Event; return (this.Season.types[id] || 1) * (ev && ev.types && ev.types[id] || 1); },
   TipMul() { const ev = this.Event; return ev && ev.tip || 1; },

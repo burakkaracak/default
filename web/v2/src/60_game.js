@@ -5,7 +5,7 @@ const Game = {
   loaded: false,
 
   Default() {
-    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {} };
+    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {} };
   },
 
   Boot() {
@@ -23,6 +23,7 @@ const Game = {
     if (this.st.staff.receptionist) this.AddStaff('receptionist', false);
     for (const role of Object.keys(this.st.extraStaff || {})) for (let i = 0; i < this.st.extraStaff[role]; i++) this.AddStaff(role, false);
     Facilities.Boot();
+    Social.Defaults(); Social.GetSample();
     this.BindUI();
     this.loaded = true;
     this.RefreshFloors();
@@ -62,7 +63,7 @@ const Game = {
     this.shownMoney += (this.st.money - this.shownMoney) * Math.min(1, raw * 10);
     if (Math.abs(this.shownMoney - this.st.money) < 0.6) this.shownMoney = this.st.money;
     const q = this.Quest();
-    UI.Hud({ name: this.st.name, stars: this.Stars, rating: this.Rating, day: World.day, clock: World.Clock, weather: World.WeatherText, event: Life.Event, guests: this.guests.length, rooms: this.OpenRooms().length + '/' + (Hotel.floors * 10), money: this.shownMoney, rep: this.st.rep, menuBadge: 0, socialBadge: 0, quest: q ? { text: q.text, progress: Mathf.Clamp01(q.cur() / q.target), done: q.cur() >= q.target, reward: q.reward } : null });
+    UI.Hud({ name: this.st.name, stars: this.Stars, rating: this.Rating, day: World.day, clock: World.Clock, weather: World.WeatherText, event: Life.Event, guests: this.guests.length, rooms: this.OpenRooms().length + '/' + (Hotel.floors * 10), money: this.shownMoney, rep: this.st.rep, menuBadge: 0, socialBadge: (this.st.unread || 0) + (this.st.unreadL || 0), quest: q ? { text: q.text, progress: Mathf.Clamp01(q.cur() / q.target), done: q.cur() >= q.target, reward: q.reward } : null });
     this.Labels();
     // isim etiketleri: sadece bakılan kattakiler (ya da dışarıdakiler) görünsün
     const v = Hotel.view, onView = e => (e.floor === v) || (e.floor === 0 && e.pos.z > Hotel.D / 2);
@@ -150,6 +151,7 @@ const Game = {
   OnGuestPaid(g, sat) {
     this.st.served++;
     Life.AddSat(sat);
+    Social.OnPaid(g, sat, g.room);
     const t = g.type;
     const d = (sat >= 4 ? 3 : sat >= 3 ? 1.5 : sat >= 2 ? 0 : -2) * (t.repMul || 1);
     this.st.rep = Math.max(0, this.st.rep + d);
@@ -315,7 +317,7 @@ const Game = {
     const pt = Cam.ScreenToPlane(x, y, Hotel.FloorY(f));
     if (!pt) return;
     // misafire dokunma: bilgi
-    for (const g of this.guests) if (Math.abs(g.pos.y - pt.y) < 1 && Vec.flat(g.pos, pt) < 1.1) { UI.Toast(g.type.icon + ' ' + g.name + ' · ' + g.type.name + (g.room ? ' · Oda ' + g.room.number : g.Waiting ? ' · sırada bekliyor' : ''), 'info'); return; }
+    for (const g of this.guests) if (Math.abs(g.pos.y - pt.y) < 1 && Vec.flat(g.pos, pt) < 1.1) { Chat.StartGuest(g); return; }
     const r = Hotel.RoomAt(pt, f);
     if (r && r.level < 0) { this.OfferRoom(r); return; }
     if (r && r.level >= 0 && this.player.floor === f && Vec.flat(this.player.go.position, pt) < 1.2) { this.RoomSheet(r); return; }
@@ -337,6 +339,7 @@ const Game = {
   },
   Labels() {
     const f = Hotel.view;
+    Social.Frame();
     // açılabilir oda etiketi
     const next = this.NextRoom();
     if (next && next.floor === f) UI.Label('buy', V(next.x, Hotel.FloorY(f) + 1.4, next.z), '➕ Oda aç ' + UI.fmt(this.NextRoomCost()), 'buy', () => this.OfferRoom(next));
@@ -377,7 +380,7 @@ const Game = {
     const q = UI.byId;
     q('b-menu').addEventListener('click', () => this.MenuSheet());
     q('b-build').addEventListener('click', () => this.BuildSheet());
-    q('b-social').addEventListener('click', () => UI.Toast('Otelgram yakında (Faz 3)', 'info'));
+    q('b-social').addEventListener('click', () => Social.Open());
     q('b-photo').addEventListener('click', () => Photo.Take());
     q('q-claim').addEventListener('click', () => this.ClaimQuest());
     q('b-rotl').addEventListener('click', () => Cam.Rotate(-1)); q('b-rotr').addEventListener('click', () => Cam.Rotate(1)); q('b-zin').addEventListener('click', () => Cam.Zoom(0.78)); q('b-zout').addEventListener('click', () => Cam.Zoom(1.28)); q('b-zreset').addEventListener('click', () => Cam.Reset());

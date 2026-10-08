@@ -7,6 +7,7 @@ class Guest extends Behaviour {
     const fem = Random.Chance(0.5);
     const look = type.look ? Random.Pick(type.look) : Random.Pick(Rig.Guests.filter(l => fem === l.includes('female')));
     this.name = Random.Pick(look.includes('female') ? Data.Names.f : Data.Names.m);
+    for (let k = 0; k < 6 && this.name === Game.st.manager; k++) this.name = Random.Pick(look.includes('female') ? Data.Names.f : Data.Names.m); // müdürün adıyla aynı olmasın
     this.rig = Rig.Model(this.go, look, 1.7);
     this.floor = 0; this.s = Guest.S.Arrive; this.room = null; this.path = []; this.liftT = 0; this.t = 0;
     this.nights = Random.RangeInt(type.nights[0], type.nights[1] + 1) + Life.ExtraNights();
