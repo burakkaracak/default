@@ -126,12 +126,11 @@ const Hotel = {
       const rg = U.Pivot(g, V(x, 0, zc), 'Oda' + id); r.group = rg;
       // bölme duvarları (odalar arası) ve koridor duvarı (kapı boşluklu)
       const pc = C(0.97, 0.94, 0.9);
-      const rw = o => { o.userData.roomWall = true; return o; };
-      if (s % 5 > 0) rw(U.Box('Bolme', rg, V(-2, H / 2, 0), V(0.15, H, 5.5), pc));
-      if (s % 5 === 4) rw(U.Box('BolmeD', rg, V(2, H / 2, 0), V(0.15, H, 5.5), pc));
-      rw(U.Box('KoridorDuvar1', rg, V(-1.2, H / 2, -side * 2.75), V(1.6, H, 0.15), pc));
-      rw(U.Box('KoridorDuvar2', rg, V(1.35, H / 2, -side * 2.75), V(1.3, H, 0.15), pc));
-      rw(U.Box('KapiUst', rg, V(0.15, H - 0.4, -side * 2.75), V(1.1, 0.8, 0.15), pc));
+      const parts = [], wall = (x, y, z, w, h, d) => parts.push({ geo: 'Cube', pos: V(x, (y - H / 2) / H, z), scale: V(w, h / H, d), c: pc });
+      if (s % 5 > 0) wall(-2, H / 2, 0, 0.15, H, 5.5);
+      if (s % 5 === 4) wall(2, H / 2, 0, 0.15, H, 5.5);
+      wall(-1.2, H / 2, -side * 2.75, 1.6, H, 0.15); wall(1.35, H / 2, -side * 2.75, 1.3, H, 0.15); wall(0.15, H - 0.4, -side * 2.75, 1.1, 0.8, 0.15);
+      const wm = U.Merge('OdaDuvar', rg, parts); wm.scale.set(1, H, 1); wm.position.y = H / 2; wm.userData.roomWall = true;
       if (level < 0) {
         U.Prim('Beton', rg, V(0, 0.005, 0), V(3.85, 0.01, 5.4), U.Mat(C(0.74, 0.72, 0.7))).castShadow = false;
         U.Model('cardboardBoxClosed', rg, V(-1, 0, 1.2), 20, 1); U.Model('cardboardBoxClosed', rg, V(0.8, 0, -0.6), -15, 1);

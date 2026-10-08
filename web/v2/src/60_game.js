@@ -60,8 +60,10 @@ const Game = {
     UI.Hud({ name: this.st.name, stars: this.Stars, rating: this.Rating, day: World.day, clock: World.Clock, weather: World.WeatherText, guests: this.guests.length, rooms: this.OpenRooms().length + '/' + (Hotel.floors * 10), money: this.shownMoney, rep: this.st.rep, menuBadge: 0, socialBadge: 0, quest: q ? { text: q.text, progress: Mathf.Clamp01(q.cur() / q.target), done: q.cur() >= q.target, reward: q.reward } : null });
     this.Labels();
     // isim etiketleri: sadece bakılan kattakiler (ya da dışarıdakiler) görünsün
-    const v = Hotel.view, show = e => e.tag && (e.tag.obj.visible = (e.floor === v) || (e.floor === 0 && e.pos.z > Hotel.D / 2));
-    for (const g of this.guests) show(g); for (const s of this.staff) show(s); if (this.player) { this.player.tag.obj.visible = this.player.floor === v || (this.player.floor === 0 && this.player.go.position.z > Hotel.D / 2); }
+    const v = Hotel.view, onView = e => (e.floor === v) || (e.floor === 0 && e.pos.z > Hotel.D / 2);
+    const show = e => { const ok = onView(e) && e.liftT <= 0; if (e.tag) e.tag.obj.visible = ok; e.rig.inner.visible = ok; if (e.follower) e.follower.rig.inner.visible = ok; };
+    for (const g of this.guests) show(g); for (const s of this.staff) show(s);
+    if (this.player) { const P = this.player, riding = P.liftT > 0 && P.liftPhase >= 1 && P.liftPhase < 3; P.tag.obj.visible = onView(P) && !riding; P.rig.inner.visible = !riding && (onView(P) || P.liftT > 0); }
   },
   get Stars() { return Mathf.Clamp(1 + Math.floor(this.st.rep / 40), 1, 5); },
   get Rating() { return Mathf.Clamp(2.5 + this.st.rep / 80, 1, 5); },

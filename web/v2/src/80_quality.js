@@ -12,7 +12,7 @@ const Quality = {
   Set(l, manual) { this.level = Mathf.Clamp(l, 0, 2); if (manual) { this.auto = false; try { localStorage.setItem('otel2_grafik', String(this.level)); } catch (e) { } } this.Apply(); UI.Toast('Grafik: ' + this.names[this.level], 'info'); },
   Apply() {
     const L = this.level;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, L === 2 ? 2 : L === 1 ? 1.75 : 1.25));
+    renderer.setPixelRatio(this.PixelRatio());
     renderer.shadowMap.enabled = L > 0; sunLight.castShadow = L > 0;
     sunLight.shadow.mapSize.set(L === 2 ? 4096 : 2048, L === 2 ? 4096 : 2048);
     if (sunLight.shadow.map) { sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
@@ -22,14 +22,16 @@ const Quality = {
   },
   MakeComposer() {
     const size = renderer.getSize(new THREE.Vector2());
-    const rt = new THREE.WebGLRenderTarget(size.x * renderer.getPixelRatio(), size.y * renderer.getPixelRatio(), { type: THREE.HalfFloatType, samples: 4 });
+    const rt = new THREE.WebGLRenderTarget(size.x * renderer.getPixelRatio(), size.y * renderer.getPixelRatio(), { type: THREE.HalfFloatType, samples: 2 });
     const c = new EffectComposer(renderer, rt);
     c.addPass(new RenderPass(scene, camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.4, 0.4, 1.6);
     c.addPass(this.bloom); c.addPass(new OutputPass());
     this.composer = c;
   },
-  Resize() { if (!this.composer) return; this.composer.setPixelRatio(renderer.getPixelRatio()); this.composer.setSize(innerWidth, innerHeight); },
+  // Ekran büyüdükçe piksel oranı düşer: toplam piksel Yüksek 3.6M, Orta 2.4M, Düşük 1.4M'ı aşmaz (iPhone 14 Pro dikeyde 1.75x kalır, M2 Air'de ~1.6x)
+  PixelRatio() { const L = this.level, cap = Math.sqrt((L === 2 ? 3.6e6 : L === 1 ? 2.4e6 : 1.4e6) / Math.max(1, innerWidth * innerHeight)); return Math.min(devicePixelRatio || 1, L === 2 ? 2 : L === 1 ? 1.75 : 1.25, Math.max(1, cap)); },
+  Resize() { renderer.setPixelRatio(this.PixelRatio()); if (!this.composer) return; this.composer.setPixelRatio(renderer.getPixelRatio()); this.composer.setSize(innerWidth, innerHeight); },
   Render() { if (this.composer) this.composer.render(); else renderer.render(scene, camera); },
   Tick(raw) {
     if (!this.auto || window.__sub) return;

@@ -294,6 +294,31 @@ const U = {
     return { min: b.min, max: b.max, size: b.getSize(V()), center: b.getCenter(V()) };
   },
   // Model kopyası: taban pos.y'de, orta pos.x/z'de. scale: metre çarpanı (mobilya: 1 = gerçek boy). yaw derece.
+  // Dokusuz, opak parçaları (Kenney mobilyaları) renkleri köşe rengine yazarak tek geometride birleştirir; modele göre önbelleklenir
+  _mergedCache: new Map(),
+  NoShadowRe: /^(road-|pavement|grass$|plantSmall|pottedPlant|lamp|cardboard|cloud|rug)/,
+  mergedModel(name) {
+    if (this._mergedCache.has(name)) return this._mergedCache.get(name);
+    const md = this.models[name]; let res = null;
+    if (md) {
+      md.scene.updateMatrixWorld(true);
+      const geos = [], rest = [];
+      md.scene.traverse(o => {
+        if (!o.isMesh) return;
+        const ms = Array.isArray(o.material) ? o.material : [o.material];
+        if (ms.length !== 1 || !ms[0] || ms[0].map || ms[0].transparent || o.isSkinnedMesh || (o.geometry.groups && o.geometry.groups.length > 1)) { rest.push(o); return; }
+        let g = o.geometry.clone(); if (g.index) g = g.toNonIndexed();
+        for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k);
+        g.applyMatrix4(o.matrixWorld);
+        const o2 = {}; ms[0].color.getRGB(o2, THREE.LinearSRGBColorSpace); const col = Col.three(C(o2.r, o2.g, o2.b));
+        const n = g.attributes.position.count, arr = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+        g.setAttribute('color', new THREE.BufferAttribute(arr, 3)); geos.push(g);
+      });
+      if (geos.length) res = { geo: BufferGeometryUtils.mergeGeometries(geos, false), rest };
+    }
+    this._mergedCache.set(name, res); return res;
+  },
   Model(name, parent, pos, yaw = 0, scale = 1, unit) {
     const md = this.models[name];
     if (!md) return U.Box(name, parent, Vec.add(pos, V(0, 0.5, 0)), V(1, 1, 1), C(0.9, 0.5, 0.8));
@@ -301,8 +326,14 @@ const U = {
     (parent || W).add(holder);
     holder.rotation.set(0, yaw * Mathf.Deg2Rad, 0);
     holder.scale.setScalar(scale * (unit ?? U.FurnUnit));
-    const g = md.scene.clone(true);
-    U.FixMats(g);
+    const mm = this.mergedModel(name); let g;
+    if (mm) {
+      g = new THREE.Group(); g.name = name;
+      const mesh = new THREE.Mesh(mm.geo, U.vertexMat()); mesh.name = name + '_1'; mesh.castShadow = true; mesh.receiveShadow = true; g.add(mesh);
+      for (const o of mm.rest) { const c = new THREE.Mesh(o.geometry, o.material); c.name = o.name; c.applyMatrix4(o.matrixWorld); g.add(c); }
+      U.FixMats(g);
+    } else { g = md.scene.clone(true); U.FixMats(g); }
+    if (this.NoShadowRe.test(name)) U.NoShadow(g);
     holder.add(g);
     const b = U.LocalBounds(g);
     // model merkezini tabana ve ortaya al (model kendi uzayında)
@@ -320,6 +351,7 @@ const U = {
     g.traverse(o => {
       if (!o.isMesh) return;
       o.castShadow = true; o.receiveShadow = true;
+      if (o.material && o.material.vertexColors) return; // birleştirilmiş, köşe renkli ağ
       const fix = m => {
         if (!m) return U.Mat(Col.white);
         if (m.map) {
@@ -527,7 +559,7 @@ class Rig {
     if (want === 'walk') this.actions.walk.timeScale = Mathf.Clamp(m, 0.8, 1.5) * 1.15;
     if (want === 'sprint') this.actions.sprint.timeScale = Mathf.Clamp(m * 0.75, 0.8, 1.4);
   }
-  update(dt) { if (this.mixer && activeInHierarchy(this.go)) this.mixer.update(dt); }
+  update(dt) { if (this.mixer && this.inner.visible && activeInHierarchy(this.go)) this.mixer.update(dt); }
 }
 
 // ---------------------------------------------------------------- Kısa animasyonlar
