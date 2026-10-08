@@ -101,7 +101,7 @@ try:
         ok, s = wait_until(pg, lambda s: any(x['fac'] == 'havuz' and x['f'] == s['roof'] and x['path'] == 0 for x in s['guests']), 90)
         check('kat testi: aile havuzda', ok, [x for x in s['guests'] if x['fac'] == 'havuz'])
         r = pg.evaluate("(()=>{const g=window.__game,G=g.Game; const a=G.BuyFloor(); return [a, g.Hotel.RoofIndex, g.Hotel.floors]})()")
-        s = pg.evaluate(STATE)
+        pg.wait_for_timeout(300); pg.evaluate('window.__game.UI.ClearDialogs()'); s = pg.evaluate(STATE)
         pool = [x for x in s['guests'] if x['fac'] == 'havuz']
         check('kat alındı, havuzdaki misafir ve çatı personeli yeni çatı katına taşındı', r[0] and r[1] == 3 and all(x['f'] == 3 and abs(x['y'] - 3 * 3.4) < 1.2 for x in pool) and all(x['f'] == 3 for x in s['staff'] if x['r'] in ('cankurtaran', 'barmen', 'bahcivan')), {'r': r, 'pool': pool, 'staff': s['staff']})
         check('çatı tesisleri yeniden kuruldu', all(s['fac'][k]['go'] for k in ('havuz', 'bar', 'bahce', 'spor')), s['fac'])
@@ -109,9 +109,11 @@ try:
         ok, s = wait_until(pg, lambda s: not any(x['s'] == 6 for x in s['guests']), 150)
         check('kat sonrası ziyaretler tamamlandı', ok and s['stats']['havuz']['n'] >= 3, {'stats': s['stats'], 'guests': s['guests']})
         # 7) bahçe çiçeklenmesi: gün değişince azalır, bahçıvan geri getirir
-        pg.evaluate("(()=>{const g=window.__game; g.World.time=0.249;})()")
-        ok, s = wait_until(pg, lambda s: s['day'] >= 2, 30)
-        b1 = pg.evaluate('window.__fac.bloom')
+        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='bahcivan'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); g.World.time=0.249;})()")
+        ok, s = wait_until(pg, lambda s: s['day'] >= 2 and s['bloom'] < 0.7, 30)
+        b1 = s['bloom']
+        check('gün değişince bahçe çiçeklenmesi azaldı', ok, {'bloom': b1})
+        pg.evaluate("(()=>{const G=window.__game.Game; G.st.extraStaff.bahcivan=0; G.AddStaff('bahcivan');})()")
         ok, s = wait_until(pg, lambda s: s['bloom'] >= 0.98, 90)
         check('bahçıvan çiçekleri yeniden açtırdı', b1 < 0.7 and ok, {'sonra_gun': b1, 'simdi': s['bloom']})
         check('GardenBonus > 0', pg.evaluate('window.__fac.GardenBonus') > 0.3, pg.evaluate('window.__fac.GardenBonus'))
