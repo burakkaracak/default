@@ -5,7 +5,7 @@ const Game = {
   loaded: false,
 
   Default() {
-    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, tutorial: 0, staffNames: {} };
+    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {} };
   },
 
   Boot() {
@@ -19,6 +19,8 @@ const Game = {
     for (let i = 0; i < this.st.staff.cleaners; i++) this.AddStaff('cleaner', false);
     for (let i = 0; i < this.st.staff.bellhops; i++) this.AddStaff('bellhop', false);
     if (this.st.staff.receptionist) this.AddStaff('receptionist', false);
+    for (const role of Object.keys(this.st.extraStaff || {})) for (let i = 0; i < this.st.extraStaff[role]; i++) this.AddStaff(role, false);
+    Facilities.Boot();
     this.BindUI();
     this.loaded = true;
     this.RefreshFloors();
@@ -30,7 +32,7 @@ const Game = {
   Save() {
     if (!this.loaded) return;
     this.st.day = World.day; this.st.time = World.time;
-    this.st.rooms = {}; for (const r of Hotel.rooms.values()) if (r.level >= 0) this.st.rooms[r.id] = r.level;
+    const rooms = {}; for (const r of Hotel.rooms.values()) if (r.level >= 0) { const prev = this.st.rooms[r.id]; rooms[r.id] = (prev && typeof prev === 'object') ? Object.assign(prev, { lv: r.level }) : r.level; } this.st.rooms = rooms;
     Store.Set('game', this.st); Store.Save();
   },
   Reset() { Store.DeleteAll(); Cloud.Wipe(); location.reload(); },
@@ -48,6 +50,7 @@ const Game = {
     }
     // oyuncu işleri: banko, temizlik, istek
     this.PlayerWork(dt);
+    Facilities.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
   },
   Frame(raw) {
@@ -68,7 +71,7 @@ const Game = {
   DirtyRooms() { return this.OpenRooms().filter(r => r.state === 'dirty'); },
   RequestRooms() { return this.OpenRooms().filter(r => r.request); },
   FreeRoom(g) {
-    const free = this.OpenRooms().filter(r => r.state === 'clean');
+    const free = this.OpenRooms().filter(r => r.state === 'clean' && r.hasBed !== false);
     if (!free.length) return null;
     free.sort((a, b) => (Math.abs(a.level - g.wantLevel) - Math.abs(b.level - g.wantLevel)) || (a.floor - b.floor));
     return free[0];
@@ -201,15 +204,17 @@ const Game = {
   },
 
   // ---------------- Personel ----------------
+  StaffCount(role) { return role === 'receptionist' ? (this.st.staff.receptionist ? 1 : 0) : role === 'cleaner' ? this.st.staff.cleaners : role === 'bellhop' ? this.st.staff.bellhops : ((this.st.extraStaff || {})[role] || 0); },
   AddStaff(role, pay = true) {
     const def = Data.Staff[role];
-    const n = role === 'receptionist' ? 0 : role === 'cleaner' ? this.st.staff.cleaners : this.st.staff.bellhops;
+    const n = this.StaffCount(role);
     const cost = Array.isArray(def.cost) ? def.cost[n] : def.cost;
     if (pay) { if (cost === undefined) return false; if (!this.Pay(cost)) return false; }
     const key = role + n;
-    const s = new Staff(role, this.st.staffNames[key]); this.st.staffNames[key] = s.name; this.staff.push(s);
+    if (!this.st.staffData) this.st.staffData = {};
+    const s = new Staff(role, key); this.staff.push(s);
     if (pay) {
-      if (role === 'receptionist') this.st.staff.receptionist = true; else if (role === 'cleaner') this.st.staff.cleaners++; else this.st.staff.bellhops++;
+      if (role === 'receptionist') this.st.staff.receptionist = true; else if (role === 'cleaner') this.st.staff.cleaners++; else if (role === 'bellhop') this.st.staff.bellhops++; else { this.st.extraStaff = this.st.extraStaff || {}; this.st.extraStaff[role] = (this.st.extraStaff[role] || 0) + 1; }
       UI.Toast(s.name + ' işe başladı: ' + def.name, 'good'); Sfx.Play('unlock', 0.6); this.Save();
       Tween.Pop(s.go, 0.2); U.Burst(Vec.add(s.pos, V(0, 1.5, 0)), C(1, 0.85, 0.3), C(0.5, 1, 0.7), 40, 4);
       if (UI.SheetOpen) UI.RenderSheet();
@@ -221,7 +226,8 @@ const Game = {
   OnNewDay() {
     this.st.day = World.day;
     let wages = 0;
-    for (const s of this.staff) wages += Data.Staff[s.role].wage;
+    for (const s of this.staff) { wages += s.Wage; s.NewDay(); }
+    wages += Facilities.Wages();
     this.st.money = Math.max(0, this.st.money - wages);
     const w = ['sunny', 'sunny', 'cloudy', 'sunny', 'rainy'][Random.RangeInt(0, 5)]; World.weather = w;
     UI.Dialog({ tag: 'YENİ GÜN', title: 'Gün ' + World.day, html: `<p>Hava: ${UI.esc(World.WeatherText)}</p><div class="stat"><span>Ağırlanan misafir</span><b>${this.st.served}</b></div><div class="stat"><span>Toplam kazanç</span><b>${UI.fmt(this.st.earned)}</b></div><div class="stat"><span>Maaşlar</span><b>-${UI.fmt(wages)}</b></div><div class="stat"><span>Ün</span><b>${Math.round(this.st.rep)} · ${'★'.repeat(this.Stars)}</b></div>`, buttons: [{ text: 'Güne başla', cls: 'gold' }] });
@@ -236,6 +242,7 @@ const Game = {
     { text: '4 oda aç', cur: () => Game.OpenRooms().length, target: 4, reward: 150 },
     { text: 'Bir resepsiyonist işe al', cur: () => Game.st.staff.receptionist ? 1 : 0, target: 1, reward: 150 },
     { text: 'Bir odayı Deluxe yap', cur: () => Game.OpenRooms().filter(r => r.level >= 1).length, target: 1, reward: 250 },
+    { text: 'Bir odayı dekore et (konfor 60)', cur: () => Math.max(0, ...Game.OpenRooms().map(r => { const z = Decor.Zone('oda' + r.id); return z ? Decor.Comfort(z) : 0; })), target: 60, reward: 300 },
     { text: '15 misafir ağırla', cur: () => Game.st.served, target: 15, reward: 300 },
     { text: 'Bir temizlikçi işe al', cur: () => Game.st.staff.cleaners, target: 1, reward: 200 },
     { text: 'Ün 40\'a ulaşsın (2 yıldız)', cur: () => Math.floor(Game.st.rep), target: 40, reward: 400 },
@@ -270,7 +277,7 @@ const Game = {
 
   // ---------------- Dokunma ve etiketler ----------------
   OnTap(x, y) {
-    if (UI.Blocking) return;
+    if (UI.Blocking || Decor.active) return;
     if (UI.SheetOpen) { UI.CloseSheet(); return; }
     const f = Hotel.view <= Hotel.floors + 1 ? Hotel.view : 0;
     const pt = Cam.ScreenToPlane(x, y, Hotel.FloorY(f));
@@ -292,7 +299,8 @@ const Game = {
     const lv = Data.RoomLevels[r.level];
     UI.Sheet({ title: 'Oda ' + r.number, sub: lv.name + ' · gecelik ' + UI.fmt(lv.price), render: body => {
       body.innerHTML = `<div class="stat"><span>Durum</span><b>${r.state === 'occupied' ? '👤 ' + (r.guest ? r.guest.name : 'dolu') : r.state === 'dirty' ? '🧹 Kirli' : '✨ Temiz ve boş'}</b></div>`;
-      if (r.level < 2) { const n = Data.RoomLevels[r.level + 1]; const b = document.createElement('div'); b.className = 'item'; b.innerHTML = `<div class="ic">${n.icon}</div><div class="tx"><b>${n.name} yap</b><small>Gecelik ${UI.fmt(n.price)}. Misafirler daha memnun kalır, daha çok öder.</small></div>`; const bt = document.createElement('button'); bt.className = 'gold'; bt.textContent = UI.fmt(n.cost); bt.disabled = r.state === 'occupied'; bt.addEventListener('click', () => this.UpgradeRoom(r)); b.appendChild(bt); body.appendChild(b); }
+      const z = Decor.Zone('oda' + r.id); const dk = document.createElement('div'); dk.className = 'item'; dk.innerHTML = `<div class="ic">🎨</div><div class="tx"><b>Dekore et</b><small>Konfor ${z ? Decor.Comfort(z) : 0} · gecelik ${UI.fmt(Decor.RoomPrice(r))}. Mobilya, duvar ve zemin seç.</small></div>`; const db = document.createElement('button'); db.className = 'pink'; db.textContent = 'Aç'; db.disabled = r.state === 'occupied'; db.addEventListener('click', () => Decor.Enter('oda' + r.id)); dk.appendChild(db); body.appendChild(dk);
+      if (r.level < 2) { const n = Data.RoomLevels[r.level + 1]; const b = document.createElement('div'); b.className = 'item'; b.innerHTML = `<div class="ic">${n.icon}</div><div class="tx"><b>${n.name} yap</b><small>Gecelik ${UI.fmt(n.price)}. Oda hazır mobilyayla yeniden döşenir.</small></div>`; const bt = document.createElement('button'); bt.className = 'gold'; bt.textContent = UI.fmt(n.cost); bt.disabled = r.state === 'occupied'; bt.addEventListener('click', () => this.UpgradeRoom(r)); b.appendChild(bt); body.appendChild(b); }
     } });
   },
   Labels() {
@@ -333,7 +341,8 @@ const Game = {
     q('b-rotl').addEventListener('click', () => Cam.Rotate(-1)); q('b-rotr').addEventListener('click', () => Cam.Rotate(1)); q('b-zoom').addEventListener('click', () => Cam.ZoomToggle());
   },
   BuildSheet(tab) {
-    UI.Sheet({ title: 'İnşa', tabs: [{ id: 'oda', label: '🛏 Odalar' }, { id: 'kat', label: '🏢 Katlar' }], tab, render: (body, t) => {
+    UI.Sheet({ title: 'İnşa', tabs: [{ id: 'oda', label: '🛏 Odalar' }, { id: 'kat', label: '🏢 Katlar' }, { id: 'tesis', label: '🏊 Tesisler' }], tab, render: (body, t) => {
+      if (t === 'tesis') { Facilities.Sheet(body); return; }
       if (t === 'oda') {
         const next = this.NextRoom();
         const it = document.createElement('div'); it.className = 'item';
@@ -358,11 +367,21 @@ const Game = {
   MenuSheet(tab) {
     UI.Sheet({ title: this.st.name, sub: 'Gün ' + World.day + ' · ' + '★'.repeat(this.Stars), tabs: [{ id: 'otel', label: '🏨 Otel' }, { id: 'personel', label: '👥 Personel' }, { id: 'gorev', label: '🎯 Görevler' }, { id: 'ayar', label: '⚙ Ayarlar' }], tab, render: (body, t) => {
       if (t === 'otel') {
+        const lb = document.createElement('div'); lb.className = 'item'; lb.innerHTML = `<div class="ic">🎨</div><div class="tx"><b>Lobiyi dekore et</b><small>Bekleme salonuna mobilya ve dekor yerleştir.</small></div>`; const lbb = document.createElement('button'); lbb.className = 'pink'; lbb.textContent = 'Aç'; lbb.addEventListener('click', () => Decor.Enter('lobi')); lb.appendChild(lbb);
         body.innerHTML = `<div class="stat"><span>Ün</span><b>${Math.round(this.st.rep)} (${this.Rating.toFixed(1).replace('.', ',')} ★)</b></div><div class="stat"><span>Ağırlanan misafir</span><b>${this.st.served}</b></div><div class="stat"><span>Kaçan misafir</span><b>${this.st.lost}</b></div><div class="stat"><span>Toplam kazanç</span><b>${UI.fmt(this.st.earned)}</b></div><div class="stat"><span>Odalar</span><b>${this.OpenRooms().length} açık · ${this.DirtyRooms().length} kirli</b></div><p style="font-size:13px;color:var(--ink-2);font-weight:700">Bir sonraki yıldız için ün: ${this.Stars * 40}. Memnun misafirler ün kazandırır, bekleyip giden misafirler düşürür.</p>`;
+        body.prepend(lb);
       } else if (t === 'personel') {
-        for (const role of ['receptionist', 'cleaner', 'bellhop']) {
+        for (const role of ['receptionist', 'cleaner', 'bellhop', ...Facilities.StaffRoles()]) {
           const def = Data.Staff[role]; const have = this.staff.filter(s => s.role === role);
-          for (const s of have) { const d = document.createElement('div'); d.className = 'item done'; d.innerHTML = `<div class="ic">${def.icon}</div><div class="tx"><b>${UI.esc(s.name)}</b><small>${def.name} · günlük ${UI.fmt(def.wage)}</small></div>`; body.appendChild(d); }
+          for (const s of have) {
+            const d = document.createElement('div'); d.className = 'item done';
+            const mp = Math.round(s.morale * 100), nx = s.NextXP;
+            d.innerHTML = `<div class="ic">${def.icon}</div><div class="tx"><b>${UI.esc(s.name)} <span class="chip">Lv ${s.lv}</span> <span class="chip">${s.trait.icon} ${s.trait.name}</span></b><small>${def.name} · günlük ${UI.fmt(s.Wage)} · ${s.trait.desc}</small><small>Moral ${mp}%${nx ? ' · XP ' + s.xp + '/' + nx : ' · en üst seviye'}</small><div class="meter"><i style="width:${mp}%;background:${mp < 30 ? 'var(--red)' : mp < 55 ? 'var(--gold)' : 'var(--mint)'}"></i></div></div><div class="col"></div>`;
+            const col = d.querySelector('.col');
+            if (s.lv < Staff.MaxLevel) { const b = document.createElement('button'); b.className = 'sea'; b.textContent = '🎓 ' + UI.fmt(Staff.TrainCost(s.lv)); b.title = 'Eğitim: seviye atlar'; b.addEventListener('click', () => { s.Train(); UI.RenderSheet(); }); col.appendChild(b); }
+            const bb = document.createElement('button'); bb.className = 'pink'; bb.textContent = '🎁 ' + UI.fmt(s.Wage * 2); bb.title = 'İkramiye: moral +40'; bb.addEventListener('click', () => { s.Bonus(); UI.RenderSheet(); }); col.appendChild(bb);
+            body.appendChild(d);
+          }
           const n = have.length; const cost = Array.isArray(def.cost) ? def.cost[n] : (n ? undefined : def.cost);
           if (cost !== undefined) { const d = document.createElement('div'); d.className = 'item'; d.innerHTML = `<div class="ic">${def.icon}</div><div class="tx"><b>${def.name} tut</b><small>${def.desc} Günlük maaş ${UI.fmt(def.wage)}.</small></div>`; const b = document.createElement('button'); b.className = 'gold'; b.textContent = UI.fmt(cost); b.addEventListener('click', () => this.AddStaff(role)); d.appendChild(b); body.appendChild(d); }
         }

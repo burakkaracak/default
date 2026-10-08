@@ -23,6 +23,10 @@ SCENES = [
     ('7_insa', "(()=>{window.__game.Game.BuildSheet('oda'); return 1})()"),
     ('8_menu', "(()=>{window.__game.UI.CloseSheet(); window.__game.Game.MenuSheet('personel'); return 1})()"),
     ('9_pencere', "(()=>{window.__game.UI.CloseSheet(); window.__game.Game.OnNewDay(); return 1})()"),
+    ('10_dekor', "(()=>{const g=window.__game; g.UI.ClearDialogs(); g.Decor.Enter('oda11'); return 1})()"),
+    ('11_dekor_secim', "(()=>{const g=window.__game; g.Decor.Buy('loungeChair'); return 1})()"),
+    ('12_lobi_dekor', "(()=>{const g=window.__game; g.Decor.Exit(); g.Decor.Enter('lobi'); return 1})()"),
+    ('13_personel', "(()=>{const g=window.__game; g.Decor.Exit(); g.Game.MenuSheet('personel'); return 1})()"),
 ]
 COLOR_JS = r'''async (b64) => { const im = new Image(); im.src = 'data:image/png;base64,' + b64; await im.decode();
   const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0);

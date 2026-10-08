@@ -54,12 +54,14 @@ const Cam = {
       if (document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur();
       try { window.focus(); el.focus({ preventScroll: true }); } catch (x) { }
       Sfx.Init(); Sfx.Resume();
+      if (Decor.active && P.size === 0) { P.set(e.pointerId, { decor: true }); Decor.OnDown(e.clientX, e.clientY); if (e.pointerType !== 'mouse') e.preventDefault(); return; }
       P.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), moved: false, btn: e.button });
       if (P.size === 2) { const [a, b] = [...P.values()]; dist0 = Math.hypot(a.x - b.x, a.y - b.y); pinch0 = this.distGoal; ang0 = Math.atan2(b.y - a.y, b.x - a.x); yaw0 = this.yawGoal; twoFinger = true; this.joy = null; }
       if (e.pointerType !== 'mouse') e.preventDefault();
     });
     el.addEventListener('pointermove', e => {
       const p = P.get(e.pointerId); if (!p) return;
+      if (p.decor) { Decor.OnMove(e.clientX, e.clientY); return; }
       p.x = e.clientX; p.y = e.clientY;
       if (Math.hypot(p.x - p.x0, p.y - p.y0) > 10) p.moved = true;
       if (P.size === 2) {
@@ -78,6 +80,7 @@ const Cam = {
     const up = e => {
       const p = P.get(e.pointerId); if (!p) return;
       P.delete(e.pointerId);
+      if (p.decor) { Decor.OnUp(e.clientX, e.clientY); return; }
       if (P.size === 0) {
         this.joy = null;
         if (!p.moved && !twoFinger && performance.now() - p.t0 < 350 && p.btn === 0) for (const h of Input.tapHandlers) h(p.x, p.y);
