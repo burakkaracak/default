@@ -9,16 +9,19 @@ class Guest extends Behaviour {
     this.name = Random.Pick(look.includes('female') ? Data.Names.f : Data.Names.m);
     this.rig = Rig.Model(this.go, look, 1.7);
     this.floor = 0; this.s = Guest.S.Arrive; this.room = null; this.path = []; this.liftT = 0; this.t = 0;
-    this.nights = Random.RangeInt(type.nights[0], type.nights[1] + 1);
-    this.patience = 40 * type.patience; this.waited = 0; this.sat = 3; this.tips = 0; this.served = false;
+    this.nights = Random.RangeInt(type.nights[0], type.nights[1] + 1) + Life.ExtraNights();
+    this.patience = 40 * type.patience; this.waited = 0; this.sat = type.sat0 ?? 3; this.tips = 0; this.served = false;
     this.wantLevel = Random.Chance(0.3) ? 1 : 0;
     const side = Random.Chance(0.5) ? Hotel.SpawnW : Hotel.SpawnE;
     this.go.position.copy(side);
-    this.tag = U.Text(this.go, V(0, 2.2, 0), type.icon + ' ' + this.name, 0.055, C(1, 1, 1), true);
+    const shown = type.disguise ? Data.Guests.find(t => t.id === type.disguise) : type; // gizli misafir kılığında görünür
+    this.tag = U.Text(this.go, V(0, 2.2, 0), shown.icon + ' ' + this.name, 0.055, C(1, 1, 1), true);
     this.mood = U.Text(this.go, V(0, 2.7, 0), '', 0.1, Col.white, true); this.mood.obj.visible = false;
     if (type.follower) this.follower = new Follower(this, type.follower, fem);
     this.path = [Vec.add(Hotel.Street, V(side.x < 0 ? -2 : 2, 0, 0)), Hotel.Entrance.clone(), V(0, 0, 6.0)];
     this.slot = -1;
+    if (type.id === 'huysuz') Tween.After(0.5, () => this.ShowMood('😤', C(1, 0.7, 0.6), 3));
+    if (type.id === 'unlu') Tween.After(0.5, () => this.ShowMood('📸', Col.white, 3));
   }
   static seq = 0;
   get S() { return Guest.S; }
@@ -87,7 +90,7 @@ class Guest extends Behaviour {
     this.t += dt; this.rig.Tick(0);
     const r = this.room;
     if (!r.request && this.t > this.nextReq && this.reqCount < 2 + this.nights) {
-      r.request = { def: Random.Pick(Data.Requests), t: 0, guest: this }; this.reqCount++;
+      r.request = { def: Data.Requests.length ? (() => { const ws = Data.Requests.map(q => Life.ReqMul(q.id)); let k = Math.random() * ws.reduce((a, b) => a + b, 0); for (let i = 0; i < ws.length; i++) { k -= ws[i]; if (k <= 0) return Data.Requests[i]; } return Data.Requests[0]; })() : null, t: 0, guest: this }; this.reqCount++;
       this.nextReq = this.t + Random.Range(14, 28);
       Game.OnRequest(r);
     }
@@ -106,7 +109,7 @@ class Guest extends Behaviour {
     const r = this.room;
     const base = Decor.RoomPrice(r) * this.type.pay * this.nights;
     const sat = Mathf.Clamp(this.sat, 1, 5);
-    const tip = Math.round(base * Data.Tip * Mathf.Clamp01((sat - 2) / 3)) + this.tips;
+    const tip = Math.round(base * Data.Tip * Mathf.Clamp01((sat - 2) / 3) * (this.type.tipMul || 1) * Life.TipMul()) + this.tips;
     Game.Earn(Math.round(base), Vec.add(this.pos, V(0, 1.6, 0)), tip);
     Game.OnGuestPaid(this, sat);
     const face = sat >= 4.5 ? '😍' : sat >= 3.5 ? '😊' : sat >= 2.5 ? '🙂' : '😕';
