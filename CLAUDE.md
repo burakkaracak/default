@@ -23,5 +23,5 @@ Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENM
 
 ## Yayın
 - Eski oyun: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu (web/dist). capabilities `{db:{}, user:{}, downloads:true, sample:{}}`.
-- Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/XgdXpWv6sm3LPrsiQhzZ3B (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true}`.
+- Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true}`.
 - Kullanıcı iPhone 14 Pro (Safari) ve M2 MacBook Air'de oynuyor. Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor yetkisi gerekir.
