@@ -30,7 +30,7 @@ class Guest extends Behaviour {
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
     if (this.moodT > 0) { this.moodT -= dt; if (this.moodT <= 0) this.mood.obj.visible = false; }
-    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); this.rig.inner.visible = this.liftT <= 0; if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
+    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
     const S = Guest.S;
     if (this.path.length) {
       const n = this.path[0];
@@ -137,8 +137,7 @@ class Follower extends Behaviour {
   Update() {
     if (this.sitting || !alive(this.leader)) return;
     const L = this.leader.pos, p = this.go.position;
-    if (this.leader.liftT > 0) { p.copy(L); p.y = Hotel.FloorY(this.leader.liftTo); this.rig.Tick(0); this.rig.inner.visible = false; return; }
-    this.rig.inner.visible = true;
+    if (this.leader.liftT > 0) { p.copy(L); p.y = Hotel.FloorY(this.leader.liftTo); this.rig.Tick(0); return; }
     const d = V(L.x - p.x, 0, L.z - p.z), m = Vec.len(d);
     p.y = L.y;
     if (m > 1.3) { const st = Math.min(m - 1.1, 3.4 * Time.deltaTime); p.add(Vec.mul(d, st / m)); U.Face(this.go, d); this.rig.Tick(1); }

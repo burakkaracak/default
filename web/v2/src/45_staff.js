@@ -64,7 +64,7 @@ class Staff extends Behaviour {
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
     if (this.moodT > 0) { this.moodT -= dt; if (this.moodT <= 0) this.mood.obj.visible = false; }
-    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); this.rig.inner.visible = this.liftT <= 0; if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
+    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
     if (this.path.length) {
       const n = this.path[0];
       if (n.lift !== undefined) { this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9; this.pos.set(n.x, this.pos.y, n.z); return; }
