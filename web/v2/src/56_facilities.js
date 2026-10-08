@@ -5,8 +5,9 @@ const Facilities = (() => {
   const S = { lobbyG: null, roofG: null, booted: false, fac: {}, roofIdx: -1, roofLamps: [], roofHalos: [], bloom: 1, day: 0, waters: [], flowerPivots: [], wilted: [], t: 0 };
   const PATIENCE = 35, warm = C(1, 0.85, 0.55);
   const yawDeg = (from, to) => Math.atan2(to.x - from.x, to.z - from.z) * Mathf.Rad2Deg;
-  const faceTo = (go, from, to) => { if (Math.abs(to.x - from.x) + Math.abs(to.z - from.z) > 1e-4) setEuler(go, 0, yawDeg(from, to), 0); };
-  // model dönüşü: U.Face (yürüyüş) ile aynı yön kuralı; mobilya modelleri bakış yönüne göre ek açı ister
+  // Karakter modeli yaw 0'da -z'ye bakar (Rig.CharYaw=180 ile); yüzünü bir noktaya döndürmek için +CharYaw eklenir.
+  const faceTo = (go, from, to) => { if (Math.abs(to.x - from.x) + Math.abs(to.z - from.z) > 1e-4) setEuler(go, 0, yawDeg(from, to) + Rig.CharYaw, 0); };
+  // Kenney mobilyaları yaw 0'da -z'ye bakar: bakış yönüne göre +180
   const CHAIR_YAW = 180, RELAX_YAW = 180;
 
   // ---------------- yardımcılar ----------------
@@ -41,9 +42,9 @@ const Facilities = (() => {
       mode: 'counter', entry: V(3.8, 0, 1.4), serve: V(7.9, 0, 3.8), serveLook: V(6, 0, 3.8), wait: V(6.3, 0, 3.8), waitLook: V(8, 0, 3.8), qdir: V(0, 0, -0.8), label: V(4.9, 0, 4.1),
       enjoy: 7, waitText: 'Kahve bekliyor', item: C(0.98, 0.98, 0.95), sat: 0.4, staffTime: 1.8,
       spots: [
-        { p: V(2.1, 0, 2.9), look: V(3.0, 0, 2.9), act: 'sit' }, { p: V(3.9, 0, 2.9), look: V(3.0, 0, 2.9), act: 'sit' },
-        { p: V(2.1, 0, 5.4), look: V(3.0, 0, 5.4), act: 'sit' }, { p: V(3.9, 0, 5.4), look: V(3.0, 0, 5.4), act: 'sit' },
-        { p: V(5.4, 0, 4.4), look: V(5.4, 0, 5.4), act: 'sit' }, { p: V(6.3, 0, 5.4), look: V(5.4, 0, 5.4), act: 'sit' },
+        { p: V(2.1, 0, 2.9), look: V(3.0, 0, 2.9), act: 'sit', dy: 0.4 }, { p: V(3.9, 0, 2.9), look: V(3.0, 0, 2.9), act: 'sit', dy: 0.4 },
+        { p: V(2.1, 0, 5.4), look: V(3.0, 0, 5.4), act: 'sit', dy: 0.4 }, { p: V(3.9, 0, 5.4), look: V(3.0, 0, 5.4), act: 'sit', dy: 0.4 },
+        { p: V(5.4, 0, 4.4), look: V(5.4, 0, 5.4), act: 'sit', dy: 0.4 }, { p: V(6.3, 0, 5.4), look: V(5.4, 0, 5.4), act: 'sit', dy: 0.4 },
       ],
       build(g, fac) {
         U.Prim('KafeHali', g, V(4.9, 0.02, 4.1), V(6.2, 0.03, 4.8), U.Mat(C(0.93, 0.8, 0.62), { tex: U.CarpetTex, tiling: { x: 3, y: 2 } })).castShadow = false;
@@ -53,11 +54,10 @@ const Facilities = (() => {
         U.Box('Vitrin', g, V(7.2, 0.95, 4.3), V(0.34, 0.36, 0.7), C(0.85, 0.95, 1, 0.4));
         U.Box('Pasta', g, V(7.2, 0.84, 4.15), V(0.22, 0.14, 0.22), C(1, 0.75, 0.8), 'Cylinder'); U.Box('Pasta2', g, V(7.2, 0.84, 4.5), V(0.2, 0.14, 0.2), C(0.6, 0.4, 0.3), 'Cylinder');
         U.Model('bookcaseOpen', g, V(8.7, 0, 2.3), 270, 1);
-        for (const s of this.spots) { } // sandalyeler masa ile birlikte
         for (const t of [V(3.0, 0, 2.9), V(3.0, 0, 5.4), V(5.4, 0, 5.4)]) { table(fac, g, t); U.Box('Fincan', g, V(t.x + 0.2, 0.7, t.z - 0.15), V(0.14, 0.1, 0.14), Col.white, 'Cylinder'); }
         for (const s of this.spots) chair('chairRounded', g, s.p, s.look);
-        U.Box('Tahta', g, V(7.2, 0.55, 5.8), V(0.5, 0.75, 0.05), C(0.2, 0.28, 0.24)); U.Box('TahtaCerceve', g, V(7.2, 0.55, 5.84), V(0.58, 0.83, 0.03), C(0.72, 0.5, 0.32));
-        U.Text(g, V(7.2, 0.62, 5.76), '☕ MENÜ', 0.035, C(1, 0.95, 0.8), false, true).makeFlat(true, 0);
+        U.Box('Tahta', g, V(7.2, 0.55, 5.8), V(0.5, 0.75, 0.05), C(0.2, 0.28, 0.24)); U.Box('TahtaCerceve', g, V(7.2, 0.55, 5.76), V(0.58, 0.83, 0.03), C(0.72, 0.5, 0.32));
+        U.Text(g, V(7.2, 0.62, 5.86), '☕ MENÜ', 0.035, C(1, 0.95, 0.8), false, true).makeFlat(true, 0);
         const l = U.Prim('KafeLamba', g, V(6.6, 2.5, 3.8), V(0.55, 0.3, 0.55), U.Mat(C(1, 0.9, 0.7)), 'Cone'); fix(l, C(1, 0.9, 0.6)); halo(fac, g, V(6.6, 2.4, 3.8), 1.8, C(1, 0.9, 0.6));
         U.Box('Zincir', g, V(6.6, 3.0, 3.8), V(0.04, 0.7, 0.04), C(0.6, 0.6, 0.65));
         lamp(fac, V(6.6, 2.3, 3.8), 6, 0.9, warm);
@@ -69,10 +69,10 @@ const Facilities = (() => {
       mode: 'table', entry: V(3.8, 0, -1.2), serve: V(6.3, 0, -5.0), serveLook: V(6.3, 0, -3), cook: V(6.3, 0, -6.38), cookLook: V(6.3, 0, -5), label: V(5.0, 0, -4.1),
       enjoy: 9, waitText: 'Yemek bekliyor', item: Col.white, sat: 0.5, staffTime: 2.2,
       spots: [
-        { p: V(3.0, 0, -2.0), look: V(3.0, 0, -3.0), act: 'sit', at: V(3.9, 0, -2.1) }, { p: V(3.0, 0, -4.0), look: V(3.0, 0, -3.0), act: 'sit', at: V(3.9, 0, -4.0) },
-        { p: V(3.9, 0, -5.3), look: V(3.0, 0, -5.3), act: 'sit', at: V(4.5, 0, -5.0) },
-        { p: V(5.5, 0, -2.0), look: V(5.5, 0, -3.0), act: 'sit', at: V(6.3, 0, -2.0) }, { p: V(5.5, 0, -4.0), look: V(5.5, 0, -3.0), act: 'sit', at: V(6.3, 0, -4.1) },
-        { p: V(7.8, 0, -2.0), look: V(7.8, 0, -3.0), act: 'sit', at: V(7.0, 0, -2.0) }, { p: V(7.8, 0, -4.0), look: V(7.8, 0, -3.0), act: 'sit', at: V(7.0, 0, -4.1) },
+        { p: V(3.0, 0, -2.0), look: V(3.0, 0, -3.0), act: 'sit', dy: 0.4, at: V(3.9, 0, -2.1) }, { p: V(3.0, 0, -4.0), look: V(3.0, 0, -3.0), act: 'sit', dy: 0.4, at: V(3.9, 0, -4.0) },
+        { p: V(3.9, 0, -5.3), look: V(3.0, 0, -5.3), act: 'sit', dy: 0.4, at: V(4.5, 0, -5.0) },
+        { p: V(5.5, 0, -2.0), look: V(5.5, 0, -3.0), act: 'sit', dy: 0.4, at: V(6.3, 0, -2.0) }, { p: V(5.5, 0, -4.0), look: V(5.5, 0, -3.0), act: 'sit', dy: 0.4, at: V(6.3, 0, -4.1) },
+        { p: V(7.8, 0, -2.0), look: V(7.8, 0, -3.0), act: 'sit', dy: 0.4, at: V(7.0, 0, -2.0) }, { p: V(7.8, 0, -4.0), look: V(7.8, 0, -3.0), act: 'sit', dy: 0.4, at: V(7.0, 0, -4.1) },
       ],
       build(g, fac) {
         removeNear(S.lobbyG, 'pottedPlant', 5.6, -5.8);
@@ -100,8 +100,8 @@ const Facilities = (() => {
       mode: 'table', entry: V(-3.8, 0, -1.2), serve: V(-9.7, 0, -6.2), serveLook: V(-9.7, 0, -4), label: V(-7.9, 0, -4.1),
       enjoy: 10, waitText: 'Masaj bekliyor', item: C(1, 0.6, 0.75), sat: 0.8, staffTime: 2.6,
       spots: [
-        { p: V(-10.8, 0, -4.4), dy: 0.6, act: 'lie', look: V(-10.8, 0, -6), at: V(-9.7, 0, -4.4) },
-        { p: V(-8.6, 0, -4.4), dy: 0.6, act: 'lie', look: V(-8.6, 0, -6), at: V(-7.5, 0, -4.4) },
+        { p: V(-10.8, 0, -4.4), dy: 0.75, feet: 0.85, act: 'lie', look: V(-10.8, 0, -2), at: V(-9.7, 0, -4.4) },
+        { p: V(-8.6, 0, -4.4), dy: 0.75, feet: 0.85, act: 'lie', look: V(-8.6, 0, -2), at: V(-7.5, 0, -4.4) },
         { p: V(-5.5, 0, -4.3), dy: 0.3, act: 'sit', look: V(-4.5, 0, -4.3), self: true },
         { p: V(-4.5, 0, -4.3), dy: 0.3, act: 'sit', look: V(-5.5, 0, -4.3), self: true },
       ],
@@ -125,7 +125,7 @@ const Facilities = (() => {
         // bitkiler, alçak saksı sırası (lobiden ayırır)
         U.Model('pottedPlant', g, V(-3.6, 0, -6.2), 0, 1); U.Model('plantSmall3', g, V(-12.2, 0, -2.1), 0, 3);
         const parts = [];
-        for (let x = -12.2; x <= -6.2; x += 1.0) { parts.push({ geo: 'Round', pos: V(x, 0.25, -1.75), scale: V(0.9, 0.5, 0.4), c: C(0.6, 0.45, 0.35) }, { geo: 'Round', pos: V(x, 0.65, -1.75), scale: V(0.9, 0.4, 0.45), c: C(0.45, 0.7, 0.45) }); }
+        for (let x = -12.2; x <= -9.2; x += 1.0) { parts.push({ geo: 'Round', pos: V(x, 0.25, -1.75), scale: V(0.9, 0.5, 0.4), c: C(0.6, 0.45, 0.35) }, { geo: 'Round', pos: V(x, 0.65, -1.75), scale: V(0.9, 0.4, 0.45), c: C(0.45, 0.7, 0.45) }); }
         U.Merge('Saksilar', g, parts);
         // taş yığını, sepet
         U.Box('Tas1', g, V(-6.8, 0.1, -6.2), V(0.4, 0.2, 0.35), C(0.6, 0.6, 0.62), 'Sphere'); U.Box('Tas2', g, V(-6.8, 0.28, -6.2), V(0.3, 0.16, 0.26), C(0.7, 0.7, 0.72), 'Sphere');
@@ -134,17 +134,17 @@ const Facilities = (() => {
       },
     },
     havuz: {
-      mode: 'self', serve: V(6.4, 0, -2.2), serveLook: V(0.8, 0, 0), guard: V(6.4, 0, -2.2), guardDy: 1.45, label: V(0.8, 0, 0),
+      mode: 'self', serve: V(6.4, 0, -2.2), serveLook: V(0.8, 0, 0), guard: V(6.4, 0, -2.2), guardDy: 1.45, label: V(0.8, 0, 1.6),
       enjoy: 99, waitText: '', item: C(0.5, 0.8, 1), sat: 0.5, pool: { x0: -2.6, x1: 4.2, z0: -1.9, z1: 1.9 },
       spots: [
-        { p: V(-2.2, 0, 3.3), look: V(-2.2, 0, 0), act: 'lie', dy: 0.45, edge: V(-2.2, 0, 3.0) }, { p: V(0, 0, 3.3), look: V(0, 0, 0), act: 'lie', dy: 0.45, edge: V(0, 0, 3.0) }, { p: V(2.2, 0, 3.3), look: V(2.2, 0, 0), act: 'lie', dy: 0.45, edge: V(2.2, 0, 3.0) },
-        { p: V(5.6, 0, -0.9), look: V(0.8, 0, -0.9), act: 'lie', dy: 0.45, edge: V(5.3, 0, -0.9) }, { p: V(5.6, 0, 1.1), look: V(0.8, 0, 1.1), act: 'lie', dy: 0.45, edge: V(5.3, 0, 1.1) },
+        { p: V(-2.2, 0, 3.3), look: V(-2.2, 0, 0), act: 'lie', dy: 0.42, pitch: 62, feet: 0.45, edge: V(-2.2, 0, 3.0) }, { p: V(0, 0, 3.3), look: V(0, 0, 0), act: 'lie', dy: 0.42, pitch: 62, feet: 0.45, edge: V(0, 0, 3.0) }, { p: V(2.2, 0, 3.3), look: V(2.2, 0, 0), act: 'lie', dy: 0.42, pitch: 62, feet: 0.45, edge: V(2.2, 0, 3.0) },
+        { p: V(5.6, 0, -0.9), look: V(0.8, 0, -0.9), act: 'lie', dy: 0.42, pitch: 62, feet: 0.45, edge: V(5.3, 0, -0.9) }, { p: V(5.6, 0, 1.1), look: V(0.8, 0, 1.1), act: 'lie', dy: 0.42, pitch: 62, feet: 0.45, edge: V(5.3, 0, 1.1) },
       ],
       build(g, fac) {
         U.Prim('Deck', g, V(1.05, 0.015, 0.25), V(9.9, 0.03, 7.3), U.Mat(C(0.9, 0.86, 0.78), { tex: U.WoodTex, tiling: { x: 5, y: 3 } })).castShadow = false;
         U.Box('Havuz', g, V(0.8, 0.22, 0), V(8, 0.44, 5), C(0.55, 0.8, 0.95));
         const dip = U.Box('HavuzDip', g, V(0.8, 0.3, 0), V(7.7, 0.3, 4.7), C(0.35, 0.65, 0.9)); fix(dip, C(0.4, 0.75, 1));
-        const su = water(g, V(0.8, 0.46, 0), V(7.8, 4.8, 1), C(0.45, 0.82, 1, 0.7), 'Quad'); su.rotation.x = -Math.PI / 2;
+        const su = water(g, V(0.8, 0.46, 0), V(7.8, 4.8, 1), C(0.45, 0.82, 1, 0.55), 'Quad'); su.rotation.x = -Math.PI / 2;
         const rimC = C(0.93, 0.9, 0.85);
         U.Box('Kenar', g, V(0.8, 0.25, -2.65), V(8.7, 0.5, 0.3), rimC); U.Box('Kenar', g, V(0.8, 0.25, 2.65), V(8.7, 0.5, 0.3), rimC);
         U.Box('Kenar', g, V(-3.35, 0.25, 0), V(0.3, 0.5, 5.6), rimC); U.Box('Kenar', g, V(4.95, 0.25, 0), V(0.3, 0.5, 5.6), rimC);
@@ -168,7 +168,7 @@ const Facilities = (() => {
     bar: {
       mode: 'counter', serve: V(6.4, 0, -5.75), serveLook: V(6.4, 0, -4), wait: V(4.3, 0, -4.4), waitLook: V(6, 0, -5), qdir: V(-0.1, 0, 0.75), label: V(6.4, 0, -5.0),
       enjoy: 8, waitText: 'İçecek bekliyor', item: C(1, 0.7, 0.3), sat: 0.5, staffTime: 2.0,
-      spots: [{ p: V(5.4, 0, -4.35), look: V(5.4, 0, -5.5), act: 'sit', dy: 0.12 }, { p: V(6.4, 0, -4.35), look: V(6.4, 0, -5.5), act: 'sit', dy: 0.12 }, { p: V(7.4, 0, -4.35), look: V(7.4, 0, -5.5), act: 'sit', dy: 0.12 }],
+      spots: [{ p: V(5.4, 0, -4.35), look: V(5.4, 0, -5.5), act: 'sit', dy: 0.55 }, { p: V(6.4, 0, -4.35), look: V(6.4, 0, -5.5), act: 'sit', dy: 0.55 }, { p: V(7.4, 0, -4.35), look: V(7.4, 0, -5.5), act: 'sit', dy: 0.55 }],
       build(g, fac) {
         U.Prim('BarZemin', g, V(6.4, 0.015, -5.1), V(5.4, 0.03, 3.1), U.Mat(C(0.55, 0.42, 0.34), { tex: U.WoodTex, tiling: { x: 3, y: 2 } })).castShadow = false;
         U.Box('ArkaBar', g, V(6.4, 0.6, -6.35), V(3.6, 1.2, 0.35), C(0.4, 0.3, 0.26));
@@ -196,7 +196,7 @@ const Facilities = (() => {
       mode: 'self', entry: V(-4.4, 0, 0.5), serve: V(-8.0, 0, -1.7), serveLook: V(-8, 0, 0.3), label: V(-8, 0, 0.3),
       enjoy: 5, waitText: '', item: C(1, 0.6, 0.75), sat: 0.5, stroll: [V(-8.0, 0, -1.7), V(-9.8, 0, -0.4), V(-8.0, 0, 2.3)],
       beds: [V(-11.0, 0, -2.4), V(-11.0, 0, 3.4), V(-5.4, 0, -2.4), V(-5.4, 0, 3.4)], bedWork: [V(-9.9, 0, -2.4), V(-9.9, 0, 3.4), V(-6.5, 0, -2.4), V(-6.5, 0, 3.4)],
-      spots: [{ p: V(-5.6, 0, 0.6), look: V(-8, 0, 0.6), act: 'sit' }, { p: V(-9.7, 0, 1.6), look: V(-8, 0, 0.3), act: 'sit' }],
+      spots: [{ p: V(-5.6, 0, 0.6), look: V(-8, 0, 0.6), act: 'sit', dy: 0.4 }, { p: V(-9.7, 0, 1.6), look: V(-8, 0, 0.3), act: 'sit', dy: 0.4 }],
       build(g, fac) {
         U.Prim('Cim', g, V(-8, 0.015, 0.3), V(7.6, 0.03, 12.0), U.Mat(C(0.56, 0.78, 0.42), { tex: U.GrassTex, tiling: { x: 3, y: 5 } })).castShadow = false;
         U.Flat('Patika', g, V(-8, 0.025, 0.3), V(1.1, 0.02, 11.4), C(0.88, 0.84, 0.76)); U.Flat('Patika2', g, V(-8, 0.025, 0.5), V(7.0, 0.02, 1.0), C(0.88, 0.84, 0.76));
@@ -326,7 +326,11 @@ const Facilities = (() => {
     guest.go.position.set(spot.p.x, y + (spot.dy || 0), spot.p.z);
     faceTo(guest.go, spot.p, spot.look);
     guest.rig.act = spot.act === 'sit' ? Rig.Act.Sit : spot.act === 'lie' ? Rig.Act.Lie : spot.act === 'mat' ? Rig.Act.Cheer : Rig.Act.None;
-    if (spot.act === 'lie') guest.go.rotation.x = -Math.PI / 2 * 0; // (static poz; oda yataklarıyla aynı görünüm)
+    if (spot.act === 'lie') { // sırt üstü uzan: ayaklar bakış yönünde, baş geride
+      const d = Vec.norm(V(spot.look.x - spot.p.x, 0, spot.look.z - spot.p.z)), k = spot.feet ?? 0.5;
+      guest.go.position.set(spot.p.x + d.x * k, y + (spot.dy || 0), spot.p.z + d.z * k);
+      setEuler(guest.go, (Rig.CharYaw ? 1 : -1) * (spot.pitch ?? 90), yawDeg(spot.p, spot.look) + Rig.CharYaw, 0);
+    }
     guest.rig.Tick(0);
   }
   function release(guest) {
@@ -426,7 +430,7 @@ const Facilities = (() => {
   // havuz: şezlongda uzan → suya gir → yüz → çık → uzan → öde
   function poolTick(guest, fac, dt) {
     const v = guest.fv, y = WorldY(fac), P = fac.L.pool, spot = v.spot;
-    if (v.sub === 0) { guest.rig.Tick(0); if (v.t > 4) { v.sub = 1; v.t = 0; guest.rig.act = Rig.Act.None; guest.go.position.y = y; guest.path = [WP(fac, spot.edge)]; } return; }
+    if (v.sub === 0) { guest.rig.Tick(0); if (v.t > 4) { v.sub = 1; v.t = 0; guest.rig.act = Rig.Act.None; guest.go.rotation.x = 0; guest.go.position.set(spot.p.x, y, spot.p.z); guest.path = [WP(fac, spot.edge)]; } return; }
     if (v.sub === 1) { // kenara geldi: suya atla
       v.sub = 2; v.t = 0; v.swimT = Random.Range(8, 12);
       guest.go.position.set(Mathf.Clamp(spot.edge.x, P.x0, P.x1), y - 0.25, Mathf.Clamp(spot.edge.z, P.z0, P.z1));
@@ -485,9 +489,9 @@ const Facilities = (() => {
       const wp = L.bedWork[x.bed % L.bedWork.length];
       if (!near(staff.pos, wp, 0.4)) { if (!staff.path.length) goTo(wp); staff.rig.act = Rig.Act.None; return; }
       faceTo(staff.go, staff.pos, WP(fac, L.beds[x.bed % L.beds.length])); staff.rig.act = Rig.Act.Clean; staff.rig.Tick(0);
-      x.w += dt / 3.5; Game.ShowProgress(WP(fac, L.beds[x.bed % L.beds.length]), x.w);
+      x.w += dt / 3.5 * (staff.Eff ?? 1); Game.ShowProgress(WP(fac, L.beds[x.bed % L.beds.length]), x.w);
       if (Random.Chance(dt * 2)) Particles.drift(WP(fac, Vec.add(L.beds[x.bed % L.beds.length], V(Random.Range(-0.5, 0.5), 0.6, Random.Range(-0.5, 0.5)))), C(0.5, 0.8, 1), 0.08, 0.8, V(0, -0.5, 0));
-      if (x.w >= 1) { x.w = 0; setBloom(S.bloom + 0.34); x.bed++; staff.rig.act = Rig.Act.None; Sfx.Play('clean', 0.4); U.Burst(WP(fac, L.beds[(x.bed - 1) % L.beds.length], 0.6), C(1, 0.6, 0.75), C(1, 0.9, 0.5), 16, 2.5); }
+      if (x.w >= 1) { x.w = 0; setBloom(S.bloom + 0.34); x.bed++; staff.rig.act = Rig.Act.None; Sfx.Play('clean', 0.4); staff.GainXP && staff.GainXP(4); U.Burst(WP(fac, L.beds[(x.bed - 1) % L.beds.length], 0.6), C(1, 0.6, 0.75), C(1, 0.9, 0.5), 16, 2.5); }
       return;
     }
     // servis personeli: barista, garson, terapist, barmen
@@ -505,10 +509,10 @@ const Facilities = (() => {
     const standAt = L.mode === 'table' ? g.fv.spot.at : L.serve;
     if (!near(staff.pos, standAt)) { if (!staff.path.length) staff.path = [WP(fac, standAt)]; staff.rig.act = Rig.Act.None; return; }
     faceTo(staff.go, staff.pos, L.mode === 'table' ? g.pos : WP(fac, L.serveLook)); staff.rig.act = Rig.Act.Clean; staff.rig.Tick(0);
-    const speed = (Time.time - fac.cookT < 3) ? 1.7 : 1;
+    const speed = ((Time.time - fac.cookT < 3) ? 1.7 : 1) * (staff.Eff ?? 1); // aşçı varsa restoran hızlanır; seviye/moral (Staff.Eff)
     staff.work += dt / (L.staffTime || 2) * speed;
     Game.ShowProgress(WP(fac, L.mode === 'table' ? g.fv.spot.p : L.serve), staff.work);
-    if (staff.work >= 1) { staff.work = 0; serve(fac, g, false); x.target = null; staff.rig.act = Rig.Act.None; }
+    if (staff.work >= 1) { staff.work = 0; serve(fac, g, false); x.target = null; staff.rig.act = Rig.Act.None; if (staff.trait) g.sat += staff.trait.sat || 0; staff.GainXP && staff.GainXP(5); }
   }
 
   // ---------------- bahçe çiçeklenmesi ----------------
@@ -526,10 +530,11 @@ const Facilities = (() => {
     for (const id in S.fac) {
       const fac = S.fac[id]; if (!fac.built || fac.L.mode === 'self') continue;
       const fi = FloorIdx(fac); if (P.floor !== fi) { fac.pwork = 0; continue; }
-      const g = frontWaiting(fac); if (!g) { fac.pwork = 0; continue; }
+      const g = fac.guests.find(x => x.fv && x.fv.phase === 'wait' && !x.fv.served && x.fv.claimed === P && !x.path.length) || frontWaiting(fac);
+      if (!g) { fac.pwork = 0; continue; }
       const L = fac.L, spotP = L.mode === 'table' ? WP(fac, g.fv.spot.p) : null;
       const ok = P.Near(WP(fac, L.serve), 1.8) || (spotP && P.Near(spotP, 1.7)) || (L.mode === 'table' && P.Near(WP(fac, g.fv.spot.at), 1.2));
-      if (!ok) { fac.pwork = 0; continue; }
+      if (!ok) { fac.pwork = 0; if (g.fv.claimed === P) g.fv.claimed = null; continue; }
       if (g.fv.claimed && g.fv.claimed !== P) { fac.pwork = 0; continue; }
       g.fv.claimed = P; working = true;
       fac.pwork += dt / 1.2; P.rig.act = Rig.Act.Clean;
@@ -613,7 +618,10 @@ const Facilities = (() => {
     },
     BuildRoof(g) {
       cleanupRoofRefs(); S.roofG = g;
-      if (S.booted) { for (const id in S.fac) if (isRoof(S.fac[id])) buildVis(S.fac[id]); setBloom(S.bloom); }
+      if (S.booted) {
+        if (Hotel.RoofIndex !== S.roofIdx) { onRoofMoved(S.roofIdx, Hotel.RoofIndex); S.roofIdx = Hotel.RoofIndex; }
+        for (const id in S.fac) if (isRoof(S.fac[id])) buildVis(S.fac[id]); setBloom(S.bloom);
+      }
     },
     Tick(dt) {
       if (!S.booted) return;
