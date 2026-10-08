@@ -1,31 +1,27 @@
 # Otel Ustası
 
-Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oyun eşine hediye, mağazaya çıkmayacak.
+Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oyun eşine (Elif) hediye, mağazaya çıkmayacak.
+Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENMİYOR (Elif sevmedi).
 
 ## Yapı
-- `unity/`: Asıl Unity projesi (Assets/Scripts altında 35 C# dosyası). Kaynak/başvuru olarak durur, burada düzenlenmez.
-- `web/`: Unity oyununun tarayıcı sürümü (three.js). Kullanıcının oynadığı sürüm bu.
-  - `web/src/00_engine.js`: Unity yardımcılarının karşılıkları (U, Mathf, Random, Time, Store, GUI=IMGUI taklidi, Rig, Sfx).
-    Bütün oyun nesneleri `W` grubunda; W'nin z ölçeği -1, böylece Unity sayıları (konum/döndürme) aynen geçerli.
-  - `web/src/NN_*.js`: C# dosyalarının satır satır çevirisi (aynı sınıf ve üye adları). Kurallar: `web/PORTING.md`.
-  - `web/models/*.glb`: Kenney karakter/mobilya modelleri (FBX'ten çevrildi; mobilyalar assimp ile, karakterler three FBXLoader ile).
-  - Derleme: `cd web && npm i && node build.mjs` → `dist/index.html` (artifact sayfası), `dist/game.js`, `dist/models.json`, `dist/play.html` (yerel deneme).
-  - Testler (başsız Chromium): `python3 test_boot.py çıktı.png 1280 800 saniye "js"`, `test_smoke.py` (tüm sistemler + menü sekmeleri), `test_click.py çıktı 390 844 1` (telefon dokunma), `test_text.py` (yazı taşması; 4 ekran boyutu, 0 olmalı).
-    Her değişiklikten sonra `python3 test_iphone.py` çalıştır (iPhone 14 Pro taklidi: hata, taşan yazı, binen üst kutular, soluk renk; ekran görüntülerine de bak). Kullanıcı iPhone 14 Pro'da Safari ile oynuyor.
-    Hata ayıklama: `window.__game` (GameManager, Popups, Store...), `window.__sub = 8` mantığı hızlandırır.
-- Unity'de olmayan, sonradan eklenenler: restoran + garson (`web/src/64_restaurant.js`), yeni misafir türleri Köpekli/Fenomen/Emekli/Öğrenci/Sporcu (`33_customer.js`, köpek: `Dog`).
-  Elif için: spa + terapist (`66_spa.js`, restoranın doğusu), bahçede düğün organizasyonu (`67_wedding.js`, 3. günden sonra teklif gelir),
-  fotoğraf modu (`68_photo.js`, `downloads` yeteneğiyle kaydeder). Dışarısı yürünebilir, trafik hareketli (`65_outside.js`).
-  Grafik kalitesi Düşük/Orta/Yüksek (`97_quality.js`, FPS<40 olursa kendiliğinden düşer; Ayarlar'da seçilebilir).
-  Otel zinciri (`56_chain.js`): resepsiyonisti olan diğer oteller sen başka oteldeyken de kazanır (`Chain.TickBackground`, dakikalık oran `idleRate`).
-  Sohbet (`69_chat.js`): misafirin yanında "💬 Sohbet", Otelgram'da "Yanıtla"; hazır cevaplar + `sample` ile serbest yazışma (Claude).
-  Hırsız olayı İSTENMİYOR (Elif sevmedi).
-- `eski-oyun-fikirleri.md`: Silinen eski web oyunundan fikirler (kalanlar: spor salonu, çatı barı, yeni şehirler, etkinlikler, başarımlar, albüm).
+- `web/v2/`: **Otel Ustası 2** (yeni oyun, asıl geliştirme burada). three.js + HTML arayüz. Kayıt `otel2_kayit_v1` (localStorage) + bulut `kayit2`/`yedek2`.
+  - `src/00_engine.js`: motor (Mathf, Random, Vec, Col, Store, Behaviour, U: malzeme/geometri/model/Merge, TextMesh, Particles, ProgressPad, Rig, Tween, Sfx, Input).
+    Koordinat: düz three.js uzayı (x doğu, y yukarı, z güney); `W` kök grup. Modeller `U.Model/U.Furn/U.City` (taban pos.y, orta pos.x/z).
+  - `05_ui.js` DOM arayüz (Hud, Floors, Toast, Label=3B noktaya bağlı etiket, Sheet=alt sayfa, Dialog=oyunu durduran pencere).
+  - `10_data.js` veriler · `20_world.js` kasaba/deniz/gündüz-gece/lambalar · `25_hotel.js` katlı otel (odalar, lobi, çatı, kesit, yürünebilirlik, `Path` asansörlü yol)
+  - `30_camera.js` kamera + dokunma hareketleri (sürükle=joystick, dokun=git/seç, iki parmak=yakınlaş/döndür, sağ fare=döndür, Q/E)
+  - `35_player.js` · `40_guest.js` (Guest/Follower) · `45_staff.js` (resepsiyonist, temizlikçi, kat görevlisi) · `60_game.js` (durum, kayıt, görevler, öğretici, menüler)
+  - `70_cloud.js` bulut · `80_quality.js` grafik + fotoğraf · `99_main.js` açılış/döngü.
+  - Modeller `models/*.glb` (Kenney karakter 12, mobilya 30, kasaba paketi 15, bulut/bayrak) + ham dokular `characters.rgba.json`, `city.rgba.json`
+    (`python3 ../tools_png2rgba.py png çıktı.json [--noflip]`; kasaba dokusu --noflip). build.mjs GLB'lerden doku başvurularını çıkarır, çalışırken DataTexture takılır.
+  - Derleme: `cd web/v2 && node build.mjs` (`--dev` küçültmez) → `dist/index.html`, `dist/game.js`, `dist/models.json`, `dist/play.html`.
+  - Testler: `python3 test_boot.py çıktı.png [en boy sn js] [--touch]`, `test_flow.py` (tam oyun akışı), `test_iphone.py` (iPhone 14 Pro: hata, binişme, taşma, renk), `test_cloud.py` (7 senaryo).
+    Hızlandırma: `window.__sub = 6` (mantık adımı), `window.__noRender = 1` (çizim seyreltir). Başsız Chromium'da fps çok düşük; testlerde `Quality.Set(0)`.
+    Her değişiklikten sonra test_flow + test_iphone çalıştır; ekran görüntülerine de bak.
+- `web/src/`: eski oyun (Otel Ustası 1, Unity portu). Yeni oyun yerini alana kadar yayında kalır; artık geliştirilmez.
+- `unity/`: Unity projesi, yalnız başvuru. `eski-oyun-fikirleri.md`: eski web oyunundan fikirler.
 
 ## Yayın
-- Artifact: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu — hep aynı adres: `Artifact` publish, file_path `web/dist/index.html`,
-  files `{"game.js": "dist/game.js", "models.json": "dist/models.json"}` (çalışma dizini web/ iken), url ile güncelle.
-- capabilities `{db:{}, user:{}, downloads:true, sample:{}}` korunsun (redeploy'da capabilities verme ya da aynısını ver).
-- Kayıt: localStorage (`otel_ustasi_kayit_v1`) + bulut (`web/src/98_cloud.js`, db `data/users/<id>/kayit`, kişiye özel).
-  Açılışta ilerleme puanı (gün/oda) karşılaştırılır; boş/yeni oyun buluttakini ezmez (`__base`), çakışmada ilerideki korunur, `yedek` belgesi en ilerideki kayıt. 15 sn'de bir ve sayfa gizlenince buluta yazılır. Test: `test_cloud.py` (7 senaryo).
-  Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor (Katkıda bulunan) yetkisi gerekir.
+- Eski oyun: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu (web/dist). capabilities `{db:{}, user:{}, downloads:true, sample:{}}`.
+- Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/XgdXpWv6sm3LPrsiQhzZ3B (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true}`.
+- Kullanıcı iPhone 14 Pro (Safari) ve M2 MacBook Air'de oynuyor. Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor yetkisi gerekir.

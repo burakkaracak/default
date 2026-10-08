@@ -35,6 +35,6 @@ def decode(path):
     return w, h, bytes(out)
 w, h, rgba = decode(sys.argv[1])
 # GLTFExporter resmi dikey çevirerek gömdü (UV'ler buna göre): satırları ters çevir
-rgba = b''.join(rgba[(h - 1 - y) * w * 4:(h - y) * w * 4] for y in range(h))
+if '--noflip' not in sys.argv: rgba = b''.join(rgba[(h - 1 - y) * w * 4:(h - y) * w * 4] for y in range(h))
 json.dump({'w': w, 'h': h, 'rgba': base64.b64encode(rgba).decode()}, open(sys.argv[2], 'w'))
 print(w, h, len(rgba))
