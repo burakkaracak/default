@@ -20,7 +20,7 @@ STATE = '''(()=>{const g=window.__game, G=g.Game, F=window.__game.Facilities; re
 def look(pg, floor, x, z, dist=16, yaw=0):
     pg.evaluate(f"(()=>{{const g=window.__game; g.Hotel.SetView({floor}); g.Cam.follow=null; g.Cam.floor={floor}; g.Cam.target.set({x}, g.Hotel.FloorY({floor}), {z}); g.Cam.yawGoal={yaw}; g.Cam.distGoal={dist}; g.Cam.Snap();}})()")
 def shot(pg, name):
-    pg.evaluate('window.__noRender=0'); pg.wait_for_timeout(900); pg.screenshot(path=SHOT + '_' + name + '.png'); pg.evaluate('window.__noRender=1')
+    pg.evaluate('window.__noRender=0'); pg.wait_for_timeout(900); pg.screenshot(path=SHOT + '_' + name + '.png', timeout=120000); pg.evaluate('window.__noRender=1')
 def wait_until(pg, cond, timeout, step=700):
     t0 = time.time(); s = None
     while time.time() - t0 < timeout:
@@ -77,7 +77,7 @@ try:
             # misafirler sokağa çıkana kadar bekle
             wait_until(pg, lambda s: all(x['s'] == 5 and x['z'] > 7 for x in s['guests']) or not s['guests'], 60)
         # 3) oyuncu servis etsin: barista'yı kaldıramayız; kafeye barista olmadan test → ikinci kafe kurma yerine spa'da oyuncu terapist yerine masaj yapsın
-        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='terapist'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); G.player.GoTo(g.Hotel.Lobby.lounge,0); const x=G.Spawn('balayi'); x.pos.set(0,0,12); window.__fac.ForceVisit(x,'spa',0);})()")
+        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='terapist'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); G.st.extraStaff[t.role]--; delete G.st.staffData[t.key]; G.player.GoTo(g.Hotel.Lobby.lounge,0); const x=G.Spawn('balayi'); x.pos.set(0,0,12); window.__fac.ForceVisit(x,'spa',0);})()")
         ok, s = wait_until(pg, lambda s: any(x['fac'] == 'spa' and x['ph'] == 'wait' and x['path'] == 0 for x in s['guests']), 60)
         check('oyuncu testi: misafir spada masaj bekliyor', ok, s['guests'])
         pg.evaluate("(()=>{const g=window.__game,G=g.Game; const x=G.guests.find(q=>q.fv&&q.fv.fac.id==='spa'); const at=x.fv.spot.at||x.fv.spot.p; G.player.GoTo(new g.THREE.Vector3(at.x,0,at.z),0);})()")
@@ -85,7 +85,7 @@ try:
         check('oyuncu masaj yaptı (keyif aşaması)', ok, s['guests'])
         wait_until(pg, lambda s: not any(x['s'] == 6 for x in s['guests']), 90)
         # 4) sabırsızlık: kafede barista yokken 35 sn bekleyen misafir kızıp gider
-        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='barista'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); G.player.GoTo(g.Hotel.Lobby.lounge,0); const x=G.Spawn('is'); x.pos.set(0,0,12); x.sat=3; window.__fac.ForceVisit(x,'kafe');})()")
+        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='barista'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); G.st.extraStaff[t.role]--; delete G.st.staffData[t.key]; G.player.GoTo(g.Hotel.Lobby.lounge,0); const x=G.Spawn('is'); x.pos.set(0,0,12); x.sat=3; window.__fac.ForceVisit(x,'kafe');})()")
         ok, s = wait_until(pg, lambda s: any(x['fac'] == 'kafe' and x['ph'] == 'wait' for x in s['guests']), 60)
         ok, s = wait_until(pg, lambda s: any(x['s'] == 5 and x['t'] == 'is' for x in s['guests']) or not s['guests'], 90)
         g = [x for x in s['guests'] if x['t'] == 'is']
@@ -109,27 +109,28 @@ try:
         ok, s = wait_until(pg, lambda s: not any(x['s'] == 6 for x in s['guests']), 150)
         check('kat sonrası ziyaretler tamamlandı', ok and s['stats']['havuz']['n'] >= 3, {'stats': s['stats'], 'guests': s['guests']})
         # 7) bahçe çiçeklenmesi: gün değişince azalır, bahçıvan geri getirir
-        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='bahcivan'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); g.World.time=0.249;})()")
+        pg.evaluate("(()=>{const g=window.__game,G=g.Game; const t=G.staff.find(s=>s.role==='bahcivan'); t.destroy(); G.staff.splice(G.staff.indexOf(t),1); G.st.extraStaff[t.role]--; delete G.st.staffData[t.key]; g.World.time=0.249;})()")
         ok, s = wait_until(pg, lambda s: s['day'] >= 2 and s['bloom'] < 0.7, 30)
         b1 = s['bloom']
         check('gün değişince bahçe çiçeklenmesi azaldı', ok, {'bloom': b1})
-        pg.evaluate("(()=>{const G=window.__game.Game; G.st.extraStaff.bahcivan=0; G.AddStaff('bahcivan');})()")
+        pg.evaluate("(()=>{const G=window.__game.Game; G.AddStaff('bahcivan');})()")
         ok, s = wait_until(pg, lambda s: s['bloom'] >= 0.98, 90)
         check('bahçıvan çiçekleri yeniden açtırdı', b1 < 0.7 and ok, {'sonra_gun': b1, 'simdi': s['bloom']})
         check('GardenBonus > 0', pg.evaluate('window.__fac.GardenBonus') > 0.3, pg.evaluate('window.__fac.GardenBonus'))
         # 8) sayfa: tesisler sekmesi
         n = pg.evaluate("(()=>{window.__game.Game.BuildSheet('tesis'); return document.querySelectorAll('.sheet .item').length})()")
         check('Tesisler sekmesi 7 öğe gösteriyor', n == 7, n)
-        pg.evaluate('window.__noRender=0'); pg.wait_for_timeout(800); pg.screenshot(path=SHOT + '_sheet.png'); pg.evaluate('window.__noRender=1; window.__game.UI.CloseSheet()')
+        pg.evaluate('window.__noRender=0'); pg.wait_for_timeout(800); pg.screenshot(path=SHOT + '_sheet.png', timeout=120000); pg.evaluate('window.__noRender=1; window.__game.UI.CloseSheet()')
         # gece görünümü (ışıklar)
         pg.evaluate("(()=>{const g=window.__game; g.World.time=0.92; g.World.Apply();})()")
         look(pg, 3, 1, -1, 24); shot(pg, 'cati_gece'); look(pg, 0, 0, 0, 24); shot(pg, 'lobi_gece')
         pg.evaluate("(()=>{const g=window.__game; g.World.time=0.4; g.World.Apply();})()")
         # 9) kayıt ve yeniden yükleme
-        before = pg.evaluate(STATE); pg.evaluate('window.__game.Game.Save()')
-        pg.reload(); pg.wait_for_function('window.__ready === true', timeout=90000); pg.evaluate("window.__game.UI.ClearDialogs(); window.__game.Facilities=window.__fac; window.__sub=6; window.__noRender=1; window.__game.Quality.Set(0)")
+        pg.evaluate('window.__pause=1; window.__game.Game.Save()'); before = pg.evaluate(STATE)
+        pg.reload(); pg.wait_for_function('window.__ready === true', timeout=90000); pg.evaluate("window.__pause=1; window.__game.UI.ClearDialogs(); window.__game.Facilities=window.__fac; window.__noRender=1; window.__game.Quality.Set(0)")
         after = pg.evaluate(STATE)
-        check('yeniden yükleme: tesisler, personel, istatistik ve para korundu', all(v['built'] and v['go'] for v in after['fac'].values()) and len(after['fac']) == 7 and sorted(x['r'] for x in after['staff']) == sorted(x['r'] for x in before['staff']) and after['money'] == before['money'] and after['stats'] == before['stats'] and after['roof'] == 3, {'fac': after['fac'], 'staff': [x['r'] for x in after['staff']], 'money': (before['money'], after['money'])})
+        if after['money'] != before['money'] or after['stats'] != before['stats']: print('   fark:', {'money': (before['money'], after['money']), 'stats': (before['stats'], after['stats'])})
+        check('yeniden yükleme: tesisler, personel, istatistik ve para korundu', all(v['built'] and v['go'] for v in after['fac'].values()) and len(after['fac']) == 7 and sorted(x['r'] for x in after['staff']) == sorted(x['r'] for x in before['staff']) and after['money'] == before['money'] and after['stats'] == before['stats'] and after['roof'] == 3, {'fac': all(v['built'] and v['go'] for v in after['fac'].values()), 'staff': (sorted(x['r'] for x in before['staff']), sorted(x['r'] for x in after['staff'])), 'money': (before['money'], after['money']), 'roof': after['roof']})
         look(pg, 0, 0, 0, 26); shot(pg, 'lobi'); look(pg, 3, 1, 0, 26); shot(pg, 'cati2')
         for e in sorted(set(errs)): print('  ' + e)
         if errs: fails.append('hatalar')
