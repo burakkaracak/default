@@ -14,6 +14,19 @@ const Data = {
   RoomCost: n => Math.round(30 * Math.pow(1.38, n) / 5) * 5,
   FloorCost: f => [0, 900, 2800, 6500, 14000][f] || 20000,
   Tip: 0.25,
+  TillAuto: 25,  // resepsiyon bankosundaki para, oyuncu gelmezse bu kadar saniye sonra kendiliğinden kasaya geçer
+
+  // Hız yükseltmeleri (seviye başına +step)
+  Upgrades: {
+    me: { name: 'Koşu ayakkabısı', icon: '👟', desc: 'Müdürün yürüme hızı artar.', cost: [200, 450, 900, 1600, 2800], step: 0.10 },
+    staff: { name: 'Ekip eğitimi', icon: '⚡', desc: 'Bütün personel daha hızlı çalışır.', cost: [300, 700, 1400, 2600, 4200], step: 0.08 },
+  },
+  // Oda parçaları (her oda için ayrı seviye 0-3): gecelik fiyat ve memnuniyet etkisi, seviye başına
+  RoomParts: [
+    { id: 'bed', name: 'Yatak', icon: '🛏', cost: [120, 300, 650], price: 0, sat: 0.3 },
+    { id: 'tv', name: 'Televizyon', icon: '📺', cost: [100, 260, 560], price: 0.08, sat: 0 },
+    { id: 'bath', name: 'Banyo', icon: '🛁', cost: [140, 340, 720], price: 0.04, sat: 0.15 },
+  ],
 
   Staff: {
     receptionist: { name: 'Resepsiyonist', icon: '🛎', cost: 300, wage: 40, desc: 'Misafirleri senin yerine karşılar ve odaya yerleştirir.' },

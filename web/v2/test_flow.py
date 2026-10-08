@@ -11,7 +11,7 @@ fails = []
 def check(name, ok, info=''):
     print(('TAMAM  ' if ok else 'HATA   ') + name + ('  ' + str(info) if info else ''))
     if not ok: fails.append(name)
-STATE = '''(()=>{const g=window.__game, G=g.Game; return {money:Math.round(G.st.money), served:G.st.served, guests:G.guests.map(x=>({n:x.name,s:x.s,f:x.floor,room:x.room?x.room.number:null,slot:x.slot})), queue:G.queue.length,
+STATE = '''(()=>{const g=window.__game, G=g.Game; return {money:Math.round(G.st.money+G.st.till), served:G.st.served, guests:G.guests.map(x=>({n:x.name,s:x.s,f:x.floor,room:x.room?x.room.number:null,slot:x.slot})), queue:G.queue.length,
   rooms:[...g.Hotel.rooms.values()].filter(r=>r.level>=0).map(r=>({n:r.number,st:r.state,req:r.request?r.request.def.id:null})), player:{f:G.player.floor,x:+G.player.pos.x.toFixed(1),z:+G.player.pos.z.toFixed(1),path:G.player.path.length}, day:g.World.day, staff:G.staff.map(s=>s.role)}})()'''
 try:
     with sync_playwright() as p:

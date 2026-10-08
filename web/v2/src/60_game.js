@@ -1,11 +1,11 @@
 // Oyun yöneticisi: durum, kayıt, misafir akışı, para, görevler, arayüz bağlantıları
 const Game = {
-  st: null, player: null, guests: [], queue: [], staff: [], spawnT: 4, pads: new Map(), shownMoney: 0, saveT: 5,
+  st: null, player: null, guests: [], queue: [], staff: [], spawnT: 4, tillAge: 0, pile: [], pileN: -1, pads: new Map(), shownMoney: 0, saveT: 5,
   NightLen: 36,  // bir gece (saniye)
   loaded: false,
 
   Default() {
-    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {} };
+    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
   },
 
   Boot() {
@@ -23,6 +23,7 @@ const Game = {
     if (this.st.staff.receptionist) this.AddStaff('receptionist', false);
     for (const role of Object.keys(this.st.extraStaff || {})) for (let i = 0; i < this.st.extraStaff[role]; i++) this.AddStaff(role, false);
     Facilities.Boot();
+    this.st.upg = this.st.upg || {}; this.st.comp = this.st.comp || {}; this.st.till = this.st.till || 0; this.tillAge = 0; this.RefreshPile();
     Social.Defaults(); Social.GetSample();
     this.BindUI();
     this.loaded = true;
@@ -54,6 +55,7 @@ const Game = {
     }
     // oyuncu işleri: banko, temizlik, istek
     this.PlayerWork(dt);
+    this.TillTick(dt);
     Facilities.Tick(dt);
     Life.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
@@ -65,6 +67,7 @@ const Game = {
     const q = this.Quest();
     UI.Hud({ name: this.st.name, stars: this.Stars, rating: this.Rating, day: World.day, clock: World.Clock, weather: World.WeatherText, event: Life.Event, guests: this.guests.length, rooms: this.OpenRooms().length + '/' + (Hotel.floors * 10), money: this.shownMoney, rep: this.st.rep, menuBadge: 0, socialBadge: (this.st.unread || 0) + (this.st.unreadL || 0), quest: q ? { text: q.text, progress: Mathf.Clamp01(q.cur() / q.target), done: q.cur() >= q.target, reward: q.reward } : null });
     this.Labels();
+    for (const c of this.pile) c.visible = Hotel.view === 0;
     // isim etiketleri: sadece bakılan kattakiler (ya da dışarıdakiler) görünsün
     const v = Hotel.view, onView = e => (e.floor === v) || (e.floor === 0 && e.pos.z > Hotel.D / 2);
     const show = e => { const ok = onView(e) && e.liftT <= 0; if (e.tag) e.tag.obj.visible = ok; e.rig.inner.visible = ok; if (e.follower) e.follower.rig.inner.visible = ok; };
@@ -125,11 +128,59 @@ const Game = {
   // ---------------- Para ----------------
   Pay(n) { if (this.st.money < n) { UI.Toast('Yeterli paran yok (' + UI.fmt(n) + ')', 'bad'); Sfx.Play('bad', 0.5); return false; } this.st.money -= n; Sfx.Play('coin', 0.5); return true; },
   Earn(n, pos, tip = 0) {
-    this.st.money += n + tip; this.st.earned += n + tip;
+    this.st.till += n + tip; this.st.earned += n + tip;
     Tween.FloatText(pos, '+' + UI.fmt(n), C(0.45, 1, 0.55), 0.12);
     if (tip > 0) Tween.FloatText(Vec.add(pos, V(0.6, 0.5, 0)), '♥ bahşiş ' + UI.fmt(tip), C(1, 0.6, 0.75), 0.09);
     Sfx.Play('coin', 0.7);
-    for (let i = 0; i < Math.min(6, 1 + Math.round(n / 40)); i++) { const c = U.Prim('Para', W, Vec.add(pos, V(Random.Range(-0.3, 0.3), Random.Range(-0.2, 0.3), Random.Range(-0.3, 0.3))), V(0.3, 0.06, 0.3), U.Mat(C(1, 0.82, 0.25), 0.6), 'Cylinder'); U.NoShadow(c); Tween.Fly(c, this.player.go, null, i * 0.06); }
+    const to = this.PilePos();
+    for (let i = 0; i < Math.min(6, 1 + Math.round(n / 40)); i++) { const c = U.Prim('Para', W, Vec.add(pos, V(Random.Range(-0.3, 0.3), Random.Range(-0.2, 0.3), Random.Range(-0.3, 0.3))), V(0.3, 0.06, 0.3), U.Mat(C(1, 0.82, 0.25), 0.6), 'Cylinder'); U.NoShadow(c); Tween.Fly(c, null, to, i * 0.06); }
+    if (!this.tillHinted) { this.tillHinted = true; UI.Hint('Kazanç resepsiyon bankosunda birikir: yanına gidince toplanır (' + Data.TillAuto + ' sn sonra kendiliğinden de geçer)', 5); }
+  },
+  // ---- Bankodaki para yığını ----
+  PilePos() { const d = Hotel.Lobby.desk; return V(d.x - 0.3, 1.25, d.z + 0.1); },
+  RefreshPile() {
+    const n = Math.min(30, Math.ceil(this.st.till / 40));
+    if (n === this.pileN) return; this.pileN = n;
+    for (const c of this.pile) Destroy(c); this.pile = [];
+    const d = Hotel.Lobby.desk, mat = U.Mat(C(1, 0.82, 0.25), 0.6);
+    for (let i = 0; i < n; i++) { const col = i % 5, h = Math.floor(i / 5); const c = U.Prim('ParaYigin', W, V(d.x - 0.9 + col * 0.34 + (h % 2) * 0.05, 1.18 + h * 0.07, d.z + 0.1 + (col % 2) * 0.05), V(0.3, 0.06, 0.3), mat, 'Cylinder'); U.NoShadow(c); this.pile.push(c); }
+  },
+  CollectTill() {
+    const n = Math.floor(this.st.till); if (n <= 0) return;
+    this.st.till = 0; this.st.money += n; this.tillAge = 0;
+    const from = this.PilePos();
+    for (let i = 0; i < 6; i++) { const c = U.Prim('Para', W, Vec.add(from, V(Random.Range(-0.5, 0.5), 0, Random.Range(-0.2, 0.2))), V(0.3, 0.06, 0.3), U.Mat(C(1, 0.82, 0.25), 0.6), 'Cylinder'); U.NoShadow(c); Tween.Fly(c, this.player.go, null, i * 0.05); }
+    Tween.FloatText(Vec.add(this.player.pos, V(0, 2.4, 0)), '💰 ' + UI.fmt(n), C(1, 0.9, 0.4), 0.12);
+    Sfx.Play('coin', 0.8); this.RefreshPile();
+  },
+  TillTick(dt) {
+    if (this.st.till > 0) {
+      this.tillAge += dt;
+      const P = this.player;
+      if (this.tillAge > Data.TillAuto || (P && P.floor === 0 && P.liftT <= 0 && P.Near(Hotel.Lobby.desk, 3))) this.CollectTill();
+    } else this.tillAge = 0;
+    this.RefreshPile();
+  },
+
+  // ---------------- Yükseltmeler ----------------
+  UpgLv(k) { return (this.st.upg && this.st.upg[k]) || 0; },
+  UpgMul(k) { return 1 + Data.Upgrades[k].step * this.UpgLv(k); },
+  BuyUpgrade(k) {
+    const u = Data.Upgrades[k], lv = this.UpgLv(k); if (lv >= u.cost.length) return false;
+    if (!this.Pay(u.cost[lv])) return false;
+    this.st.upg[k] = lv + 1; Sfx.Play('unlock', 0.6); UI.Toast(u.icon + ' ' + u.name + ' seviye ' + (lv + 1), 'good');
+    U.Burst(Vec.add(this.player.pos, V(0, 1.2, 0)), C(1, 0.85, 0.3), C(0.5, 0.9, 1), 30, 4); this.Save(); if (UI.SheetOpen) UI.RenderSheet(); return true;
+  },
+  // Oda parçaları: yatak/TV/banyo seviyeleri (oda sınıfı yükselince de korunur)
+  PartLv(r, i) { const c = this.st.comp && this.st.comp[r.id]; return (c && c[i]) || 0; },
+  PartPriceMul(r) { let m = 1; Data.RoomParts.forEach((p, i) => m += p.price * this.PartLv(r, i)); return m; },
+  PartSat(r) { let s = 0; Data.RoomParts.forEach((p, i) => s += p.sat * this.PartLv(r, i)); return s; },
+  BuyPart(r, i) {
+    const p = Data.RoomParts[i], lv = this.PartLv(r, i); if (r.level < 0 || lv >= p.cost.length) return false;
+    if (!this.Pay(p.cost[lv])) return false;
+    const c = this.st.comp[r.id] = this.st.comp[r.id] || [0, 0, 0]; c[i] = lv + 1;
+    Sfx.Play('unlock', 0.5); UI.Toast('Oda ' + r.number + ': ' + p.name + ' seviye ' + (lv + 1), 'good');
+    U.Burst(V(r.x, Hotel.FloorY(r.floor) + 1, r.z), C(1, 0.8, 0.5), C(1, 0.95, 0.8), 25, 3); this.Save(); if (UI.SheetOpen) UI.RenderSheet(); return true;
   },
 
   // ---------------- Misafirler ----------------
@@ -334,6 +385,13 @@ const Game = {
     UI.Sheet({ title: 'Oda ' + r.number, sub: lv.name + ' · gecelik ' + UI.fmt(lv.price), render: body => {
       body.innerHTML = `<div class="stat"><span>Durum</span><b>${r.state === 'occupied' ? '👤 ' + (r.guest ? r.guest.name : 'dolu') : r.state === 'dirty' ? '🧹 Kirli' : r.state === 'broken' ? '🔧 Arızalı: içeri gir, tamir et' : '✨ Temiz ve boş'}</b></div>`;
       const z = Decor.Zone('oda' + r.id); const dk = document.createElement('div'); dk.className = 'item'; dk.innerHTML = `<div class="ic">🎨</div><div class="tx"><b>Dekore et</b><small>Konfor ${z ? Decor.Comfort(z) : 0} · gecelik ${UI.fmt(Decor.RoomPrice(r))}. Mobilya, duvar ve zemin seç.</small></div>`; const db = document.createElement('button'); db.className = 'pink'; db.textContent = 'Aç'; db.disabled = r.state === 'occupied'; db.addEventListener('click', () => Decor.Enter('oda' + r.id)); dk.appendChild(db); body.appendChild(dk);
+      Data.RoomParts.forEach((p, i) => {
+        const lv = this.PartLv(r, i), max = p.cost.length, d = document.createElement('div'); d.className = 'item' + (lv >= max ? ' done' : '');
+        const eff = [p.price ? '+%' + Math.round(p.price * 100) + ' fiyat' : '', p.sat ? 'memnuniyet' : ''].filter(Boolean).join(' · ');
+        d.innerHTML = `<div class="ic">${p.icon}</div><div class="tx"><b>${p.name} <span class="chip">${lv}/${max}</span></b><small>Her seviye: ${eff}</small></div>`;
+        if (lv < max) { const b = document.createElement('button'); b.className = 'gold'; b.textContent = UI.fmt(p.cost[lv]); b.addEventListener('click', () => this.BuyPart(r, i)); d.appendChild(b); }
+        body.appendChild(d);
+      });
       if (r.level < 2) { const n = Data.RoomLevels[r.level + 1]; const b = document.createElement('div'); b.className = 'item'; b.innerHTML = `<div class="ic">${n.icon}</div><div class="tx"><b>${n.name} yap</b><small>Gecelik ${UI.fmt(n.price)}. Oda hazır mobilyayla yeniden döşenir.</small></div>`; const bt = document.createElement('button'); bt.className = 'gold'; bt.textContent = UI.fmt(n.cost); bt.disabled = r.state === 'occupied'; bt.addEventListener('click', () => this.UpgradeRoom(r)); b.appendChild(bt); body.appendChild(b); }
     } });
   },
@@ -349,7 +407,13 @@ const Game = {
       else if (r.state === 'broken') UI.Label('br' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), '🔧 Tamir et', 'need', () => this.player.GoTo(r.inside, r.floor));
       else if (r.state === 'dirty') UI.Label('dt' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), '🧹 Temizle', '', () => this.player.GoTo(r.inside, r.floor));
     }
-    if (f === 0 && this.queue.length && !this.staff.find(s => s.role === 'receptionist')) UI.Label('desk', V(0, 2.6, -3.6), '🛎 ' + this.queue.length + ' misafir bekliyor', 'need', () => this.player.GoTo(Hotel.Lobby.deskBack, 0));
+    const hasRecep = !!this.staff.find(s => s.role === 'receptionist');
+    if (f === 0 && this.queue.length && (!hasRecep || this.queue.length >= 3)) UI.Label('desk', V(0, 2.6, -3.6), '🛎 ' + this.queue.length + (hasRecep ? ' misafir sırada' : ' misafir bekliyor'), hasRecep ? '' : 'need', () => this.player.GoTo(Hotel.Lobby.deskBack, 0));
+    if (f === 0) this.queue.forEach((g, i) => {
+      const k = Mathf.Clamp01(1 - g.waited / g.patience), col = k > 0.5 ? '#5fd68a' : k > 0.25 ? '#f2b84b' : '#ef6b6b';
+      UI.Label('qp' + i, Vec.add(g.pos, V(0, 2.5, 0)), `<span style="display:inline-block;width:44px;height:7px;border-radius:4px;background:rgba(0,0,0,.25);overflow:hidden"><i style="display:block;height:100%;width:${Math.round(k * 100)}%;background:${col}"></i></span>`, '');
+    });
+    if (f === 0 && this.st.till > 0) UI.Label('till', V(Hotel.Lobby.desk.x - 0.3, 1.9, Hotel.Lobby.desk.z), '💰 ' + UI.fmt(this.st.till) + ' · topla', 'buy', () => this.player.GoTo(Hotel.Lobby.deskFront, 0));
     if (f === Hotel.floors + 1 && !Data.Facilities.some(d => d.floor === 'roof' && Facilities.Built(d.id))) UI.Label('roof', V(0, Hotel.FloorY(f) + 1.5, 0), '🌿 Çatı · İnşa → Tesisler', '', () => this.BuildSheet('tesis'));
   },
   OnViewChanged() { this.RefreshFloors(); },
@@ -410,7 +474,7 @@ const Game = {
     } });
   },
   MenuSheet(tab) {
-    UI.Sheet({ title: this.st.name, sub: 'Gün ' + World.day + ' · ' + '★'.repeat(this.Stars), tabs: [{ id: 'otel', label: '🏨 Otel' }, { id: 'personel', label: '👥 Personel' }, { id: 'gorev', label: '🎯 Görevler' }, { id: 'ayar', label: '⚙ Ayarlar' }], tab, render: (body, t) => {
+    UI.Sheet({ title: this.st.name, sub: 'Gün ' + World.day + ' · ' + '★'.repeat(this.Stars), tabs: [{ id: 'otel', label: '🏨 Otel' }, { id: 'personel', label: '👥 Personel' }, { id: 'gelisim', label: '⚡ Gelişim' }, { id: 'gorev', label: '🎯 Görevler' }, { id: 'ayar', label: '⚙ Ayarlar' }], tab, render: (body, t) => {
       if (t === 'otel') {
         const lb = document.createElement('div'); lb.className = 'item'; lb.innerHTML = `<div class="ic">🎨</div><div class="tx"><b>Lobiyi dekore et</b><small>Bekleme salonuna mobilya ve dekor yerleştir.</small></div>`; const lbb = document.createElement('button'); lbb.className = 'pink'; lbb.textContent = 'Aç'; lbb.addEventListener('click', () => Decor.Enter('lobi')); lb.appendChild(lbb);
         body.innerHTML = `<div class="stat"><span>Ün</span><b>${Math.round(this.st.rep)} (${this.Rating.toFixed(1).replace('.', ',')} ★)</b></div><div class="stat"><span>Ağırlanan misafir</span><b>${this.st.served}</b></div><div class="stat"><span>Kaçan misafir</span><b>${this.st.lost}</b></div><div class="stat"><span>Toplam kazanç</span><b>${UI.fmt(this.st.earned)}</b></div><div class="stat"><span>Odalar</span><b>${this.OpenRooms().length} açık · ${this.DirtyRooms().length} kirli</b></div><p style="font-size:13px;color:var(--ink-2);font-weight:700">Yıldız için şartları yukarıda görebilirsin. Memnun misafirler ün ve puan kazandırır; bekleyip giden misafirler düşürür.</p>`;
@@ -431,6 +495,14 @@ const Game = {
           const n = have.length; const cost = Array.isArray(def.cost) ? def.cost[n] : (n ? undefined : def.cost);
           if (cost !== undefined) { const d = document.createElement('div'); d.className = 'item'; d.innerHTML = `<div class="ic">${def.icon}</div><div class="tx"><b>${def.name} tut</b><small>${def.desc} Günlük maaş ${UI.fmt(def.wage)}.</small></div>`; const b = document.createElement('button'); b.className = 'gold'; b.textContent = UI.fmt(cost); b.addEventListener('click', () => this.AddStaff(role)); d.appendChild(b); body.appendChild(d); }
         }
+      } else if (t === 'gelisim') {
+        for (const k of Object.keys(Data.Upgrades)) {
+          const u = Data.Upgrades[k], lv = this.UpgLv(k), max = u.cost.length, d = document.createElement('div'); d.className = 'item' + (lv >= max ? ' done' : '');
+          d.innerHTML = `<div class="ic">${u.icon}</div><div class="tx"><b>${u.name} <span class="chip">${lv}/${max}</span></b><small>${u.desc} Şu an +%${Math.round(u.step * lv * 100)}; her seviye +%${Math.round(u.step * 100)}.</small><div class="meter"><i style="width:${lv / max * 100}%;background:var(--mint)"></i></div></div>`;
+          if (lv < max) { const b = document.createElement('button'); b.className = 'gold'; b.textContent = UI.fmt(u.cost[lv]); b.addEventListener('click', () => this.BuyUpgrade(k)); d.appendChild(b); }
+          body.appendChild(d);
+        }
+        const n = document.createElement('p'); n.style.cssText = 'font-size:13px;color:var(--ink-2);font-weight:700'; n.textContent = 'Oda yatağı, televizyonu ve banyosunu yükseltmek için odaya dokun.'; body.appendChild(n);
       } else if (t === 'gorev') {
         this.Quests.forEach((q, i) => { const d = document.createElement('div'); d.className = 'item' + (i < this.st.questIdx ? ' done' : i > this.st.questIdx ? ' locked' : ''); d.innerHTML = `<div class="ic">${i < this.st.questIdx ? '✅' : i === this.st.questIdx ? '🎯' : '🔒'}</div><div class="tx"><b>${UI.esc(q.text)}</b><small>Ödül ${UI.fmt(q.reward)}${i === this.st.questIdx ? ' · ' + Math.min(q.cur(), q.target) + '/' + q.target : ''}</small></div>`; if (i === this.st.questIdx && q.cur() >= q.target) { const b = document.createElement('button'); b.className = 'gold'; b.textContent = 'Ödülü al'; b.addEventListener('click', () => { this.ClaimQuest(); UI.RenderSheet(); }); d.appendChild(b); } body.appendChild(d); });
       } else {
