@@ -54,8 +54,9 @@ const Social = {
       if (built.length && Random.Chance(0.3)) l = this.FacPosts[Random.Pick(built).id];
       this.Add(this.Handle(), this.Fill(Random.Pick(l), room), this.Likes(1), false, 0);
     } else if (sat <= 2.2 && Random.Chance(0.5)) this.Add(this.Handle(), this.Fill(Random.Pick(this.Bad), room), this.Likes(0.7), true, 0);
-    // çok mutlu ayrılan misafir mektup bırakabilir
-    if (sat >= 4.4 && Random.Chance(0.3)) this.AddLetter(g, room, sat);
+    // hikâye misafiri memnun ayrılırsa mutlaka mektup bırakır; diğerleri ara sıra sıradan mektup
+    if (g.arcId && sat >= 4) this.AddLetter(g, room, sat);
+    else if (!g.arcId && sat >= 4.4 && Random.Chance(0.25)) this.AddLetter(g, room, sat);
   },
   Share(text, kind, bad) { this.Add(kind === 2 ? '@yerel.gazete' : this.Handle(), this.Fill(text), kind === 2 ? Random.RangeInt(400, 900) : this.Likes(2.5), !!bad, kind); },
   Add(author, text, likes, bad, kind) {
@@ -72,17 +73,17 @@ const Social = {
   // ---------------- mektuplar ----------------
   // Küçük, veriye dayalı hikâyeler: aynı tür misafir tekrar mektup bırakınca hikâye ilerler.
   Arcs: {
-    balayi: { who: 'Ece ile Kaan', chapters: [
+    balayi: { who: 'Ece ile Kaan', name: 'Ece', chapters: [
       'Odamızdaki çiçekler ve sizin güler yüzünüz balayımızı unutulmaz yaptı. Hâlâ ikimiz de gülümseyerek anlatıyoruz.',
       'Biz Ece ile Kaan, yine yazıyoruz! Evimizde yeni bir köşe ayırdık ve adını "Lavanta Köşesi" koyduk. İlk yıl dönümümüzde yine geleceğiz.',
       'Bir müjdemiz var: bir bebeğimiz olacak! Adını koyarken sizi de düşündük. Yine sizde kalmayı çok isteriz.',
     ] },
-    emekli: { who: 'Nermin Hanım', chapters: [
+    emekli: { who: 'Nermin Hanım', name: 'Nermin', chapters: [
       'Evladım, yıllardır bu kadar rahat uyumamıştım. Çayınız için de sağ olun.',
       'Torunlarıma otelinizi anlattım, hepsi görmek istiyor. Size bahçede yetiştirdiğim kekik gönderdim.',
       'Bu yıl da geldim, odamı tanıdım! Siz de ailemden biri oldunuz artık, sağ olun, var olun.',
     ] },
-    is: { who: 'Yazar Cem', chapters: [
+    is: { who: 'Yazar Cem', name: 'Cem', chapters: [
       'Romanımın ilk bölümünü sizin sessiz köşenizde yazdım. Teşekkürler!',
       'Romanım bitti ve yayınevi kabul etti! Kitabın teşekkür bölümünde otelinizin adı geçecek.',
       'Kitabım çıktı! Size imzalı bir nüsha gönderiyorum. Odanızda yazmaya bir daha gelirim.',
@@ -94,9 +95,19 @@ const Social = {
     'Resepsiyondaki sıcak karşılamanızı unutamadım. Kolay gelsin!',
     'Küçük ilgileriniz tatilimi güzelleştirdi. Teşekkürler.',
   ],
+  // Hikâyesi bitmemiş bir türden misafir gelince, otelde hikâye misafiri yoksa ara sıra o karakter olur (gerçek tür, kılık değil)
+  MaybeArc(g, force) {
+    const id = g.type.id, arc = this.Arcs[id]; if (!arc) return false;
+    const st = Game.st; this.Defaults();
+    if ((st.arcs[id] || 0) >= arc.chapters.length) return false;
+    if (Game.guests.some(x => x !== g && x.arcId)) return false;
+    if (!force && !Random.Chance(0.3)) return false;
+    g.arcId = id; g.name = arc.name; g.tag.text = Chat.Shown(g).icon + ' ' + arc.name;
+    return true;
+  },
   AddLetter(g, room, sat) {
     const st = Game.st; this.Defaults();
-    const id = g.type.disguise || g.type.id, arc = this.Arcs[id];
+    const id = g.arcId, arc = id ? this.Arcs[id] : null; // yalnız hikâye misafiri (gerçek türüyle) hikâyeyi ilerletir
     let text, from = g.name, chap = 0, used = false;
     if (arc && (st.arcs[id] || 0) < arc.chapters.length) { chap = st.arcs[id] || 0; st.arcs[id] = chap + 1; text = arc.chapters[chap]; from = arc.who; used = true; }
     else text = Random.Pick(this.Generic);

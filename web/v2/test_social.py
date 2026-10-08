@@ -77,14 +77,23 @@ try:
         s = pg.evaluate("(()=>{const g=window.__game,G=g.Game,p=window.__p; return {f0:window.__f0, f1:G.st.followers, replied:!!p.reply, bad:p.bad, done:g.Chat.done}})()")
         check('kibar yanıt takipçi kazandırdı ve kötü yorumu yumuşattı', s['f1'] > s['f0'] and s['replied'] and not s['bad'], s)
         pg.evaluate("window.__game.Chat.Close()")
-        # --- 6) mektup ve hikâye
-        s = pg.evaluate("(()=>{const g=window.__game,G=g.Game; const mk=t=>({type:Data0.find(q=>q.id===t), name:'Misafir'}); return 0})()") if False else None
-        res = pg.evaluate("(()=>{const g=window.__game,G=g.Game; G.st.letters=[]; G.st.arcs={}; const t=g.Data.Guests.find(q=>q.id==='balayi'); const out=[]; for(let i=0;i<4;i++){ g.Social.AddLetter({type:t,name:'Ece'}, null, 4.8); out.push(G.st.letters[0].arc);} g.UI.ClearDialogs(); return {arcs:out, n:G.st.letters.length, unreadL:G.st.unreadL, first:G.st.letters[3].text.slice(0,30), manager:G.st.manager}})()")
-        check('mektup hikâyesi bölüm bölüm ilerliyor (1,2,3, sonra sıradan)', res['arcs'] == [1, 2, 3, 0], res)
+        # --- 6) mektup ve hikâye: yalnız hikâye misafiri (gerçek tür) ilerletir, mektubu gerçekten konaklayan misafir bırakır
+        res = pg.evaluate("""(()=>{const g=window.__game,G=g.Game; G.st.letters=[]; G.st.arcs={}; G.st.rep=0; const out={};
+          // kılıklı müfettiş (gerçek tür mufettis) hikâyeyi ilerletmez
+          const m=G.Spawn('mufettis'); m.path=[]; out.mufArc=!!m.arcId; g.Social.AddLetter(m, null, 4.8); out.mufArcs=JSON.stringify(G.st.arcs); out.mufFrom=G.st.letters[0].from===m.name;
+          // etiketsiz balayı misafiri sıradan mektup yazar
+          const b0=G.Spawn('balayi'); b0.path=[]; b0.arcId=null; g.Social.AddLetter(b0, null, 4.8); out.plainArc=G.st.letters[0].arc; out.arcsAfterPlain=JSON.stringify(G.st.arcs);
+          // hikâye misafiri: zorla etiketle, odaya yerleştir, öde, mektup bırakır
+          const arcs=[]; for(let i=0;i<4;i++){ for(const q of G.guests) q.arcId=null; const r=g.Hotel.Room(11); const x=G.Spawn('balayi'); x.path=[]; const ok=g.Social.MaybeArc(x,true); x.room=r; r.guest=x; x.sat=4.8; const n0=G.st.letters.length; G.OnGuestPaid(x, 4.8); r.guest=null; arcs.push([ok, G.st.letters.length-n0, G.st.letters[0].arc, G.st.letters[0].from, x.name, x.tag.text.startsWith('💞')||x.tag.text.startsWith('🧳')||true]); }
+          out.arcs=arcs; out.arcState=JSON.stringify(G.st.arcs); g.UI.ClearDialogs(); out.manager=G.st.manager; out.first=G.st.letters[0].text.slice(0,12); return out})()""")
+        check('kılıklı müfettiş yazar hikâyesini ilerletmedi', (not res['mufArc']) and res['mufArcs'] == '{}' , res)
+        check('etiketsiz misafir sıradan mektup yazdı', res['plainArc'] == 0 and res['arcsAfterPlain'] == '{}', res)
+        check('hikâye misafiri 3 bölüm boyunca mektup bıraktı, sonra sıradan', [a[2] for a in res['arcs']] == [1, 2, 3, 0] and all(a[1] == 1 for a in res['arcs']) and all(a[0] for a in res['arcs'][:3]), res['arcs'])
+        check('mektubu gönderen karakter, gerçekten konaklayan misafir', all(a[3] == 'Ece ile Kaan' and a[4] == 'Ece' for a in res['arcs'][:3]), res['arcs'])
         check('mektup yöneticiye hitap ediyor', res['first'].startswith('Sevgili ' + res['manager']), res)
         pg.evaluate("window.__game.Social.Open('mektup')"); pg.wait_for_timeout(300)
         n = pg.evaluate("document.querySelectorAll('.sheet .letter').length")
-        check('mektuplar sekmesi dolu', n == 4, n); pg.screenshot(path=OUT + '/mektuplar.png')
+        check('mektuplar sekmesi dolu', n >= 5, n); pg.screenshot(path=OUT + '/mektuplar.png')
         pg.evaluate("window.__game.UI.CloseSheet()")
         # --- 7) isim çakışması
         bad = pg.evaluate("(()=>{const g=window.__game,G=g.Game; let c=0; for(let i=0;i<60;i++){ const x=G.Spawn(); if(x.name===G.st.manager) c++; x.destroy(); G.OnGuestGone(x);} return c})()")
