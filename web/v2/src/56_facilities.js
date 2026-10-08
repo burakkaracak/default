@@ -266,6 +266,11 @@ const Facilities = (() => {
     emekli: { bahce: 3, spa: 1.5, restoran: 1.5, kafe: 1.5, havuz: 0.5, bar: 0.5, spor: 0.1 },
     balayi: { spa: 3, restoran: 2.5, bar: 2, havuz: 1, bahce: 1, kafe: 0.5, spor: 0.2 },
     sporcu: { spor: 4, havuz: 2, kafe: 0.5, bahce: 0.3, restoran: 0.8, bar: 0.2, spa: 0.5 },
+    huysuz: { spa: 2, kafe: 1.5, restoran: 1.5, bahce: 1, havuz: 0.5, bar: 0.7, spor: 0.3 },
+    milyoner: { restoran: 2.5, spa: 2, bar: 2, havuz: 1, bahce: 1, kafe: 1, spor: 0.5 },
+    mufettis: { restoran: 2, kafe: 2, spa: 1, bar: 1, havuz: 0.5, bahce: 0.5, spor: 0.5 },
+    fenomen: { havuz: 3, bar: 2.5, spa: 2, restoran: 1.5, kafe: 1.5, bahce: 1.2, spor: 0.8 },
+    unlu: { spa: 3, bar: 2, restoran: 2, havuz: 1.5, bahce: 1, kafe: 0.5, spor: 0.5 },
   };
 
   // ---------------- kurulum ----------------
@@ -643,7 +648,7 @@ const Facilities = (() => {
       const built = Data.Facilities.filter(d => S.fac[d.id] && S.fac[d.id].built);
       if (!built.length || !(S.alwaysOffer || Random.Chance(0.65))) return false;
       const pref = Prefs[guest.type.id] || {}; let sum = 0; const w = [];
-      for (const d of built) { const fac = S.fac[d.id]; if (!freeSpots(fac, guest).length) continue; let k = pref[d.id] ?? 1; if (d.id === 'bar' && World.IsNight) k *= 1.6; if (d.id === 'havuz' && (World.IsNight || World.weather === 'rainy' || World.weather === 'snowy')) k *= 0.25; w.push([fac, k]); sum += k; }
+      for (const d of built) { const fac = S.fac[d.id]; if (!freeSpots(fac, guest).length) continue; let k = (pref[d.id] ?? 1) * Life.FacMul(d.id); if (d.id === 'bar' && World.IsNight) k *= 1.6; if (d.id === 'havuz' && (World.IsNight || World.weather === 'rainy' || World.weather === 'snowy')) k *= 0.25; w.push([fac, k]); sum += k; }
       if (!w.length || sum <= 0) return false;
       let r = Math.random() * sum; let pick = w[w.length - 1][0];
       for (const [fac, k] of w) { r -= k; if (r <= 0) { pick = fac; break; } }

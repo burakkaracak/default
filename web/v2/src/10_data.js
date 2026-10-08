@@ -48,6 +48,12 @@ const Data = {
     { id: 'aile', name: 'Aile', icon: '👨‍👩‍👧', pay: 1.25, patience: 0.9, nights: [2, 3], w: 3, follower: 0.62 },
     { id: 'emekli', name: 'Emekli', icon: '👵', pay: 1.15, patience: 1.5, nights: [2, 3], w: 2 },
     { id: 'balayi', name: 'Balayı çifti', icon: '💞', pay: 1.9, patience: 0.9, nights: [2, 3], w: 1.5, follower: 1, minStars: 2 },
+    { id: 'sporcu', name: 'Sporcu', icon: '🏃', pay: 1.2, patience: 1.1, nights: [1, 2], w: 1.6, minStars: 2, look: ['character-male-b', 'character-female-b'] },
+    { id: 'huysuz', name: 'Huysuz misafir', icon: '😤', pay: 1.3, patience: 0.55, nights: [1, 2], w: 1.1, sat0: 2.4, tipMul: 2.5, desc: 'Memnun etmesi zor ama mutlu ederseniz cömert bahşiş bırakır.' },
+    { id: 'milyoner', name: 'Gizli milyoner', icon: '🎩', disguise: 'turist', pay: 1, patience: 1, nights: [1, 2], w: 0.35, minStars: 2, desc: 'Turist kılığında gelir; çok memnun kalırsa büyük bahşiş bırakır.' },
+    { id: 'mufettis', name: 'Otel müfettişi', icon: '🕵', disguise: 'is', pay: 1.45, patience: 0.7, nights: [1, 1], w: 0.4, minStars: 2, look: ['character-male-d', 'character-female-d'], desc: 'İş insanı gibi görünür; raporu ünü çok etkiler.' },
+    { id: 'fenomen', name: 'Fenomen', icon: '🤳', pay: 1.6, patience: 0.8, nights: [1, 2], w: 1, minStars: 3, repMul: 2.5, look: ['character-female-e', 'character-male-e'], desc: 'Takipçilerine anlatır: memnuniyeti ünü katlar.' },
+    { id: 'unlu', name: 'Ünlü', icon: '⭐', pay: 3, patience: 0.7, nights: [1, 2], w: 0.5, minStars: 4, repMul: 2, follower: 1, look: ['character-female-f', 'character-male-f'], desc: 'Kapıda hayranlar! Çok öder, beklemeyi sevmez.' },
   ],
   Requests: [
     { id: 'towel', name: 'Havlu', icon: '🧺', tip: 10 },
