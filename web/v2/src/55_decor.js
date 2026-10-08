@@ -226,7 +226,7 @@ const Decor = {
   Enter(zoneId) {
     const z = this.zones.get(zoneId); if (!z) return;
     if (z.room && z.room.state === 'occupied') { UI.Toast('Odada misafir var, çıkınca dekore edebilirsin', 'info'); return; }
-    this.active = z; this.sel = null; this.lastZone = z;
+    this.active = z; this.sel = null; this.lastZone = z; document.body.classList.add('decor');
     const o = z.worldOrigin, cx = o.x + z.x0 + z.cols * this.Cell / 2, cz = o.z + z.z0 + z.rows * this.Cell / 2;
     Cam.follow = null; Cam.target.set(cx, Hotel.FloorY(z.floorIdx), cz); Cam.distGoal = z.room ? 12 : 16; Hotel.SetView(z.floorIdx);
     // liste sağda (geniş ekran) ya da altta (telefon): bölge boş alanda kalsın
@@ -244,7 +244,7 @@ const Decor = {
     if (!this.active) return;
     const z = this.active;
     if (z.room && !this.HasBed(z)) { UI.Toast('Odada yatak yok! Misafir yerleşemez', 'bad'); }
-    this.Select(null); this.Grid(false); this.active = null;
+    this.Select(null); this.Grid(false); this.active = null; document.body.classList.remove('decor');
     UI.CloseSheet(); this.Toolbar(false);
     for (const o of z.parent.children) if (o.userData.roomWall && o.userData.hFull) { o.scale.y = o.userData.hFull; o.position.y = o.userData.hFull / 2; }
     Cam.follow = Game.player.go; Cam.distGoal = 24; Cam.pitch = this.pitch0 || 50;
@@ -346,6 +346,7 @@ const Decor = {
   Pick(x, y) {
     const z = this.active; if (!z) return null;
     const ndc = new THREE.Vector2(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1);
+    camera.updateMatrixWorld(); z.parent.updateMatrixWorld(true); // yeni kurulmuş eşya henüz çizilmemiş olabilir
     const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, camera);
     const hits = rc.intersectObjects(z.items.filter(it => it.go).map(it => it.go), true);
     for (const h of hits) { let o = h.object; while (o && !o.userData.item) o = o.parent; if (o) return o.userData.item; }

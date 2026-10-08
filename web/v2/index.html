@@ -120,7 +120,8 @@
     .hud.tl { max-width: 58vw; }
   }
   /* dekorasyon */
-  .decor-bar { position: absolute; left: 50%; top: 72px; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; }
+  body.decor .hud.tl, body.decor .hud.tr, body.decor .hud.br, body.decor #quest-card, body.decor #hint { display: none !important; }
+  .decor-bar { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; }
   .decor-bar button { pointer-events: auto; }
   .sheet.short { max-height: 46%; } @media (min-width: 900px) { .sheet.short { max-height: calc(100% - 24px); } }
   .catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }

@@ -39,7 +39,7 @@ const Hotel = {
       const g = U.Pivot(W, V(0, this.FloorY(f), 0), 'Kat' + f); this.groups.push(g);
       // döşeme
       const slab = U.Prim('Doseme', g, V(0, -0.15, 0), V(Wd, 0.3, D), U.Mat(C(0.9, 0.88, 0.84)));
-      if (f === 0) { U.Prim('Zemin', g, V(0, 0.01, 0), V(Wd - 0.5, 0.02, D - 0.5), U.Mat(C(0.95, 0.93, 0.88), { tex: U.TileTex, tiling: { x: 13, y: 7 } })).castShadow = false; }
+      if (f === 0) { U.Prim('Zemin', g, V(0, 0.01, 0), V(Wd - 0.5, 0.02, D - 0.5), U.Mat(C(0.93, 0.87, 0.78), { tex: U.TileTex, tiling: { x: 13, y: 7 } })).castShadow = false; }
       else U.Prim('Koridor', g, V(-1.7, 0.01, 0), V(Wd - 4.4, 0.02, 3), U.Mat(C(0.78, 0.7, 0.62), { tex: U.CarpetTex, tiling: { x: 8, y: 1 } })).castShadow = false;
       // dış duvarlar (kameraya bakan gizlenir)
       const t = 0.25;

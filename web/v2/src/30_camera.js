@@ -105,7 +105,7 @@ const Cam = {
   // Ekran noktasının y yüksekliğindeki düzleme izdüşümü
   ScreenToPlane(px, py, y) {
     const ndc = new THREE.Vector2(px / innerWidth * 2 - 1, -(py / innerHeight) * 2 + 1);
-    const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, camera);
+    camera.updateMatrixWorld(); const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, camera);
     const o = rc.ray.origin, d = rc.ray.direction;
     if (Math.abs(d.y) < 1e-6) return null;
     const t = (y - o.y) / d.y; if (t < 0) return null;
@@ -113,6 +113,7 @@ const Cam = {
   },
 };
 function worldToScreen(p) {
+  camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert(); // çizim atlanmış olsa bile güncel kamera
   const v = new THREE.Vector3(p.x, p.y, p.z).project(camera);
   return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, z: v.z };
 }

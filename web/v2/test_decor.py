@@ -31,13 +31,14 @@ try:
         r0 = pg.evaluate("window.__game.Decor.sel.rot"); pg.evaluate("window.__game.Decor.Rotate()")
         r1 = pg.evaluate("window.__game.Decor.sel.rot")
         check('kanepe döndü', (r1 - r0) % 360 == 90 or True, {'r0': r0, 'r1': r1})
-        # sürükle: seçili eşyanın ekran konumundan 2 hücre sağa
-        pos = pg.evaluate("(()=>{const D=window.__game.Decor, z=D.active, it=D.sel; const w=D.WorldOf(z,it); const a=window.__game.worldToScreen(w); const c=D.Center(z,it); const w2=D.WorldOf(z,{k:it.k,c:it.c,r:it.r+2,rot:it.rot}); const b=window.__game.worldToScreen(w2); return {ax:a.x,ay:a.y,bx:b.x,by:b.y,c:it.c,r:it.r}})()")
-        print('  pick:', pg.evaluate(f"(()=>{{const D=window.__game.Decor; const p=D.Pick({pos['ax']},{pos['ay']}); return {{pick: p && p.k, grid: !!D.gridMesh, gridCount: D.gridMesh && D.gridMesh.geometry.attributes.position.count, pos: [{pos['ax']},{pos['ay']}], el: document.elementFromPoint({pos['ax']},{pos['ay']}) && document.elementFromPoint({pos['ax']},{pos['ay']}).id}}}})()"))
+        # sürükle: seçili eşyanın ekran konumundan 2 hücre sağa (önce büyüme animasyonunun bitmesini bekle)
+        pg.wait_for_timeout(700)
+        pos = pg.evaluate("(()=>{const D=window.__game.Decor, z=D.active, it=D.sel; const w=D.WorldOf(z,it); const a=window.__game.worldToScreen(w); const c=D.Center(z,it); let t=null; for(const [dc,dr] of [[0,2],[0,-2],[2,0],[-2,0],[0,1],[0,-1],[1,0],[-1,0]]){const cand={k:it.k,c:it.c+dc,r:it.r+dr,rot:it.rot}; if(D.Fits(z,cand,it)){t=cand;break;}} const w2=D.WorldOf(z,t||{k:it.k,c:it.c,r:it.r+2,rot:it.rot}); const b=window.__game.worldToScreen(w2); return {ax:a.x,ay:a.y,bx:b.x,by:b.y,c:it.c,r:it.r,fits:!!t}})()")
+        print('  pick:', pg.evaluate(f"(()=>{{const D=window.__game.Decor; const p=D.Pick({pos['ax']},{pos['ay']}); return {{pick: p && p.k, blocking: window.__game.UI.Blocking, scale: D.sel.go && D.sel.go.scale.x, go: !!D.sel.go, inItems: D.active.items.includes(D.sel), grid: !!D.gridMesh, gridCount: D.gridMesh && D.gridMesh.geometry.attributes.position.count, pos: [{pos['ax']},{pos['ay']}], el: (e=>e && (e.tagName+'#'+e.id+'.'+e.className))(document.elementFromPoint({pos['ax']},{pos['ay']})), elOld: document.elementFromPoint({pos['ax']},{pos['ay']}) && document.elementFromPoint({pos['ax']},{pos['ay']}).id}}}})()"))
         pg.mouse.move(pos['ax'], pos['ay']); pg.mouse.down(); pg.mouse.move(pos['ax'] + (pos['bx'] - pos['ax']) / 2, pos['ay'] + (pos['by'] - pos['ay']) / 2, steps=5); pg.mouse.move(pos['bx'], pos['by'], steps=5); pg.mouse.up()
         pg.wait_for_timeout(300)
         s = pg.evaluate("(()=>{const D=window.__game.Decor; return {c: D.sel && D.sel.c, r: D.sel && D.sel.r}})()")
-        check('eşya sürüklendi (satır değişti)', s['r'] is not None and s['r'] != pos['r'], {'before': [pos['c'], pos['r']], 'after': s})
+        check('eşya sürüklendi (hücre değişti)', s['r'] is not None and (s['r'] != pos['r'] or s['c'] != pos['c']), {'before': [pos['c'], pos['r']], 'after': s})
         # duvar ve zemin
         pg.evaluate("(()=>{const D=window.__game.Decor; D.active.wall='#ebe2f6'; D.active.floor='halilav'; D.BuildZone(D.active); D.SaveZone(D.active);})()")
         # kaldır
