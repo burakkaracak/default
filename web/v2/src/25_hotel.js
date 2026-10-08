@@ -4,7 +4,7 @@ const Hotel = {
   W: 26, D: 14, H: Data.Floor.H,
   RoomX: [-10, -6, -2, 2, 6],           // oda merkezleri (x); kuzey yakası slot 0-4, güney yakası 5-9
   floors: 1,                             // sahip olunan oda katı sayısı (0 = sadece zemin)
-  groups: [], rooms: new Map(), walls: [], roof: null, view: 0, lobby: null,
+  groups: [], rooms: new Map(), walls: [], roof: null, view: 0, lobby: null, liftDoors: [],
   Lobby: { desk: V(0, 0, -3.6), deskBack: V(0, 0, -4.9), deskFront: V(0, 0, -2.1), lounge: V(-8, 0, 2.5) },
   Entrance: V(0, 0, 7.4), Street: V(0, 0, 9.6), SpawnW: V(-34, 0, 9.6), SpawnE: V(34, 0, 9.6),
 
@@ -18,7 +18,7 @@ const Hotel = {
 
   // ---------------- İnşa ----------------
   Build(state) {
-    for (const g of this.groups) Destroy(g); this.groups = []; this.rooms.clear(); this.walls = [];
+    for (const g of this.groups) Destroy(g); this.groups = []; this.rooms.clear(); this.walls = []; this.liftDoors = [];
     if (this.roof) Destroy(this.roof); if (this.lobby) Destroy(this.lobby);
     this.floors = state.floors;
     for (let f = 0; f <= this.floors; f++) this.BuildFloorGroup(f, state);
@@ -74,7 +74,7 @@ const Hotel = {
       // asansör çekirdeği (doğu ucu)
       const core = U.Pivot(g, V(10.6, 0, 0), 'Asansor');
       U.Box('Kabin', core, V(0, H / 2, -1.7), V(2.6, H, 0.2), C(0.85, 0.85, 0.88));
-      U.Box('Kapi', core, V(0, 1.2, -1.58), V(1.6, 2.4, 0.08), C(0.65, 0.7, 0.78, 1));
+      const kapi = U.Box('Kapi', core, V(0, 1.2, -1.58), V(1.6, 2.4, 0.08), C(0.65, 0.7, 0.78, 1)); this.liftDoors[f] = kapi; kapi.userData.open = 0;
       U.Box('Cerceve', core, V(0, 2.55, -1.56), V(2.2, 0.3, 0.1), C(0.95, 0.75, 0.3));
       const glow = U.Prim('Isik', core, V(0, 2.55, -1.5), V(0.5, 0.12, 0.04), U.Mat(C(1, 0.9, 0.5)));
       World.AddFixture(glow, C(1, 0.9, 0.5), 0);
@@ -165,6 +165,17 @@ const Hotel = {
   },
 
   SetName(n) { if (this.signText) this.signText.text = (n || 'OTEL').toLocaleUpperCase('tr-TR'); },
+
+  // ---------------- Asansör kapıları ----------------
+  LiftDoor(f, open) { const d = this.liftDoors[f]; if (d) d.userData.open = open ? 1 : 0; },
+  TickDoors(dt) {
+    for (const d of this.liftDoors) {
+      if (!d) continue; const want = d.userData.open ? 1 : 0, cur = d.userData.k || 0;
+      if (Math.abs(want - cur) < 0.01) continue;
+      const k = cur + (want - cur) * Math.min(1, dt * 7); d.userData.k = k;
+      d.scale.x = 1.6 * (1 - k * 0.92) || 0.01; d.position.x = -0.8 * k; // sola kayarak açılır
+    }
+  },
 
   // ---------------- Görünüm (kat kesiti) ----------------
   SetView(f) {

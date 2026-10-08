@@ -658,7 +658,7 @@ const Facilities = (() => {
       if (spotIdx !== undefined) S.forceSpot = fac.spots[spotIdx];
       if (guest.fv) release(guest);
       const r = guest.room;
-      if (r && guest.s === Guest.S.Stay) { r.guest = null; r.state = 'dirty'; r.dirt = 1; if (r.mess) r.mess.visible = true; guest.go.position.copy(r.inside); guest.lying = false; if (guest.follower) guest.follower.Follow(); }
+      if (r && guest.s === Guest.S.Stay) { r.guest = null; r.state = 'dirty'; r.dirt = 1; if (r.mess) r.mess.visible = true; guest.go.position.copy(r.inside); guest.go.rotation.set(0, 0, 0); guest.lying = false; guest.Blanket(false); if (guest.follower) guest.follower.Follow(); }
       if (guest.s === Guest.S.Queue) Game.Dequeue(guest);
       guest.rig.act = Rig.Act.None; guest.path = [];
       return startVisit(guest, fac);

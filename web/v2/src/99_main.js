@@ -74,6 +74,7 @@ function frame(now) {
   const sub = window.__sub || 1;
   for (let k = 0; k < sub; k++) { if (k > 0) { Time.deltaTime = raw * Time.timeScale; Time.time += Time.deltaTime; } tickLogic(); }
   Cam.Update(raw);
+  Hotel.TickDoors(raw);
   Hotel.FrameView();
   applySun();
   Game.Frame(raw);

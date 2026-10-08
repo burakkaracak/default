@@ -20,7 +20,7 @@ class Player extends Behaviour {
 
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
-    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) this.ArriveFloor(); return; }
+    if (this.liftT > 0) { this.LiftTick(dt); return; }
     // manuel kontrol
     let mx = 0, mz = 0;
     const k = Input.keys;
@@ -43,28 +43,59 @@ class Player extends Behaviour {
       const n = this.path[0];
       if (n.lift !== undefined) {
         // asansöre bin
-        this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9; this.go.position.set(n.x, this.floorY, n.z);
-        Sfx.Play('tick', 0.6); return;
+        this.path.shift(); this.go.position.set(n.x, this.floorY, n.z); this.StartLift(n.lift); return;
       }
       U.Walk(this.go, this.path, this.speed, this.rig);
       return;
     }
     this.rig.Tick(0);
   }
+  // Asansör yolculuğu: kapı açılır → karakter kabine girer → kabin (ve kamera) katlar boyunca kayar → kapı açılır, karakter çıkar
+  StartLift(f) {
+    this.path = []; this.liftFrom = this.floor; this.liftTo = f;
+    this.liftDur = 1.4 + 0.35 * Math.abs(f - this.floor); this.liftT = this.liftDur; this.liftPhase = 0;
+    Hotel.LiftDoor(this.floor, true); Sfx.Play('tick', 0.6);
+    UI.Toast((f === 0 ? 'Lobi' : f > Hotel.floors ? 'Çatı' : f + '. kat') + (f > this.floor ? ' ↑' : ' ↓'), 'info');
+  }
+  LiftTick(dt) {
+    this.liftT -= dt; this.rig.Tick(0);
+    const u = 1 - this.liftT / this.liftDur; // 0..1
+    const y0 = Hotel.FloorY(this.liftFrom), y1 = Hotel.FloorY(this.liftTo);
+    if (u < 0.2) { this.go.position.z = Mathf.Lerp(0, -1.2, u / 0.2); } // kabine yürür
+    else if (u < 0.8) {
+      if (this.liftPhase === 0) { this.liftPhase = 1; Hotel.LiftDoor(this.liftFrom, false); this.rig.inner.visible = false; }
+      const k = Mathf.Ease.inOutCubic((u - 0.2) / 0.6);
+      this.go.position.y = Mathf.Lerp(y0, y1, k);
+      if (this.liftPhase === 1 && k > 0.5) { this.liftPhase = 2; this.floor = this.liftTo; Hotel.SetView(this.floor); }
+    } else {
+      if (this.liftPhase === 2) { this.liftPhase = 3; this.rig.inner.visible = true; this.go.position.y = y1; Hotel.LiftDoor(this.liftTo, true); Sfx.Play('ding', 0.5); }
+      this.go.position.z = Mathf.Lerp(-1.2, 0.3, (u - 0.8) / 0.2);
+    }
+    if (this.liftT <= 0) this.ArriveFloor();
+  }
   ArriveFloor() {
-    this.floor = this.liftTo; this.go.position.y = this.floorY;
-    Hotel.SetView(this.floor); Sfx.Play('ding', 0.5);
+    this.floor = this.liftTo; this.go.position.y = this.floorY; this.rig.inner.visible = true; this.go.position.z = 0.3; this.liftT = 0;
+    if (Hotel.view !== this.floor) Hotel.SetView(this.floor);
+    Hotel.LiftDoor(this.floor, false);
   }
   RideLift(f) {
-    if (!Hotel.InLift(this.go.position) || f === this.floor) return false;
-    this.path = []; this.liftTo = f; this.liftT = 0.9; return true;
+    if (!Hotel.InLift(this.go.position) || f === this.floor || this.liftT > 0) return false;
+    this.StartLift(f); return true;
   }
   TryMove(step) {
     const p = this.go.position, f = this.floor;
     const nx = V(p.x + step.x, p.y, p.z), nz = V(p.x, p.y, p.z + step.z);
     if (Hotel.Walkable(V(p.x + step.x, p.y, p.z + step.z), f)) { p.x += step.x; p.z += step.z; return; }
-    if (Hotel.Walkable(nx, f)) p.x += step.x;
-    if (Hotel.Walkable(nz, f)) p.z += step.z;
+    let moved = false;
+    if (Hotel.Walkable(nx, f)) { p.x += step.x; moved = true; }
+    if (Hotel.Walkable(nz, f)) { p.z += step.z; moved = true; }
+    if (moved || f < 1 || f > Hotel.floors) return;
+    // kapı yardımı: odaya doğru itiliyorsa ve kapıya yakınsa kapı hizasına kay
+    const side = Math.sign(step.z); if (!side || Math.abs(step.z) < Math.abs(step.x) * 0.5) return;
+    const r = Hotel.RoomAt(V(p.x, p.y, side * 2.5), f); if (!r || r.level < 0) return;
+    const dx = (r.x + 0.15) - p.x; if (Math.abs(dx) > 1.3) return;
+    p.x += Mathf.Clamp(dx, -1, 1) * Math.abs(step.z) * 1.5;
+    const nz2 = V(p.x, p.y, p.z + step.z); if (Hotel.Walkable(nz2, f)) p.z += step.z;
   }
   Near(pt, r = 1.8) { const p = this.go.position; return Math.abs(p.y - pt.y) < 1.5 && Math.hypot(p.x - pt.x, p.z - pt.z) < r; }
 }

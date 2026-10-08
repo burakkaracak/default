@@ -9,20 +9,20 @@ const Decor = {
   },
   // k: anahtar · n: ad · m: model (ya da b: prosedürel kurucu) · w,d: hücre · yaw: modelin önü +z'ye baksın diye ek dönüş · cost · comfort · cat · star · flat (üstüne basılabilir, çakışmaz)
   Catalog: [
-    { k: 'bedSingle', n: 'Tek kişilik yatak', i: '🛏', m: 'bedSingle', w: 2, d: 4, cost: 120, comfort: 8, cat: 'yatak', star: 1, bed: true },
-    { k: 'bedDouble', n: 'Çift kişilik yatak', i: '🛏', m: 'bedDouble', w: 3, d: 4, cost: 320, comfort: 16, cat: 'yatak', star: 1, bed: true },
+    { k: 'bedSingle', n: 'Tek kişilik yatak', i: '🛏', m: 'bedSingle', w: 2, d: 4, cost: 120, comfort: 8, cat: 'yatak', star: 1, bed: true, yaw: 180 },
+    { k: 'bedDouble', n: 'Çift kişilik yatak', i: '🛏', m: 'bedDouble', w: 3, d: 4, cost: 320, comfort: 16, cat: 'yatak', star: 1, bed: true, yaw: 180 },
     { k: 'nightstand', n: 'Komodin ve abajur', i: '🕯', b: 'nightstand', w: 2, d: 1, cost: 70, comfort: 4, cat: 'mobilya', star: 1 },
-    { k: 'chairCushion', n: 'Koltuk', i: '🪑', m: 'chairCushion', w: 2, d: 2, cost: 90, comfort: 5, cat: 'mobilya', star: 1 },
-    { k: 'chairRounded', n: 'Sandalye', i: '🪑', m: 'chairRounded', w: 1, d: 1, cost: 45, comfort: 2, cat: 'mobilya', star: 1 },
-    { k: 'loungeChair', n: 'Berjer', i: '🛋', m: 'loungeChair', w: 2, d: 2, cost: 140, comfort: 7, cat: 'mobilya', star: 1 },
-    { k: 'loungeChairRelax', n: 'Dinlenme koltuğu', i: '🛋', m: 'loungeChairRelax', w: 2, d: 3, cost: 220, comfort: 10, cat: 'mobilya', star: 2 },
-    { k: 'loungeDesignSofa', n: 'Kanepe', i: '🛋', m: 'loungeDesignSofa', w: 4, d: 2, cost: 380, comfort: 14, cat: 'mobilya', star: 2 },
+    { k: 'chairCushion', n: 'Koltuk', i: '🪑', m: 'chairCushion', w: 2, d: 2, cost: 90, comfort: 5, cat: 'mobilya', star: 1, yaw: 180 },
+    { k: 'chairRounded', n: 'Sandalye', i: '🪑', m: 'chairRounded', w: 1, d: 1, cost: 45, comfort: 2, cat: 'mobilya', star: 1, yaw: 180 },
+    { k: 'loungeChair', n: 'Berjer', i: '🛋', m: 'loungeChair', w: 2, d: 2, cost: 140, comfort: 7, cat: 'mobilya', star: 1, yaw: 180 },
+    { k: 'loungeChairRelax', n: 'Dinlenme koltuğu', i: '🛋', m: 'loungeChairRelax', w: 2, d: 3, cost: 220, comfort: 10, cat: 'mobilya', star: 2, yaw: 180 },
+    { k: 'loungeDesignSofa', n: 'Kanepe', i: '🛋', m: 'loungeDesignSofa', w: 4, d: 2, cost: 380, comfort: 14, cat: 'mobilya', star: 2, yaw: 180 },
     { k: 'sideTable', n: 'Sehpa', i: '🪵', m: 'sideTable', w: 1, d: 1, cost: 40, comfort: 2, cat: 'mobilya', star: 1 },
     { k: 'tableCoffeeGlass', n: 'Cam orta sehpa', i: '🪟', m: 'tableCoffeeGlass', w: 3, d: 2, cost: 160, comfort: 5, cat: 'mobilya', star: 2 },
     { k: 'tableRound', n: 'Yuvarlak masa', i: '🟤', m: 'tableRound', w: 2, d: 2, cost: 110, comfort: 4, cat: 'mobilya', star: 1 },
-    { k: 'bookcaseOpen', n: 'Kitaplık', i: '📚', m: 'bookcaseOpen', w: 2, d: 1, cost: 130, comfort: 6, cat: 'mobilya', star: 1 },
-    { k: 'bookcaseClosedDoors', n: 'Gardırop', i: '🚪', m: 'bookcaseClosedDoors', w: 2, d: 1, cost: 150, comfort: 5, cat: 'mobilya', star: 1 },
-    { k: 'tvSet', n: 'Televizyon ünitesi', i: '📺', b: 'tvSet', w: 3, d: 1, cost: 260, comfort: 12, cat: 'mobilya', star: 1 },
+    { k: 'bookcaseOpen', n: 'Kitaplık', i: '📚', m: 'bookcaseOpen', w: 2, d: 1, cost: 130, comfort: 6, cat: 'mobilya', star: 1, yaw: 180 },
+    { k: 'bookcaseClosedDoors', n: 'Gardırop', i: '🚪', m: 'bookcaseClosedDoors', w: 2, d: 1, cost: 150, comfort: 5, cat: 'mobilya', star: 1, yaw: 180 },
+    { k: 'tvSet', n: 'Televizyon ünitesi', i: '📺', b: 'tvSet', w: 3, d: 1, cost: 260, comfort: 12, cat: 'mobilya', star: 1, yaw: 180 },
     { k: 'coatRackStanding', n: 'Askılık', i: '🧥', m: 'coatRackStanding', w: 1, d: 1, cost: 35, comfort: 2, cat: 'mobilya', star: 1 },
     { k: 'lampSquareFloor', n: 'Lambader', i: '💡', m: 'lampSquareFloor', w: 1, d: 1, cost: 60, comfort: 4, cat: 'dekor', star: 1, light: true },
     { k: 'bathtub', n: 'Küvet', i: '🛁', m: 'bathtub', w: 2, d: 4, cost: 450, comfort: 18, cat: 'mobilya', star: 3 },
@@ -40,10 +40,10 @@ const Decor = {
   ],
   Presets: {
     0: [['bedSingle', 0, 1, 0], ['nightstand', 2, 1, 0], ['plantSmall1', 6, 6, 0]],
-    1: [['bedDouble', 0, 1, 0], ['nightstand', 3, 1, 0], ['tvSet', 4, 6, 0], ['chairCushion', 0, 6, 0], ['rugBlue', 1, 4, 0]],
-    2: [['bedDouble', 0, 1, 0], ['nightstand', 3, 1, 0], ['tvSet', 4, 6, 0], ['loungeChairRelax', 5, 2, 0], ['bookcaseOpen', 0, 7, 0], ['rugPink', 1, 4, 0], ['vase', 5, 0, 0], ['plantSmall2', 6, 0, 0]],
+    1: [['bedDouble', 0, 1, 0], ['nightstand', 3, 1, 0], ['tvSet', 4, 6, 180], ['chairCushion', 0, 6, 180], ['rugBlue', 1, 4, 0]],
+    2: [['bedDouble', 0, 1, 0], ['nightstand', 3, 1, 0], ['tvSet', 4, 6, 180], ['loungeChairRelax', 5, 2, 0], ['bookcaseOpen', 0, 7, 180], ['rugPink', 1, 4, 0], ['vase', 5, 0, 0], ['plantSmall2', 6, 0, 0]],
   },
-  LobbyPreset: [['loungeDesignSofa', 0, 2, 0], ['loungeDesignSofa', 0, 8, 0], ['tableCoffeeGlass', 5, 5, 0], ['loungeChairRelax', 9, 2, 0], ['rugLav', 3, 4, 0], ['pottedPlant', 0, 0, 0], ['vase', 11, 0, 0]],
+  LobbyPreset: [['loungeDesignSofa', 0, 2, 0], ['loungeDesignSofa', 0, 8, 180], ['tableCoffeeGlass', 5, 5, 0], ['loungeChairRelax', 9, 2, 0], ['rugLav', 3, 4, 0], ['pottedPlant', 0, 0, 0], ['vase', 11, 0, 0]],
 
   zones: new Map(), active: null, sel: null, ghost: null, drag: null, lastZone: null,
   Def(k) { return this.Catalog.find(c => c.k === k); },
@@ -216,10 +216,14 @@ const Decor = {
     const r = z.room; if (!r) return;
     const bed = z.items.find(it => this.Def(it.k).bed);
     const y = Hotel.FloorY(r.floor);
-    if (bed) { const c = this.Center(z, bed); r.bed = V(r.x + c.x, y, r.z + c.zz); r.bedYaw = (bed.rot || 0) + (this.Def(bed.k).yaw || 0) + 180; r.hasBed = true; }
-    else { r.bed = V(r.x, y, r.z); r.bedYaw = 0; r.hasBed = false; }
+    if (bed) {
+      // modelin başucu yaw yönünde (+z döndürülmüş); karakter sırtüstü yatarken başı holder'ın -z'sine uzanır → holder yaw = model yaw + 180
+      const c = this.Center(z, bed), my = (bed.rot || 0) + (this.Def(bed.k).yaw || 0), a = my * Mathf.Deg2Rad, hx = Math.sin(a), hz = Math.cos(a);
+      const foot = (c.d * this.Cell) / 2 - 0.12;
+      r.bed = V(r.x + c.x - hx * foot, y, r.z + c.zz - hz * foot); r.bedYaw = my + 180; r.hasBed = true;
+    } else { r.bed = V(r.x, y, r.z); r.bedYaw = 0; r.hasBed = false; }
     const seat = z.items.find(it => /chair|lounge|Sofa/.test(it.k));
-    if (seat) { const c = this.Center(z, seat); r.seat = V(r.x + c.x, y, r.z + c.zz); r.seatYaw = (seat.rot || 0) + (this.Def(seat.k).yaw || 0); } else { r.seat = V(r.x + 1.2, y, r.z + z.side * 2.4); r.seatYaw = 0; }
+    if (seat) { const c = this.Center(z, seat); r.seat = V(r.x + c.x, y, r.z + c.zz); r.seatYaw = (seat.rot || 0) + (this.Def(seat.k).yaw || 0) + 180; } else { r.seat = V(r.x + 1.2, y, r.z + z.side * 2.4); r.seatYaw = 0; }
   },
 
   // ---------------- Düzenleme kipi ----------------

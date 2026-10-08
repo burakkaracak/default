@@ -30,7 +30,7 @@ class Guest extends Behaviour {
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
     if (this.moodT > 0) { this.moodT -= dt; if (this.moodT <= 0) this.mood.obj.visible = false; }
-    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
+    if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); this.rig.inner.visible = this.liftT <= 0; if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
     const S = Guest.S;
     if (this.path.length) {
       const n = this.path[0];
@@ -49,7 +49,7 @@ class Guest extends Behaviour {
       case S.Stay: this.StayTick(dt); break;
       case S.Checkout: this.Pay(); break;
       case S.Visit: Facilities.GuestTick(this, dt); break;
-      case S.Leave: this.destroy(); if (this.follower) this.follower.destroy(); Game.OnGuestGone(this); break;
+      case S.Leave: this.Blanket(false); this.destroy(); if (this.follower) this.follower.destroy(); Game.OnGuestGone(this); break;
     }
   }
 
@@ -69,10 +69,19 @@ class Guest extends Behaviour {
     this.stayLen = this.nights * Game.NightLen;
     this.nextReq = Random.Range(6, 14); this.reqCount = 0;
     this.rig.act = Rig.Act.Lie;
-    this.go.position.copy(this.room.bed); this.go.position.y += 0.55; setEuler(this.go, 0, this.room.bedYaw || 0, 0);
-    this.lying = true;
+    this.go.position.copy(this.room.bed); this.go.position.y += 0.42; setEuler(this.go, -90, this.room.bedYaw || 0, 0); // sırtüstü, başı başucunda
+    this.lying = true; this.Blanket(true);
     if (this.follower) this.follower.Sit(this.room);
     Game.OnCheckIn(this);
+  }
+  // yatakta üstüne örtü: yatağın ortasında, gövdeyi örten ince kutu
+  Blanket(show) {
+    if (this.blanket) { Destroy(this.blanket); this.blanket = null; }
+    if (!show || !this.room) return;
+    const r = this.room, a = (r.bedYaw || 0) * Mathf.Deg2Rad, hx = Math.sin(a), hz = Math.cos(a); // baş yönü = holder -z
+    const p = V(r.bed.x - hx * 0.55, r.bed.y + 0.56, r.bed.z - hz * 0.55);
+    const b = U.Box('Ortu', W, p, V(1.25, 0.1, 1.15), C(0.95, 0.72, 0.78)); b.rotation.y = a; b.castShadow = false;
+    this.blanket = b;
   }
   StayTick(dt) {
     this.t += dt; this.rig.Tick(0);
@@ -86,7 +95,7 @@ class Guest extends Behaviour {
     if (this.t >= this.stayLen && !r.request) {
       // çıkış: odadan bankoya
       this.s = Guest.S.Checkout; this.rig.act = Rig.Act.None; this.lying = false;
-      this.go.position.copy(r.inside);
+      this.go.position.copy(r.inside); setEuler(this.go, 0, 0, 0); this.Blanket(false);
       r.guest = null; r.state = 'dirty'; r.dirt = 1; if (r.mess) r.mess.visible = true;
       if (this.follower) this.follower.Follow();
       this.path = Hotel.Path(this.pos, r.floor, V(0.9, 0, -2.0), 0);
@@ -128,7 +137,8 @@ class Follower extends Behaviour {
   Update() {
     if (this.sitting || !alive(this.leader)) return;
     const L = this.leader.pos, p = this.go.position;
-    if (this.leader.liftT > 0) { p.copy(L); p.y = Hotel.FloorY(this.leader.liftTo); this.rig.Tick(0); return; }
+    if (this.leader.liftT > 0) { p.copy(L); p.y = Hotel.FloorY(this.leader.liftTo); this.rig.Tick(0); this.rig.inner.visible = false; return; }
+    this.rig.inner.visible = true;
     const d = V(L.x - p.x, 0, L.z - p.z), m = Vec.len(d);
     p.y = L.y;
     if (m > 1.3) { const st = Math.min(m - 1.1, 3.4 * Time.deltaTime); p.add(Vec.mul(d, st / m)); U.Face(this.go, d); this.rig.Tick(1); }

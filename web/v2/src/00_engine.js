@@ -482,7 +482,7 @@ class ProgressPad {
 
 // ---------------------------------------------------------------- Karakter iskeleti
 class Rig {
-  static CharYaw = 180;
+  static CharYaw = 0; // model önü +z; U.Face hareket yönüne +z'yi çevirir
   static Guests = ['character-female-a', 'character-female-b', 'character-female-c', 'character-female-e', 'character-female-f', 'character-male-a', 'character-male-b', 'character-male-c', 'character-male-e', 'character-male-f'];
   static Act = { None: 0, Clean: 1, Cheer: 2, Sad: 3, Lie: 4, Sit: 5, Wave: 6 };
   static all = new Set();

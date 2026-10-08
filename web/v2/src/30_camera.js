@@ -10,12 +10,12 @@ const Cam = {
   Rotate(dir) { this.yawGoal = Math.round(this.yawGoal / 90) * 90 + dir * 90; Sfx.Play('tap', 0.4); },
   Zoom(k) { this.distGoal = Mathf.Clamp(this.distGoal * k, this.MinDist, this.MaxDist); },
   ZoomToggle() { this.distGoal = this.distGoal > 20 ? 14 : 30; },
+  Reset() { this.distGoal = 24; this.yawGoal = Math.round(this.yawGoal / 360) * 360; this.pitch = 50; if (Game.player) { this.follow = Game.player.go; if (Hotel.view !== Game.player.floor && Game.player.liftT <= 0) Hotel.SetView(Game.player.floor); } Sfx.Play('tap', 0.4); },
   Snap() { this.yaw = this.yawGoal; this.dist = this.distGoal; if (this.follow) this.target.copy(this.FollowPoint()); this.Apply(); },
 
   FollowPoint() {
     const p = this.follow.position.clone();
-    const base = Hotel.FloorY(this.floor);
-    p.y = base;
+    p.y = this.follow.position.y; // asansörde katlar arası kayarken kamera da kayar
     // biraz önünü göster
     const f = this.Forward; p.x += f.x * 1.5; p.z += f.z * 1.5;
     const aspect = innerWidth / innerHeight;
