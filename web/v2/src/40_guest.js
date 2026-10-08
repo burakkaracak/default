@@ -1,6 +1,6 @@
 // Misafir: kasabadan gelir, resepsiyonda sıraya girer, odaya çıkar, konaklar, isteklerde bulunur, çıkışta öder ve gider.
 class Guest extends Behaviour {
-  static S = { Arrive: 0, Queue: 1, ToRoom: 2, Stay: 3, Checkout: 4, Leave: 5 };
+  static S = { Arrive: 0, Queue: 1, ToRoom: 2, Stay: 3, Checkout: 4, Leave: 5, Visit: 6 };
   constructor(type) {
     super(); this.go.name = 'Misafir';
     this.type = type; this.id = ++Guest.seq;
@@ -48,6 +48,7 @@ class Guest extends Behaviour {
       case S.ToRoom: this.EnterRoom(); break;
       case S.Stay: this.StayTick(dt); break;
       case S.Checkout: this.Pay(); break;
+      case S.Visit: Facilities.GuestTick(this, dt); break;
       case S.Leave: this.destroy(); if (this.follower) this.follower.destroy(); Game.OnGuestGone(this); break;
     }
   }
@@ -60,6 +61,7 @@ class Guest extends Behaviour {
     this.path = Hotel.Path(this.pos, 0, room.inside, room.floor);
     this.sat += this.waited < 12 ? 0.5 : this.waited > 30 ? -0.6 : 0;
     if (room.level > this.wantLevel) this.sat += 0.6;
+    this.sat += Decor.SatBonus(room);
     this.ShowMood('🔑', C(1, 0.9, 0.5), 1.5);
   }
   EnterRoom() {
@@ -67,7 +69,7 @@ class Guest extends Behaviour {
     this.stayLen = this.nights * Game.NightLen;
     this.nextReq = Random.Range(6, 14); this.reqCount = 0;
     this.rig.act = Rig.Act.Lie;
-    this.go.position.copy(this.room.bed); this.go.position.y += 0.55; setEuler(this.go, 0, this.room.side > 0 ? 180 : 0, 0);
+    this.go.position.copy(this.room.bed); this.go.position.y += 0.55; setEuler(this.go, 0, this.room.bedYaw || 0, 0);
     this.lying = true;
     if (this.follower) this.follower.Sit(this.room);
     Game.OnCheckIn(this);
@@ -93,7 +95,7 @@ class Guest extends Behaviour {
   }
   Pay() {
     const r = this.room;
-    const base = Data.RoomLevels[r.level].price * this.type.pay * this.nights;
+    const base = Decor.RoomPrice(r) * this.type.pay * this.nights;
     const sat = Mathf.Clamp(this.sat, 1, 5);
     const tip = Math.round(base * Data.Tip * Mathf.Clamp01((sat - 2) / 3)) + this.tips;
     Game.Earn(Math.round(base), Vec.add(this.pos, V(0, 1.6, 0)), tip);
@@ -101,11 +103,15 @@ class Guest extends Behaviour {
     const face = sat >= 4.5 ? '😍' : sat >= 3.5 ? '😊' : sat >= 2.5 ? '🙂' : '😕';
     this.ShowMood(face, Col.white, 3);
     this.rig.act = sat >= 3.5 ? Rig.Act.Cheer : Rig.Act.None; this.rig.Tick(0);
-    this.s = Guest.S.Leave;
-    this.path = [V(0, 0, 6.0), Hotel.Entrance.clone(), Hotel.Street.clone(), Random.Chance(0.5) ? Hotel.SpawnW.clone() : Hotel.SpawnE.clone()];
     Tween.After(0.8, () => { this.rig.act = Rig.Act.None; });
+    if (Facilities.Offer(this)) return; // tesise uğrar (durumu Facilities yönetir)
+    this.Depart(true);
   }
-  Depart() { this.s = Guest.S.Leave; this.path = [Hotel.Entrance.clone(), Hotel.Street.clone(), Random.Chance(0.5) ? Hotel.SpawnW.clone() : Hotel.SpawnE.clone()]; }
+  // Çıkış: lobiden sokağa (fromLobby: içeriden başlıyorsa)
+  Depart(fromLobby) {
+    this.s = Guest.S.Leave;
+    this.path = fromLobby ? [V(0, 0, 6.0), Hotel.Entrance.clone(), Hotel.Street.clone(), Random.Chance(0.5) ? Hotel.SpawnW.clone() : Hotel.SpawnE.clone()] : [Hotel.Entrance.clone(), Hotel.Street.clone(), Random.Chance(0.5) ? Hotel.SpawnW.clone() : Hotel.SpawnE.clone()];
+  }
   GoToSlot(i) { this.slot = i; this.path = [Hotel.QueueSlot(i)]; }
 }
 
@@ -117,7 +123,7 @@ class Follower extends Behaviour {
     this.rig = Rig.Model(this.go, look, 1.7 * scale);
     this.leader = leader; this.go.position.copy(leader.pos).add(V(0.8, 0, 0.4)); this.sitting = false;
   }
-  Sit(room) { this.sitting = true; this.go.position.set(room.x + 1.2, Hotel.FloorY(room.floor), room.side * 2.4); this.rig.act = Rig.Act.Sit; this.rig.Tick(0); }
+  Sit(room) { this.sitting = true; const s = room.seat || V(room.x + 1.2, Hotel.FloorY(room.floor), room.side * 2.4); this.go.position.copy(s); setEuler(this.go, 0, room.seatYaw || 0, 0); this.rig.act = Rig.Act.Sit; this.rig.Tick(0); }
   Follow() { this.sitting = false; this.rig.act = Rig.Act.None; this.go.position.copy(this.leader.pos); }
   Update() {
     if (this.sitting || !alive(this.leader)) return;

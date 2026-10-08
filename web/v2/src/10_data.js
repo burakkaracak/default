@@ -19,7 +19,26 @@ const Data = {
     receptionist: { name: 'Resepsiyonist', icon: '🛎', cost: 300, wage: 40, desc: 'Misafirleri senin yerine karşılar ve odaya yerleştirir.' },
     cleaner: { name: 'Temizlikçi', icon: '🧹', cost: [220, 520, 1100, 2200], wage: 30, desc: 'Kirli odaları kendiliğinden temizler.' },
     bellhop: { name: 'Kat görevlisi', icon: '🧳', cost: [350, 800], wage: 35, desc: 'Misafir isteklerini (havlu, su, oda servisi) odaya götürür.' },
+    // tesis personeli (ilgili tesis kurulunca işe alınabilir)
+    barista: { name: 'Barista', icon: '☕', cost: [400, 900], wage: 35, desc: 'Kafede kahveleri hazırlar, misafirler beklemez.', look: ['character-female-c', 'character-male-a'] },
+    asci: { name: 'Aşçı', icon: '👩‍🍳', cost: 700, wage: 55, desc: 'Restoran mutfağında pişirir; servis çok hızlanır.', look: ['character-male-f', 'character-female-f'] },
+    garson: { name: 'Garson', icon: '🍽', cost: [500, 1000], wage: 40, desc: 'Restoranda tabakları masalara taşır.', look: ['character-female-e', 'character-male-c'] },
+    terapist: { name: 'Terapist', icon: '💆', cost: [800, 1500], wage: 60, desc: 'Spada masaj yapar.', look: ['character-female-f', 'character-male-b'] },
+    cankurtaran: { name: 'Cankurtaran', icon: '🛟', cost: 600, wage: 45, desc: 'Havuz başında nöbet tutar; misafirler daha rahat ve mutlu.', look: ['character-male-e', 'character-female-a'] },
+    barmen: { name: 'Barmen', icon: '🍹', cost: [900, 1600], wage: 60, desc: 'Çatı barında kokteyl hazırlar.', look: ['character-male-c', 'character-female-b'] },
+    bahcivan: { name: 'Bahçıvan', icon: '🌱', cost: 500, wage: 35, desc: 'Çiçekleri bakımlı tutar; açmış bahçe bütün misafirleri mutlu eder.', look: ['character-female-a', 'character-male-a'] },
   },
+
+  // Tesisler: zemin kat (floor 0) ya da çatı ('roof'); unlock = gereken yıldız; roles = tutulabilecek personel
+  Facilities: [
+    { id: 'kafe', name: 'Kafe', icon: '☕', cost: 1200, unlock: 1, floor: 0, roles: ['barista'], price: 7, desc: 'Lobinin doğu köşesi. Misafirler çıkışta kahve içer; iş insanları bayılır.' },
+    { id: 'bahce', name: 'Bahçe', icon: '🌷', cost: 2500, unlock: 1, floor: 'roof', roles: ['bahcivan'], price: 0, desc: 'Çatıda çiçekler, çeşme ve banklar. Ücretsiz gezinti; bahçe açmışken herkes daha mutlu.' },
+    { id: 'havuz', name: 'Havuz', icon: '🏊', cost: 3000, unlock: 2, floor: 'roof', roles: ['cankurtaran'], price: 7, desc: 'Çatıda havuz ve şezlonglar. Aileler ve turistler çok sever.' },
+    { id: 'spor', name: 'Spor salonu', icon: '🏋', cost: 4000, unlock: 2, floor: 'roof', roles: [], price: 9, desc: 'Koşu bantları, ağırlıklar, minderler. Personel gerekmez; sporcular ve öğrenciler gelir.' },
+    { id: 'restoran', name: 'Restoran', icon: '🍝', cost: 5000, unlock: 2, floor: 0, roles: ['garson', 'asci'], price: 16, desc: 'Lobinin kuzeydoğusu. Garson (ya da sen) tabakları taşır; aşçı pişirmeyi hızlandırır.' },
+    { id: 'spa', name: 'Spa', icon: '🧖', cost: 7000, unlock: 3, floor: 0, roles: ['terapist'], price: 24, desc: 'Masaj yatakları, jakuzi ve mumlar. Balayı çiftleri ve emekliler için.' },
+    { id: 'bar', name: 'Çatı barı', icon: '🍹', cost: 9000, unlock: 3, floor: 'roof', roles: ['barmen'], price: 22, desc: 'Çatıda manzaralı bar, ışık zincirleri. Akşamları hesap 1,5 kat.' },
+  ],
 
   // Misafir türleri (faz 1: temel 6; diğerleri faz 3)
   Guests: [

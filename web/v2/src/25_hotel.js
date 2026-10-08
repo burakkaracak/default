@@ -52,8 +52,17 @@ const Hotel = {
       const parts = [];
       for (const side of [-1, 1]) {
         const z = side * (D / 2 + 0.02);
-        if (f === 0) { for (const x of [-9, -5, 5, 9]) parts.push({ geo: 'Cube', pos: V(x, 1.7, z), scale: V(2.4, 1.9, 0.1), c: winC }); }
-        else for (const x of this.RoomX) parts.push({ geo: 'Cube', pos: V(x, 1.8, z), scale: V(1.6, 1.4, 0.1), c: winC }, { geo: 'Cube', pos: V(x, 0.95, z + side * 0.12), scale: V(1.9, 0.12, 0.3), c: trimC });
+        if (f === 0) { for (const x of [-9, -5, 5, 9]) { parts.push({ geo: 'Cube', pos: V(x, 1.7, z + side * 0.04), scale: V(2.4, 1.9, 0.1), c: winC }, { geo: 'Cube', pos: V(x, 1.7, z - side * 0.02), scale: V(2.55, 2.05, 0.06), c: C(1, 1, 1) }); parts.push({ geo: 'Cube', pos: V(x, 0.62, z + side * 0.2), scale: V(2.0, 0.24, 0.36), c: C(0.6, 0.42, 0.3) }); for (const dx of [-0.7, -0.35, 0, 0.35, 0.7]) parts.push({ geo: 'Sphere', pos: V(x + dx, 0.84, z + side * 0.2), scale: V(0.26, 0.22, 0.26), c: [C(0.98, 0.45, 0.6), C(0.75, 0.55, 0.95), C(1, 0.85, 0.3)][Math.abs(dx * 10 | 0) % 3] }); } }
+        else for (const x of this.RoomX) {
+          // pencere, balkon ve çiçeklik
+          parts.push({ geo: 'Cube', pos: V(x, 1.8, z + side * 0.04), scale: V(1.6, 1.4, 0.1), c: winC }, { geo: 'Cube', pos: V(x, 1.8, z - side * 0.02), scale: V(1.75, 1.55, 0.06), c: C(1, 1, 1) });
+          parts.push({ geo: 'Cube', pos: V(x, 0.06, z + side * 0.5), scale: V(2.3, 0.12, 1.0), c: C(0.97, 0.94, 0.9) });
+          for (const dx of [-1.1, -0.55, 0, 0.55, 1.1]) parts.push({ geo: 'Cube', pos: V(x + dx, 0.5, z + side * 0.95), scale: V(0.06, 0.9, 0.06), c: trimC });
+          parts.push({ geo: 'Cube', pos: V(x, 0.95, z + side * 0.95), scale: V(2.3, 0.07, 0.07), c: trimC });
+          for (const sz of [-1, 1]) for (const dz of [0.25, 0.5, 0.75]) parts.push({ geo: 'Cube', pos: V(x + sz * 1.12, 0.5, z + side * dz), scale: V(0.06, 0.9, 0.06), c: trimC }, { geo: 'Cube', pos: V(x + sz * 1.12, 0.95, z + side * 0.5), scale: V(0.07, 0.07, 1.0), c: trimC });
+          parts.push({ geo: 'Cube', pos: V(x, 1.0, z + side * 0.92), scale: V(1.2, 0.22, 0.26), c: C(0.6, 0.42, 0.3) });
+          for (const dx of [-0.4, -0.13, 0.13, 0.4]) parts.push({ geo: 'Sphere', pos: V(x + dx, 1.2, z + side * 0.92), scale: V(0.22, 0.2, 0.22), c: [C(0.98, 0.45, 0.6), C(0.75, 0.55, 0.95), C(1, 0.85, 0.3), C(0.98, 0.6, 0.7)][(dx * 10 + 5 | 0) % 4] });
+        }
         parts.push({ geo: 'Cube', pos: V(0, H - 0.1, z + side * 0.06), scale: V(Wd + 0.2, 0.22, 0.14), c: trimC });
       }
       for (const side of [-1, 1]) { const x = side * (Wd / 2 + 0.02); for (const z of [-4, 0, 4]) parts.push({ geo: 'Cube', pos: V(x, 1.8, z), scale: V(0.1, 1.4, 1.6), c: winC }); parts.push({ geo: 'Cube', pos: V(x + side * 0.06, H - 0.1, 0), scale: V(0.14, 0.22, D + 0.2), c: trimC }); }
@@ -93,9 +102,7 @@ const Hotel = {
     U.Flat('Yolluk', g, V(0, 0.025, 1.2), V(2.6, 0.02, 8.6), C(0.62, 0.52, 0.82));
     U.Flat('YollukKenar', g, V(0, 0.02, 1.2), V(2.9, 0.02, 8.9), C(0.95, 0.8, 0.4));
     // bekleme köşesi (batı)
-    U.Model('loungeDesignSofa', g, V(-9, 0, 1.0), 90, 1); U.Model('loungeDesignSofa', g, V(-9, 0, 4.4), 90, 1);
-    U.Model('tableCoffeeGlass', g, V(-7.2, 0, 2.7), 0, 1); U.Model('loungeChairRelax', g, V(-5.8, 0, 0.6), 180, 1);
-    U.Box('Hali', g, V(-7.4, 0.02, 2.7), V(6, 0.03, 5.4), C(0.6, 0.78, 0.68));
+    Decor.FurnishLobby(g);
     U.Model('plantSmall2', g, V(-11.6, 0, 5.6), 0, 1); U.Model('pottedPlant', g, V(-11.6, 0, -5.6), 0, 1); U.Model('pottedPlant', g, V(5.6, 0, -5.8), 0, 1);
     // kafe köşesi (doğu, ileride tesis)
     U.Model('kitchenBar', g, V(5.5, 0, 3.2), 90, 1); U.Model('kitchenBarEnd', g, V(5.5, 0, 5.0), 90, 1); U.Model('kitchenCoffeeMachine', g, V(5.5, 1.0, 3.2), 90, 1);
@@ -105,6 +112,7 @@ const Hotel = {
     U.Box('Zincir', g, V(0, this.H - 0.1, 0), V(0.05, 0.3, 0.05), C(0.8, 0.7, 0.3));
     // giriş paspası
     U.Flat('Paspas', g, V(0, 0.03, 5.9), V(2.4, 0.02, 1.4), C(0.75, 0.3, 0.35));
+    Facilities.BuildLobby(g);
     this.lobby = g;
   },
 
@@ -112,17 +120,18 @@ const Hotel = {
     const H = this.H;
     for (let s = 0; s < 10; s++) {
       const side = s < 5 ? -1 : 1, x = this.RoomX[s % 5], zc = side * 4.25;
-      const id = this.RoomId(f, s), level = state.rooms[id] ?? -1;
+      const id = this.RoomId(f, s), rs = state.rooms[id], level = rs == null ? -1 : typeof rs === 'object' ? rs.lv : rs;
       const r = { id, floor: f, slot: s, side, x, z: zc, level, state: level < 0 ? 'locked' : 'clean', guest: null, request: null, dirt: 0, go: null, door: V(x, this.FloorY(f), side * 1.9), inside: V(x + 0.9, this.FloorY(f), side * 3.6), bed: V(x - 0.8, this.FloorY(f), side * 5.1), number: (f * 100) + (s + 1), group: null };
       this.rooms.set(id, r);
       const rg = U.Pivot(g, V(x, 0, zc), 'Oda' + id); r.group = rg;
       // bölme duvarları (odalar arası) ve koridor duvarı (kapı boşluklu)
       const pc = C(0.97, 0.94, 0.9);
-      if (s % 5 > 0) U.Box('Bolme', rg, V(-2, H / 2, 0), V(0.15, H, 5.5), pc);
-      if (s % 5 === 4) U.Box('BolmeD', rg, V(2, H / 2, 0), V(0.15, H, 5.5), pc);
-      U.Box('KoridorDuvar1', rg, V(-1.2, H / 2, -side * 2.75), V(1.6, H, 0.15), pc);
-      U.Box('KoridorDuvar2', rg, V(1.35, H / 2, -side * 2.75), V(1.3, H, 0.15), pc);
-      U.Box('KapiUst', rg, V(0.15, H - 0.4, -side * 2.75), V(1.1, 0.8, 0.15), pc);
+      const rw = o => { o.userData.roomWall = true; return o; };
+      if (s % 5 > 0) rw(U.Box('Bolme', rg, V(-2, H / 2, 0), V(0.15, H, 5.5), pc));
+      if (s % 5 === 4) rw(U.Box('BolmeD', rg, V(2, H / 2, 0), V(0.15, H, 5.5), pc));
+      rw(U.Box('KoridorDuvar1', rg, V(-1.2, H / 2, -side * 2.75), V(1.6, H, 0.15), pc));
+      rw(U.Box('KoridorDuvar2', rg, V(1.35, H / 2, -side * 2.75), V(1.3, H, 0.15), pc));
+      rw(U.Box('KapiUst', rg, V(0.15, H - 0.4, -side * 2.75), V(1.1, 0.8, 0.15), pc));
       if (level < 0) {
         U.Prim('Beton', rg, V(0, 0.005, 0), V(3.85, 0.01, 5.4), U.Mat(C(0.74, 0.72, 0.7))).castShadow = false;
         U.Model('cardboardBoxClosed', rg, V(-1, 0, 1.2), 20, 1); U.Model('cardboardBoxClosed', rg, V(0.8, 0, -0.6), -15, 1);
@@ -131,28 +140,7 @@ const Hotel = {
   },
 
   // Oda seviyesine göre döşeme ve mobilya
-  Furnish(r) {
-    const rg = r.group; const old = rg.children.filter(c => c.userData.furn); for (const o of old) Destroy(o);
-    const lv = Data.RoomLevels[r.level], side = r.side;
-    const add = (o) => { o.userData.furn = true; return o; };
-    const floorMat = r.level === 0 ? U.Mat(C(0.86, 0.72, 0.55), { tex: U.WoodTex, tiling: { x: 2, y: 3 } }) : r.level === 1 ? U.Mat(C(0.72, 0.78, 0.86), { tex: U.CarpetTex, tiling: { x: 3, y: 4 } }) : U.Mat(C(0.92, 0.8, 0.86), { tex: U.CarpetTex, tiling: { x: 3, y: 4 } });
-    add(U.Prim('Taban', rg, V(0, 0.005, 0), V(3.85, 0.01, 5.4), floorMat)).castShadow = false;
-    // duvar rengi: iç duvarlara ince boya katmanı
-    const wc = Col.hex(lv.color);
-    add(U.Flat('Boya', rg, V(0, 1.2, side * 2.72), V(3.8, 2.4, 0.03), wc));
-    // yatak dış duvara dayalı
-    add(U.Model(r.level === 2 ? 'bedDouble' : r.level === 1 ? 'bedDouble' : 'bedSingle', rg, V(-0.8, 0, side * 1.55), side > 0 ? 180 : 0, 1));
-    add(U.Model('cabinetBedDrawerTable', rg, V(0.75, 0, side * 2.3), side > 0 ? 180 : 0, 1));
-    add(U.Model('lampRoundTable', rg, V(0.75, 0.55, side * 2.3), 0, 1));
-    add(U.Model('plantSmall1', rg, V(1.6, 0, side * -1.9), 0, 1));
-    if (r.level >= 1) { add(U.Model('cabinetTelevision', rg, V(1.5, 0, side * -0.2), side > 0 ? 270 : 90, 1)); add(U.Model('televisionModern', rg, V(1.5, 0.5, side * -0.2), side > 0 ? 270 : 90, 1)); add(U.Model('chairCushion', rg, V(-1.3, 0, side * -1.6), side > 0 ? 0 : 180, 1)); }
-    if (r.level >= 2) { add(U.Model('loungeChairRelax', rg, V(1.3, 0, side * 1.0), side > 0 ? 240 : 60, 1)); add(U.Model('bookcaseOpen', rg, V(-1.6, 0, side * -1.0), side > 0 ? 90 : 270, 1)); add(U.Flat('Hali', rg, V(0.2, 0.015, 0), V(2.2, 0.02, 1.6), C(0.93, 0.6, 0.68))); }
-    // kapı numarası
-    const t = U.Text(rg, V(0.15, 2.45, -side * 2.9), String(r.number), 0.05, C(0.35, 0.25, 0.2), false, true); t.obj.userData.furn = true;
-    // kirlilik görüntüsü (çarşaf yığını) gerektiğinde
-    r.mess = add(U.Box('Dagınık', rg, V(0.4, 0.15, side * 0.4), V(0.9, 0.3, 0.7), C(0.9, 0.9, 0.95))); r.mess.visible = r.state === 'dirty';
-    r.heart = null;
-  },
+  Furnish(r) { Decor.Furnish(r); },
 
   BuildRoof(state) {
     const y = this.FloorY(this.floors + 1), g = U.Pivot(W, V(0, y, 0), 'Cati'); this.roof = g;
@@ -173,6 +161,7 @@ const Hotel = {
     World.AddLamp(V(0, y + 2.2, this.D / 2 - 0.5), 8, 1, C(1, 0.9, 0.6));
     // çiçekli saksılar
     for (const x of [-6, -2, 2, 6]) U.Model('plantSmall2', g, V(x, 0, 5.2), 0, 1.1);
+    Facilities.BuildRoof(g);
   },
 
   SetName(n) { if (this.signText) this.signText.text = (n || 'OTEL').toLocaleUpperCase('tr-TR'); },

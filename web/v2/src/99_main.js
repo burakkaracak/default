@@ -105,7 +105,7 @@ async function boot() {
   Cloud.OfferBackup();
   setInterval(() => Cloud.Push(), 15000);
   requestAnimationFrame(frame);
-  window.__game = { Game, World, Hotel, Cam, UI, Store, U, Time, Guest, Staff, Player, Quality, Cloud, Data, THREE, scene, camera, renderer, Rig, Particles, Tween };
+  window.__game = { Game, World, Hotel, Cam, UI, Store, U, Time, Guest, Staff, Player, Quality, Cloud, Data, THREE, scene, camera, renderer, Rig, Particles, Tween, Decor, Facilities, worldToScreen };
   window.__ready = true;
 }
 boot().catch(e => { console.error(e); const ld = document.getElementById('loading'); if (ld) ld.innerHTML = '<div style="color:#fff;padding:20px">Yüklenemedi: ' + e.message + '</div>'; });
