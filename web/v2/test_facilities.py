@@ -34,7 +34,7 @@ try:
         pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:400]))
         pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append('CONSOLE ' + m.text[:300]))
         pg.goto(f'http://localhost:{PORT}/play.html'); pg.wait_for_function('window.__ready === true', timeout=90000)
-        pg.evaluate("(()=>{const g=window.__game; window.__game.Facilities = window.__fac; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; g.Quality.Set(0); g.Game.spawnT=9999; g.Game.st.money=1e6; g.Game.st.rep=400; window.__sub=6; window.__noRender=1; g.Game.player.GoTo(g.Hotel.Lobby.lounge,0);})()")
+        pg.evaluate("(()=>{const g=window.__game; window.__game.Facilities = window.__fac; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; g.Quality.Set(0); g.Game.spawnT=9999; g.Game.st.money=1e6; g.Game.st.rep=400; g.Game.st.stars=5; window.__sub=6; window.__noRender=1; g.Game.player.GoTo(g.Hotel.Lobby.lounge,0);})()")
         # 1) hepsini kur, personel tut, odalar aç
         r = pg.evaluate("""(()=>{const g=window.__game,G=g.Game,F=window.__fac; const ids=['kafe','bahce','havuz','spor','restoran','spa','bar']; const built=ids.map(i=>F.Buy(i));
           const roles=['barista','asci','garson','terapist','cankurtaran','barmen','bahcivan']; const hired=roles.map(r=>G.AddStaff(r)); const rec=G.AddStaff('receptionist'); const cl=G.AddStaff('cleaner');

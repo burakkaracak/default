@@ -9,6 +9,7 @@ const World = {
     const T = this.T, root = U.Pivot(W, V(), 'Kasaba'); this.root = root;
     // --- zemin: büyük çim, kum ve deniz ---
     const grass = U.Prim('Cim', root, V(0, -0.02, -6), V(220, 0.04, 150), U.Mat(C(0.56, 0.78, 0.4), { tex: U.GrassTex, tiling: { x: 40, y: 28 } }));
+    grass.material = grass.material.clone(); this.grass = grass;
     grass.receiveShadow = true; grass.castShadow = false;
     // kumsal ve deniz güneyde
     U.Prim('Kum', root, V(0, 0.0, 30), V(220, 0.06, 12), U.Mat(C(0.96, 0.88, 0.7), { tex: U.SandTex, tiling: { x: 30, y: 2 } }));
@@ -104,7 +105,7 @@ const World = {
 
   get Clock() { const m = Math.floor(this.time * 24 * 60) % (24 * 60); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); },
   get IsNight() { return this.daylight < 0.35; },
-  get WeatherText() { return Data.Weather[this.weather]; },
+  get WeatherText() { return Life.WeatherText; },
 
   Tick(dt) {
     const before = this.time;
