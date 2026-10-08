@@ -99,7 +99,8 @@ const Decor = {
   HasBed(z) { return z.items.some(it => this.Def(it.k).bed); },
   // oda fiyat çarpanı: konfor 0 → 1.0, 100 → 1.5
   PriceMul(r) { const z = this.zones.get('oda' + r.id); return z ? 1 + Math.min(100, this.Comfort(z)) * 0.005 : 1; },
-  RoomPrice(r) { return Math.round(Data.RoomLevels[r.level].price * this.PriceMul(r)); },
+  RoomPrice(r) { return Math.round(Data.RoomLevels[r.level].price * this.PriceMul(r) * Life.PriceMul()); },
+  Cost(d) { return Math.round(d.cost * Life.FurnMul()); },
   SatBonus(r) { const z = this.zones.get('oda' + r.id); return z ? Math.min(1.2, this.Comfort(z) * 0.012) : 0; },
 
   // ---------------- Kurma ----------------
@@ -307,7 +308,7 @@ const Decor = {
       for (const d of list) {
         const locked = Game.Stars < d.star;
         const card = document.createElement('div'); card.className = 'cat-card' + (locked ? ' locked' : '');
-        card.innerHTML = `<div class="ci">${d.i}</div><div class="cn">${UI.esc(d.n)}</div><div class="cc">${locked ? '🔒 ' + d.star + '★' : UI.fmt(d.cost)}</div><div class="cm">+${d.comfort} konfor</div>`;
+        card.innerHTML = `<div class="ci">${d.i}</div><div class="cn">${UI.esc(d.n)}</div><div class="cc">${locked ? '🔒 ' + d.star + '★' : UI.fmt(this.Cost(d))}</div><div class="cm">+${d.comfort} konfor</div>`;
         if (!locked) card.addEventListener('click', () => this.Buy(d.k));
         grid.appendChild(card);
       }
@@ -319,7 +320,7 @@ const Decor = {
     const z = this.active, d = this.Def(k);
     const spot = this.FindSpot(z, k);
     if (!spot) { UI.Toast('Yer yok: önce bir eşya kaldır', 'bad'); return; }
-    if (!Game.Pay(d.cost)) return;
+    if (!Game.Pay(this.Cost(d))) return;
     z.items.push(spot); const g = this.BuildItem(z, spot); g.userData.zone = z.id; g.userData.furn = true;
     Tween.Pop(g, 0.2); Sfx.Play('build', 0.6);
     this.Select(spot); this.UpdateRoomSpots(z); this.SaveZone(z); this.RefreshSub();

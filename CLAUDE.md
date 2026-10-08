@@ -12,6 +12,7 @@ Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENM
   - `10_data.js` veriler · `20_world.js` kasaba/deniz/gündüz-gece/lambalar · `25_hotel.js` katlı otel (odalar, lobi, çatı, kesit, yürünebilirlik, `Path` asansörlü yol)
   - `30_camera.js` kamera + dokunma hareketleri (sürükle=joystick, dokun=git/seç, iki parmak=yakınlaş/döndür, sağ fare=döndür, Q/E)
   - `35_player.js` · `40_guest.js` (Guest/Follower) · `45_staff.js` (resepsiyonist, temizlikçi, kat görevlisi) · `60_game.js` (durum, kayıt, görevler, öğretici, menüler)
+  - `58_life.js` (Life): yıldız şartları (`st.stars`, düşmez) ve misafir puanı (`st.recent` son 20), mevsimler (7 gün), hava + yağmur/kar efekti, günlük olaylar (`st.event`), oda arızası (`state 'broken'`).
   - `70_cloud.js` bulut · `80_quality.js` grafik + fotoğraf · `99_main.js` açılış/döngü.
   - Modeller `models/*.glb` (Kenney karakter 12, mobilya 30, kasaba paketi 15, bulut/bayrak) + ham dokular `characters.rgba.json`, `city.rgba.json`
     (`python3 ../tools_png2rgba.py png çıktı.json [--noflip]`; kasaba dokusu --noflip). build.mjs GLB'lerden doku başvurularını çıkarır, çalışırken DataTexture takılır.

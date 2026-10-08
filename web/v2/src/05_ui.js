@@ -16,7 +16,7 @@ const UI = {
   Hud(s) {
     const q = this.byId;
     q('h-name').textContent = s.name; q('h-stars').textContent = '★'.repeat(s.stars) + '☆'.repeat(5 - s.stars) + ' ' + s.rating.toFixed(1).replace('.', ',');
-    q('h-day').textContent = 'Gün ' + s.day + ' · ' + s.clock; q('h-weather').textContent = s.weather; q('h-guests').textContent = 'Misafir ' + s.guests + ' · Oda ' + s.rooms;
+    q('h-day').textContent = 'Gün ' + s.day + ' · ' + s.clock; q('h-weather').textContent = s.weather; { const e = q('h-event'), t = s.event ? s.event.icon + ' ' + s.event.name : ''; if (e.textContent !== t) e.textContent = t; e.hidden = !t; } q('h-guests').textContent = 'Misafir ' + s.guests + ' · Oda ' + s.rooms;
     q('money').textContent = this.fmt(s.money).slice(1); q('rep').textContent = 'Ün ' + Math.round(s.rep);
     const badge = (id, n) => { const b = q(id); b.hidden = !(n > 0); b.textContent = n; };
     badge('menu-badge', s.menuBadge); badge('social-badge', s.socialBadge);
