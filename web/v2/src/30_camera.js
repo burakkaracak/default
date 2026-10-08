@@ -15,7 +15,8 @@ const Cam = {
 
   FollowPoint() {
     const p = this.follow.position.clone();
-    p.y = this.follow.position.y; // asansörde katlar arası kayarken kamera da kayar
+    // izlenen katın yüksekliği; asansör yolculuğunda karakterle birlikte kayar
+    p.y = (Game.player && this.follow === Game.player.go && Game.player.liftT > 0) ? this.follow.position.y : Hotel.FloorY(this.floor);
     // biraz önünü göster
     const f = this.Forward; p.x += f.x * 1.5; p.z += f.z * 1.5;
     const aspect = innerWidth / innerHeight;
