@@ -99,7 +99,7 @@ const Decor = {
   HasBed(z) { return z.items.some(it => this.Def(it.k).bed); },
   // oda fiyat çarpanı: konfor 0 → 1.0, 100 → 1.5
   PriceMul(r) { const z = this.zones.get('oda' + r.id); return z ? 1 + Math.min(100, this.Comfort(z)) * 0.005 : 1; },
-  RoomPrice(r) { return Math.round(Data.RoomLevels[r.level].price * this.PriceMul(r) * Life.PriceMul()); },
+  RoomPrice(r) { return Math.round(Data.RoomLevels[r.level].price * this.PriceMul(r) * Life.PriceMul() * Game.PartPriceMul(r)); },
   Cost(d) { return Math.round(d.cost * Life.FurnMul()); },
   SatBonus(r) { const z = this.zones.get('oda' + r.id); return z ? Math.min(1.2, this.Comfort(z) * 0.012) : 0; },
 

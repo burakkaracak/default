@@ -3,7 +3,7 @@ class Player extends Behaviour {
   constructor(look, name) {
     super(); this.go.name = 'Oyuncu';
     this.rig = Rig.Model(this.go, look || 'character-female-a', 1.75);
-    this.floor = 0; this.speed = 5.6; this.path = []; this.liftT = 0; this.busy = 0;
+    this.floor = 0; this.path = []; this.liftT = 0; this.busy = 0;
     this.go.position.set(0, 0, 10);
     this.tag = U.Text(this.go, V(0, 2.25, 0), name || 'Müdür', 0.07, C(1, 0.85, 0.4), true);
     this.ring = U.Flat('Halka', this.go, V(0, 0.03, 0), V(1.2, 0.02, 1.2), C(1, 1, 1, 0.55), 'Torus'); this.ring.rotation.x = Math.PI / 2;
@@ -11,6 +11,8 @@ class Player extends Behaviour {
   }
   get floorY() { return Hotel.FloorY(this.floor); }
   get pos() { return this.go.position; }
+  get speed() { return 5.6 * Game.UpgMul('me'); }
+  set speed(v) { }
 
   GoTo(p, f) {
     if (f === undefined) f = this.floor;

@@ -33,8 +33,8 @@ class Staff extends Behaviour {
   get pos() { return this.go.position; }
   get def() { return Data.Staff[this.role]; }
   // hız/verim çarpanı: seviye, kişilik, moral
-  get Eff() { return (1 + 0.2 * (this.lv - 1)) * this.trait.speed * (this.morale < 0.3 ? 0.6 : this.morale < 0.55 ? 0.85 : 1); }
-  get speed() { return 3.6 * Math.min(1.5, this.Eff); }
+  get Eff() { return (1 + 0.2 * (this.lv - 1)) * this.trait.speed * (this.morale < 0.3 ? 0.6 : this.morale < 0.55 ? 0.85 : 1) * Game.UpgMul('staff'); }
+  get speed() { const m = Game.UpgMul('staff'); return 3.6 * Math.min(1.5, this.Eff / m) * m; }  // yükseltme üst sınırın dışında
   set speed(v) { }
   get Wage() { return Math.round(this.def.wage * (1 + 0.15 * (this.lv - 1)) * (this.trait.wage || 1)); }
   get NextXP() { return Staff.XP[this.lv] ?? null; }

@@ -65,7 +65,7 @@ class Guest extends Behaviour {
     this.path = Hotel.Path(this.pos, 0, room.inside, room.floor);
     this.sat += this.waited < 12 ? 0.5 : this.waited > 30 ? -0.6 : 0;
     if (room.level > this.wantLevel) this.sat += 0.6;
-    this.sat += Decor.SatBonus(room);
+    this.sat += Decor.SatBonus(room) + Game.PartSat(room);
     this.ShowMood('🔑', C(1, 0.9, 0.5), 1.5);
   }
   EnterRoom() {
