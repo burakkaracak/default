@@ -441,7 +441,7 @@ const Game = {
     list.push({ i: Hotel.floors + 1, label: '⌂', name: 'Çatı' });
     if (Hotel.floors < Data.Floor.Max) list.push({ i: -1, label: '+', name: 'Yeni kat', locked: true });
     list.unshift({ i: -2, label: '🛎', name: 'Resepsiyona git', desk: true });
-    if (Wedding.Busy) list.unshift({ i: -3, label: '💍', name: 'Düğüne git', desk: true });
+    if (Wedding.Busy || Wedding.Meeting) list.unshift({ i: -3, label: Wedding.Meeting ? '💬' : '💍', name: Wedding.Meeting ? 'Çiftle görüş' : 'Düğüne git', desk: true });
     UI.Floors(list, Hotel.view, i => {
       if (i === -1) { this.BuildSheet('kat'); return; }
       if (i === -2) { this.GoReception(); return; }

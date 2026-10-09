@@ -6,6 +6,7 @@ const Hotel = {
   floors: 1,                             // sahip olunan oda katı sayısı (0 = sadece zemin)
   groups: [], rooms: new Map(), walls: [], roof: null, view: 0, lobby: null, liftDoors: [],
   Lobby: { desk: V(0, 0, -3.6), deskBack: V(0, 0, -4.9), deskFront: V(0, 0, -2.1), lounge: V(-8, 0, 2.5) },
+  Deck: { hx: 9.2, z0: 7, z1: 15.2 },    // çatının güneye (deniz tarafına) uzanan düğün terası
   Entrance: V(0, 0, 7.4), Street: V(0, 0, 9.6), SpawnW: V(-34, 0, 9.6), SpawnE: V(34, 0, 9.6),
 
   FloorY(f) { return f * this.H; },
@@ -146,7 +147,7 @@ const Hotel = {
     U.Prim('CatiDoseme', g, V(0, -0.15, 0), V(this.W, 0.3, this.D), U.Mat(C(0.9, 0.88, 0.84)));
     U.Prim('CatiZemin', g, V(0, 0.01, 0), V(this.W - 0.4, 0.02, this.D - 0.4), U.Mat(C(0.82, 0.78, 0.72), { tex: U.TileTex, tiling: { x: 10, y: 5 } })).castShadow = false;
     const pc = C(0.98, 0.95, 0.9);
-    for (const [p, s] of [[V(0, 0.5, -this.D / 2 + 0.12), V(this.W, 1, 0.25)], [V(0, 0.5, this.D / 2 - 0.12), V(this.W, 1, 0.25)], [V(this.W / 2 - 0.12, 0.5, 0), V(0.25, 1, this.D)], [V(-this.W / 2 + 0.12, 0.5, 0), V(0.25, 1, this.D)]]) U.Box('Parapet', g, p, s, pc);
+    for (const [p, s] of [[V(0, 0.5, -this.D / 2 + 0.12), V(this.W, 1, 0.25)], [V(this.W / 2 - 0.12, 0.5, 0), V(0.25, 1, this.D)], [V(-this.W / 2 + 0.12, 0.5, 0), V(0.25, 1, this.D)]]) U.Box('Parapet', g, p, s, pc);
     // asansör makine dairesi, su deposu, klimalar
     U.Box('Makine', g, V(10.6, 1.6, -0.3), V(3, 3.2, 3.4), C(0.9, 0.86, 0.8));
     U.Box('Depo', g, V(-9, 1.4, -4), V(2.2, 2.4, 2.2), C(0.7, 0.75, 0.8), 'Cylinder');
@@ -160,6 +161,7 @@ const Hotel = {
     World.AddLamp(V(0, y + 2.2, this.D / 2 - 0.5), 8, 1, C(1, 0.9, 0.6));
     // çiçekli saksılar
     for (const x of [-6, -2, 2, 6]) U.Model('plantSmall2', g, V(x, 0, 5.2), 0, 1.1);
+    Wedding.BuildHall(g);
     Facilities.BuildRoof(g);
   },
 
@@ -210,7 +212,7 @@ const Hotel = {
       if (p.x > 8.8 && p.z < -1.4) return false; // asansör kabini
       return true;
     }
-    if (f > this.floors) return Math.abs(p.x) < Wd && Math.abs(p.z) < Dd; // çatı
+    if (f > this.floors) return (Math.abs(p.x) < Wd && Math.abs(p.z) < Dd) || (Math.abs(p.x) < this.Deck.hx - 0.4 && p.z > Dd - 0.3 && p.z < this.Deck.z1 - 0.5); // çatı + güney teras
     if (Math.abs(p.x) <= Wd && Math.abs(p.z) < 1.6) return true; // koridor (oda bölgesi 1.6'da başlar; arada boşluk kalmasın)
     const r = this.RoomAt(p, f);
     if (!r) return false;
@@ -229,7 +231,7 @@ const Hotel = {
       pts.push(P(b.x, b.z));
       return pts;
     }
-    if (f > this.floors) { pts.push(P(b.x, b.z)); return pts; }
+    if (f > this.floors) { if (b.z > this.D / 2 - 0.5 && a.z < this.D / 2 - 0.5) pts.push(P(Mathf.Clamp(b.x, -this.Deck.hx + 1, this.Deck.hx - 1), this.D / 2 - 0.8)); pts.push(P(b.x, b.z)); return pts; }
     const ra = this.RoomAt(a, f), rb = this.RoomAt(b, f);
     if (ra) { pts.push(P(ra.x + 0.15, ra.side * 2.3), P(ra.x + 0.15, ra.side * 0.9)); }
     if (rb) { pts.push(P(rb.x + 0.15, rb.side * 0.9), P(rb.x + 0.15, rb.side * 2.3)); }
