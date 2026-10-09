@@ -141,6 +141,8 @@
   .chat .typebar { display: flex; gap: 8px; padding: 8px 12px 10px; border-top: 1px solid rgba(0,0,0,0.08); flex: 0 0 auto; }
   .chat .typebar input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: 16px; font-weight: 700; padding: 10px 12px; border: 2px solid var(--paper-2); border-radius: 12px; -webkit-user-select: text; user-select: text; outline: none; }
   .item.post.bad { background: #fff1f1; } .item .rep { color: var(--ink-2); }
+  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 8px; }
+  .photos .ph { background: var(--paper-2); border-radius: 12px; overflow: hidden; cursor: pointer; } .photos img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; } .photos small { display: block; padding: 4px 6px; font-size: 11px; font-weight: 800; color: var(--ink-2); }
   .decor-bar { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; }
   .decor-bar button { pointer-events: auto; }
   .sheet.short { max-height: 46%; } @media (min-width: 900px) { .sheet.short { max-height: calc(100% - 24px); } }

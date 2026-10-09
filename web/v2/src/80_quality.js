@@ -50,6 +50,7 @@ const Photo = {
     if (!this.pending) return; this.pending = false;
     const gl = renderer.domElement, cv = document.createElement('canvas'); cv.width = gl.width; cv.height = gl.height;
     const ctx = cv.getContext('2d'); ctx.drawImage(gl, 0, 0);
+    if (Album.Add(cv)) { Game.st.photos = (Game.st.photos || 0) + 1; UI.Toast('📸 Albüme eklendi', 'good'); }
     const h = Math.round(cv.height * 0.07), k = cv.width / innerWidth;
     const grd = ctx.createLinearGradient(0, cv.height - h * 1.8, 0, cv.height); grd.addColorStop(0, 'rgba(20,24,40,0)'); grd.addColorStop(1, 'rgba(20,24,40,0.75)');
     ctx.fillStyle = grd; ctx.fillRect(0, cv.height - h * 1.8, cv.width, h * 1.8);

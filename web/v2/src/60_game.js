@@ -5,7 +5,7 @@ const Game = {
   loaded: false,
 
   Default() {
-    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
+    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, ach: {}, achInit: false, memories: [], chain: {}, chainEarned: 0, dayLog: [], earnedMark: 0, chats: 0, replies: 0, photos: 0, repairs: 0, weddings: 0, seasonsSeen: [], flags: {}, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
   },
 
   Boot() {
@@ -40,7 +40,7 @@ const Game = {
     const rooms = {}; for (const r of Hotel.rooms.values()) if (r.level >= 0) { const prev = this.st.rooms[r.id]; rooms[r.id] = (prev && typeof prev === 'object') ? Object.assign(prev, { lv: r.level }) : r.level; } this.st.rooms = rooms;
     Store.Set('game', this.st); Store.Save();
   },
-  Reset() { Store.DeleteAll(); Cloud.Wipe(); location.reload(); },
+  Reset() { Album.Clear(); Store.DeleteAll(); Cloud.Wipe(); location.reload(); },
 
   // ---------------- Döngü ----------------
   Tick(dt) {
@@ -58,6 +58,7 @@ const Game = {
     this.TillTick(dt);
     Facilities.Tick(dt);
     Life.Tick(dt);
+    Ach.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
   },
   Frame(raw) {
@@ -207,11 +208,11 @@ const Game = {
     const d = (sat >= 4 ? 3 : sat >= 3 ? 1.5 : sat >= 2 ? 0 : -2) * (t.repMul || 1);
     this.st.rep = Math.max(0, this.st.rep + d);
     if (t.id === 'milyoner') {
-      if (sat >= 4.3) { const b = 200 * this.Stars; this.Earn(0, Vec.add(g.pos, V(0, 2.2, 0)), b); UI.Dialog({ tag: 'SÜRPRİZ', title: '🎩 Gizli milyoner!', html: `<p>Turist sandığın ${UI.esc(g.name)} aslında bir milyonermiş. Otelini çok sevdi ve <b>${UI.fmt(b)}</b> bahşiş bıraktı!</p>`, buttons: [{ text: 'Vay be!', cls: 'gold' }] }); }
+      if (sat >= 4.3) { (this.st.flags = this.st.flags || {}).milyoner = true; const b = 200 * this.Stars; this.Earn(0, Vec.add(g.pos, V(0, 2.2, 0)), b); UI.Dialog({ tag: 'SÜRPRİZ', title: '🎩 Gizli milyoner!', html: `<p>Turist sandığın ${UI.esc(g.name)} aslında bir milyonermiş. Otelini çok sevdi ve <b>${UI.fmt(b)}</b> bahşiş bıraktı!</p>`, buttons: [{ text: 'Vay be!', cls: 'gold' }] }); }
       else UI.Toast('🎩 ' + g.name + ' gizli bir milyonermiş... ama pek etkilenmedi', 'info');
     }
     if (t.id === 'mufettis') {
-      if (sat >= 4) { this.st.rep += 12; UI.Dialog({ tag: 'MÜFETTİŞ RAPORU', title: '🕵 Harika rapor!', html: `<p>İş insanı sandığın ${UI.esc(g.name)} bir otel müfettişiymiş. Raporu çok iyi: <b>Ün +12</b></p>`, buttons: [{ text: 'Süper', cls: 'gold' }] }); }
+      if (sat >= 4) { (this.st.flags = this.st.flags || {}).mufettis = true; this.st.rep += 12; UI.Dialog({ tag: 'MÜFETTİŞ RAPORU', title: '🕵 Harika rapor!', html: `<p>İş insanı sandığın ${UI.esc(g.name)} bir otel müfettişiymiş. Raporu çok iyi: <b>Ün +12</b></p>`, buttons: [{ text: 'Süper', cls: 'gold' }] }); }
       else if (sat < 3) { this.st.rep = Math.max(0, this.st.rep - 8); UI.Toast('🕵 Bir müfettiş memnun ayrılmadı: Ün -8', 'bad'); }
       else UI.Toast('🕵 Bir müfettiş otelini inceledi: rapor orta', 'info');
     }
@@ -309,11 +310,14 @@ const Game = {
     this.st.money = Math.max(0, this.st.money - wages);
     const prevSeason = this.st.season;
     const ev = Life.StartDay(); const season = Life.Season; this.st.season = season.id;
+    this.st.seasonsSeen = this.st.seasonsSeen || []; if (!this.st.seasonsSeen.includes(season.id)) this.st.seasonsSeen.push(season.id);
+    const chain = Chain.NewDay();
+    const chainHtml = chain.out.map(o => `<div class="item"><div class="ic">${o.c.icon}</div><div class="tx"><b>${o.c.name} şubesi +${UI.fmt(o.n)}</b><small>${UI.esc(o.line)}</small></div></div>`).join('');
     const nxt = Game.Stars < 5 ? Life.ReqList(Game.Stars + 1) : [];
     const seasonHtml = prevSeason && prevSeason !== season.id ? `<p><b>${season.icon} ${season.name} geldi!</b></p>` : '';
     const evHtml = ev ? `<div class="item"><div class="ic">${ev.icon}</div><div class="tx"><b>${UI.esc(ev.name)}</b><small>${UI.esc(ev.desc)}</small></div></div>` : '';
     const starHtml = nxt.length ? `<div class="stat"><span>${Game.Stars + 1}. yıldız şartları</span><b>${nxt.filter(x => x.ok).length}/${nxt.length}</b></div>` : '';
-    UI.Dialog({ tag: 'YENİ GÜN', title: 'Gün ' + World.day, html: `${seasonHtml}<p>${season.icon} ${season.name} · ${UI.esc(Data.Weather[World.weather])}</p>${evHtml}<div class="stat"><span>Ağırlanan misafir</span><b>${this.st.served}</b></div><div class="stat"><span>Toplam kazanç</span><b>${UI.fmt(this.st.earned)}</b></div><div class="stat"><span>Maaşlar</span><b>-${UI.fmt(wages)}</b></div><div class="stat"><span>Ün</span><b>${Math.round(this.st.rep)} · ${'★'.repeat(this.Stars)}</b></div>${starHtml}`, buttons: [{ text: 'Güne başla', cls: 'gold' }] });
+    UI.Dialog({ tag: 'YENİ GÜN', title: 'Gün ' + World.day, html: `${seasonHtml}<p>${season.icon} ${season.name} · ${UI.esc(Data.Weather[World.weather])}</p>${evHtml}${chainHtml}<div class="stat"><span>Ağırlanan misafir</span><b>${this.st.served}</b></div><div class="stat"><span>Toplam kazanç</span><b>${UI.fmt(this.st.earned)}</b></div><div class="stat"><span>Maaşlar</span><b>-${UI.fmt(wages)}</b></div><div class="stat"><span>Ün</span><b>${Math.round(this.st.rep)} · ${'★'.repeat(this.Stars)}</b></div>${starHtml}`, buttons: [{ text: 'Güne başla', cls: 'gold' }] });
     this.Save();
   },
 
@@ -474,7 +478,7 @@ const Game = {
     } });
   },
   MenuSheet(tab) {
-    UI.Sheet({ title: this.st.name, sub: 'Gün ' + World.day + ' · ' + '★'.repeat(this.Stars), tabs: [{ id: 'otel', label: '🏨 Otel' }, { id: 'personel', label: '👥 Personel' }, { id: 'gelisim', label: '⚡ Gelişim' }, { id: 'gorev', label: '🎯 Görevler' }, { id: 'ayar', label: '⚙ Ayarlar' }], tab, render: (body, t) => {
+    UI.Sheet({ title: this.st.name, sub: 'Gün ' + World.day + ' · ' + '★'.repeat(this.Stars), tabs: [{ id: 'otel', label: '🏨 Otel' }, { id: 'personel', label: '👥 Personel' }, { id: 'gelisim', label: '⚡ Gelişim' }, { id: 'gorev', label: '🎯 Görevler' }, { id: 'basarim', label: '🏆 Başarım' }, { id: 'album', label: '📸 Albüm' }, { id: 'zincir', label: '🏙 Zincir' }, { id: 'ayar', label: '⚙ Ayarlar' }], tab, render: (body, t) => {
       if (t === 'otel') {
         const lb = document.createElement('div'); lb.className = 'item'; lb.innerHTML = `<div class="ic">🎨</div><div class="tx"><b>Lobiyi dekore et</b><small>Bekleme salonuna mobilya ve dekor yerleştir.</small></div>`; const lbb = document.createElement('button'); lbb.className = 'pink'; lbb.textContent = 'Aç'; lbb.addEventListener('click', () => Decor.Enter('lobi')); lb.appendChild(lbb);
         body.innerHTML = `<div class="stat"><span>Ün</span><b>${Math.round(this.st.rep)} (${this.Rating.toFixed(1).replace('.', ',')} ★)</b></div><div class="stat"><span>Ağırlanan misafir</span><b>${this.st.served}</b></div><div class="stat"><span>Kaçan misafir</span><b>${this.st.lost}</b></div><div class="stat"><span>Toplam kazanç</span><b>${UI.fmt(this.st.earned)}</b></div><div class="stat"><span>Odalar</span><b>${this.OpenRooms().length} açık · ${this.DirtyRooms().length} kirli</b></div><p style="font-size:13px;color:var(--ink-2);font-weight:700">Yıldız için şartları yukarıda görebilirsin. Memnun misafirler ün ve puan kazandırır; bekleyip giden misafirler düşürür.</p>`;
@@ -503,6 +507,9 @@ const Game = {
           body.appendChild(d);
         }
         const n = document.createElement('p'); n.style.cssText = 'font-size:13px;color:var(--ink-2);font-weight:700'; n.textContent = 'Oda yatağı, televizyonu ve banyosunu yükseltmek için odaya dokun.'; body.appendChild(n);
+      } else if (t === 'basarim') { Ach.Render(body);
+      } else if (t === 'album') { Album.Render(body);
+      } else if (t === 'zincir') { Chain.Render(body);
       } else if (t === 'gorev') {
         this.Quests.forEach((q, i) => { const d = document.createElement('div'); d.className = 'item' + (i < this.st.questIdx ? ' done' : i > this.st.questIdx ? ' locked' : ''); d.innerHTML = `<div class="ic">${i < this.st.questIdx ? '✅' : i === this.st.questIdx ? '🎯' : '🔒'}</div><div class="tx"><b>${UI.esc(q.text)}</b><small>Ödül ${UI.fmt(q.reward)}${i === this.st.questIdx ? ' · ' + Math.min(q.cur(), q.target) + '/' + q.target : ''}</small></div>`; if (i === this.st.questIdx && q.cur() >= q.target) { const b = document.createElement('button'); b.className = 'gold'; b.textContent = 'Ödülü al'; b.addEventListener('click', () => { this.ClaimQuest(); UI.RenderSheet(); }); d.appendChild(b); } body.appendChild(d); });
       } else {
