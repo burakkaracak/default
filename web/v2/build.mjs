@@ -1,4 +1,4 @@
-// Derleme (Otel Ustası 2): src/*.js dosyalarını sırayla birleştirir, esbuild ile tek dosyaya paketler.
+// Derleme (Lavanta Koyu): src/*.js dosyalarını sırayla birleştirir, esbuild ile tek dosyaya paketler.
 // Çıktı: dist/index.html (artifact parçası), dist/game.js, dist/models.json, dist/play.html (yerel deneme)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
 import { build } from 'esbuild';
