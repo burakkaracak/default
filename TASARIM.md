@@ -1,7 +1,7 @@
 # Otel Ustası 2 — Tasarım
 
 Elif için hediye: sıcak, renkli, derin bir otel kurma oyunu. iPhone 14 Pro (Safari) ve M2 MacBook Air'de akıcı çalışır.
-Eski oyun (web/src) yerini bu oyuna bırakır; kayıtlar sıfırdan başlar.
+Eski oyun depodan kaldırıldı; kayıtlar sıfırdan başlar.
 
 ## 1. Dünya: Lavanta Koyu
 - Sahil kasabası. Ortada otel arsası; etrafta Kenney kasaba binaları, yollar, lamba direkleri, çeşmeli meydan, ağaçlar; güneyde kumsal ve deniz (dalgalı), arkada tepeler.
