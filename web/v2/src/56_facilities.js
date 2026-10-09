@@ -271,6 +271,10 @@ const Facilities = (() => {
     mufettis: { restoran: 2, kafe: 2, spa: 1, bar: 1, havuz: 0.5, bahce: 0.5, spor: 0.5 },
     fenomen: { havuz: 3, bar: 2.5, spa: 2, restoran: 1.5, kafe: 1.5, bahce: 1.2, spor: 0.8 },
     unlu: { spa: 3, bar: 2, restoran: 2, havuz: 1.5, bahce: 1, kafe: 0.5, spor: 0.5 },
+    fotografci: { bahce: 3, havuz: 2, bar: 1.5, kafe: 1.5, restoran: 1, spa: 0.4, spor: 0.2 },
+    yaslicift: { bahce: 3, restoran: 2, kafe: 1.5, spa: 1.5, havuz: 0.5, bar: 0.4, spor: 0.1 },
+    gezgin: { kafe: 3, bahce: 2, havuz: 1.5, bar: 1.2, spor: 0.5, restoran: 0.6, spa: 0.2 },
+    yazar: { kafe: 4, bahce: 2, restoran: 1.2, spa: 1, bar: 0.8, havuz: 0.4, spor: 0.2 },
   };
 
   // ---------------- kurulum ----------------
