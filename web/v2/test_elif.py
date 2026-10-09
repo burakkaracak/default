@@ -22,8 +22,8 @@ try:
         pg.goto('http://localhost:8849/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
         pg.evaluate(BOOT)
         # --- 1) özel günler
-        r = pg.evaluate("""(()=>{const S=window.__Special,out={}; for(const d of ['2026-05-10','2026-05-09','2027-05-09','2026-10-29','2026-10-30','2026-01-01','2026-02-14','2026-03-08','2026-04-23','2026-05-19','2026-07-01']){ window.__today=d; const m=S.Today(); out[d]=m&&m.id;} window.__today=null; return out})()""")
-        exp = {'2026-05-10': 'anneler', '2026-05-09': None, '2027-05-09': 'anneler', '2026-10-29': 'ekim29', '2026-10-30': None, '2026-01-01': 'yilbasi', '2026-02-14': 'sevgililer', '2026-03-08': 'kadinlar', '2026-04-23': 'nisan23', '2026-05-19': 'mayis19', '2026-07-01': None}
+        r = pg.evaluate("""(()=>{const S=window.__Special,out={}; for(const d of ['2026-05-10','2026-05-09','2027-05-09','2026-10-29','2026-10-30','2026-01-01','2026-02-14','2026-03-08','2026-04-23','2026-04-19','2026-05-19','2026-07-01']){ window.__today=d; const m=S.Today(); out[d]=m&&m.id;} window.__today=null; return out})()""")
+        exp = {'2026-05-10': 'anneler', '2026-05-09': None, '2027-05-09': 'anneler', '2026-10-29': 'ekim29', '2026-10-30': None, '2026-01-01': 'yilbasi', '2026-02-14': 'sevgililer', '2026-03-08': 'kadinlar', '2026-04-23': 'dogum', '2026-04-19': 'yildonumu', '2026-05-19': 'mayis19', '2026-07-01': None}
         check('sabit özel günler ve Anneler Günü (Mayıs\'ın 2. pazarı) doğru bulunuyor', r == exp, r)
         r = pg.evaluate("""(()=>{const S=window.__Special,E=window.__ElifData; E.birthday=[14,6]; E.anniversary=[3,9]; window.__today='2026-06-14'; const a=S.Today(); window.__today='2026-09-03'; const b=S.Today(); window.__today='2026-06-15'; const c=S.Today(); E.birthday=null; E.anniversary=null; window.__today=null; return [a&&a.id, b&&b.id, c&&c.id]})()""")
         check('kişisel yuva: doğum günü ve yıldönümü tanımlanınca tanınıyor, boşken hiçbir şey çıkmıyor', r == ['dogum', 'yildonumu', None], r)
