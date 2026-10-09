@@ -2,3 +2,5 @@ web/node_modules/
 .DS_Store
 web/v2/dist/
 web/dist/
+web/v2/fac_*.png
+web/v2/cesit_shots/
