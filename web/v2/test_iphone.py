@@ -10,7 +10,7 @@ srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8835'], cwd=HERE +
 time.sleep(0.8)
 UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
 SIZES = [('cerceve', 376, 643), ('tamekran', 393, 760)]
-SETUP = "(()=>{const g=window.__game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; return 'ok'})()"
+SETUP = "(()=>{const g=window.__game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; window.__noWedding=1; return 'ok'})()"
 def go(x, z, f=0): return f"(()=>{{const g=window.__game,G=g.Game; g.UI.ClearDialogs(); g.UI.CloseSheet(); G.player.floor={f}; G.player.go.position.set({x},g.Hotel.FloorY({f}),{z}); g.Hotel.SetView({f}); g.Cam.Snap(); return 1}})()"
 GROW = "(()=>{const g=window.__game,G=g.Game; G.st.money=1e6; for(let i=0;i<5;i++) G.BuyRoom(G.NextRoom()); G.BuyFloor(); G.AddStaff('receptionist'); G.AddStaff('cleaner'); for(const t of ['turist','aile','is']) G.Spawn(t); G.st.money=2345; g.UI.ClearDialogs(); return 1})()"
 SCENES = [
@@ -30,6 +30,11 @@ SCENES = [
     ('14_sohbet', "(()=>{const g=window.__game,G=g.Game; g.UI.CloseSheet(); g.UI.ClearDialogs(); const r=g.Hotel.Room(11); const x=G.Spawn('turist'); x.path=[]; x.room=r; r.guest=x; r.state='occupied'; x.floor=1; x.pos.set(r.inside.x, g.Hotel.FloorY(1), r.inside.z); x.EnterRoom(); g.Chat.StartGuest(x); g.Chat.Say(true,'Evet, her köşesiyle biz ilgileniyoruz. Hoş geldiniz!'); g.Chat.Say(false,'Ne güzel, insan bunu hissediyor. Teşekkürler!'); g.Chat.Render(); return 1})()"),
     ('15_sohbet_yazma', "(()=>{const g=window.__game; g.Social.sample={json:async()=>({reply:'x',mood:1})}; g.Chat.Render(); return 1})()"),
     ('16_otelgram', "(()=>{const g=window.__game,G=g.Game; g.Chat.Close(); g.Social.sample=null; g.Social.Add('@ayse_gezgin','Oda 102 manzarası ve dekorasyonu çok şık. 10/10',33,false,0); g.Social.Add('@kotu.yorum','Oda biraz tozluydu, beklentimin altında kaldı.',20,true,0); g.UI.ClearDialogs(); g.Social.Open('akis'); return 1})()"),
+    ('18_basarim', "(()=>{const g=window.__game; g.UI.CloseSheet(); g.UI.ClearDialogs(); g.Game.MenuSheet('basarim'); return 1})()"),
+    ('19_album', "(()=>{const g=window.__game; g.Album=window.__Album; const cv=document.createElement('canvas'); cv.width=800; cv.height=450; const x=cv.getContext('2d'); x.fillStyle='#9ad0f3'; x.fillRect(0,0,800,450); x.fillStyle='#f6e6c6'; x.fillRect(0,300,800,150); window.__Album.Add(cv); window.__Album.Memory('⭐','2 yıldızlı otel oldun'); g.Game.MenuSheet('album'); return 1})()"),
+    ('20_zincir', "(()=>{const g=window.__game; g.Game.st.stars=4; g.Game.st.money=500000; g.Game.st.dayLog=[8000]; window.__Chain.Open(window.__Chain.Cities[0]); g.UI.ClearDialogs(); g.Game.MenuSheet('zincir'); return 1})()"),
+    ('21_dugun_teklif', "(()=>{const g=window.__game; g.UI.CloseSheet(); window.__Wedding.Offer(); return 1})()"),
+    ('22_dugun_sahne', "(()=>{const g=window.__game,G=g.Game,W=window.__Wedding; g.UI.ClearDialogs(); G.st.wedding={day:g.World.day,theme:1,couple:['Selin','Can'],deposit:500,attended:false,done:false}; g.World.time=0.56; G.player.floor=0; G.player.go.position.set(-6,0,12); g.Hotel.SetView(0); g.Cam.follow=G.player.go; g.Cam.Snap(); return 1})()"),
     ('17_mektup', "(()=>{const g=window.__game,G=g.Game; g.Social.AddLetter({type:g.Data.Guests.find(q=>q.id==='balayi'),name:'Ece'}, null, 4.8); g.UI.ClearDialogs(); g.Social.Open('mektup'); return 1})()"),
 ]
 COLOR_JS = r'''async (b64) => { const im = new Image(); im.src = 'data:image/png;base64,' + b64; await im.decode();

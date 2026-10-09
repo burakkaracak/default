@@ -12,7 +12,7 @@ fails = []
 def check(name, ok, info=''):
     print(('TAMAM  ' if ok else 'HATA   ') + name + ('  ' + str(info) if info else ''))
     if not ok: fails.append(name)
-STATE = '''(()=>{const g=window.__game, G=g.Game, F=window.__game.Facilities; return {money:Math.round(G.st.money), served:G.st.served, day:g.World.day, roof:g.Hotel.RoofIndex, floors:g.Hotel.floors,
+STATE = '''(()=>{const g=window.__game, G=g.Game, F=window.__game.Facilities; return {money:Math.round(G.st.money+(G.st.till||0)), served:G.st.served, day:g.World.day, roof:g.Hotel.RoofIndex, floors:g.Hotel.floors,
   guests:G.guests.map(x=>({n:x.name,t:x.type.id,s:x.s,f:x.floor,sat:+x.sat.toFixed(2),ph:x.fv?x.fv.phase:null,sub:x.fv?x.fv.sub:null,fac:x.fv?x.fv.fac.id:null,path:x.path.length,y:+x.pos.y.toFixed(2),x:+x.pos.x.toFixed(1),z:+x.pos.z.toFixed(1)})),
   staff:G.staff.map(s=>({r:s.role,f:s.floor,x:+s.pos.x.toFixed(1),z:+s.pos.z.toFixed(1),y:+s.pos.y.toFixed(2),path:s.path.length})),
   fac:Object.fromEntries(Object.entries(F.S.fac).map(([k,f])=>[k,{built:f.built,go:!!f.go,n:f.guests.length}])), stats:G.st.facStats||{}, bloom:+F.bloom.toFixed(2)}})()'''
@@ -52,7 +52,7 @@ try:
         plan = [('kafe', ['is', 'turist'], 0, 4.9, 4.1), ('restoran', ['balayi', 'emekli'], 0, 5.0, -4.1), ('spa', ['balayi', 'emekli', 'turist'], 0, -7.9, -4.1),
                 ('havuz', ['aile', 'turist'], 'roof', 0.8, 0.3), ('bar', ['is', 'balayi'], 'roof', 6.4, -5.0), ('bahce', ['emekli', 'aile'], 'roof', -8, 0.3), ('spor', ['ogrenci', 'turist'], 'roof', 7.7, 4.7)]
         for fid, types, fl, cx, cz in plan:
-            m0 = pg.evaluate('Math.round(window.__game.Game.st.money)')
+            m0 = pg.evaluate('Math.round(window.__game.Game.st.money+(window.__game.Game.st.till||0))')
             names = pg.evaluate("(([fid, types])=>{const g=window.__game,G=g.Game; return types.map(t=>{const x=G.Spawn(t); x.pos.set(0,0,12); const ok=window.__fac.ForceVisit(x,fid); return [x.name, ok];});})", [fid, types])
             check(fid + ': ForceVisit kabul edildi', all(n[1] for n in names), names)
             # misafir tesise varsın (bekliyor ya da keyif)

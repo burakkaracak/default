@@ -66,6 +66,7 @@ const Life = {
     { id: 'ariza', name: 'Tesisat arızası', icon: '🔧', desc: 'Bir odada su kaçağı var! Gidip tamir et, yoksa oda kullanılamaz.', breakRoom: true, w: 1.5, minRooms: 2 },
     { id: 'rakip', name: 'Rakip kampanyası', icon: '📉', desc: 'Karşı otel indirim yaptı. Misafir puanın 4\'ün altındaysa bugün daha az misafir gelir.', spawnFn: () => Life.Rating() >= 4 ? 1 : 0.7, w: 1, minDay: 4 },
     { id: 'gazete', name: 'Gazete haberi', icon: '📰', desc: 'Yerel gazete otelini övdü! Ün +10.', rep: 10, w: 1, cond: () => Life.Rating() >= 3.8 && (Game.st.recent || []).length >= 5 },
+    { id: 'film', name: 'Film ekibi', icon: '🎬', desc: 'Bir film ekibi otelde çekim yapıyor: ünlüler, fenomenler ve ekip kapıda! Bahşişler iki katı.', burst: { unlu: 1, fenomen: 2, is: 3 }, tip: 2, w: 0.8, minStars: 4 },
     { id: 'indirim', name: 'Mobilya indirimi', icon: '🛋', desc: 'Mağazada indirim: bugün dekor eşyaları %25 ucuz.', furn: 0.75, w: 1 },
   ],
   get Event() { const e = Game.st && Game.st.event; return e && e.day === World.day ? this.Events.find(x => x.id === e.id) || null : null; },
@@ -74,7 +75,7 @@ const Life = {
     st.event = null;
     if (World.day >= 3 && Math.random() < 0.6) {
       const season = this.Season.id;
-      const pool = this.Events.filter(e => e.id !== prev && (!e.seasons || e.seasons.includes(season)) && (!e.minDay || World.day >= e.minDay) && (!e.minRooms || Game.OpenRooms().length >= e.minRooms) && (!e.cond || e.cond()));
+      const pool = this.Events.filter(e => e.id !== prev && (!e.seasons || e.seasons.includes(season)) && (!e.minDay || World.day >= e.minDay) && (!e.minStars || Game.Stars >= e.minStars) && (!e.minRooms || Game.OpenRooms().length >= e.minRooms) && (!e.cond || e.cond()));
       let sum = 0; for (const e of pool) sum += e.w;
       let r = Math.random() * sum; let pick = null; for (const e of pool) { r -= e.w; if (r <= 0) { pick = e; break; } }
       if (pick) st.event = { id: pick.id, day: World.day };
@@ -88,6 +89,7 @@ const Life = {
   BeginEvent(ev) {
     if (ev.rep) Game.st.rep += ev.rep;
     if (ev.id === 'gazete') Social.Share('{otel}: Lavanta Koyu\'nun en sevilen oteli seçildi! Misafirler övgüler yağdırıyor.', 2, false);
+    if (ev.id === 'film') Social.Share('{otel}: bir film ekibi otelde çekim yapıyor! Herkes bunu konuşuyor.', 2, false);
     if (ev.id === 'festival') Social.Share('Lavanta Festivali başladı! {otel} bu hafta sonu festivalin en şık adresi.', 1, false);
     if (ev.burst) { let i = 0; for (const t in ev.burst) for (let k = 0; k < ev.burst[t]; k++) Tween.After(1 + 1.6 * i++, () => { if (Game.queue.length < 8) Game.Spawn(t); }); }
     if (ev.breakRoom) this.BreakRoom();

@@ -51,7 +51,7 @@ const Game = {
     this.spawnT -= dt;
     if (this.spawnT <= 0) {
       this.spawnT = Random.Range(7, 12) / Math.pow(Math.max(1, open), 0.55) * (World.IsNight ? Life.NightMul() : 1) / Life.SpawnMul();
-      if (this.guests.length < open + 3 && this.queue.length < 6) this.Spawn();
+      if (this.guests.length < open + 3 && this.queue.length < 6 && !Wedding.Busy) this.Spawn();
     }
     // oyuncu işleri: banko, temizlik, istek
     this.PlayerWork(dt);
@@ -59,6 +59,7 @@ const Game = {
     Facilities.Tick(dt);
     Life.Tick(dt);
     Ach.Tick(dt);
+    Wedding.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
   },
   Frame(raw) {
@@ -312,6 +313,7 @@ const Game = {
     const ev = Life.StartDay(); const season = Life.Season; this.st.season = season.id;
     this.st.seasonsSeen = this.st.seasonsSeen || []; if (!this.st.seasonsSeen.includes(season.id)) this.st.seasonsSeen.push(season.id);
     const chain = Chain.NewDay();
+    Wedding.NewDay();
     const chainHtml = chain.out.map(o => `<div class="item"><div class="ic">${o.c.icon}</div><div class="tx"><b>${o.c.name} şubesi +${UI.fmt(o.n)}</b><small>${UI.esc(o.line)}</small></div></div>`).join('');
     const nxt = Game.Stars < 5 ? Life.ReqList(Game.Stars + 1) : [];
     const seasonHtml = prevSeason && prevSeason !== season.id ? `<p><b>${season.icon} ${season.name} geldi!</b></p>` : '';
@@ -434,9 +436,11 @@ const Game = {
     list.push({ i: Hotel.floors + 1, label: '⌂', name: 'Çatı' });
     if (Hotel.floors < Data.Floor.Max) list.push({ i: -1, label: '+', name: 'Yeni kat', locked: true });
     list.unshift({ i: -2, label: '🛎', name: 'Resepsiyona git', desk: true });
+    if (Wedding.Busy) list.unshift({ i: -3, label: '💍', name: 'Düğüne git', desk: true });
     UI.Floors(list, Hotel.view, i => {
       if (i === -1) { this.BuildSheet('kat'); return; }
       if (i === -2) { this.GoReception(); return; }
+      if (i === -3) { Wedding.Attend(); return; }
       Hotel.SetView(i);
       if (this.player.floor !== i && i <= Hotel.floors + 1) { if (!this.player.RideLift(i)) this.player.GoTo(Hotel.Lift(i), i); UI.Hint('Elif asansörle ' + (i === 0 ? 'lobiye' : i > Hotel.floors ? 'çatıya' : i + '. kata') + ' geliyor', 3); }
       Sfx.Play('tap', 0.4);
