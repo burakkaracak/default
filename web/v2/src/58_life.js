@@ -30,14 +30,14 @@ const Life = {
     const st = Game.st; if (st.stars >= 5) return;
     const n = st.stars + 1, list = this.ReqList(n);
     if (!list.length || !list.every(x => x.ok)) return;
-    st.stars = n; Game.Save();
+    st.stars = n; Album.Memory('⭐', n + ' yıldızlı otel oldun'); Game.Save();
     Sfx.Play('unlock', 0.9);
     U.Burst(Vec.add(Game.player.go.position, V(0, 2.2, 0)), C(1, 0.85, 0.3), C(1, 0.55, 0.75), 120, 6);
     const perks = { 2: 'Balayı çiftleri, sporcular, müfettiş ve gizli milyoner gelmeye başlar. Havuz, spor salonu, restoran açılabilir.', 3: 'Fenomenler gelir. Spa ve çatı barı açılabilir.', 4: 'Ünlüler gelmeye başlar!', 5: 'Lavanta Koyu\'nun en iyi oteli!' };
     UI.Dialog({ tag: 'YENİ YILDIZ', title: '★'.repeat(n) + ' ' + n + ' yıldızlı otel!', html: `<p>Tebrikler! Oda fiyatları %${(n - 1) * 10} arttı, daha çok misafir gelecek.</p><p>${perks[n]}</p>`, buttons: [{ text: 'Harika!', cls: 'gold' }] });
     if (UI.SheetOpen) UI.RenderSheet();
   },
-  PriceMul() { return 1 + 0.1 * (Game.Stars - 1); },
+  PriceMul() { return (1 + 0.1 * (Game.Stars - 1)) * (1 + 0.05 * Chain.Count); },
 
   // ---------------- Mevsim ----------------
   Seasons: [
@@ -95,7 +95,7 @@ const Life = {
   // olay çarpanları
   SpawnMul() { const ev = this.Event; let k = this.Season.spawn * (1 + 0.12 * (Game.Stars - 1)) * (1 + Social.AdsBonus); if (World.weather === 'rainy') k *= 0.85; if (World.weather === 'snowy') k *= 0.8; if (ev) { if (ev.spawn) k *= ev.spawn; if (ev.spawnFn) k *= ev.spawnFn(); } return k; },
   NightMul() { const ev = this.Event; return ev && ev.night ? 1 : 2.5; },
-  TypeMul(id) { const ev = this.Event; return (this.Season.types[id] || 1) * (ev && ev.types && ev.types[id] || 1); },
+  TypeMul(id) { const ev = this.Event; return (this.Season.types[id] || 1) * (ev && ev.types && ev.types[id] || 1) * Chain.Bias(id); },
   TipMul() { const ev = this.Event; return ev && ev.tip || 1; },
   ExtraNights() { const ev = this.Event; return ev && ev.nights || 0; },
   ReqMul(id) { const ev = this.Event; return ev && ev.req && ev.req[id] || 1; },
@@ -118,6 +118,7 @@ const Life = {
     return r;
   },
   FixRoom(r) {
+    Game.st.repairs = (Game.st.repairs || 0) + 1;
     r.state = 'clean'; if (r.leak) { Destroy(r.leak); r.leak = null; }
     Game.st.rep += 1; U.Burst(V(r.x, Hotel.FloorY(r.floor) + 1, r.z), C(0.5, 0.8, 1), C(1, 1, 1), 30, 3);
     Sfx.Play('unlock', 0.5); UI.Toast('Oda ' + r.number + ' tamir edildi', 'good');

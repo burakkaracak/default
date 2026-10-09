@@ -234,6 +234,7 @@ const Chat = {
   Finish() {
     this.done = true; this.choices = []; this.busy = false;
     const m = this.mood, st = Game.st;
+    if (this.mode === 'guest') st.chats = (st.chats || 0) + 1; else st.replies = (st.replies || 0) + 1;
     if (this.mode === 'guest' && this.who) {
       const g = this.who;
       if (alive(g.go)) {
