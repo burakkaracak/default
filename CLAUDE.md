@@ -1,10 +1,10 @@
-# Otel Ustası
+# Lavanta Koyu
 
 Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oyun eşine (Elif) hediye, mağazaya çıkmayacak.
-Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENMİYOR (Elif sevmedi).
+Tasarım belgesi: `TASARIM.md` (fazlar). Hırsız olayı İSTENMİYOR (Elif sevmedi).
 
 ## Yapı
-- `web/v2/`: **Otel Ustası 2** (yeni oyun, asıl geliştirme burada). three.js + HTML arayüz. Kayıt `otel2_kayit_v1` (localStorage) + bulut `kayit2`/`yedek2`.
+- `web/v2/`: **Lavanta Koyu** (tek oyun; klasör adı `v2` eski kalıntıdır, kayıt ve bulut anahtarları `otel2_kayit_v1`, `kayit2`, `yedek2` değişmez). three.js + HTML arayüz. Kayıt `otel2_kayit_v1` (localStorage) + bulut `kayit2`/`yedek2`.
   - `src/00_engine.js`: motor (Mathf, Random, Vec, Col, Store, Behaviour, U: malzeme/geometri/model/Merge, TextMesh, Particles, ProgressPad, Rig, Tween, Sfx, Input).
     Koordinat: düz three.js uzayı (x doğu, y yukarı, z güney); `W` kök grup. Modeller `U.Model/U.Furn/U.City` (taban pos.y, orta pos.x/z).
     Performans: dokusuz mobilya modelleri `U.mergedModel` ile tek ağa birleşir (köşe rengi, `vertexMat`); oda duvarları oda başına tek `U.Merge`; bakılmayan kattaki karakterler çizilmez; `Quality.PixelRatio` toplam pikseli sınırlar. Karakter modeli yaw 0'da +z'ye bakar (`Rig.CharYaw=0`), Kenney mobilyası -z'ye (katalogda `yaw:180`).
@@ -23,5 +23,5 @@ Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENM
     Her değişiklikten sonra test_flow + test_iphone çalıştır; ekran görüntülerine de bak.
 
 ## Yayın
-- Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true, sample:{}}` (sample: serbest sohbet; eksik bırakılırsa yetenek iptal olur, hep tam seti ver).
+- Oyun (Lavanta Koyu): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true, sample:{}}` (sample: serbest sohbet; eksik bırakılırsa yetenek iptal olur, hep tam seti ver).
 - Kullanıcı iPhone 14 Pro (Safari) ve M2 MacBook Air'de oynuyor. Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor yetkisi gerekir.

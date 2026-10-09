@@ -1,4 +1,4 @@
-# Bulut kaydı (Otel Ustası 2): birden çok "cihaz" aynı sahte veritabanını paylaşır. Kayıp senaryoları denenir.
+# Bulut kaydı (Lavanta Koyu): birden çok "cihaz" aynı sahte veritabanını paylaşır. Kayıp senaryoları denenir.
 import glob, sys, subprocess, time, os, json
 from playwright.sync_api import sync_playwright
 HERE = os.path.dirname(os.path.abspath(__file__))

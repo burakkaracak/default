@@ -1,4 +1,4 @@
-# Otel Ustası 2 — Tasarım
+# Lavanta Koyu — Tasarım
 
 Elif için hediye: sıcak, renkli, derin bir otel kurma oyunu. iPhone 14 Pro (Safari) ve M2 MacBook Air'de akıcı çalışır.
 Eski oyun depodan kaldırıldı; kayıtlar sıfırdan başlar.

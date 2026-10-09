@@ -58,7 +58,7 @@ const Photo = {
     ctx.font = `700 ${Math.round(h * 0.32)}px ${UI_FONT}`; ctx.fillStyle = '#fff'; ctx.textAlign = 'right';
     ctx.fillText('Gün ' + World.day + ' · ' + World.Clock + ' · ' + new Date().toLocaleDateString('tr-TR'), cv.width - 24 * k, cv.height - h * 0.6);
     const flash = document.createElement('div'); flash.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:40;pointer-events:none;transition:opacity .5s'; document.body.appendChild(flash); requestAnimationFrame(() => { flash.style.opacity = 0; setTimeout(() => flash.remove(), 500); });
-    const name = 'otel-ustasi-gun-' + World.day + '.png';
+    const name = 'lavanta-koyu-gun-' + World.day + '.png';
     cv.toBlob(async blob => {
       if (!blob) return;
       if (this.downloads) { try { await this.downloads.save({ filename: name, data: blob }); UI.Toast('Fotoğraf kaydedildi', 'good'); } catch (e) { if (e && e.code !== 'declined') UI.Toast('Fotoğraf kaydedilemedi', 'bad'); } }

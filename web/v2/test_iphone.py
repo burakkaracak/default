@@ -1,4 +1,4 @@
-# iPhone testi (Otel Ustası 2): iPhone 14 Pro boyutunda (dokunmatik, 3x) açar; hata, binen arayüz kutuları, taşan yazı ve soluk renk denetler.
+# iPhone testi (Lavanta Koyu): iPhone 14 Pro boyutunda (dokunmatik, 3x) açar; hata, binen arayüz kutuları, taşan yazı ve soluk renk denetler.
 # Kullanım: python3 test_iphone.py [çıktı_klasörü]
 import glob, sys, subprocess, time, os, base64
 from playwright.sync_api import sync_playwright

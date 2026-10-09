@@ -1,5 +1,5 @@
 // ============================================================================
-// Otel Ustası 2 · motor
+// Lavanta Koyu · motor
 // Sahne three.js uzayında (x sağ, y yukarı, z öne/güney). Bütün oyun nesneleri "W" grubunda durur.
 // Burada: matematik, rastgele, vektör/renk, zaman, kayıt, davranış döngüsü, malzeme/geometri yardımcıları,
 // yazı sprite'ları, parçacıklar, karakter iskeleti, kısa animasyonlar, ses, girdi.
