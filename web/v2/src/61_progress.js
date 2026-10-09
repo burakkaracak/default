@@ -98,12 +98,13 @@ const Album = {
       t.getContext('2d').drawImage(cv, 0, 0, t.width, t.height);
       const a = this.Items(); a.push({ u: t.toDataURL('image/jpeg', 0.7), day: World.day, clock: World.Clock, stars: Game.Stars, name: Game.st.name });
       while (a.length > this.Max) a.shift();
-      this.Save(a); return a.length;
+      this.Save(a); try { Gallery.Refresh(); } catch (e) { } return a.length;
     } catch (e) { return 0; }
   },
   Memory(icon, text) { const st = Game.st; st.memories = st.memories || []; st.memories.unshift({ day: World.day, icon, text }); while (st.memories.length > 40) st.memories.pop(); },
   Render(body) {
     const items = this.Items().reverse(), st = Game.st;
+    Gallery.Render(body);
     const h = document.createElement('div'); h.className = 'stat'; h.innerHTML = `<span>📸 Fotoğraflar</span><b>${items.length}/${this.Max}</b>`; body.appendChild(h);
     if (!items.length) { const e = document.createElement('div'); e.className = 'item'; e.innerHTML = '<div class="ic">📷</div><div class="tx"><b>Albüm boş</b><small>Sağ üstteki 📷 düğmesiyle fotoğraf çek. Fotoğraflar bu cihazda saklanır.</small></div>'; body.appendChild(e); }
     const g = document.createElement('div'); g.className = 'photos';

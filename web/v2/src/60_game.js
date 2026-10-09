@@ -25,7 +25,7 @@ const Game = {
     for (const role of Object.keys(this.st.extraStaff || {})) for (let i = 0; i < this.st.extraStaff[role]; i++) this.AddStaff(role, false);
     Facilities.Boot();
     this.st.upg = this.st.upg || {}; this.st.comp = this.st.comp || {}; this.st.till = this.st.till || 0; this.tillAge = 0; this.RefreshPile();
-    Social.Defaults(); Social.GetSample();
+    Social.Defaults(); Social.GetSample(); Gallery.Init();
     this.BindUI();
     this.loaded = true;
     this.RefreshFloors();
@@ -41,7 +41,7 @@ const Game = {
     const rooms = {}; for (const r of Hotel.rooms.values()) if (r.level >= 0) { const prev = this.st.rooms[r.id]; rooms[r.id] = (prev && typeof prev === 'object') ? Object.assign(prev, { lv: r.level }) : r.level; } this.st.rooms = rooms;
     Store.Set('game', this.st); Store.Save();
   },
-  Reset() { Album.Clear(); Store.DeleteAll(); Cloud.Wipe(); location.reload(); },
+  Reset() { Album.Clear(); Gallery.Clear(); Store.DeleteAll(); Cloud.Wipe(); location.reload(); },
 
   // ---------------- Döngü ----------------
   Tick(dt) {
@@ -62,6 +62,7 @@ const Game = {
     Ach.Tick(dt);
     Wedding.Tick(dt);
     Special.Tick(dt);
+    Gallery.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
   },
   Frame(raw) {
