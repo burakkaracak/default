@@ -109,6 +109,7 @@ const Album = {
     const g = document.createElement('div'); g.className = 'photos';
     for (const p of items) { const c = document.createElement('div'); c.className = 'ph'; c.innerHTML = `<img alt="" src="${p.u}"><small>Gün ${p.day} · ${UI.esc(p.clock)} · ${'★'.repeat(p.stars)}</small>`; c.addEventListener('click', () => UI.Dialog({ tag: 'ANI', title: 'Gün ' + p.day + ' · ' + p.clock, html: `<img alt="" style="width:100%;border-radius:14px;margin-bottom:10px" src="${p.u}">`, buttons: [{ text: 'Kapat', cls: 'gold' }] })); g.appendChild(c); }
     body.appendChild(g);
+    if ((st.noteLog || []).length) { const nn = document.createElement('div'); nn.className = 'sec'; nn.textContent = '💌 NOTLAR'; body.appendChild(nn); for (const n of st.noteLog) { const d = document.createElement('div'); d.className = 'item'; d.innerHTML = `<div class="ic">💌</div><div class="tx"><b>${UI.esc(n.from)}</b><small style="white-space:pre-line">${UI.esc(n.text)}</small><small>Gün ${n.day}</small></div>`; body.appendChild(d); } }
     const mm = document.createElement('div'); mm.className = 'sec'; mm.textContent = 'ANILAR'; body.appendChild(mm);
     const ms = st.memories || [];
     if (!ms.length) { const e = document.createElement('div'); e.className = 'item'; e.innerHTML = '<div class="ic">📖</div><div class="tx"><b>Henüz anı yok</b><small>Yeni yıldız, düğün, büyük başarımlar ve yeni şubeler buraya yazılır.</small></div>'; body.appendChild(e); }
