@@ -616,6 +616,7 @@ const Sfx = {
     this.clips.pop = this.Notes([880], 0.07, 40);
     this.clips.tap = this.Notes([1200], 0.03, 80);
     this.clips.heart = this.Notes([988, 1319], 0.09, 18);
+    if (typeof Music !== 'undefined') Music.Init();
   },
   Resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
   SetVolume(v) { this.volume = v; if (this.gain) this.gain.gain.value = 0.45 * v; },

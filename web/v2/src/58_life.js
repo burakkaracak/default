@@ -148,13 +148,23 @@ const Life = {
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
     const snow = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.32, map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, color: 0xffffff }));
     for (const o of [rain, snow]) { o.frustumCulled = false; o.visible = false; o.renderOrder = 5; scene.add(o); }
-    this.fx = { rain, snow, N, box, t: 0 };
+    // mevsim yaprakları (sonbahar) ve taçyaprakları (ilkbahar): kar ile aynı hareket, farklı renk
+    const lp = new Float32Array(240 * 3); for (let i = 0; i < 240; i++) lp.set([(Math.random() - 0.5) * box.x, Math.random() * box.y, (Math.random() - 0.5) * box.z], i * 3);
+    const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lp, 3));
+    const leaf = new THREE.Points(lg, new THREE.PointsMaterial({ size: 0.34, map: snow.material.map, transparent: true, depthWrite: false, color: 0xd98b3a })); leaf.frustumCulled = false; leaf.visible = false; leaf.renderOrder = 5; scene.add(leaf);
+    // ateş böcekleri: gece otel çevresinde süzülen sarı ışıklar (kalite orta ve üstünde)
+    const FN = 28, fp = new Float32Array(FN * 3), fc = new Float32Array(FN * 3), fb = [];
+    for (let i = 0; i < FN; i++) { const side = i % 2 ? 1 : -1, x = (Math.random() - 0.5) * 60, z = side * (9 + Math.random() * 6); fb.push({ x, z, y: 0.5 + Math.random() * 1.8, p: Math.random() * 6.28, s: 0.3 + Math.random() * 0.5 }); fp.set([x, fb[i].y, z], i * 3); }
+    const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(fp, 3)); fg.setAttribute('color', new THREE.BufferAttribute(fc, 3));
+    const fly = new THREE.Points(fg, new THREE.PointsMaterial({ size: 0.45, map: snow.material.map, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); fly.frustumCulled = false; fly.visible = false; fly.renderOrder = 6; scene.add(fly);
+    this.fx = { rain, snow, leaf, fly, fb, N, box, t: 0 };
   },
   TickFX(dt) {
     if (!this.fx) this.BuildFX();
     const f = this.fx, w = World.weather, ev = this.Event;
     const showRain = w === 'rainy', showSnow = w === 'snowy';
     f.rain.visible = showRain; f.snow.visible = showSnow;
+    this.TickAmbient(dt);
     if (!showRain && !showSnow) return;
     const c = Cam.target, n = Quality.level === 0 ? Math.floor(f.N * 0.45) : f.N;
     if (showRain) {
@@ -168,6 +178,24 @@ const Life = {
       const a = f.snow.geometry.attributes.position, p = a.array;
       for (let i = 0; i < n; i++) { const o = i * 3; p[o + 1] -= 1.6 * dt; p[o] += Math.sin(f.t * 0.8 + i) * 0.6 * dt; if (p[o + 1] < 0) { p[o] = (Math.random() - 0.5) * f.box.x; p[o + 1] = f.box.y; p[o + 2] = (Math.random() - 0.5) * f.box.z; } }
       a.needsUpdate = true; f.snow.geometry.setDrawRange(0, n);
+    }
+  },
+
+  // mevsim yaprakları ve ateş böcekleri (kalite orta ve üstünde, kötü havada yok)
+  TickAmbient(dt) {
+    const f = this.fx, w = World.weather, calm = w === 'sunny' || w === 'cloudy', q = Quality.level >= 1, c = Cam.target, sid = this.Season.id;
+    const showLeaf = q && calm && (sid === 'sonbahar' || sid === 'ilkbahar'); f.leaf.visible = showLeaf;
+    if (showLeaf) {
+      f.leaf.material.color.set(sid === 'sonbahar' ? 0xd98b3a : 0xffb6cf); f.leaf.position.set(c.x, c.y, c.z); f.t += dt;
+      const p = f.leaf.geometry.attributes.position.array;
+      for (let i = 0; i < 240; i++) { const o = i * 3; p[o + 1] -= (sid === 'sonbahar' ? 1.1 : 0.7) * dt; p[o] += Math.sin(f.t * 0.7 + i) * 0.9 * dt; p[o + 2] += Math.cos(f.t * 0.5 + i * 1.7) * 0.5 * dt; if (p[o + 1] < 0) { p[o] = (Math.random() - 0.5) * f.box.x; p[o + 1] = f.box.y * 0.6; p[o + 2] = (Math.random() - 0.5) * f.box.z; } }
+      f.leaf.geometry.attributes.position.needsUpdate = true;
+    }
+    const showFly = q && calm && World.daylight < 0.45 && this.Season.id !== 'kis'; f.fly.visible = showFly;
+    if (showFly) {
+      const a = f.fly.geometry.attributes.position, col = f.fly.geometry.attributes.color, k = Mathf.Clamp01(1 - World.daylight * 2.2);
+      f.fb.forEach((b, i) => { b.p += b.s * dt; a.array[i * 3] = b.x + Math.cos(b.p) * 1.4; a.array[i * 3 + 1] = b.y + Math.sin(b.p * 1.7) * 0.4; a.array[i * 3 + 2] = b.z + Math.sin(b.p * 0.8) * 1.2; const g = (0.5 + 0.5 * Math.sin(b.p * 4 + i)) * k; col.array.set([g, g * 0.9, g * 0.3], i * 3); });
+      a.needsUpdate = true; col.needsUpdate = true;
     }
   },
 

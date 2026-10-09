@@ -36,6 +36,11 @@ SCENES = [
     ('21_dugun_teklif', "(()=>{const g=window.__game; g.UI.CloseSheet(); window.__Wedding.Offer(); return 1})()"),
     ('22_dugun_sahne', "(()=>{const g=window.__game,G=g.Game,W=window.__Wedding; g.UI.ClearDialogs(); G.st.wedding={day:g.World.day,theme:1,couple:['Selin','Can'],deposit:500,attended:false,done:false}; g.World.time=0.56; G.player.floor=0; G.player.go.position.set(-6,0,12); g.Hotel.SetView(0); g.Cam.follow=G.player.go; g.Cam.Snap(); return 1})()"),
     ('17_mektup', "(()=>{const g=window.__game,G=g.Game; g.Social.AddLetter({type:g.Data.Guests.find(q=>q.id==='balayi'),name:'Ece'}, null, 4.8); g.UI.ClearDialogs(); g.Social.Open('mektup'); return 1})()"),
+    ('23_kiyafet', "(()=>{const g=window.__game; g.UI.ClearDialogs(); g.UI.CloseSheet(); g.Game.MenuSheet('ayar'); const b=document.querySelector('.sheet .body'); b.scrollTop=b.scrollHeight; return 1})()"),
+    ('24_tablolar', "(()=>{const g=window.__game; g.UI.CloseSheet(); const c=document.createElement('canvas'); c.width=640; c.height=480; const x=c.getContext('2d'); x.fillStyle='#e8a0c0'; x.fillRect(0,0,640,480); window.__Gallery.Save([c.toDataURL('image/jpeg',0.8)]); window.__Gallery.Init(); g.Game.MenuSheet('album'); return 1})()"),
+    ('25_ozel_gun', "(()=>{const g=window.__game; g.UI.CloseSheet(); g.UI.ClearDialogs(); window.__Gallery.Clear(); window.__today='2026-10-29'; window.__Special.t=0; window.__Special.Tick(0.1); g.Game.player.floor=0; g.Hotel.SetView(0); g.Game.player.go.position.set(0,0,2); g.Cam.follow=g.Game.player.go; g.Cam.Snap(); return 1})()"),
+    ('26_kedi', "(()=>{const g=window.__game; g.UI.ClearDialogs(); window.__today=null; const c=window.__Pets.cat; c.go.position.set(-3,0,3); c.target=c.go.position.clone(); c.state='idle'; c.t=99; g.Game.player.go.position.set(-1,0,3.5); g.Cam.distGoal=9; g.Cam.Snap(); return 1})()"),
+    ('27_ipucu', "(()=>{const g=window.__game; window.__Hints.last=-999; g.Game.st.hints={}; g.Game.st.tutorial=99; g.Game.st.served=5; window.__Hints.t=0; window.__Hints.Tick(0.1); return 1})()"),
 ]
 COLOR_JS = r'''async (b64) => { const im = new Image(); im.src = 'data:image/png;base64,' + b64; await im.decode();
   const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
