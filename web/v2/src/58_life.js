@@ -33,7 +33,7 @@ const Life = {
     st.stars = n; Album.Memory('⭐', n + ' yıldızlı otel oldun'); Game.Save();
     Sfx.Play('unlock', 0.9);
     U.Burst(Vec.add(Game.player.go.position, V(0, 2.2, 0)), C(1, 0.85, 0.3), C(1, 0.55, 0.75), 120, 6);
-    const perks = { 2: 'Balayı çiftleri, sporcular, müfettiş ve gizli milyoner gelmeye başlar. Havuz, spor salonu, restoran açılabilir.', 3: 'Fenomenler gelir. Spa ve çatı barı açılabilir.', 4: 'Ünlüler gelmeye başlar!', 5: 'Lavanta Koyu\'nun en iyi oteli!' };
+    const perks = { 2: 'Balayı çiftleri, sporcular, fotoğrafçılar, yaşlı çiftler, müfettiş ve gizli milyoner gelmeye başlar. Havuz, spor salonu, restoran açılabilir.', 3: 'Fenomenler ve yazarlar gelir. Spa ve çatı barı açılabilir.', 4: 'Ünlüler gelmeye başlar!', 5: 'Lavanta Koyu\'nun en iyi oteli!' };
     UI.Dialog({ tag: 'YENİ YILDIZ', title: '★'.repeat(n) + ' ' + n + ' yıldızlı otel!', html: `<p>Tebrikler! Oda fiyatları %${(n - 1) * 10} arttı, daha çok misafir gelecek.</p><p>${perks[n]}</p>`, buttons: [{ text: 'Harika!', cls: 'gold' }] });
     if (UI.SheetOpen) UI.RenderSheet();
   },
@@ -41,10 +41,10 @@ const Life = {
 
   // ---------------- Mevsim ----------------
   Seasons: [
-    { id: 'ilkbahar', name: 'İlkbahar', icon: '🌸', weather: { sunny: 4, cloudy: 3, rainy: 2 }, spawn: 1, types: { balayi: 1.4 }, grass: C(0.56, 0.8, 0.4) },
-    { id: 'yaz', name: 'Yaz', icon: '🌞', weather: { sunny: 7, cloudy: 1, rainy: 0.5 }, spawn: 1.25, types: { aile: 1.6, turist: 1.3, ogrenci: 1.3 }, grass: C(0.64, 0.79, 0.36) },
-    { id: 'sonbahar', name: 'Sonbahar', icon: '🍂', weather: { sunny: 2, cloudy: 3, rainy: 3 }, spawn: 0.95, types: { is: 1.4, emekli: 1.2 }, grass: C(0.78, 0.68, 0.38) },
-    { id: 'kis', name: 'Kış', icon: '⛄', weather: { sunny: 1.5, cloudy: 3, rainy: 1, snowy: 3.5 }, spawn: 0.85, types: { emekli: 1.5, is: 1.3 }, grass: C(0.62, 0.7, 0.52) },
+    { id: 'ilkbahar', name: 'İlkbahar', icon: '🌸', weather: { sunny: 4, cloudy: 3, rainy: 2 }, spawn: 1, types: { balayi: 1.4, fotografci: 1.5, gezgin: 1.3 }, grass: C(0.56, 0.8, 0.4) },
+    { id: 'yaz', name: 'Yaz', icon: '🌞', weather: { sunny: 7, cloudy: 1, rainy: 0.5 }, spawn: 1.25, types: { aile: 1.6, turist: 1.3, ogrenci: 1.3, gezgin: 1.5 }, grass: C(0.64, 0.79, 0.36) },
+    { id: 'sonbahar', name: 'Sonbahar', icon: '🍂', weather: { sunny: 2, cloudy: 3, rainy: 3 }, spawn: 0.95, types: { is: 1.4, emekli: 1.2, fotografci: 1.5, yaslicift: 1.4 }, grass: C(0.78, 0.68, 0.38) },
+    { id: 'kis', name: 'Kış', icon: '⛄', weather: { sunny: 1.5, cloudy: 3, rainy: 1, snowy: 3.5 }, spawn: 0.85, types: { emekli: 1.5, is: 1.3, yazar: 1.8, yaslicift: 1.3 }, grass: C(0.62, 0.7, 0.52) },
   ],
   SeasonLen: 7,
   get Season() { return this.Seasons[Math.floor((Math.max(1, World.day) - 1) / this.SeasonLen) % 4]; },
@@ -67,6 +67,13 @@ const Life = {
     { id: 'rakip', name: 'Rakip kampanyası', icon: '📉', desc: 'Karşı otel indirim yaptı. Misafir puanın 4\'ün altındaysa bugün daha az misafir gelir.', spawnFn: () => Life.Rating() >= 4 ? 1 : 0.7, w: 1, minDay: 4 },
     { id: 'gazete', name: 'Gazete haberi', icon: '📰', desc: 'Yerel gazete otelini övdü! Ün +10.', rep: 10, w: 1, cond: () => Life.Rating() >= 3.8 && (Game.st.recent || []).length >= 5 },
     { id: 'film', name: 'Film ekibi', icon: '🎬', desc: 'Bir film ekibi otelde çekim yapıyor: ünlüler, fenomenler ve ekip kapıda! Bahşişler iki katı.', burst: { unlu: 1, fenomen: 2, is: 3 }, tip: 2, w: 0.8, minStars: 4 },
+    { id: 'pazar', name: 'Kasaba pazarı', icon: '🧺', desc: 'Meydanda pazar kuruldu: gezginler ve turistler akın ediyor, kafe dolup taşıyor.', types: { turist: 1.6, gezgin: 3 }, fac: { kafe: 1.5, bahce: 1.2 }, spawn: 1.2, w: 1.6, seasons: ['ilkbahar', 'yaz', 'sonbahar'] },
+    { id: 'fotograf', name: 'Fotoğraf gezisi', icon: '📷', desc: 'Bir fotoğraf kulübü koyu keşfe geldi: fotoğrafçılar kapıda, bahçe ve havuz çok işlenecek.', burst: { fotografci: 3 }, fac: { bahce: 1.8, havuz: 1.3 }, w: 1, minStars: 2, seasons: ['ilkbahar', 'sonbahar'] },
+    { id: 'yuruyus', name: 'Doğa yürüyüşü günü', icon: '🥾', desc: 'Kasabada doğa yürüyüşü var: sırt çantalı gezginler otele uğruyor.', burst: { gezgin: 3 }, fac: { kafe: 1.4 }, w: 1.2, seasons: ['ilkbahar', 'yaz', 'sonbahar'] },
+    { id: 'zirve', name: 'İş zirvesi', icon: '🤝', desc: 'Kasabada bir zirve toplantısı var: iş insanları geliyor. Sabırsızlar ama bahşişleri iyi.', burst: { is: 4 }, tip: 1.3, fac: { kafe: 1.6, restoran: 1.6 }, w: 0.9, minStars: 3, seasons: ['sonbahar', 'kis', 'ilkbahar'] },
+    { id: 'yemek', name: 'Yemek günleri', icon: '🍲', desc: 'Kasabada yerel lezzet günleri! Restoranın tezgâhı dolar, herkes yemek için geliyor.', fac: { restoran: 2.5, kafe: 1.3 }, spawn: 1.15, w: 1.3, cond: () => Facilities.Built('restoran') },
+    { id: 'dolunay', name: 'Dolunay gecesi', icon: '🌕', desc: 'Bu gece dolunay! Sahil dolu, çatı barı ve bahçe romantik çiftlerle dolar.', night: true, types: { balayi: 3, yaslicift: 2 }, fac: { bar: 2, bahce: 1.5 }, tip: 1.25, w: 1, minStars: 2 },
+    { id: 'kissenligi', name: 'Kış şenliği', icon: '🎄', desc: 'Kasabada ışıklı kış şenliği var! Şömine sıcaklığı, sıcak çikolata, uzun akşamlar.', night: true, types: { aile: 2, yaslicift: 2, yazar: 2 }, fac: { kafe: 1.8, restoran: 1.5, spa: 1.5 }, tip: 1.3, w: 1.6, seasons: ['kis'] },
     { id: 'indirim', name: 'Mobilya indirimi', icon: '🛋', desc: 'Mağazada indirim: bugün dekor eşyaları %25 ucuz.', furn: 0.75, w: 1 },
   ],
   get Event() { const e = Game.st && Game.st.event; return e && e.day === World.day ? this.Events.find(x => x.id === e.id) || null : null; },
@@ -91,6 +98,10 @@ const Life = {
     if (ev.id === 'gazete') Social.Share('{otel}: Lavanta Koyu\'nun en sevilen oteli seçildi! Misafirler övgüler yağdırıyor.', 2, false);
     if (ev.id === 'film') Social.Share('{otel}: bir film ekibi otelde çekim yapıyor! Herkes bunu konuşuyor.', 2, false);
     if (ev.id === 'festival') Social.Share('Lavanta Festivali başladı! {otel} bu hafta sonu festivalin en şık adresi.', 1, false);
+    if (ev.id === 'pazar') Social.Share('Kasaba pazarı kuruldu! {otel}\'in kafesinde pazar sonrası kahve molası şart.', 1, false);
+    if (ev.id === 'dolunay') Social.Share('Bu gece dolunay! {otel}\'in çatısından manzara görülmeye değer.', 1, false);
+    if (ev.id === 'kissenligi') Social.Share('Kış şenliği başladı! {otel} ışıklarla süslendi, kapıda sıcak çikolata var.', 1, false);
+    if (ev.id === 'yemek') Social.Share('Yerel lezzet günleri başladı! {otel}\'in restoranı bu hafta dolup taşıyor.', 1, false);
     if (ev.burst) { let i = 0; for (const t in ev.burst) for (let k = 0; k < ev.burst[t]; k++) Tween.After(1 + 1.6 * i++, () => { if (Game.queue.length < 8) Game.Spawn(t); }); }
     if (ev.breakRoom) this.BreakRoom();
   },

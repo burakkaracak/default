@@ -1,6 +1,110 @@
 // Sohbet metinleri (eski oyundan taşındı + yeni türler). [misafirin sözü, [[cevap, misafirin tepkisi, puan -1..2], ...]]
 const TalkData = {
  "talks": {
+ "fotografci": [
+   [
+    "Bu ışık inanılmaz! Gün batımında çatıdan çekim yapabilir miyim?",
+    [
+     ["Tabii, çatı tamamen sizin. En güzel ışık akşamüstü.", "Harika, tam da aradığım şey!", 2],
+     ["Yapabilirsiniz, yalnız misafirlere dikkat edin.", "Tamam, rahatsız etmem.", 1],
+     ["Sanırım olur, bilmiyorum.", "Peki, kendim bakarım.", -1]
+    ]
+   ],
+   [
+    "Kasabada fotoğraflık bir yer önerir misiniz?",
+    [
+     ["Sabah erkenden sahile inin, deniz sisli olur.", "Yarın şafakta orada olacağım, teşekkürler!", 2],
+     ["Meydandaki çeşme çok güzel çıkar.", "Not aldım, sağ olun.", 1],
+     ["Her yer güzel.", "Hmm, bir bakarız.", 0]
+    ]
+   ],
+   [
+    "Otelinizi de kitabıma koymak isterim. İzin verir misiniz?",
+    [
+     ["Elbette, büyük mutluluk duyarız!", "Çok naziksiniz, güzel çıkacak!", 2],
+     ["Olur, ama önce bir bakayım.", "Anlaşıldı, göstereceğim.", 1],
+     ["Pek sevmem.", "Peki, saygı duyarım.", -1]
+    ]
+   ]
+  ],
+ "yaslicift": [
+   [
+    "Biz bu koya her yıl geliriz. Hâlâ ne kadar huzurlu burası!",
+    [
+     ["Yeniden hoş geldiniz! Sizi ağırlamak büyük mutluluk.", "Ne kadar nazik, buraya hep gelirdik zaten.", 2],
+     ["Hoş geldiniz, güzel bir tatil dilerim.", "Sağ olun evladım.", 1],
+     ["Evet, sakin bir yer.", "Hı hı...", 0]
+    ]
+   ],
+   [
+    "Kızım, sabahları sıcak bir çay bulunur mu?",
+    [
+     ["Hemen getiriyorum, yanında da simit olsun mu?", "Aman ne güzel, Allah razı olsun!", 2],
+     ["Kafede çay var, size hazırlatırım.", "Teşekkür ederiz.", 1],
+     ["Kafe saatleri belli.", "Eh, peki.", -1]
+    ]
+   ],
+   [
+    "Bahçede biraz oturmak isteriz. Bir köşe var mı?",
+    [
+     ["Çeşmenin yanındaki bank tam size göre, gölgesi de var.", "Çok iyi, hemen gidelim.", 2],
+     ["Bahçede dilediğiniz yere oturabilirsiniz.", "Teşekkürler.", 1],
+     ["Başka yer bulun lütfen.", "Ah... peki.", -1]
+    ]
+   ]
+  ],
+ "gezgin": [
+   [
+    "Merhaba! Ucuz ama temiz bir oda arıyordum, sizi buldum.",
+    [
+     ["Doğru yerdesiniz! Temiz oda, sıcak karşılama.", "Duyduğuma göre doğruymuş, sevindim!", 2],
+     ["Odanız hazır olacak.", "Süper, yoruldum.", 1],
+     ["Fiyatlarımız sabit.", "Tamam, tamam.", 0]
+    ]
+   ],
+   [
+    "Kasabada yerel bir lezzet ne yenir?",
+    [
+     ["Sahildeki balıkçıda günün balığı efsane, lavanta bal da deneyin.", "Hemen gidiyorum, çok teşekkürler!", 2],
+     ["Meydandaki fırına uğrayın.", "Olur, bakarım.", 1],
+     ["Bilmiyorum, sormadım.", ".. peki.", -1]
+    ]
+   ],
+   [
+    "Yürüyüş rotası var mı? Tepeye çıkmak istiyorum.",
+    [
+     ["Arkadaki patika tepeye çıkıyor, manzarası harika. Su almayı unutmayın!", "Süper, yarın sabah deniyorum!", 2],
+     ["Bir harita vereyim.", "Çok iyi, sağ olun.", 1],
+     ["Tepeye gitmeyin bence.", "Hmm, olur.", -1]
+    ]
+   ]
+  ],
+ "yazar": [
+   [
+    "Sessiz bir köşe lazım, romanın son bölümündeyim. Kafe sabahları sakin mi?",
+    [
+     ["Sabahları neredeyse boş. Size hep aynı masayı ayıracağım.", "Hayat kurtardınız, tam aradığım yer!", 2],
+     ["Erken saatlerde sakin olur.", "Güzel, orada yazarım.", 1],
+     ["Biraz kalabalık olabilir.", "Yazık, başka yer bakarım.", -1]
+    ]
+   ],
+   [
+    "Bu koy yazmaya ilham veriyor. Siz hiç yazdınız mı?",
+    [
+     ["Anılarımı yazıyorum aslında, belki bir gün kitap olur.", "Yazın, okumak isterim, söz!", 2],
+     ["Hayır ama okumayı çok severim.", "O da güzel bir şey.", 1],
+     ["Vaktim yok.", "Anlıyorum.", 0]
+    ]
+   ],
+   [
+    "Odama bir kahve ve biraz sessizlik rica edebilir miyim?",
+    [
+     ["Hemen gönderiyorum, kapıya 'rahatsız etmeyin' asıyorum.", "Mükemmel, teşekkürler!", 2],
+     ["Kahveyi hazırlatırım.", "Sağ olun.", 1],
+     ["Bekleyin biraz.", "...", -1]
+    ]
+   ]
+  ],
   "turist": [
    [
     "Merhaba! Otel çok şirin görünüyor. Siz mi işletiyorsunuz?",

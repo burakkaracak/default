@@ -67,6 +67,10 @@ const Data = {
     { id: 'mufettis', name: 'Otel müfettişi', icon: '🕵', disguise: 'is', pay: 1.45, patience: 0.7, nights: [1, 1], w: 0.4, minStars: 2, look: ['character-male-d', 'character-female-d'], desc: 'İş insanı gibi görünür; raporu ünü çok etkiler.' },
     { id: 'fenomen', name: 'Fenomen', icon: '🤳', pay: 1.6, patience: 0.8, nights: [1, 2], w: 1, minStars: 3, repMul: 2.5, look: ['character-female-e', 'character-male-e'], desc: 'Takipçilerine anlatır: memnuniyeti ünü katlar.' },
     { id: 'unlu', name: 'Ünlü', icon: '⭐', pay: 3, patience: 0.7, nights: [1, 2], w: 0.5, minStars: 4, repMul: 2, follower: 1, look: ['character-female-f', 'character-male-f'], desc: 'Kapıda hayranlar! Çok öder, beklemeyi sevmez.' },
+    { id: 'fotografci', name: 'Fotoğrafçı', icon: '📷', pay: 1.15, patience: 1.3, nights: [1, 2], w: 1.1, minStars: 2, look: ['character-male-e', 'character-female-c'], desc: 'Koyun manzarasını çekmeye geldi. Bahçe ve havuzda saatlerce vakit geçirir.' },
+    { id: 'yaslicift', name: 'Yaşlı çift', icon: '👴', pay: 1.3, patience: 1.7, nights: [2, 4], w: 1.4, minStars: 2, follower: 1, look: ['character-male-b', 'character-female-b'], desc: 'Her yıl tatile gelen sakin bir çift. Acele etmezler, bahşişleri tatlıdır.' },
+    { id: 'gezgin', name: 'Sırt çantalı gezgin', icon: '🥾', pay: 0.9, patience: 1.4, nights: [1, 3], w: 1.8, look: ['character-female-d', 'character-male-a'], desc: 'Bütçesi dar ama meraklı. Kafeyi ve bahçeyi sever, her şeyi paylaşır.' },
+    { id: 'yazar', name: 'Yazar', icon: '✍', pay: 1.35, patience: 1.2, nights: [3, 5], w: 0.8, minStars: 3, look: ['character-female-f', 'character-male-d'], desc: 'Kitabını yazmaya sessiz bir yer arıyor. Uzun kalır, kafede otururken fikir bulur.' },
   ],
   Requests: [
     { id: 'towel', name: 'Havlu', icon: '🧺', tip: 10 },
