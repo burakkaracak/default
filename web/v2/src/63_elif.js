@@ -2,8 +2,8 @@
 // KİŞİSEL İÇERİK YUVASI (ElifData): doğum günü, yıldönümü ve Burak'ın yazdığı notlar yalnız bu nesneye yazılır.
 // Ayarlar ekranında bu bilgi için alan YOK (sürpriz bozulmasın); Burak tarihleri ve notları sohbette iletir.
 const ElifData = {
-  birthday: null,     // [gün, ay] örn. [14, 6]
-  anniversary: null,  // [gün, ay]
+  birthday: [23, 4],  // [gün, ay] örn. [14, 6]
+  anniversary: [19, 4], // [gün, ay]
   birthdayMsg: null,  // özel mesaj (boşsa varsayılan)
   anniversaryMsg: null,
   // Burak'ın notları: { id, when: {...}, text, from }
@@ -28,9 +28,9 @@ const Special = {
   MothersDay(y) { const d = new Date(y, 4, 1); const first = (7 - d.getDay()) % 7 + 1; return first + 7; },
   Match(now) {
     const day = now.getDate(), mon = now.getMonth() + 1, y = now.getFullYear();
-    for (const s of this.Days) { if (s.special === 'anneler' ? (mon === 5 && day === this.MothersDay(y)) : (s.d === day && s.m === mon)) return s; }
     const b = ElifData.birthday; if (b && b[0] === day && b[1] === mon) return { id: 'dogum', icon: '🎂', name: 'Doğum günü', msg: ElifData.birthdayMsg || 'Doğum günün kutlu olsun! Otel bugün senin için süslendi.', col: [C(1, 0.5, 0.7), C(1, 0.85, 0.3), C(0.6, 0.8, 1)], big: true };
     const a = ElifData.anniversary; if (a && a[0] === day && a[1] === mon) return { id: 'yildonumu', icon: '💞', name: 'Yıldönümü', msg: ElifData.anniversaryMsg || 'Mutlu yıllar! Bugün otel sizin için kalplerle süslendi.', col: [C(1, 0.4, 0.55), C(1, 0.75, 0.85), C(1, 0.85, 0.4)], big: true };
+    for (const s of this.Days) { if (s.special === 'anneler' ? (mon === 5 && day === this.MothersDay(y)) : (s.d === day && s.m === mon)) return s; }
     return null;
   },
   Today() { return this.Match(this.Now()); },
