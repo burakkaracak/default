@@ -21,10 +21,7 @@ Tasarım belgesi: `TASARIM.md` (Otel Ustası 2, fazlar). Hırsız olayı İSTENM
   - Testler: `python3 test_boot.py çıktı.png [en boy sn js] [--touch]`, `test_flow.py` (tam oyun akışı), `test_iphone.py` (iPhone 14 Pro: hata, binişme, taşma, renk), `test_cloud.py` (7 senaryo).
     Hızlandırma: `window.__sub = 6` (mantık adımı), `window.__noRender = 1` (çizim seyreltir). Başsız Chromium'da fps çok düşük; testlerde `Quality.Set(0)`.
     Her değişiklikten sonra test_flow + test_iphone çalıştır; ekran görüntülerine de bak.
-- `web/src/`: eski oyun (Otel Ustası 1, Unity portu). Yeni oyun yerini alana kadar yayında kalır; artık geliştirilmez.
-- `unity/`: Unity projesi, yalnız başvuru. `eski-oyun-fikirleri.md`: eski web oyunundan fikirler.
 
 ## Yayın
-- Eski oyun: https://claude.ai/artifact/FwXmtN8maAGCFSH5GXt1hu (web/dist). capabilities `{db:{}, user:{}, downloads:true, sample:{}}`.
 - Yeni oyun (Otel Ustası 2): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true, sample:{}}` (sample: serbest sohbet; eksik bırakılırsa yetenek iptal olur, hep tam seti ver).
 - Kullanıcı iPhone 14 Pro (Safari) ve M2 MacBook Air'de oynuyor. Eşi kendi kaydına yazabilsin diye paylaşımda en az Contributor yetkisi gerekir.
