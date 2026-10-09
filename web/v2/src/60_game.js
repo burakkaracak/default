@@ -5,7 +5,7 @@ const Game = {
   loaded: false,
 
   Default() {
-    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, hat: '', celebrated: {}, notesRead: [], noteLog: [], ach: {}, achInit: false, memories: [], chain: {}, chainEarned: 0, dayLog: [], earnedMark: 0, chats: 0, replies: 0, photos: 0, repairs: 0, weddings: 0, seasonsSeen: [], flags: {}, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
+    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, music: true, hints: {}, pets: 0, catName: 'Pamuk', hat: '', celebrated: {}, notesRead: [], noteLog: [], ach: {}, achInit: false, memories: [], chain: {}, chainEarned: 0, dayLog: [], earnedMark: 0, chats: 0, replies: 0, photos: 0, repairs: 0, weddings: 0, seasonsSeen: [], flags: {}, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
   },
 
   Boot() {
@@ -25,7 +25,7 @@ const Game = {
     for (const role of Object.keys(this.st.extraStaff || {})) for (let i = 0; i < this.st.extraStaff[role]; i++) this.AddStaff(role, false);
     Facilities.Boot();
     this.st.upg = this.st.upg || {}; this.st.comp = this.st.comp || {}; this.st.till = this.st.till || 0; this.tillAge = 0; this.RefreshPile();
-    Social.Defaults(); Social.GetSample(); Gallery.Init();
+    Social.Defaults(); Social.GetSample(); Gallery.Init(); Pets.Init();
     this.BindUI();
     this.loaded = true;
     this.RefreshFloors();
@@ -63,10 +63,11 @@ const Game = {
     Wedding.Tick(dt);
     Special.Tick(dt);
     Gallery.Tick(dt);
+    Hints.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
   },
   Frame(raw) {
-    Life.Frame(raw);
+    Life.Frame(raw); Music.Frame(raw);
     this.shownMoney += (this.st.money - this.shownMoney) * Math.min(1, raw * 10);
     if (Math.abs(this.shownMoney - this.st.money) < 0.6) this.shownMoney = this.st.money;
     const q = this.Quest();
@@ -378,6 +379,7 @@ const Game = {
     if (!pt) return;
     // misafire dokunma: bilgi
     for (const g of this.guests) if (Math.abs(g.pos.y - pt.y) < 1 && Vec.flat(g.pos, pt) < 1.1) { Chat.StartGuest(g); return; }
+    if (Pets.Tap(pt)) return;
     const r = Hotel.RoomAt(pt, f);
     if (r && r.level < 0) { this.OfferRoom(r); return; }
     if (r && r.level >= 0 && this.player.floor === f && Vec.flat(this.player.go.position, pt) < 1.2) { this.RoomSheet(r); return; }
@@ -406,7 +408,7 @@ const Game = {
   },
   Labels() {
     const f = Hotel.view;
-    Social.Frame(); Special.Frame();
+    Social.Frame(); Special.Frame(); Pets.Frame();
     // açılabilir oda etiketi
     const next = this.NextRoom();
     if (next && next.floor === f) UI.Label('buy', V(next.x, Hotel.FloorY(f) + 1.4, next.z), '➕ Oda aç ' + UI.fmt(this.NextRoomCost()), 'buy', () => this.OfferRoom(next));
@@ -525,6 +527,8 @@ const Game = {
         body.querySelector('#in-mgr').addEventListener('change', e => { this.st.manager = e.target.value.trim() || 'Müdür'; this.player.tag.text = this.st.manager; this.Save(); });
         body.querySelector('#bt-q').addEventListener('click', () => { Quality.Set((Quality.level + 1) % 3, true); UI.RenderSheet(); });
         body.querySelector('#bt-s').addEventListener('click', () => { this.st.sound = !this.st.sound; Sfx.SetVolume(this.st.sound ? 1 : 0); this.Save(); UI.RenderSheet(); });
+        Music.Render(body);
+        Pets.Render(body);
         Outfit.Render(body);
         body.querySelector('#bt-r').addEventListener('click', () => UI.Dialog({ tag: 'DİKKAT', title: 'Baştan başlansın mı?', body: 'Otel, para ve tüm ilerleme silinir.', buttons: [{ text: 'Evet, sil', cls: 'red', act: () => this.Reset() }, { text: 'Vazgeç', cls: 'ghost' }] }));
       }
