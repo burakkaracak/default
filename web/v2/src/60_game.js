@@ -5,7 +5,7 @@ const Game = {
   loaded: false,
 
   Default() {
-    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, ach: {}, achInit: false, memories: [], chain: {}, chainEarned: 0, dayLog: [], earnedMark: 0, chats: 0, replies: 0, photos: 0, repairs: 0, weddings: 0, seasonsSeen: [], flags: {}, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
+    return { v: 2, name: 'Lavanta Oteli', manager: 'Elif', look: 'character-female-a', money: Data.StartMoney, rep: 0, day: 1, time: 0.33, floors: 1, rooms: { 10: 0 }, staff: { receptionist: false, cleaners: 0, bellhops: 0 }, served: 0, earned: 0, lost: 0, questIdx: 0, questDone: false, sound: true, followers: 50, hat: '', celebrated: {}, notesRead: [], noteLog: [], ach: {}, achInit: false, memories: [], chain: {}, chainEarned: 0, dayLog: [], earnedMark: 0, chats: 0, replies: 0, photos: 0, repairs: 0, weddings: 0, seasonsSeen: [], flags: {}, feed: [], letters: [], arcs: {}, unread: 0, unreadL: 0, postSeq: 0, tutorial: 0, staffData: {}, facilities: {}, extraStaff: {}, upg: {}, comp: {}, till: 0 };
   },
 
   Boot() {
@@ -17,6 +17,7 @@ const Game = {
     World.day = this.st.day; World.time = this.st.time;
     Hotel.Build(this.st);
     this.player = new Player(this.st.look, this.st.manager);
+    if (this.st.hat) Outfit.Hat(this.st.hat);
     Cam.follow = this.player.go; Cam.target.copy(this.player.go.position);
     for (let i = 0; i < this.st.staff.cleaners; i++) this.AddStaff('cleaner', false);
     for (let i = 0; i < this.st.staff.bellhops; i++) this.AddStaff('bellhop', false);
@@ -60,6 +61,7 @@ const Game = {
     Life.Tick(dt);
     Ach.Tick(dt);
     Wedding.Tick(dt);
+    Special.Tick(dt);
     for (const [k, p] of this.pads) { p.t -= dt; if (p.t <= 0) { p.pad.Show(false); } }
   },
   Frame(raw) {
@@ -403,7 +405,7 @@ const Game = {
   },
   Labels() {
     const f = Hotel.view;
-    Social.Frame();
+    Social.Frame(); Special.Frame();
     // açılabilir oda etiketi
     const next = this.NextRoom();
     if (next && next.floor === f) UI.Label('buy', V(next.x, Hotel.FloorY(f) + 1.4, next.z), '➕ Oda aç ' + UI.fmt(this.NextRoomCost()), 'buy', () => this.OfferRoom(next));
@@ -522,6 +524,7 @@ const Game = {
         body.querySelector('#in-mgr').addEventListener('change', e => { this.st.manager = e.target.value.trim() || 'Müdür'; this.player.tag.text = this.st.manager; this.Save(); });
         body.querySelector('#bt-q').addEventListener('click', () => { Quality.Set((Quality.level + 1) % 3, true); UI.RenderSheet(); });
         body.querySelector('#bt-s').addEventListener('click', () => { this.st.sound = !this.st.sound; Sfx.SetVolume(this.st.sound ? 1 : 0); this.Save(); UI.RenderSheet(); });
+        Outfit.Render(body);
         body.querySelector('#bt-r').addEventListener('click', () => UI.Dialog({ tag: 'DİKKAT', title: 'Baştan başlansın mı?', body: 'Otel, para ve tüm ilerleme silinir.', buttons: [{ text: 'Evet, sil', cls: 'red', act: () => this.Reset() }, { text: 'Vazgeç', cls: 'ghost' }] }));
       }
     } });
