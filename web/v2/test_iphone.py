@@ -1,15 +1,30 @@
 # iPhone testi (Lavanta Koyu): iPhone 14 Pro boyutunda (dokunmatik, 3x) açar; hata, binen arayüz kutuları, taşan yazı ve soluk renk denetler.
-# Kullanım: python3 test_iphone.py [çıktı_klasörü]
+# Kullanım: python3 test_iphone.py [çıktı_klasörü] [--cihaz mac|iphone15|iphone14|hepsi]  (varsayılan: iphone14)
 import glob, sys, subprocess, time, os, base64
 from playwright.sync_api import sync_playwright
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
-OUT = sys.argv[1] if len(sys.argv) > 1 else HERE + '/iphone_shots'
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
+CIHAZ = sys.argv[sys.argv.index('--cihaz') + 1] if '--cihaz' in sys.argv else 'iphone14'
+if CIHAZ in ARGS: ARGS.remove(CIHAZ)
+OUT = ARGS[0] if ARGS else HERE + '/iphone_shots'
 os.makedirs(OUT, exist_ok=True)
 srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8835'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
-UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
-SIZES = [('cerceve', 376, 643), ('tamekran', 393, 760)]
+def iua(v): return f'Mozilla/5.0 (iPhone; CPU iPhone OS {v}_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/{v}.0 Mobile/15E148 Safari/604.1'
+MAC_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+# Her profil: (ad, genişlik, yükseklik, piksel yoğunluğu, dokunmatik, tarayıcı kimliği)
+# MacBook Air 13,6" M2: 2560x1664 ekran, varsayılan ölçek 1470x956 @2; Chrome tam ekranda araç çubuğu yok.
+# iPhone 14 Pro / 15 Pro: ikisi de 393x852 @3 (aynı mantıksal ölçü). Safari dikey: alt çubuklu 393x659, çubuklar kapalı 393x760; yatay ~852x330.
+PROFILES = {
+    'mac': [('mac_tamekran', 1470, 956, 2, False, MAC_UA), ('mac_pencere', 1470, 830, 2, False, MAC_UA)],
+    'iphone15': [('i15_dikey', 393, 659, 3, True, iua(18)), ('i15_dikey_tam', 393, 760, 3, True, iua(18)), ('i15_yatay', 852, 330, 3, True, iua(18))],
+    'iphone14': [('i14_dikey', 393, 659, 3, True, iua(17)), ('i14_dikey_tam', 393, 760, 3, True, iua(17)), ('i14_yatay', 852, 330, 3, True, iua(17))],
+}
+PROFILES['yatay'] = [p for p in PROFILES['iphone14'] if 'yatay' in p[0]]
+PROFILES['hepsi'] = PROFILES['mac'] + PROFILES['iphone15'] + PROFILES['iphone14']
+SIZES = PROFILES[CIHAZ]
+STATS_JS = "(()=>{const g=window.__game,r=g.renderer,i=r.info,pr=r.getPixelRatio(); return {kalite:g.Quality.names[g.Quality.level],oran:+pr.toFixed(2),piksel:Math.round(innerWidth*pr*innerHeight*pr/1e5)/10,cagri:i.render.calls,ucgen:Math.round(i.render.triangles/1000),geo:i.memory.geometries,doku:i.memory.textures,js:performance.memory?Math.round(performance.memory.usedJSHeapSize/1048576):-1}})()" 
 SETUP = "(()=>{const g=window.__game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; window.__noWedding=1; return 'ok'})()"
 def go(x, z, f=0): return f"(()=>{{const g=window.__game,G=g.Game; g.UI.ClearDialogs(); g.UI.CloseSheet(); G.player.floor={f}; G.player.go.position.set({x},g.Hotel.FloorY({f}),{z}); g.Hotel.SetView({f}); g.Cam.Snap(); return 1}})()"
 GROW = "(()=>{const g=window.__game,G=g.Game; G.st.money=1e6; for(let i=0;i<5;i++) G.BuyRoom(G.NextRoom()); G.BuyFloor(); G.AddStaff('receptionist'); G.AddStaff('cleaner'); for(const t of ['turist','aile','is']) G.Spawn(t); G.st.money=2345; g.UI.ClearDialogs(); return 1})()"
@@ -60,26 +75,28 @@ problems = []
 try:
     with sync_playwright() as p:
         b = p.chromium.launch(executable_path=C, args=['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        for (name, w, h) in SIZES:
-            ctx = b.new_context(viewport={'width': w, 'height': h}, device_scale_factor=3, is_mobile=True, has_touch=True, user_agent=UA)
+        for (name, w, h, dpr, touch, UA) in SIZES:
+            ctx = b.new_context(viewport={'width': w, 'height': h}, device_scale_factor=dpr, is_mobile=touch, has_touch=touch, user_agent=UA)
             pg = ctx.new_page(); errs = []
             pg.on('pageerror', lambda e: errs.append('HATA ' + str(e)[:300]))
             pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append('KONSOL ' + m.text[:300]))
             pg.goto('http://localhost:8835/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
+            real = pg.evaluate("(()=>{const q=window.__game.Quality,l=q.level,pr=q.PixelRatio(); return {kalite:q.names[l],oran:+pr.toFixed(2),mpx:Math.round(innerWidth*pr*innerHeight*pr/1e5)/10}})()")
             pg.evaluate(SETUP)
+            pg.evaluate("(()=>{const q=window.__game.Quality; q.Set(0)})()")  # başsız yazılım çizimi Yüksek/Orta'da çok yavaş; düzen denetimi Düşük'te yapılır
             pg.add_style_tag(content='* { animation: none !important; transition: none !important; }')  # başsız tarayıcıda animasyon zamanlaması güvenilmez
-            print(f'== {name} {w}x{h}: grafik', pg.evaluate('window.__game.Quality.names[window.__game.Quality.level]'))
+            print(f'== {name} {w}x{h} @{dpr}x: gerçek cihazda grafik {real["kalite"]}, piksel oranı {real["oran"]}, çizilen {real["mpx"]} Mpx')
             for (sc, js) in SCENES:
                 if js: pg.evaluate(js)
                 pg.wait_for_timeout(2200)
-                ui = pg.evaluate(UI_JS)
+                ui = pg.evaluate(UI_JS); st = pg.evaluate(STATS_JS)
                 shot = pg.screenshot(path=f'{OUT}/{name}_{sc}.png')
                 col = pg.evaluate(COLOR_JS, base64.b64encode(shot).decode())
                 issues = []
                 if ui: issues.append('; '.join(sorted(set(ui)))[:300])
                 if sc in ('1_baslangic', '2_lobi', '4_buyumus') and col['sat'] < 0.07: issues.append('renkler soluk')
                 if sc in ('1_baslangic', '2_lobi', '4_buyumus') and col['lum'] > 0.92: issues.append('görüntü fazla beyaz')
-                print(f'  {sc}: doygunluk {col["sat"]:.2f}, parlaklık {col["lum"]:.2f}' + ('' if not issues else '  <-- ' + ' | '.join(issues)))
+                print(f'  {sc}: doygunluk {col["sat"]:.2f}, parlaklık {col["lum"]:.2f}' + f' | {st["kalite"]} x{st["oran"]} {st["piksel"]}Mpx çağrı {st["cagri"]} üçgen {st["ucgen"]}b geo {st["geo"]} doku {st["doku"]} js {st["js"]}MB' + ('' if not issues else '  <-- ' + ' | '.join(issues)))
                 problems += [f'{name}/{sc}: {i}' for i in issues]
             for e in sorted(set(errs)): print('  ' + e); problems.append(f'{name}: {e}')
             ctx.close()
