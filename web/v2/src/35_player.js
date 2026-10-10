@@ -7,10 +7,25 @@ class Player extends Behaviour {
     this.go.position.set(0, 0, 10);
     this.tag = U.Text(this.go, V(0, 2.25, 0), name || 'Müdür', 0.07, C(1, 0.85, 0.4), true);
     this.ring = U.Flat('Halka', this.go, V(0, 0.03, 0), V(1.2, 0.02, 1.2), C(1, 1, 1, 0.55), 'Torus'); this.ring.rotation.x = Math.PI / 2;
-    this.progress = null; this.work = null; this.carry = null;
+    this.progress = null; this.work = null; this.items = []; this.stackG = null;
   }
   get floorY() { return Hotel.FloorY(this.floor); }
   get pos() { return this.go.position; }
+  // Elde eşya yığını: havlu, tuvalet kâğıdı. Kapasite 'Taşıma sepeti' yükseltmesiyle artar.
+  get CarryCap() { const u = Data.Upgrades.carry; return u.add + u.step * Game.UpgLv('carry'); }
+  get CarryFree() { return this.CarryCap - this.items.length; }
+  Count(t) { return this.items.filter(x => x === t).length; }
+  CarryAdd(t) { if (this.CarryFree <= 0) return false; this.items.push(t); this.RefreshCarry(); return true; }
+  CarryTake(t) { const i = this.items.lastIndexOf(t); if (i < 0) return false; this.items.splice(i, 1); this.RefreshCarry(); return true; }
+  RefreshCarry() {
+    if (this.stackG) { Destroy(this.stackG); this.stackG = null; }
+    if (!this.items.length) return;
+    const g = this.stackG = U.Pivot(this.go, V(0, 0.95, 0.42), 'Yigin'); let y = 0;
+    for (const t of this.items) {
+      if (t === 'towel') { U.Box('Havlu', g, V(0, y + 0.05, 0), V(0.4, 0.1, 0.32), y / 0.11 % 2 < 1 ? C(1, 1, 1) : C(0.8, 0.92, 1)); y += 0.11; }
+      else { U.Box('Kagit', g, V(0, y + 0.09, 0), V(0.22, 0.18, 0.22), C(1, 1, 1), 'Cylinder'); U.Box('KagitSerit', g, V(0, y + 0.09, 0), V(0.23, 0.05, 0.23), C(0.55, 0.75, 0.95), 'Cylinder'); y += 0.19; }
+    }
+  }
   get speed() { return 5.6 * Game.UpgMul('me'); }
   set speed(v) { }
 
@@ -22,6 +37,7 @@ class Player extends Behaviour {
 
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
+    if (this.stackG) this.stackG.visible = this.rig.inner.visible;
     if (this.liftT > 0) { this.LiftTick(dt); return; }
     // manuel kontrol
     let mx = 0, mz = 0;

@@ -114,6 +114,7 @@ const Hotel = {
     // giriş paspası
     U.Flat('Paspas', g, V(0, 0.03, 5.9), V(2.4, 0.02, 1.4), C(0.75, 0.3, 0.35));
     Facilities.BuildLobby(g);
+    Wc.BuildLobby(g);
     this.lobby = g;
   },
 
@@ -210,6 +211,7 @@ const Hotel = {
       if (Math.abs(p.x) > Wd || Math.abs(p.z) > Dd) return false;
       const L = this.Lobby; if (Math.abs(p.x - L.desk.x) < 2.3 && Math.abs(p.z - L.desk.z) < 0.7) return false; // banko
       if (p.x > 8.8 && p.z < -1.4) return false; // asansör kabini
+      if (Wc.Blocks(p)) return false; // tuvalet kabinleri
       return true;
     }
     if (f > this.floors) return (Math.abs(p.x) < Wd && Math.abs(p.z) < Dd) || (Math.abs(p.x) < this.Deck.hx - 0.4 && p.z > Dd - 0.3 && p.z < this.Deck.z1 - 0.5); // çatı + güney teras
