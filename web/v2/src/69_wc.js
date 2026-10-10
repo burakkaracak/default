@@ -23,8 +23,8 @@ const Wc = (() => {
       U.Box('Havlu', g, V(12.3, y + 0.06 + j * 0.1, -0.85 + k * 0.38), V(0.4, 0.09, 0.32), tow[(i + k + j) % 3]);
     for (const y of [0.38, 0.98, 1.58]) for (let k = 0; k < 4; k++) for (let j = 0; j < 2; j++)
       { U.Box('Kagit', g, V(12.3, y + 0.14 + j * 0.2, 0.55 + k * 0.17), V(0.2, 0.18, 0.2), white, 'Cylinder'); U.Box('KagitSerit', g, V(12.3, y + 0.14 + j * 0.2, 0.55 + k * 0.17), V(0.21, 0.05, 0.21), blue, 'Cylinder'); }
-    U.Text(g, V(11.9, 2.7, -0.7), '🧺 HAVLU', 0.05, C(0.4, 0.3, 0.55), true, true);
-    U.Text(g, V(11.9, 2.7, 0.95), '🧻 KÂĞIT', 0.05, C(0.4, 0.3, 0.55), true, true);
+    U.Text(g, V(11.0, 2.3, -0.7), '🧺 HAVLU', 0.05, C(0.4, 0.3, 0.55), true, true);
+    U.Text(g, V(11.0, 2.3, 0.95), '🧻 KÂĞIT', 0.05, C(0.4, 0.3, 0.55), true, true);
     // alma noktaları: yerde yumuşak halkalar
     for (const k of ['towel', 'paper']) {
       const p = STATION[k];
