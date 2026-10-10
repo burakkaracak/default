@@ -19,7 +19,7 @@ const Data = {
   // Hız yükseltmeleri (seviye başına +step)
   Upgrades: {
     me: { name: 'Koşu ayakkabısı', icon: '👟', desc: 'Müdürün yürüme hızı artar.', cost: [200, 450, 900, 1600, 2800], step: 0.10 },
-    carry: { name: 'Taşıma sepeti', icon: '🧺', desc: 'Elinde bir seferde daha çok eşya (havlu, tuvalet kâğıdı) taşırsın.', cost: [150, 350, 700, 1300, 2200], step: 1, add: 2 },
+    carry: { name: 'Taşıma sepeti', icon: '🧺', desc: 'Elinde bir seferde daha çok eşya (havlu, kâğıt, yemek tabağı) taşırsın.', cost: [150, 350, 700, 1300, 2200], step: 1, add: 2 },
     staff: { name: 'Ekip eğitimi', icon: '⚡', desc: 'Bütün personel daha hızlı çalışır.', cost: [300, 700, 1400, 2600, 4200], step: 0.08 },
   },
   // Oda parçaları (her oda için ayrı seviye 0-3): gecelik fiyat ve memnuniyet etkisi, seviye başına
@@ -49,7 +49,7 @@ const Data = {
     { id: 'bahce', name: 'Bahçe', icon: '🌷', cost: 2500, unlock: 1, floor: 'roof', roles: ['bahcivan'], price: 0, desc: 'Çatıda çiçekler, çeşme ve banklar. Ücretsiz gezinti; bahçe açmışken herkes daha mutlu.' },
     { id: 'havuz', name: 'Havuz', icon: '🏊', cost: 3000, unlock: 2, floor: 'roof', roles: ['cankurtaran'], price: 7, desc: 'Çatıda havuz ve şezlonglar. Aileler ve turistler çok sever.' },
     { id: 'spor', name: 'Spor salonu', icon: '🏋', cost: 4000, unlock: 2, floor: 'roof', roles: [], price: 9, desc: 'Koşu bantları, ağırlıklar, minderler. Personel gerekmez; sporcular ve öğrenciler gelir.' },
-    { id: 'restoran', name: 'Restoran', icon: '🍝', cost: 5000, unlock: 2, floor: 0, roles: ['garson', 'asci'], price: 16, desc: 'Lobinin kuzeydoğusu. Garson (ya da sen) tabakları taşır; aşçı pişirmeyi hızlandırır.' },
+    { id: 'restoran', name: 'Restoran', icon: '🍝', cost: 5000, unlock: 2, floor: 0, roles: ['garson', 'asci'], price: 16, desc: 'Lobinin kuzeydoğusu. Mutfakta yemek pişer, tabakları masalara taşırsın; kirli tabakları topla. Aşçı pişirir, garson taşır.' },
     { id: 'spa', name: 'Spa', icon: '🧖', cost: 7000, unlock: 3, floor: 0, roles: ['terapist'], price: 24, desc: 'Masaj yatakları, jakuzi ve mumlar. Balayı çiftleri ve emekliler için.' },
     { id: 'bar', name: 'Çatı barı', icon: '🍹', cost: 9000, unlock: 3, floor: 'roof', roles: ['barmen'], price: 22, desc: 'Çatıda manzaralı bar, ışık zincirleri. Akşamları hesap 1,5 kat.' },
   ],

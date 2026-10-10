@@ -119,7 +119,7 @@ try:
         check('GardenBonus > 0', pg.evaluate('window.__fac.GardenBonus') > 0.3, pg.evaluate('window.__fac.GardenBonus'))
         # 8) sayfa: tesisler sekmesi
         n = pg.evaluate("(()=>{window.__game.Game.BuildSheet('tesis'); return document.querySelectorAll('.sheet .item').length})()")
-        check('Tesisler sekmesi 7 öğe gösteriyor', n == 7, n)
+        check('Tesisler sekmesi 8 öğe gösteriyor (7 tesis + tuvalet)', n == 8, n)
         pg.evaluate('window.__noRender=0'); pg.wait_for_timeout(800); pg.screenshot(path=SHOT + '_sheet.png', timeout=120000); pg.evaluate('window.__noRender=1; window.__game.UI.CloseSheet()')
         # gece görünümü (ışıklar)
         pg.evaluate("(()=>{const g=window.__game; g.World.time=0.92; g.World.Apply();})()")
