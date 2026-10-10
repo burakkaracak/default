@@ -1,6 +1,6 @@
 // Misafir: kasabadan gelir, resepsiyonda sıraya girer, odaya çıkar, konaklar, isteklerde bulunur, çıkışta öder ve gider.
 class Guest extends Behaviour {
-  static S = { Arrive: 0, Queue: 1, ToRoom: 2, Stay: 3, Checkout: 4, Leave: 5, Visit: 6 };
+  static S = { Arrive: 0, Queue: 1, ToRoom: 2, Stay: 3, Checkout: 4, Leave: 5, Visit: 6, Wc: 7 };
   constructor(type) {
     super(); this.go.name = 'Misafir';
     this.type = type; this.id = ++Guest.seq;
@@ -51,8 +51,9 @@ class Guest extends Behaviour {
         break;
       case S.ToRoom: this.EnterRoom(); break;
       case S.Stay: this.StayTick(dt); break;
-      case S.Checkout: this.Pay(); break;
+      case S.Checkout: if (!this.wcDone) { this.wcDone = true; if (Wc.Offer(this)) break; } this.Pay(); break;
       case S.Visit: Facilities.GuestTick(this, dt); break;
+      case S.Wc: Wc.GuestTick(this, dt); break;
       case S.Leave: this.Blanket(false); this.destroy(); if (this.follower) this.follower.destroy(); Game.OnGuestGone(this); break;
     }
   }

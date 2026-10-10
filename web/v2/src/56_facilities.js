@@ -677,6 +677,7 @@ const Facilities = (() => {
       let total = 0, earn = 0; for (const k in stats) { total += stats[k].n; earn += stats[k].earn; }
       body.innerHTML = `<div class="stat"><span>Tesis ziyareti</span><b>${total}</b></div><div class="stat"><span>Tesis kazancı</span><b>${UI.fmt(earn)}</b></div>`;
       if (S.fac.bahce && S.fac.bahce.built) { const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = `<span>🌷 Bahçe çiçeklenmesi</span><b style="flex:0 0 40%"><div class="meter"><i style="width:${Math.round(S.bloom * 100)}%"></i></div></b>`; body.appendChild(d); }
+      Wc.SheetItem(body);
       for (const d of Data.Facilities) {
         const fac = S.fac[d.id], it = document.createElement('div');
         const roles = d.roles.map(r => Data.Staff[r].icon + ' ' + Data.Staff[r].name).join(', ');

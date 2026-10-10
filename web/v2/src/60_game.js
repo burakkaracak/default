@@ -23,7 +23,7 @@ const Game = {
     for (let i = 0; i < this.st.staff.bellhops; i++) this.AddStaff('bellhop', false);
     if (this.st.staff.receptionist) this.AddStaff('receptionist', false);
     for (const role of Object.keys(this.st.extraStaff || {})) for (let i = 0; i < this.st.extraStaff[role]; i++) this.AddStaff(role, false);
-    Facilities.Boot();
+    Facilities.Boot(); Wc.Boot();
     this.st.upg = this.st.upg || {}; this.st.comp = this.st.comp || {}; this.st.till = this.st.till || 0; this.tillAge = 0; this.RefreshPile();
     Social.Defaults(); Social.GetSample(); Gallery.Init(); Pets.Init();
     this.BindUI();
@@ -57,7 +57,7 @@ const Game = {
     // oyuncu işleri: banko, temizlik, istek
     this.PlayerWork(dt);
     this.TillTick(dt);
-    Facilities.Tick(dt);
+    Facilities.Tick(dt); Wc.Tick(dt);
     Life.Tick(dt);
     Ach.Tick(dt);
     Wedding.Tick(dt);
@@ -76,7 +76,7 @@ const Game = {
     for (const c of this.pile) c.visible = Hotel.view === 0;
     // isim etiketleri: sadece bakılan kattakiler (ya da dışarıdakiler) görünsün
     const v = Hotel.view, onView = e => (e.floor === v) || (e.floor === 0 && e.pos.z > Hotel.D / 2);
-    const show = e => { const ok = onView(e) && e.liftT <= 0; if (e.tag) e.tag.obj.visible = ok; e.rig.inner.visible = ok; if (e.follower) e.follower.rig.inner.visible = ok; };
+    const show = e => { const ok = onView(e) && e.liftT <= 0 && !e.hidden; if (e.tag) e.tag.obj.visible = ok; e.rig.inner.visible = ok; if (e.follower) e.follower.rig.inner.visible = ok; };
     for (const g of this.guests) show(g); for (const s of this.staff) show(s);
     if (this.player) { const P = this.player, riding = P.liftT > 0 && P.liftPhase >= 1 && P.liftPhase < 3; P.tag.obj.visible = onView(P) && !riding; P.rig.inner.visible = !riding && (onView(P) || P.liftT > 0); }
   },
@@ -253,8 +253,9 @@ const Game = {
       const r = Hotel.RoomAt(P.go.position, P.floor);
       if (r && r.level >= 0) {
         if (r.request && !(r.request.claimed)) {
+          if (r.request.def.id === 'towel' && !P.Count('towel')) { P.work2 = 0; UI.Hint('Havlun yok: lobideki rafın yanından havlu al 🧺', 2.5); return; }
           P.work2 = (P.work2 || 0) + dt / 1.2; this.ShowProgress(V(r.x, Hotel.FloorY(r.floor), r.z), P.work2);
-          if (P.work2 >= 1) { P.work2 = 0; this.RequestDone(r, true); }
+          if (P.work2 >= 1) { P.work2 = 0; if (r.request.def.id === 'towel') P.CarryTake('towel'); this.RequestDone(r, true); }
           return;
         }
         if (r.state === 'broken') {
@@ -361,7 +362,7 @@ const Game = {
     const T = this.st.tutorial; this.st.tutorial = step;
     const msgs = {
       0: { tag: 'HOŞ GELDİN', title: 'Lavanta Oteli senin!', body: 'Anneannenden kalan bu küçük oteli yeniden canlandıracaksın. Karakterini ekranda parmağını sürükleyerek (ya da WASD ile) yürüt.\n\nİlk misafir yolda: resepsiyon bankosunun ARKASINA git ve onu karşıla.', buttons: [{ text: 'Başlayalım!', cls: 'gold', act: () => UI.Hint('Resepsiyonun arkasında dur: misafiri odaya sen yerleştirirsin', 8) }] },
-      2: { tag: 'HARİKA', title: 'İlk misafirin odasına çıkıyor', body: 'Misafir 1. kattaki odasına asansörle çıkıyor. Konaklarken odanın üstünde bir istek (havlu, su, kahve) belirirse odaya gidip hallet: bahşiş kazanırsın.\n\nSağdaki kat düğmeleriyle katları görebilirsin.', buttons: [{ text: 'Tamam', cls: 'gold' }] },
+      2: { tag: 'HARİKA', title: 'İlk misafirin odasına çıkıyor', body: 'Misafir 1. kattaki odasına asansörle çıkıyor. Konaklarken odanın üstünde bir istek (havlu, su, kahve) belirirse hallet: bahşiş kazanırsın. Havlu isteği için önce lobinin sağındaki raftan havlu al, sonra odaya git.\n\nSağdaki kat düğmeleriyle katları görebilirsin.', buttons: [{ text: 'Tamam', cls: 'gold' }] },
       3: { tag: 'PARA KAZANDIN', title: 'İlk kazancın!', body: 'Misafir çıkışta ödedi. Çıkan misafirin odası kirlenir: odaya girip temizle (ya da ileride temizlikçi tut).\n\nParan birikince "İnşa" düğmesinden yeni oda aç.', buttons: [{ text: 'Tamam', cls: 'gold' }] },
       4: { tag: 'TERTEMİZ', title: 'Oda hazır', body: 'Temizlik tamam. Artık yeni misafir yerleşebilir. Görev kartındaki hedefleri tamamlayıp ödül al; yeni oda ve kat açtıkça otel büyür, yıldızın artar.', buttons: [{ text: 'Devam', cls: 'gold' }] },
     };
@@ -414,7 +415,7 @@ const Game = {
     if (next && next.floor === f) UI.Label('buy', V(next.x, Hotel.FloorY(f) + 1.4, next.z), '➕ Oda aç ' + UI.fmt(this.NextRoomCost()), 'buy', () => this.OfferRoom(next));
     for (const r of Hotel.rooms.values()) {
       if (r.floor !== f || r.level < 0) continue;
-      if (r.request) UI.Label('rq' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), r.request.def.icon + ' ' + r.request.def.name, 'need', () => this.player.GoTo(r.inside, r.floor));
+      if (r.request) UI.Label('rq' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), r.request.def.icon + ' ' + r.request.def.name, 'need', () => { if (r.request && r.request.def.id === 'towel' && !this.player.Count('towel')) Wc.FetchTowel(); else this.player.GoTo(r.inside, r.floor); });
       else if (r.state === 'broken') UI.Label('br' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), '🔧 Tamir et', 'need', () => this.player.GoTo(r.inside, r.floor));
       else if (r.state === 'dirty') UI.Label('dt' + r.id, V(r.x, Hotel.FloorY(f) + 1.6, r.z), '🧹 Temizle', '', () => this.player.GoTo(r.inside, r.floor));
     }
@@ -511,7 +512,7 @@ const Game = {
       } else if (t === 'gelisim') {
         for (const k of Object.keys(Data.Upgrades)) {
           const u = Data.Upgrades[k], lv = this.UpgLv(k), max = u.cost.length, d = document.createElement('div'); d.className = 'item' + (lv >= max ? ' done' : '');
-          d.innerHTML = `<div class="ic">${u.icon}</div><div class="tx"><b>${u.name} <span class="chip">${lv}/${max}</span></b><small>${u.desc} Şu an +%${Math.round(u.step * lv * 100)}; her seviye +%${Math.round(u.step * 100)}.</small><div class="meter"><i style="width:${lv / max * 100}%;background:var(--mint)"></i></div></div>`;
+          d.innerHTML = `<div class="ic">${u.icon}</div><div class="tx"><b>${u.name} <span class="chip">${lv}/${max}</span></b><small>${u.desc} ${u.add !== undefined ? `Şu an ${u.add + u.step * lv} eşya; her seviye +${u.step}.` : `Şu an +%${Math.round(u.step * lv * 100)}; her seviye +%${Math.round(u.step * 100)}.`}</small><div class="meter"><i style="width:${lv / max * 100}%;background:var(--mint)"></i></div></div>`;
           if (lv < max) { const b = document.createElement('button'); b.className = 'gold'; b.textContent = UI.fmt(u.cost[lv]); b.addEventListener('click', () => this.BuyUpgrade(k)); d.appendChild(b); }
           body.appendChild(d);
         }

@@ -85,10 +85,11 @@ class Staff extends Behaviour {
     if (this.work >= 1) { this.work = 0; g.sat += this.trait.sat; g.Assign(room); Sfx.Play('ding', 0.5); this.GainXP(5); }
   }
   CleanerTick(dt) {
+    if (this.wcJob && Wc.StaffWork(this, dt)) return;
     if (!this.task) {
       this.idleT -= dt; if (this.idleT > 0) { this.rig.Tick(0); return; }
       const r = Game.DirtyRooms().filter(x => !x.claimed).sort((a, b) => Math.abs(a.floor - this.floor) - Math.abs(b.floor - this.floor))[0];
-      if (!r) { this.idleT = 1.5; this.rig.Tick(0); if (this.floor !== 0 && Random.Chance(0.02)) this.Go(V(10, 0, 4), 0); return; }
+      if (!r) { if (Wc.Claim(this, 'clean')) return; this.idleT = 1.5; this.rig.Tick(0); if (this.floor !== 0 && Random.Chance(0.02)) this.Go(V(10, 0, 4), 0); return; }
       this.task = r; r.claimed = this; this.work = 0; this.Go(r.inside, r.floor); return;
     }
     const r = this.task;
@@ -98,10 +99,11 @@ class Staff extends Behaviour {
     if (this.work >= 1) { Game.CleanDone(r, false); if (r.guestNext) { } this.rig.act = Rig.Act.None; r.claimed = null; this.task = null; this.idleT = 0.5; this.GainXP(6); }
   }
   BellhopTick(dt) {
+    if (this.wcJob && Wc.StaffWork(this, dt)) return;
     if (!this.task) {
       this.idleT -= dt; if (this.idleT > 0) { this.rig.Tick(0); return; }
       const r = Game.RequestRooms().filter(x => !x.request.claimed)[0];
-      if (!r) { this.idleT = 1.5; this.rig.Tick(0); return; }
+      if (!r) { if (Wc.Claim(this, 'paper')) return; this.idleT = 1.5; this.rig.Tick(0); return; }
       this.task = r; r.request.claimed = this; this.work = 0; this.Go(r.inside, r.floor); return;
     }
     const r = this.task;

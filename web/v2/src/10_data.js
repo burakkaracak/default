@@ -19,6 +19,7 @@ const Data = {
   // Hız yükseltmeleri (seviye başına +step)
   Upgrades: {
     me: { name: 'Koşu ayakkabısı', icon: '👟', desc: 'Müdürün yürüme hızı artar.', cost: [200, 450, 900, 1600, 2800], step: 0.10 },
+    carry: { name: 'Taşıma sepeti', icon: '🧺', desc: 'Elinde bir seferde daha çok eşya (havlu, tuvalet kâğıdı) taşırsın.', cost: [150, 350, 700, 1300, 2200], step: 1, add: 2 },
     staff: { name: 'Ekip eğitimi', icon: '⚡', desc: 'Bütün personel daha hızlı çalışır.', cost: [300, 700, 1400, 2600, 4200], step: 0.08 },
   },
   // Oda parçaları (her oda için ayrı seviye 0-3): gecelik fiyat ve memnuniyet etkisi, seviye başına
