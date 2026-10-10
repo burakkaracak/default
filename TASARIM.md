@@ -17,16 +17,15 @@ Oyuncu kendi karakteriyle koşar (sürükle/WASD) ya da **dokunarak** hedef gös
 ## 3. İnşa ve dekorasyon
 - Kat planında boş yuvaya oda kurma; oda tipi: Standart / Deluxe / Suit; temalar (Deniz, Bahçe, Lavanta, Modern, Romantik).
 - **Mobilya kataloğu**: odaya ve lobiye ızgarada serbest yerleştirme, döndürme, kaldırma; duvar ve zemin rengi seçimi. Dekor memnuniyeti ve fiyatı artırır.
-- Tesisler: kafe, restoran, spa, havuz, çatı barı, bahçe, spor salonu, çocuk kulübü, çamaşırhane, depo.
+- Tesisler: kafe, restoran, spa, havuz, çatı barı, bahçe, spor salonu, depo.
 
 ## 4. Personel
-Resepsiyonist, temizlikçi, kat görevlisi, teknisyen, barista, aşçı, garson, terapist, bahçıvan, cankurtaran.
+Resepsiyonist, temizlikçi, kat görevlisi, barista, aşçı, garson, terapist, cankurtaran.
 Seviye, moral, kişilik (titiz, neşeli, tembel…), eğitim, vardiya, ikramiye, dinlenme odası.
 
 ## 5. İlerleme
 - Ün puanı → yıldız (1–5), her yıldızın şartı var (oda sayısı, tesis, memnuniyet).
 - Günlük hedefler, haftalık etkinlik, 48 başarım, anı albümü.
-- Hikâye: anneannenin oteli, rakip Kaan Bey, 3 perde; seçimler.
 - Yeni şehirler: Bodrum, Kapadokya (zincir; diğer oteller arka planda kazanır).
 
 ## 6. Misafirler
@@ -37,7 +36,7 @@ Otelgram (yorumlar, takipçi, yanıtlama) ve misafirle sohbet (hazır cevaplar +
 Festivaller, düğün, konser, film ekibi, bayramlar, fırtına, sıcak dalgası, arıza, zam, rakip kampanyası. **Hırsız yok.**
 
 ## 8. Elif dokunuşları
-Gizli notlar, özel günlerde kutlama, fotoğraf modu ve albüm, kedi/köpek, müdür kıyafetleri, Elif'in fotoğrafları tablolarda.
+Gizli notlar, özel günlerde kutlama, fotoğraf modu ve albüm, kedi, müdür kıyafetleri, Elif'in fotoğrafları tablolarda.
 
 ## 9. Görünüm
 Yumuşak gölgeler, ortam gölgelemesi, gece parlaması, vinyet, renk düzeltme; yumuşak animasyonlar (zıplama, sallanma), parçacıklar (yaprak, kar, konfeti), kuşlar, dalgalar.
