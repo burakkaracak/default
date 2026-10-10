@@ -1,8 +1,8 @@
 # Lavanta Koyu
 
-Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oyun eşine (Elif) hediye, mağazaya çıkmayacak.
+Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oyun eşine (Elif) hediye, mağazaya çıkmayacak. Saatleri her zaman Türkiye saatiyle (UTC+3) söyle; UTC verme.
 Tasarım belgesi: `TASARIM.md` (fazlar).
-"Orijinal oyun" = Poki'deki **My Perfect Hotel** (örnek alınan oyun). Bizim eski sürümümüz (Otel Ustası) DEĞİL. MPH'de olup bizde olmayanlar (2026-10-10): ortak tuvaletler + kâğıt rafı, elde eşya yığını taşıma (kapasite yükseltmeli), yeni otele/haritaya geçiş, İK/geliştirme odası (yere para yatırarak), restoranda yemek hazırla-taşı-tabak topla, sen yokken kazanç, VIP misafir, otopark/taksi, günlük ödül. Sıradaki iş: tuvalet + eşya yığını taşıma. Hırsız olayı İSTENMİYOR (Elif sevmedi).
+"Orijinal oyun" = Poki'deki **My Perfect Hotel** (örnek alınan oyun). Bizim eski sürümümüz (Otel Ustası) DEĞİL. MPH'de olup bizde olmayanlar (2026-10-10): yeni otele/haritaya geçiş, İK/geliştirme odası (yere para yatırarak), restoranda yemek hazırla-taşı-tabak topla, sen yokken kazanç, VIP misafir, otopark/taksi, günlük ödül. Yapıldı: ortak tuvalet + kâğıt rafı, elde eşya yığını taşıma (`69_wc.js` Wc, test `test_wc.py`). Sıradaki iş: restoranda yemek hazırla-taşı-tabak topla (eşya yığınını kullanır). Hırsız olayı İSTENMİYOR (Elif sevmedi).
 
 ## Yapı
 - `web/v2/`: **Lavanta Koyu** (tek oyun; klasör adı `v2` eski kalıntıdır, kayıt ve bulut anahtarları `otel2_kayit_v1`, `kayit2`, `yedek2` değişmez). three.js + HTML arayüz. Kayıt `otel2_kayit_v1` (localStorage) + bulut `kayit2`/`yedek2`.
@@ -25,7 +25,7 @@ Tasarım belgesi: `TASARIM.md` (fazlar).
   - Derleme: `cd web/v2 && node build.mjs` (`--dev` küçültmez) → `dist/index.html`, `dist/game.js`, `dist/models.json`, `dist/play.html`.
   - Testler: `python3 test_boot.py çıktı.png [en boy sn js] [--touch]`, `test_flow.py` (tam oyun akışı), `test_iphone.py` (iPhone 14 Pro: hata, binişme, taşma, renk), `test_cloud.py` (7 senaryo).
     Hızlandırma: `window.__sub = 6` (mantık adımı), `window.__noRender = 1` (çizim seyreltir). Başsız Chromium'da fps çok düşük; testlerde `Quality.Set(0)`.
-    Her değişiklikten sonra test_flow + test_iphone çalıştır; ekran görüntülerine de bak.
+    Test cihazları: MacBook Air M2, 13,6 inç, 8 GB RAM (Chrome, tam ekran, 1440×900), iPhone 15 Pro ve iPhone 14 Pro (Safari). Her değişiklikten sonra üçünü de test et: `python3 test_iphone.py [klasör] --cihaz hepsi` (ya da `mac` / `iphone15` / `iphone14` / `yatay`) + `test_flow.py`; ekran görüntülerine de bak. Profiller test_iphone.py başında (Mac 1470×956 @2, iPhone 393×659/760 dikey ve 852×330 yatay @3). Düzen Düşük grafikle denenir (başsız yazılım çizimi Yüksek'te yavaş); cihazda gerçek kalite/piksel oranı yazdırılır. Performans ve kalite ayarında (bellek, doku, piksel oranı) Mac'in 8 GB RAM'i hesaba katılır. Telefon yatay düzeni `index.html` içinde `max-height: 520px` kuralında.
 
 ## Yayın
 - Oyun (Lavanta Koyu): https://claude.ai/artifact/S2QERxjzjMcvqwaBP7W4Xy (url ile güncelle). `Artifact` publish: file_path `web/v2/dist/index.html`, files `{"game.js": "web/v2/dist/game.js", "models.json": "web/v2/dist/models.json"}` (çalışma dizini repo kökü iken), capabilities `{db:{}, user:{}, downloads:true, sample:{}}` (sample: serbest sohbet; eksik bırakılırsa yetenek iptal olur, hep tam seti ver).
