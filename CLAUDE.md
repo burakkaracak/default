@@ -1,7 +1,8 @@
 # Lavanta Koyu
 
 Kullanıcı Türkçe konuşur, kod bilmez; sade Türkçe ile kısa cevap ver. Oyun eşine (Elif) hediye, mağazaya çıkmayacak.
-Tasarım belgesi: `TASARIM.md` (fazlar). Hırsız olayı İSTENMİYOR (Elif sevmedi).
+Tasarım belgesi: `TASARIM.md` (fazlar).
+"Orijinal oyun" = Poki'deki **My Perfect Hotel** (örnek alınan oyun). Bizim eski sürümümüz (Otel Ustası) DEĞİL. MPH'de olup bizde olmayanlar (2026-10-10): ortak tuvaletler + kâğıt rafı, elde eşya yığını taşıma (kapasite yükseltmeli), yeni otele/haritaya geçiş, İK/geliştirme odası (yere para yatırarak), restoranda yemek hazırla-taşı-tabak topla, sen yokken kazanç, VIP misafir, otopark/taksi, günlük ödül. Sıradaki iş: tuvalet + eşya yığını taşıma. Hırsız olayı İSTENMİYOR (Elif sevmedi).
 
 ## Yapı
 - `web/v2/`: **Lavanta Koyu** (tek oyun; klasör adı `v2` eski kalıntıdır, kayıt ve bulut anahtarları `otel2_kayit_v1`, `kayit2`, `yedek2` değişmez). three.js + HTML arayüz. Kayıt `otel2_kayit_v1` (localStorage) + bulut `kayit2`/`yedek2`.
