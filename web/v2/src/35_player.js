@@ -1,3 +1,15 @@
+// Elde taşınan eşya yığınının çizimi (müdür ve personel ortak): havlu, kâğıt, tabak, kirli tabak
+function drawStack(o, pos) {
+  if (o.stackG) { Destroy(o.stackG); o.stackG = null; }
+  if (!o.items.length) return;
+  const g = o.stackG = U.Pivot(o.go, pos, 'Yigin'); let y = 0;
+  for (const t of o.items) {
+    if (t === 'towel') { U.Box('Havlu', g, V(0, y + 0.05, 0), V(0.4, 0.1, 0.32), y / 0.11 % 2 < 1 ? C(1, 1, 1) : C(0.8, 0.92, 1)); y += 0.11; }
+    else if (t === 'plate') { U.Box('Tabak', g, V(0, y + 0.03, 0), V(0.42, 0.05, 0.42), C(1, 1, 1), 'Cylinder'); U.Box('Yemek', g, V(0, y + 0.08, 0), V(0.26, 0.07, 0.26), C(0.92, 0.55, 0.28), 'Sphere'); y += 0.1; }
+    else if (t === 'dirty') { U.Box('KirliTabak', g, V(0, y + 0.03, 0), V(0.42, 0.05, 0.42), C(0.93, 0.92, 0.9), 'Cylinder'); U.Box('Kalinti', g, V(0.04, y + 0.065, 0.02), V(0.2, 0.03, 0.2), C(0.55, 0.38, 0.28), 'Sphere'); y += 0.08; }
+    else { U.Box('Kagit', g, V(0, y + 0.09, 0), V(0.22, 0.18, 0.22), C(1, 1, 1), 'Cylinder'); U.Box('KagitSerit', g, V(0, y + 0.09, 0), V(0.23, 0.05, 0.23), C(0.55, 0.75, 0.95), 'Cylinder'); y += 0.19; }
+  }
+}
 // Oyuncu: otel müdürü. Sürükleme/WASD ile yürür, dokunulan yere kendisi gider, asansörle kat değiştirir.
 class Player extends Behaviour {
   constructor(look, name) {
@@ -11,21 +23,13 @@ class Player extends Behaviour {
   }
   get floorY() { return Hotel.FloorY(this.floor); }
   get pos() { return this.go.position; }
-  // Elde eşya yığını: havlu, tuvalet kâğıdı. Kapasite 'Taşıma sepeti' yükseltmesiyle artar.
+  // Elde eşya yığını: havlu, tuvalet kâğıdı, yemek tabağı. Kapasite 'Taşıma sepeti' yükseltmesiyle artar.
   get CarryCap() { const u = Data.Upgrades.carry; return u.add + u.step * Game.UpgLv('carry'); }
   get CarryFree() { return this.CarryCap - this.items.length; }
   Count(t) { return this.items.filter(x => x === t).length; }
   CarryAdd(t) { if (this.CarryFree <= 0) return false; this.items.push(t); this.RefreshCarry(); return true; }
   CarryTake(t) { const i = this.items.lastIndexOf(t); if (i < 0) return false; this.items.splice(i, 1); this.RefreshCarry(); return true; }
-  RefreshCarry() {
-    if (this.stackG) { Destroy(this.stackG); this.stackG = null; }
-    if (!this.items.length) return;
-    const g = this.stackG = U.Pivot(this.go, V(0, 0.95, 0.42), 'Yigin'); let y = 0;
-    for (const t of this.items) {
-      if (t === 'towel') { U.Box('Havlu', g, V(0, y + 0.05, 0), V(0.4, 0.1, 0.32), y / 0.11 % 2 < 1 ? C(1, 1, 1) : C(0.8, 0.92, 1)); y += 0.11; }
-      else { U.Box('Kagit', g, V(0, y + 0.09, 0), V(0.22, 0.18, 0.22), C(1, 1, 1), 'Cylinder'); U.Box('KagitSerit', g, V(0, y + 0.09, 0), V(0.23, 0.05, 0.23), C(0.55, 0.75, 0.95), 'Cylinder'); y += 0.19; }
-    }
-  }
+  RefreshCarry() { drawStack(this, V(0, 0.95, 0.42)); }
   get speed() { return 5.6 * Game.UpgMul('me'); }
   set speed(v) { }
 

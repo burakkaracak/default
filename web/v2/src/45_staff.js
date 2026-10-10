@@ -23,6 +23,7 @@ class Staff extends Behaviour {
     const def = Data.Staff[role];
     if (!this.look) this.look = def.look ? Random.Pick(def.look) : role === 'receptionist' ? 'character-female-d' : role === 'cleaner' ? Random.Pick(['character-female-b', 'character-male-b']) : 'character-male-e';
     this.rig = Rig.Model(this.go, this.look, 1.72);
+    this.items = []; this.stackG = null;
     this.floor = 0; this.path = []; this.liftT = 0; this.task = null; this.work = 0; this.idleT = 0; this.tasksDone = sd.tasks || 0;
     this.go.position.set(10, 0, 4);
     this.tag = U.Text(this.go, V(0, 2.2, 0), def.icon + ' ' + this.name, 0.055, C(0.75, 0.95, 1), true);
@@ -31,6 +32,12 @@ class Staff extends Behaviour {
     this.Persist();
   }
   get pos() { return this.go.position; }
+  // Garson elinde en çok 2 tabak taşır
+  get CarryCap() { return 2; }
+  get CarryFree() { return this.CarryCap - this.items.length; }
+  Count(t) { return this.items.filter(x => x === t).length; }
+  CarryAdd(t) { if (this.CarryFree <= 0) return false; this.items.push(t); drawStack(this, V(0, 0.95, 0.42)); return true; }
+  CarryTake(t) { const i = this.items.lastIndexOf(t); if (i < 0) return false; this.items.splice(i, 1); drawStack(this, V(0, 0.95, 0.42)); return true; }
   get def() { return Data.Staff[this.role]; }
   // hız/verim çarpanı: seviye, kişilik, moral
   get Eff() { return (1 + 0.2 * (this.lv - 1)) * this.trait.speed * (this.morale < 0.3 ? 0.6 : this.morale < 0.55 ? 0.85 : 1) * Game.UpgMul('staff'); }

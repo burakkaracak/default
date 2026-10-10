@@ -66,7 +66,8 @@ const Facilities = (() => {
       },
     },
     restoran: {
-      mode: 'table', entry: V(3.8, 0, -1.2), serve: V(6.3, 0, -5.0), serveLook: V(6.3, 0, -3), cook: V(6.3, 0, -6.38), cookLook: V(6.3, 0, -5), label: V(5.0, 0, -4.1),
+      mode: 'kitchen', entry: V(3.8, 0, -1.2), serve: V(6.3, 0, -5.0), serveLook: V(6.3, 0, -3), cook: V(6.3, 0, -6.38), cookLook: V(6.3, 0, -5), label: V(5.0, 0, -4.1),
+      counter: V(6.3, 0, -5.0), sink: V(8.2, 0, -4.95), plateMax: 4, patience: 55,
       enjoy: 9, waitText: 'Yemek bekliyor', item: Col.white, sat: 0.5, staffTime: 2.2,
       spots: [
         { p: V(3.0, 0, -2.0), look: V(3.0, 0, -3.0), act: 'sit', dy: 0.4, at: V(3.9, 0, -2.1) }, { p: V(3.0, 0, -4.0), look: V(3.0, 0, -3.0), act: 'sit', dy: 0.4, at: V(3.9, 0, -4.0) },
@@ -93,6 +94,10 @@ const Facilities = (() => {
         U.Model('pottedPlant', g, V(1.9, 0, -6.3), 0, 1);
         halo(fac, g, V(5.5, 1.1, -3.5), 2.4, C(1, 0.75, 0.4));
         lamp(fac, V(5.5, 2.2, -3.5), 7, 0.8, warm);
+        // bulaşık tezgâhı: kirli tabaklar buraya bırakılır
+        U.Box('BulasikTezgah', g, V(8.45, 0.45, -5.85), V(0.8, 0.9, 0.7), C(0.82, 0.84, 0.88)); U.Box('BulasikLavabo', g, V(8.45, 0.92, -5.85), V(0.6, 0.06, 0.5), C(0.45, 0.6, 0.72)); U.Box('Musluk', g, V(8.45, 1.1, -6.1), V(0.05, 0.3, 0.05), C(0.75, 0.78, 0.82));
+        U.Text(g, V(8.45, 1.55, -5.85), '🧽 BULAŞIK', 0.045, C(0.4, 0.5, 0.65), true, true);
+        U.Text(g, V(6.3, 1.7, -6.1), '🍝 PİŞİR', 0.05, C(0.75, 0.3, 0.3), true, true);
         U.Text(g, V(5.0, 2.6, -6.45), 'RESTORAN', 0.065, C(0.65, 0.3, 0.3), true, true);
       },
     },
@@ -281,7 +286,7 @@ const Facilities = (() => {
   function ensureFac(id) {
     if (S.fac[id]) return S.fac[id];
     const d = def(id), L = Layout[id];
-    return S.fac[id] = { id, def: d, L, built: false, go: null, guests: [], spots: L.spots.map(s => Object.assign({ by: null }, s)), pwork: 0, cookT: -99, guardT: -99 };
+    return S.fac[id] = { id, def: d, L, built: false, go: null, guests: [], spots: L.spots.map(s => Object.assign({ by: null }, s)), pwork: 0, cookT: -99, guardT: -99, plates: 0, tm: 0, cookW: 0, pg: null, pgSig: '' };
   }
   function buildVis(fac) {
     const group = isRoof(fac) ? S.roofG : S.lobbyG;
@@ -311,7 +316,7 @@ const Facilities = (() => {
   }
 
   // ---------------- misafir akışı ----------------
-  function freeSpots(fac, guest) { return fac.spots.filter(s => !s.by && (!s.only || s.only(guest))); }
+  function freeSpots(fac, guest) { return fac.spots.filter(s => !s.by && !s.dirty && (!s.only || s.only(guest))); }
   function startVisit(guest, fac) {
     const L = fac.L, spot = (S.forceSpot && !S.forceSpot.by) ? S.forceSpot : Random.Pick(freeSpots(fac, guest)); S.forceSpot = null; if (!spot) return false;
     spot.by = guest;
@@ -378,10 +383,12 @@ const Facilities = (() => {
     else Tween.FloatText(Vec.add(guest.pos, V(0, 1.9, 0)), '♥', C(1, 0.55, 0.7), 0.14);
     guest.ShowMood(sat >= 4 ? '😍' : '😊', Col.white, 2.5);
     guest.rig.act = Rig.Act.None; guest.go.rotation.x = 0;
+    if (L.mode === 'kitchen' && v.spot) { v.spot.plate = 'dirty'; v.spot.dirty = true; } // kirli tabak masada kalır, toplanana kadar masa boş sayılmaz
     leave(guest, fac);
   }
   function serve(fac, guest, byPlayer) {
     const v = guest.fv; if (!v) return;
+    if (fac.L.mode === 'kitchen') { v.served = true; v.claimed = null; v.spot.plate = 'food'; Sfx.Play('ding', 0.5); return; } // tabak elden masaya konur
     v.served = true; v.claimed = null;
     Sfx.Play('ding', 0.5);
     // tabak / fincan / bardak misafire uçar
@@ -422,7 +429,7 @@ const Facilities = (() => {
           break;
         }
         if (v.t > 6 && Math.floor(v.t) % 7 === 0 && guest.moodT <= 0) guest.ShowMood('⏳', C(1, 0.9, 0.5));
-        if (v.t > PATIENCE) unhappy(guest, fac);
+        if (v.t > (L.patience ?? PATIENCE)) unhappy(guest, fac);
         break;
       case 'toSpot': seat(guest, fac, v.spot); v.phase = 'enjoy'; v.t = 0; break;
       case 'enjoy':
@@ -468,6 +475,93 @@ const Facilities = (() => {
     if (v.t > 3) finish(guest, fac);
   }
 
+  // ---------------- restoran mutfağı: pişir → taşı → tabak topla ----------------
+  const waitingForFood = fac => fac.guests.filter(g => g.fv && g.fv.phase === 'wait' && g.fv.seated && !g.fv.served && !g.path.length);
+  const dirtySpots = fac => fac.spots.filter(s => s.dirty);
+  const mine = (cl, who) => !cl || !alive(cl) || cl === who;
+  // tezgâhtaki ve masalardaki tabak görselleri: durum değişince yeniden çizilir (fac.go yeniden kurulabilir, bu yüzden alive denetimi)
+  function kitchenVis(fac) {
+    if (!fac.go || !alive(fac.go)) { fac.pg = null; fac.pgSig = ''; return; }
+    if (!fac.pg || !alive(fac.pg)) { fac.pg = U.Pivot(fac.go, V(), 'Tabaklar'); fac.pgSig = ''; }
+    const sig = fac.plates + '|' + fac.spots.map(s => s.plate || '-').join('');
+    if (sig === fac.pgSig) return; fac.pgSig = sig;
+    for (const c of fac.pg.children.slice()) Destroy(c);
+    const plate = (p, kind) => {
+      U.Box('Tabak', fac.pg, p, V(0.34, 0.04, 0.34), Col.white, 'Cylinder');
+      if (kind === 'food') U.Box('Yemek', fac.pg, V(p.x, p.y + 0.04, p.z), V(0.2, 0.06, 0.2), C(0.92, 0.55, 0.28), 'Sphere');
+      else U.Box('Kalinti', fac.pg, V(p.x + 0.03, p.y + 0.025, p.z), V(0.16, 0.025, 0.16), C(0.55, 0.38, 0.28), 'Sphere');
+    };
+    for (let i = 0; i < fac.plates; i++) plate(V(4.95 + i * 0.4, 0.9, -5.6), 'food');
+    for (const sp of fac.spots) if (sp.plate) { const m = Vec.lerp(sp.p, sp.look, 0.72); plate(V(m.x, 0.74, m.z), sp.plate); }
+  }
+  // müdür: pişir, tezgâhtan al, masaya götür, kirli tabağı topla, bulaşığa bırak. true = çalışıyor (pişiriyor)
+  function kitchenPlayer(fac, P, dt) {
+    const L = fac.L; if (P.floor !== 0) { fac.cookW = 0; return false; }
+    fac.tm = Math.max(0, fac.tm - dt);
+    const dem = waitingForFood(fac);
+    if (fac.tm <= 0) {
+      if (P.Near(L.sink, 1.5) && P.Count('dirty') > 0) { P.CarryTake('dirty'); fac.tm = 0.25; Sfx.Play('clean', 0.4); }
+      else {
+        const g = P.Count('plate') > 0 && dem.find(x => P.Near(WP(fac, x.fv.spot.at), 1.25));
+        if (g) { P.CarryTake('plate'); serve(fac, g, true); fac.tm = 0.35; }
+        else {
+          const d = P.CarryFree > 0 && dirtySpots(fac).find(sp => P.Near(WP(fac, sp.at), 1.25));
+          if (d) { P.CarryAdd('dirty'); d.dirty = false; d.plate = null; fac.tm = 0.3; Sfx.Play('tick', 0.4); }
+          else if (P.Near(L.counter, 1.3) && fac.plates > 0 && P.CarryFree > 0 && P.Count('plate') < dem.length) { P.CarryAdd('plate'); fac.plates--; fac.tm = 0.3; Sfx.Play('tick', 0.4); }
+        }
+      }
+    }
+    if (P.Near(L.cook, 1.0) && fac.plates < L.plateMax) {
+      P.rig.act = Rig.Act.Clean; fac.cookW += dt / (L.staffTime || 2.2); Game.ShowProgress(WP(fac, L.cook), fac.cookW);
+      if (fac.cookW >= 1) { fac.cookW = 0; fac.plates++; Sfx.Play('ding', 0.4); U.Burst(WP(fac, L.cook, 1.0), C(1, 0.9, 0.7), C(1, 0.7, 0.4), 12, 2); }
+      return true;
+    }
+    fac.cookW = 0; return false;
+  }
+  // aşçı pişirir; garson tabağı taşır, kirli tabağı toplar (elinde en çok 2)
+  function kitchenStaff(staff, fac, dt) {
+    const L = fac.L, x = staff.fx || (staff.fx = { w: 0 }), role = staff.role;
+    const goTo = p => { staff.path = pathTo(staff.pos, staff.floor, fac, p); };
+    if (staff.floor !== 0) { goTo(L.serve); return; }
+    if (role === 'asci') {
+      if (!near(staff.pos, L.cook)) { goTo(L.cook); return; }
+      faceTo(staff.go, staff.pos, WP(fac, L.cookLook));
+      if (fac.plates >= L.plateMax) { staff.rig.act = Rig.Act.None; staff.rig.Tick(0); x.w = 0; return; }
+      staff.rig.act = Rig.Act.Clean; staff.rig.Tick(0); x.w += dt / (L.staffTime || 2.2) * (staff.Eff ?? 1); Game.ShowProgress(WP(fac, L.cook), x.w);
+      if (Random.Chance(dt * 0.5)) Particles.drift(WP(fac, V(6.3, 1.1, -5.85)), C(0.95, 0.95, 0.95), 0.14, 1.4, V(0, 0.7, 0));
+      if (x.w >= 1) { x.w = 0; fac.plates++; Sfx.Play('tick', 0.4); staff.GainXP && staff.GainXP(3); }
+      return;
+    }
+    // garson
+    const dem = waitingForFood(fac), todo = dem.filter(g => mine(g.fv.claimed, staff));
+    const standAt = (p, r = 0.35) => { if (near(staff.pos, p, r)) return true; goTo(p); return false; };
+    staff.rig.act = Rig.Act.None;
+    if (staff.Count('plate') > 0 && todo.length) { // 1) tabağı masaya götür
+      const g = todo[0]; g.fv.claimed = staff; const at = g.fv.spot.at;
+      if (!standAt(WP(fac, at))) return;
+      faceTo(staff.go, staff.pos, g.pos); staff.rig.act = Rig.Act.Clean; staff.rig.Tick(0); x.w += dt / 0.6 * (staff.Eff ?? 1); Game.ShowProgress(WP(fac, g.fv.spot.p), x.w);
+      if (x.w >= 1) { x.w = 0; staff.CarryTake('plate'); serve(fac, g, false); staff.rig.act = Rig.Act.None; if (staff.trait) g.sat += staff.trait.sat || 0; staff.GainXP && staff.GainXP(4); }
+      return;
+    }
+    x.w = 0;
+    if (fac.plates > 0 && staff.CarryFree > 0 && staff.Count('plate') < dem.length) { // 2) tezgâhtan tabak al
+      if (!standAt(WP(fac, L.counter))) return;
+      while (fac.plates > 0 && staff.CarryFree > 0 && staff.Count('plate') < dem.length) { staff.CarryAdd('plate'); fac.plates--; }
+      Sfx.Play('tick', 0.35); return;
+    }
+    const d = staff.CarryFree > 0 && dirtySpots(fac).find(sp => mine(sp.cl, staff));
+    if (d) { // 3) kirli tabağı topla
+      d.cl = staff; if (!standAt(WP(fac, d.at))) return;
+      staff.CarryAdd('dirty'); d.dirty = false; d.plate = null; d.cl = null; Sfx.Play('tick', 0.35); return;
+    }
+    if (staff.Count('dirty') > 0) { // 4) bulaşığa bırak
+      if (!standAt(WP(fac, L.sink))) return;
+      while (staff.CarryTake('dirty')) { } Sfx.Play('clean', 0.4); staff.GainXP && staff.GainXP(2); return;
+    }
+    if (!near(staff.pos, L.serve)) { goTo(L.serve); return; }
+    faceTo(staff.go, staff.pos, WP(fac, L.serveLook)); staff.rig.Tick(0);
+  }
+
   // ---------------- personel ----------------
   const RoleFac = { barista: 'kafe', asci: 'restoran', garson: 'restoran', terapist: 'spa', cankurtaran: 'havuz', barmen: 'bar', bahcivan: 'bahce' };
   function near(a, b, r = 0.35) { return Math.abs(a.x - b.x) + Math.abs(a.z - b.z) < r; }
@@ -478,6 +572,7 @@ const Facilities = (() => {
     const goTo = p => { staff.path = pathTo(staff.pos, staff.floor, fac, p); };
     if (staff.floor !== fi) { goTo(L.serve); return; }
     const role = staff.role;
+    if (L.mode === 'kitchen' && (role === 'asci' || role === 'garson')) { kitchenStaff(staff, fac, dt); return; }
     if (role === 'asci') {
       if (!near(staff.pos, L.cook)) { goTo(L.cook); return; }
       faceTo(staff.go, staff.pos, WP(fac, L.cookLook)); staff.rig.act = Rig.Act.Clean; staff.rig.Tick(0); fac.cookT = Time.time;
@@ -539,6 +634,7 @@ const Facilities = (() => {
     for (const id in S.fac) {
       const fac = S.fac[id]; if (!fac.built || fac.L.mode === 'self') continue;
       const fi = FloorIdx(fac); if (P.floor !== fi) { fac.pwork = 0; continue; }
+      if (fac.L.mode === 'kitchen') { if (kitchenPlayer(fac, P, dt)) working = true; continue; }
       const g = fac.guests.find(x => x.fv && x.fv.phase === 'wait' && !x.fv.served && x.fv.claimed === P && !x.path.length) || frontWaiting(fac);
       if (!g) { fac.pwork = 0; continue; }
       const L = fac.L, spotP = L.mode === 'table' ? WP(fac, g.fv.spot.p) : null;
@@ -566,9 +662,17 @@ const Facilities = (() => {
       }
       for (const g of fac.guests) {
         const v = g.fv; if (!v || v.phase !== 'wait' || g.path.length) continue;
-        const txt = (v.t > PATIENCE * 0.6 ? '⏳ ' : d.icon + ' ') + L.waitText;
-        UI.Label('fw' + g.id, Vec.add(g.pos, V(0, v.seated ? 1.9 : 2.3, 0)), txt, 'need', () => Game.player.GoTo(WP(fac, L.mode === 'table' ? v.spot.at : L.serve), fi));
+        const txt = (v.t > (L.patience ?? PATIENCE) * 0.6 ? '⏳ ' : d.icon + ' ') + L.waitText;
+        if (L.mode === 'kitchen') {
+          UI.Label('fw' + g.id, Vec.add(g.pos, V(0, v.seated ? 1.9 : 2.3, 0)), txt, 'need', () => {
+            const P = Game.player;
+            if (P.Count('plate') > 0) P.GoTo(WP(fac, v.spot.at), fi);
+            else if (fac.plates > 0) { P.GoTo(WP(fac, L.counter), fi); UI.Toast('Tezgâhtan tabak al 🍽', 'info'); }
+            else { P.GoTo(WP(fac, L.cook), fi); UI.Toast('Önce yemeği pişir 🍝', 'info'); }
+          });
+        } else UI.Label('fw' + g.id, Vec.add(g.pos, V(0, v.seated ? 1.9 : 2.3, 0)), txt, 'need', () => Game.player.GoTo(WP(fac, L.mode === 'table' ? v.spot.at : L.serve), fi));
       }
+      if (L.mode === 'kitchen') fac.spots.forEach((sp, i) => { if (sp.dirty) UI.Label('fd' + i, WP(fac, sp.p, 1.3), '🍽 Topla', 'need', () => Game.player.GoTo(WP(fac, sp.at), fi)); });
     }
   }
 
@@ -641,6 +745,7 @@ const Facilities = (() => {
         const fac = S.fac[id]; if (!fac.built) continue;
         for (const g of fac.guests.slice()) if (!alive(g) || g.s !== Guest.S.Visit || g.fv?.fac !== fac) { if (g.fv && g.fv.fac === fac) release(g); else { arrRemove(fac.guests, g); for (const s of fac.spots) if (s.by === g) s.by = null; } }
         reflow(fac);
+        if (fac.L.mode === 'kitchen') kitchenVis(fac);
       }
       playerTick(dt);
       for (const w of S.waters) if (alive(w.m)) w.m.position.y = w.y + Math.sin(S.t * 1.6 + w.y * 7) * 0.012;
