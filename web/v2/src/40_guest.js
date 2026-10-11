@@ -112,7 +112,7 @@ class Guest extends Behaviour {
   }
   Pay() {
     const r = this.room;
-    const base = Decor.RoomPrice(r) * this.type.pay * this.nights;
+    const base = Decor.RoomPrice(r) * this.type.pay * this.nights * (this.payMul || 1);
     const sat = Mathf.Clamp(this.sat, 1, 5);
     const tip = Math.round(base * Data.Tip * Mathf.Clamp01((sat - 2) / 3) * (this.type.tipMul || 1) * Life.TipMul()) + this.tips;
     Game.Earn(Math.round(base), Vec.add(this.pos, V(0, 1.6, 0)), tip);
