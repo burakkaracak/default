@@ -35,8 +35,8 @@ const Data = {
     bellhop: { name: 'Kat görevlisi', icon: '🧳', cost: [350, 800], wage: 35, desc: 'Misafir isteklerini (havlu, su, oda servisi) odaya götürür.' },
     // tesis personeli (ilgili tesis kurulunca işe alınabilir)
     barista: { name: 'Barista', icon: '☕', cost: [400, 900], wage: 35, desc: 'Kafede kahveleri hazırlar, misafirler beklemez.', look: ['character-female-c', 'character-male-a'] },
-    asci: { name: 'Aşçı', icon: '👩‍🍳', cost: 700, wage: 55, desc: 'Restoran mutfağında pişirir; servis çok hızlanır.', look: ['character-male-f', 'character-female-f'] },
-    garson: { name: 'Garson', icon: '🍽', cost: [500, 1000], wage: 40, desc: 'Restoranda tabakları masalara taşır.', look: ['character-female-e', 'character-male-c'] },
+    asci: { name: 'Aşçı', icon: '👩‍🍳', cost: 700, wage: 55, desc: 'Restoran mutfağında yemek pişirir; tezgâh sen pişirmesen de dolar.', look: ['character-male-f', 'character-female-f'] },
+    garson: { name: 'Garson', icon: '🍽', cost: [500, 1000], wage: 40, desc: 'Pişen tabakları masalara taşır, kirli tabakları toplayıp bulaşığa bırakır.', look: ['character-female-e', 'character-male-c'] },
     terapist: { name: 'Terapist', icon: '💆', cost: [800, 1500], wage: 60, desc: 'Spada masaj yapar.', look: ['character-female-f', 'character-male-b'] },
     cankurtaran: { name: 'Cankurtaran', icon: '🛟', cost: 600, wage: 45, desc: 'Havuz başında nöbet tutar; misafirler daha rahat ve mutlu.', look: ['character-male-e', 'character-female-a'] },
     barmen: { name: 'Barmen', icon: '🍹', cost: [900, 1600], wage: 60, desc: 'Çatı barında kokteyl hazırlar.', look: ['character-male-c', 'character-female-b'] },

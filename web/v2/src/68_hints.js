@@ -11,6 +11,7 @@ const Hints = {
     { id: 'kedi', when: () => Game.st.served >= 4, text: '🐱 Lobide otelin kedisi dolaşıyor. Ona dokunursan sevilir!' },
     { id: 'zincir', when: () => Game.Stars >= 3 && Game.st.money >= 26000, text: '🏙 Menü → Zincir: Bodrum\'da şube aç, arka planda kendiliğinden kazansın.' },
     { id: 'kiyafet', when: () => World.day >= 3, text: '👗 Menü → Ayarlar\'dan kıyafetini ve şapkanı seçebilirsin.' },
+    { id: 'restoran', when: () => Facilities.Built('restoran'), text: '🍝 Restoran: ocakta pişir, tezgâhtan tabak al, masaya götür, sonra kirli tabağı toplayıp bulaşığa bırak. Aşçı ve garson bunu senin yerine yapar.' },
     { id: 'basarim', when: () => Ach.Count() >= 3, text: '🏆 Menü → Başarım: ödüllü hedeflerini buradan görebilirsin.' },
   ],
   t: 8, last: -999,

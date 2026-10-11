@@ -46,6 +46,7 @@ const Game = {
   // Sen yokken kazanç: uygulama kapalı/arka plandayken en az 5 dakika geçtiyse ve resepsiyonist varsa otel kendi kendine kazanır.
   // Kazanç = son 3 günün ortalaması × (geçen dk / 5) × %25, en çok 8 saat sayılır. Test için window.__noAway = 1 kapatır.
   AwayCheck() {
+    if (!this.loaded) return;
     const last = this.st.lastSeen || 0, now = Date.now(); this.st.lastSeen = now;
     if (!last || window.__noAway || !this.st.staff.receptionist) return;
     const mins = Math.min((now - last) / 60000, 480); if (!(mins >= 5)) return;

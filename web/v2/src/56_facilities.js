@@ -534,7 +534,7 @@ const Facilities = (() => {
     }
     // garson
     const dem = waitingForFood(fac), todo = dem.filter(g => mine(g.fv.claimed, staff));
-    const standAt = (p, r = 0.35) => { if (near(staff.pos, p, r)) return true; goTo(p); return false; };
+    const standAt = (p, r = 0.35) => { if (near(staff.pos, p, r)) return true; if (!staff.path.length) staff.path = Vec.flat(staff.pos, WP(fac, L.serve)) > 6 ? pathTo(staff.pos, staff.floor, fac, p) : [V(p.x, WorldY(fac), p.z)]; return false; }; // salonun içinde doğrudan yürür (kapı noktasına uğramaz), uzaktan gelirken kapıdan girer
     staff.rig.act = Rig.Act.None;
     if (staff.Count('plate') > 0 && todo.length) { // 1) tabağı masaya götür
       const g = todo[0]; g.fv.claimed = staff; const at = g.fv.spot.at;
