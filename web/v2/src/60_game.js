@@ -28,7 +28,7 @@ const Game = {
     Social.Defaults(); Social.GetSample(); Gallery.Init(); Pets.Init();
     this.BindUI();
     this.loaded = true;
-    this.AwayCheck();
+    this.AwayCheck(); this.DailyCheck();
     this.RefreshFloors();
     Input.tapHandlers.push((x, y) => this.OnTap(x, y));
     Life.ApplySeasonLook();
@@ -45,6 +45,20 @@ const Game = {
   },
   // Sen yokken kazanç: uygulama kapalı/arka plandayken en az 5 dakika geçtiyse ve resepsiyonist varsa otel kendi kendine kazanır.
   // Kazanç = son 3 günün ortalaması × (geçen dk / 5) × %25, en çok 8 saat sayılır. Test için window.__noAway = 1 kapatır.
+  // Günlük ödül: her gerçek günde ilk açılışta bir kez; art arda gelinen gün sayısı (7 günlük döngü) ödülü büyütür.
+  DailyCheck() {
+    if (!this.loaded || this.st.tutorial < 4 || window.__noDaily) return;
+    const key = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const now = Special.Now(), today = key(now), y = new Date(now); y.setDate(y.getDate() - 1);
+    const d = this.st.daily = this.st.daily || { last: '', streak: 0 };
+    if (d.last === today) return;
+    d.streak = d.last === key(y) ? d.streak + 1 : 1; d.last = today;
+    const n = ((d.streak - 1) % 7) + 1, earn = Math.round((60 + 40 * n) * this.Stars * (n === 7 ? 2 : 1));
+    this.st.money += earn; this.Save();
+    const row = Array.from({ length: 7 }, (_, i) => i + 1 === n ? '🎁' : i + 1 < n ? '✅' : '▫️').join(' ');
+    UI.Dialog({ tag: 'GÜNLÜK ÖDÜL', title: '🎁 Günaydın! Bugünün ödülü', html: `<p>${n}. gün: kasaya <b>${UI.fmt(earn)}</b> girdi!${n === 7 ? ' Haftanın büyük ödülü, iki katı!' : ' Yarın da gelirsen ödül büyür.'}</p><p style="text-align:center;font-size:20px">${row}</p>`, buttons: [{ text: 'Teşekkürler!', cls: 'gold' }] });
+    Sfx.Play('unlock', 0.6);
+  },
   AwayCheck() {
     if (!this.loaded) return;
     const last = this.st.lastSeen || 0, now = Date.now(); this.st.lastSeen = now;
@@ -237,6 +251,7 @@ const Game = {
       else UI.Toast('🕵 Bir müfettiş otelini inceledi: rapor orta', 'info');
     }
     if (t.id === 'fenomen' && sat >= 4) UI.Toast('🤳 ' + g.name + ' otelini takipçilerine anlattı! Ün +' + Math.round(d), 'good');
+    if (t.vip) { if (sat >= 4) UI.Toast('👑 VIP misafir çok memnun kaldı: büyük bahşiş ve ün!', 'good'); else if (sat < 3) UI.Toast('👑 VIP misafir memnun ayrılmadı: ün düştü', 'bad'); }
     if (t.id === 'huysuz' && sat >= 4) UI.Toast('😤→😊 ' + g.name + ' bile memnun kaldı!', 'good');
     if (sat >= 4.5) U.Burst(Vec.add(g.pos, V(0, 1.8, 0)), C(1, 0.5, 0.7), C(1, 0.9, 0.5), 20, 3);
     if (this.st.served === 1) this.Tutorial(3);

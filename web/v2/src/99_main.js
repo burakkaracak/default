@@ -89,7 +89,7 @@ async function boot() {
   UI.Init();
   Cam.Setup(renderer.domElement);
   addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); Quality.Resize(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { Game.Save(); Cloud.Push(); } else Game.AwayCheck(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { Game.Save(); Cloud.Push(); } else { Game.AwayCheck(); Game.DailyCheck(); } });
   addEventListener('pagehide', () => { Game.Save(); Cloud.Push(); });
   const bar = document.getElementById('loadbar');
   await loadModels(p => { if (bar) bar.style.width = Math.round(p * 100) + '%'; });

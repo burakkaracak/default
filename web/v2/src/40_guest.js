@@ -23,6 +23,7 @@ class Guest extends Behaviour {
     this.slot = -1;
     if (type.id === 'huysuz') Tween.After(0.5, () => this.ShowMood('😤', C(1, 0.7, 0.6), 3));
     if (type.id === 'unlu') Tween.After(0.5, () => this.ShowMood('📸', Col.white, 3));
+    if (type.vip) { this.wantLevel = 2; Tween.After(0.5, () => { this.ShowMood('👑', C(1, 0.85, 0.3), 3); U.Burst(Vec.add(this.pos, V(0, 1.8, 0)), C(1, 0.85, 0.3), C(1, 1, 0.8), 30, 3); UI.Toast('👑 VIP misafir geldi! Çabuk karşıla, en iyi odayı ver', 'info'); }); }
   }
   static seq = 0;
   get S() { return Guest.S; }
@@ -66,6 +67,7 @@ class Guest extends Behaviour {
     this.path = Hotel.Path(this.pos, 0, room.inside, room.floor);
     this.sat += this.waited < 12 ? 0.5 : this.waited > 30 ? -0.6 : 0;
     if (room.level > this.wantLevel) this.sat += 0.6;
+    if (this.type.vip) this.sat += room.level >= 1 ? 0.8 : -0.8; // VIP en az Deluxe oda bekler
     this.sat += Decor.SatBonus(room) + Game.PartSat(room);
     this.ShowMood('🔑', C(1, 0.9, 0.5), 1.5);
   }
