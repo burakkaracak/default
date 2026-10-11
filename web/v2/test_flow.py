@@ -74,7 +74,7 @@ try:
         check('personel: 3 misafir daha ağırlandı ve odalar temizlendi', ok, {'served': s['served'], 'rooms': s['rooms'], 'guests': s['guests']})
         pg.evaluate('window.__noRender=0'); pg.wait_for_timeout(1500); pg.screenshot(path=SHOT + '_4.png'); pg.evaluate('window.__noRender=1')
         # 8) kayıt ve yeniden yükleme
-        before = pg.evaluate(STATE); pg.evaluate("window.__game.Game.Save()")
+        before = pg.evaluate("(()=>{window.__game.Game.Save(); return " + STATE.strip() + "})()")  # kaydet ve oku aynı anda: oyun hızlı koşarken para değişmesin
         pg.reload(); pg.wait_for_function('window.__ready === true', timeout=90000); pg.evaluate('window.__game.UI.ClearDialogs()')
         after = pg.evaluate(STATE)
         check('kayıt yüklendi', after['money'] == before['money'] and len(after['rooms']) == len(before['rooms']) and sorted(after['staff']) == sorted(before['staff']), {'before': before['money'], 'after': after['money'], 'staff': after['staff']})

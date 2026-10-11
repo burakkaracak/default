@@ -1,4 +1,4 @@
-# Elif dokunuşları testi: özel günler (tarih değiştirilerek), otel defteri notları, kıyafet ve şapka, tablolar, kedi, müzik, ipuçları.
+# Elif dokunuşları testi: özel günler (tarih değiştirilerek), otel defteri notları, kıyafet ve şapka, tablolar, kedi, (müzik: test_music.py'de), ipuçları.
 # Kullanım: python3 test_elif.py [çıktı_klasörü]
 import glob, sys, subprocess, time, os
 from playwright.sync_api import sync_playwright
@@ -89,20 +89,6 @@ try:
         check('kedi: gezinti noktaları kuyruk ve yürüyüş yolundan uzak', r['ok'], r)
         r = pg.evaluate("""(()=>{const g=window.__game,G=g.Game; G.st.pets=9; const A=window.__Ach; A.t=0; A.Tick(0.1); window.__Pets.cat.loveCd=0; window.__Pets.cat.Pet(); A.t=0; A.Tick(0.1); return A.Done('kedi10')})()""")
         check('kedi: 10 sevgide başarım açılıyor', r)
-        # --- 3d) müzik
-        r = pg.evaluate("""(async()=>{const g=window.__game,M=window.__Music; if(!window.__Sfx0){} g.Game.st.music=true; try{ window.AudioContext||window.webkitAudioContext }catch(e){} const Sfx=g.Game&&window.__sfx; return !!(window.AudioContext||window.webkitAudioContext)})()""")
-        pg.evaluate("window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyX'}))"); pg.wait_for_timeout(300)
-        r = pg.evaluate("(()=>{const M=window.__Music; return {ctx:!!M.ctx, master:!!M.master}})()")
-        check('müzik: ilk dokunuş/tuş sonrası başlatılıyor', r['ctx'] and r['master'], r)
-        pg.wait_for_timeout(4500)
-        r = pg.evaluate("(()=>{const M=window.__Music; return {day:M.day&&Math.round(M.day.duration), night:M.night&&Math.round(M.night.duration), started:M.started}})()")
-        check('müzik: gündüz ve gece döngüleri üretildi (her biri ~20-30 sn)', r['day'] and r['night'] and 15 <= r['day'] <= 45 and 15 <= r['night'] <= 60, r)
-        r = pg.evaluate("""(()=>{const g=window.__game,M=window.__Music,t0=performance.now(); const b=M.Make({bpm:84,seed:3,decay:2.4,len:1.4,amp:0.05,rest:0.25,chords:[[262,330,392,494],[220,262,330,392],[175,220,262,330],[196,247,294,392]],rep:2}); return {ms:Math.round(performance.now()-t0), len:+b.duration.toFixed(1)}})()""")
-        check('müzik: bir döngünün üretimi 1,5 sn\'den kısa (başsız, yavaş ortamda)', r['ms'] < 1500, r); print('   üretim süresi:', r)
-        r = pg.evaluate("""(()=>{const g=window.__game,M=window.__Music; g.Game.st.music=true; g.Game.st.sound=true; g.Sfx0=1; for(let i=0;i<40;i++) M.Frame(0.1); const on=M.master.gain.value; g.Game.st.music=false; for(let i=0;i<40;i++) M.Frame(0.1); const off=M.master.gain.value; g.Game.st.music=true; return {on:+on.toFixed(2), off:+off.toFixed(2)}})()""")
-        check('müzik: açıkken ses, ayardan kapatınca sessiz', r['on'] > 0.4 and r['off'] < 0.05, r)
-        r = pg.evaluate("""(()=>{const g=window.__game,M=window.__Music; g.World.time=0.9; g.World.Apply(); for(let i=0;i<60;i++) M.Frame(0.1); const n=M.gNight.gain.value, d=M.gDay.gain.value; g.World.time=0.5; g.World.Apply(); for(let i=0;i<60;i++) M.Frame(0.1); return {geceN:+n.toFixed(2), geceD:+d.toFixed(2), gunN:+M.gNight.gain.value.toFixed(2), gunD:+M.gDay.gain.value.toFixed(2)}})()""")
-        check('müzik: gece döngüsüne, gündüz döngüsüne yumuşak geçiş', r['geceN'] > 0.8 and r['geceD'] < 0.2 and r['gunN'] < 0.2 and r['gunD'] > 0.8, r)
         # --- 3e) ipuçları
         r = pg.evaluate("""(()=>{const g=window.__game,G=g.Game,H=window.__Hints; g.UI.ClearDialogs(); g.UI.CloseSheet(); G.st.hints={}; G.st.tutorial=2; H.t=0; H.last=-999; H.Tick(0.1); const a=Object.keys(G.st.hints).length; G.st.tutorial=99; G.st.served=5; H.t=0; H.Tick(0.1); const b=Object.keys(G.st.hints); const txt=document.getElementById('hint').textContent; H.t=0; H.Tick(0.1); const c=Object.keys(G.st.hints).length; return {ogretici:a, ilk:b, txt:txt.slice(0,30), araSure:c}})()""")
         check('ipucu: öğretici sürerken çıkmaz; sonra bir tane gösterilir; 75 sn dolmadan ikincisi çıkmaz', r['ogretici'] == 0 and len(r['ilk']) == 1 and r['araSure'] == 1 and r['txt'], r)

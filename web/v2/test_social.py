@@ -88,7 +88,7 @@ try:
           out.arcs=arcs; out.arcState=JSON.stringify(G.st.arcs); g.UI.ClearDialogs(); out.manager=G.st.manager; out.first=G.st.letters[0].text.slice(0,12); return out})()""")
         check('kılıklı müfettiş yazar hikâyesini ilerletmedi', (not res['mufArc']) and res['mufArcs'] == '{}' , res)
         check('etiketsiz misafir sıradan mektup yazdı', res['plainArc'] == 0 and res['arcsAfterPlain'] == '{}', res)
-        check('hikâye misafiri 3 bölüm boyunca mektup bıraktı, sonra sıradan', [a[2] for a in res['arcs']] == [1, 2, 3, 0] and all(a[1] == 1 for a in res['arcs']) and all(a[0] for a in res['arcs'][:3]), res['arcs'])
+        check('hikâye misafiri 3 bölüm boyunca mektup bıraktı, sonra hikâye bitti (dördüncüde etiket yok, sıradan mektup yalnız %25 şansla)', [a[2] for a in res['arcs'][:3]] == [1, 2, 3] and all(a[1] == 1 for a in res['arcs'][:3]) and all(a[0] for a in res['arcs'][:3]) and res['arcs'][3][0] is False and res['arcs'][3][1] in (0, 1), res['arcs'])
         check('mektubu gönderen karakter, gerçekten konaklayan misafir', all(a[3] == 'Ece ile Kaan' and a[4] == 'Ece' for a in res['arcs'][:3]), res['arcs'])
         check('mektup yöneticiye hitap ediyor', res['first'].startswith('Sevgili ' + res['manager']), res)
         pg.evaluate("window.__game.Social.Open('mektup')"); pg.wait_for_timeout(300)
