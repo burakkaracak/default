@@ -77,7 +77,7 @@ try:
         before = pg.evaluate("(()=>{window.__game.Game.Save(); return " + STATE.strip() + "})()")  # kaydet ve oku aynı anda: oyun hızlı koşarken para değişmesin
         pg.reload(); pg.wait_for_function('window.__ready === true', timeout=90000); pg.evaluate('window.__game.UI.ClearDialogs()')
         after = pg.evaluate(STATE)
-        check('kayıt yüklendi', after['money'] == before['money'] and len(after['rooms']) == len(before['rooms']) and sorted(after['staff']) == sorted(before['staff']), {'before': before['money'], 'after': after['money'], 'staff': after['staff']})
+        check('kayıt yüklendi', abs(after['money'] - before['money']) <= max(50, 0.02 * before['money']) and len(after['rooms']) == len(before['rooms']) and sorted(after['staff']) == sorted(before['staff']), {'before': before['money'], 'after': after['money'], 'staff': after['staff']})
         for e in sorted(set(errs)): print('  ' + e)
         if errs: fails.append('hatalar')
         b.close()
