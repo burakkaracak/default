@@ -36,13 +36,13 @@ const Taxi = {
         else if (Math.abs(d) < 0.05) {
           t.phase = 'wait'; t.t = 1.1;
           const g = t.g;
-          if (alive(g)) { g.go.position.set(p.x, 0, 8.4); g.taxiWait = false; g.hidden = false; if (g.follower) g.follower.go.position.copy(g.go.position); g.path = [Hotel.Entrance.clone(), V(0, 0, 6.0)]; U.Burst(Vec.add(g.pos, V(0, 1, 0)), C(1, 0.95, 0.8), C(1, 1, 1), 10, 2); Sfx.Play('tick', 0.4); }
+          if (alive(g)) { g.go.position.set(p.x, 0, 8.4); g.taxiWait = false; g.hidden = false; if (g.follower) g.follower.go.position.copy(g.go.position); if (g.s === Guest.S.Arrive) g.path = [Hotel.Entrance.clone(), V(0, 0, 6.0)]; /* başka işe yollandıysa yolu bozulmasın */ U.Burst(Vec.add(g.pos, V(0, 1, 0)), C(1, 0.95, 0.8), C(1, 1, 1), 10, 2); Sfx.Play('tick', 0.4); }
         }
       } else if (t.phase === 'park') { // şeritten park yerine yanaşır
         const dz = Park.Z - p.z, st = Math.min(Math.abs(dz), 3.5 * dt); p.z += Math.sign(dz) * st; t.car.rotation.y = dz < 0 ? Math.PI / 2 : -Math.PI / 2;
         if (Math.abs(dz) < 0.05) {
           t.car.rotation.y = 0; t.phase = 'parked'; const g = t.g;
-          if (alive(g)) { g.go.position.set(p.x + 0.4, 0, 7.6); g.taxiWait = false; g.hidden = false; if (g.follower) g.follower.go.position.copy(g.go.position); g.path = [Hotel.Entrance.clone(), V(0, 0, 6.0)]; Sfx.Play('tick', 0.4); }
+          if (alive(g)) { g.go.position.set(p.x + 0.4, 0, 7.6); g.taxiWait = false; g.hidden = false; if (g.follower) g.follower.go.position.copy(g.go.position); if (g.s === Guest.S.Arrive) g.path = [Hotel.Entrance.clone(), V(0, 0, 6.0)]; /* başka işe yollandıysa yolu bozulmasın */ Sfx.Play('tick', 0.4); }
         }
       } else if (t.phase === 'parked') { // misafir otelden ayrılana kadar bekler
         if (!alive(t.g) || t.g.s === Guest.S.Leave) { t.phase = 'unpark'; Park.Release(t.slot); t.side = Random.Chance(0.5) ? 1 : -1; }
