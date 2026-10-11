@@ -4,6 +4,15 @@ const World = {
   time: 0.33, day: 1, daylight: 1, weather: 'sunny',
   lamps: [], pool: [], fixtures: [], halos: [], lit: -1,
   sea: null, clouds: [], root: null,
+  // Her yeni otel farklı bir yerde: çimen, tepe ve gökyüzü rengi değişir (1. otel = Lavanta Koyu)
+  Themes: [
+    { name: 'Lavanta Koyu', icon: '💜' },
+    { name: 'Gün Batımı Kumsalı', icon: '🏖', grass: C(0.94, 0.86, 0.6), k: 0.55, hills: C(1, 0.82, 0.68), sky: C(1, 0.7, 0.5), skyK: 0.25 },
+    { name: 'Çam Dağları', icon: '🌲', grass: C(0.28, 0.5, 0.36), k: 0.5, hills: C(0.7, 0.82, 0.95), sky: C(0.6, 0.76, 0.96), skyK: 0.18 },
+    { name: 'Çöl Vahası', icon: '🏜', grass: C(0.9, 0.7, 0.42), k: 0.7, hills: C(1, 0.78, 0.55), sky: C(1, 0.78, 0.5), skyK: 0.3 },
+  ],
+  get Theme() { return this.Themes[(((Game.st && Game.st.hotels) || 1) - 1) % this.Themes.length]; },
+  ApplyTheme() { if (this.hills) this.hills.material.color.copy(Col.three(this.Theme.hills || Col.white)); Life.ApplySeasonLook(); },
 
   Build() {
     const T = this.T, root = U.Pivot(W, V(), 'Kasaba'); this.root = root;
@@ -90,7 +99,7 @@ const World = {
       parts.push({ geo: 'Sphere', pos: V(x, -s * 0.35, z), scale: V(s * 1.6, s, s * 1.2), c: Col.lerp(C(0.42, 0.66, 0.38), C(0.58, 0.72, 0.5), rnd.NextDouble()) });
     }
     for (let k = 0; k < 5; k++) { const x = rnd.Range(-80, 80), z = rnd.Range(-120, -95), s = rnd.Range(30, 48); parts.push({ geo: 'Sphere', pos: V(x, -s * 0.3, z), scale: V(s * 1.7, s, s), c: C(0.56, 0.68, 0.72) }); }
-    const m = U.Merge('Tepeler', root, parts); m.castShadow = false;
+    const m = U.Merge('Tepeler', root, parts); m.castShadow = false; this.hills = m;
   },
 
   // ---- gece ışıkları (havuz) ----
@@ -131,6 +140,7 @@ const World = {
     let sky = Col.lerp(C(0.07, 0.09, 0.22), C(0.6, 0.8, 0.96), this.daylight);
     sky = Col.lerp(sky, C(0.97, 0.64, 0.48), dusk * 0.55 * (1 - gl));
     sky = Col.lerp(sky, Col.mul(C(0.5, 0.55, 0.6), Mathf.Lerp(0.3, 1, this.daylight)), Mathf.Clamp01(gl * 1.3));
+    const th = this.Theme; if (th.sky) sky = Col.lerp(sky, th.sky, th.skyK * this.daylight);
     scene.background.copy(Col.three(sky)); scene.fog.color.copy(Col.three(sky));
     const skyA = Col.lerp(C(0.3, 0.36, 0.62), C(0.8, 0.86, 0.97), this.daylight);
     const grA = Col.lerp(C(0.18, 0.18, 0.26), C(0.5, 0.48, 0.42), this.daylight);

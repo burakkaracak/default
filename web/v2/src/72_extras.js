@@ -55,7 +55,7 @@ const Hr = {
     if (this.ring && alive(this.ring)) this.ring.scale.setScalar(1 + 0.05 * Math.sin(Time.time * 3));
     const n = this.Next(); st.hr = st.hr || { k: '', paid: 0 };
     if (n && st.hr.k !== n.k) { st.hr.k = n.k; st.hr.paid = Math.min(st.hr.paid, n.cost - 1); if (st.hr.paid < 0) st.hr.paid = 0; }
-    if (Hotel.view === 0 && n) {
+    if (Hotel.view === 0 && n && Vec.flat(P.pos, this.pad) < 10) {
       UI.Label('hr', V(this.pad.x, 1.9, this.pad.z), `${n.u.icon} ${n.u.name} · ${UI.fmt(st.hr.paid)}/${UI.fmt(n.cost)}`, 'buy', () => P.GoTo(this.pad, 0));
     }
     if (!n || P.floor !== 0 || P.liftT > 0 || UI.Blocking || !P.Near(this.pad, 0.8)) return;
@@ -85,7 +85,7 @@ const NewHotel = {
     body.appendChild(d);
   },
   Confirm() {
-    UI.Dialog({ tag: 'YENİ OTEL', title: '🏙 Yeni otele geçilsin mi?', html: '<p>Mevcut otel, odalar, personel ve para sıfırlanır. Başarımların, anıların, albümün ve zincirin kalır. Yeni otelde <b>her kazanç +%' + Math.round((this.Mul() + 0.15 - 1) * 100) + '</b> olur.</p>', buttons: [{ text: 'Evet, geç', cls: 'gold', act: () => this.Go() }, { text: 'Vazgeç', cls: 'ghost' }] });
+    UI.Dialog({ tag: 'YENİ OTEL', title: '🏙 Yeni otele geçilsin mi?', html: '<p>Mevcut otel, odalar, personel ve para sıfırlanır. Başarımların, anıların, albümün ve zincirin kalır. Yeni yerin: <b>' + World.Themes[this.Count() % World.Themes.length].name + '</b>. Yeni otelde <b>her kazanç +%' + Math.round((this.Mul() + 0.15 - 1) * 100) + '</b> olur.</p>', buttons: [{ text: 'Evet, geç', cls: 'gold', act: () => this.Go() }, { text: 'Vazgeç', cls: 'ghost' }] });
   },
   Go() {
     const old = Game.st, fresh = Game.Default(), n = this.Count() + 1;

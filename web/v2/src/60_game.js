@@ -31,7 +31,7 @@ const Game = {
     this.AwayCheck(); this.DailyCheck();
     this.RefreshFloors();
     Input.tapHandlers.push((x, y) => this.OnTap(x, y));
-    Life.ApplySeasonLook();
+    World.ApplyTheme(); if ((this.st.hotels || 1) > 1) Tween.After(2, () => UI.Toast(World.Theme.icon + ' ' + World.Theme.name + ': yeni otelin burada!', 'good'));
     if (!saved) this.Tutorial(0);
   },
 

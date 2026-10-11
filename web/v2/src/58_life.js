@@ -140,7 +140,7 @@ const Life = {
   // ---------------- Görünüm: çim rengi, yağmur ve kar ----------------
   ApplySeasonLook() {
     const g = World.grass; if (!g) return;
-    let c = this.Season.grass; if (World.weather === 'snowy') c = C(0.93, 0.95, 0.99);
+    let c = this.Season.grass; const th = World.Theme; if (th.grass) c = Col.lerp(c, th.grass, th.k); if (World.weather === 'snowy') c = C(0.93, 0.95, 0.99);
     g.material.color.copy(Col.three(c));
   },
   fx: null,
