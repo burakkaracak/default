@@ -1,6 +1,7 @@
 // Oyun verileri: ekonomi, oda tipleri, misafir türleri, personel
 const Data = {
-  Floor: { H: 3.4, Max: 4 },          // kat yüksekliği, en fazla oda katı (zemin hariç)
+  Floor: { H: 3.4, get Max() { return 4 + Math.min(2, (((typeof Game !== 'undefined' && Game.st && Game.st.hotels) || 1) - 1)); } }, // her yeni otel 1 kat daha büyük (en çok +2)
+           // kat yüksekliği, en fazla oda katı (zemin hariç)
   DayLength: 300,                       // bir oyun günü (saniye)
   StartMoney: 120,
 
@@ -47,7 +48,7 @@ const Data = {
   Facilities: [
     { id: 'kafe', name: 'Kafe', icon: '☕', cost: 1200, unlock: 1, floor: 0, roles: ['barista'], price: 7, desc: 'Lobinin doğu köşesi. Misafirler çıkışta kahve içer; iş insanları bayılır.' },
     { id: 'bahce', name: 'Bahçe', icon: '🌷', cost: 2500, unlock: 1, floor: 'roof', roles: ['bahcivan'], price: 0, desc: 'Çatıda çiçekler, çeşme ve banklar. Ücretsiz gezinti; bahçe açmışken herkes daha mutlu.' },
-    { id: 'havuz', name: 'Havuz', icon: '🏊', cost: 3000, unlock: 2, floor: 'roof', roles: ['cankurtaran'], price: 7, desc: 'Çatıda havuz ve şezlonglar. Aileler ve turistler çok sever.' },
+    { id: 'havuz', name: 'Havuz', icon: '🏊', cost: 3000, unlock: 2, floor: 'roof', roles: ['cankurtaran'], price: 7, desc: 'Çatıda havuz ve şezlonglar. Aileler ve turistler çok sever. Kullanılan şezlongları düzenlemek gerekir (cankurtaran de yapar).' },
     { id: 'spor', name: 'Spor salonu', icon: '🏋', cost: 4000, unlock: 2, floor: 'roof', roles: [], price: 9, desc: 'Koşu bantları, ağırlıklar, minderler. Personel gerekmez; sporcular ve öğrenciler gelir.' },
     { id: 'restoran', name: 'Restoran', icon: '🍝', cost: 5000, unlock: 2, floor: 0, roles: ['garson', 'asci'], price: 16, desc: 'Lobinin kuzeydoğusu. Mutfakta yemek pişer, tabakları masalara taşırsın; kirli tabakları topla. Aşçı pişirir, garson taşır.' },
     { id: 'spa', name: 'Spa', icon: '🧖', cost: 7000, unlock: 3, floor: 0, roles: ['terapist'], price: 24, desc: 'Masaj yatakları, jakuzi ve mumlar. Balayı çiftleri ve emekliler için.' },

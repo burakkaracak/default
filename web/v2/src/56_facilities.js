@@ -383,6 +383,7 @@ const Facilities = (() => {
     else Tween.FloatText(Vec.add(guest.pos, V(0, 1.9, 0)), '♥', C(1, 0.55, 0.7), 0.14);
     guest.ShowMood(sat >= 4 ? '😍' : '😊', Col.white, 2.5);
     guest.rig.act = Rig.Act.None; guest.go.rotation.x = 0;
+    if (fac.id === 'havuz' && v.spot) { v.spot.plate = 'untidy'; v.spot.dirty = true; v.spot.dirtyT = Time.time; } // şezlong dağınık kalır: havlu düzenlenene kadar kullanılamaz
     if (L.mode === 'kitchen' && v.spot) { v.spot.plate = 'dirty'; v.spot.dirty = true; } // kirli tabak masada kalır, toplanana kadar masa boş sayılmaz
     leave(guest, fac);
   }
@@ -494,6 +495,22 @@ const Facilities = (() => {
     for (let i = 0; i < fac.plates; i++) plate(V(4.95 + i * 0.4, 0.9, -5.6), 'food');
     for (const sp of fac.spots) if (sp.plate) { const m = Vec.lerp(sp.p, sp.look, 0.72); plate(V(m.x, 0.74, m.z), sp.plate); }
   }
+  // havuz: dağınık şezlongda ıslak havlu görünür
+  function poolVis(fac) {
+    if (!fac.go || !alive(fac.go)) { fac.pg = null; fac.pgSig = ''; return; }
+    if (!fac.pg || !alive(fac.pg)) { fac.pg = U.Pivot(fac.go, V(), 'Havlular'); fac.pgSig = ''; }
+    const sig = fac.spots.map(s => s.dirty ? 'x' : '-').join(''); if (sig === fac.pgSig) return; fac.pgSig = sig;
+    for (const c of fac.pg.children.slice()) Destroy(c);
+    fac.spots.forEach((sp, i) => { if (!sp.dirty) return; U.Box('IslakHavlu', fac.pg, V(sp.p.x, 0.62, sp.p.z), V(0.55, 0.08, 0.4), [C(0.35, 0.65, 0.95), C(0.95, 0.5, 0.6), C(1, 0.85, 0.3)][i % 3]); });
+    for (const sp of fac.spots) if (sp.dirty && Time.time - (sp.dirtyT || 0) > 150) { sp.dirty = false; sp.plate = null; } // kimse bakmazsa bir süre sonra kendiliğinden toparlanır
+  }
+  // müdür: şezlongu düzenle (havuz)
+  function tidyPlayer(fac, P, dt) {
+    const d = fac.spots.find(sp => sp.dirty && P.Near(WP(fac, sp.edge || sp.p), 1.5));
+    if (!d) { fac.tidyW = 0; return; }
+    P.rig.act = Rig.Act.Clean; fac.tidyW = (fac.tidyW || 0) + dt / 0.9; Game.ShowProgress(WP(fac, d.p), fac.tidyW);
+    if (fac.tidyW >= 1) { fac.tidyW = 0; d.dirty = false; d.plate = null; P.rig.act = Rig.Act.None; Sfx.Play('clean', 0.4); }
+  }
   // müdür: pişir, tezgâhtan al, masaya götür, kirli tabağı topla, bulaşığa bırak. true = çalışıyor (pişiriyor)
   function kitchenPlayer(fac, P, dt) {
     const L = fac.L; if (P.floor !== 0) { fac.cookW = 0; return false; }
@@ -580,6 +597,14 @@ const Facilities = (() => {
       return;
     }
     if (role === 'cankurtaran') {
+      const d = fac.spots.find(sp => sp.dirty && mine(sp.cl, staff));
+      if (d) { // dağınık şezlongu düzenler, sonra kuleye döner
+        d.cl = staff; staff.go.position.y = WorldY(fac); const e = d.edge || d.p;
+        if (!near(staff.pos, e, 0.4)) { if (!staff.path.length) staff.path = [WP(fac, e)]; staff.rig.act = Rig.Act.None; return; }
+        staff.rig.act = Rig.Act.Clean; staff.rig.Tick(0); x.w += dt / 1.2 * (staff.Eff ?? 1); Game.ShowProgress(WP(fac, d.p), x.w);
+        if (x.w >= 1) { x.w = 0; d.dirty = false; d.plate = null; d.cl = null; staff.rig.act = Rig.Act.None; staff.GainXP && staff.GainXP(3); Sfx.Play('clean', 0.4); }
+        return;
+      }
       if (!near(staff.pos, L.guard, 0.3)) { goTo(L.guard); return; }
       staff.go.position.y = WorldY(fac) + L.guardDy; faceTo(staff.go, staff.pos, WP(fac, L.serveLook)); staff.rig.act = Rig.Act.Sit; staff.rig.Tick(0); fac.guardT = Time.time;
       return;
@@ -632,7 +657,8 @@ const Facilities = (() => {
     const P = Game.player; if (!P || P.liftT > 0) return;
     let working = false;
     for (const id in S.fac) {
-      const fac = S.fac[id]; if (!fac.built || fac.L.mode === 'self') continue;
+      const fac = S.fac[id]; if (fac.built && id === 'havuz' && P.floor === FloorIdx(fac)) tidyPlayer(fac, P, dt);
+      if (!fac.built || fac.L.mode === 'self') continue;
       const fi = FloorIdx(fac); if (P.floor !== fi) { fac.pwork = 0; continue; }
       if (fac.L.mode === 'kitchen') { if (kitchenPlayer(fac, P, dt)) working = true; continue; }
       const g = fac.guests.find(x => x.fv && x.fv.phase === 'wait' && !x.fv.served && x.fv.claimed === P && !x.path.length) || frontWaiting(fac);
@@ -672,6 +698,7 @@ const Facilities = (() => {
           });
         } else UI.Label('fw' + g.id, Vec.add(g.pos, V(0, v.seated ? 1.9 : 2.3, 0)), txt, 'need', () => Game.player.GoTo(WP(fac, L.mode === 'table' ? v.spot.at : L.serve), fi));
       }
+      if (d.id === 'havuz') fac.spots.forEach((sp, i) => { if (sp.dirty) UI.Label('fd' + i, WP(fac, sp.p, 1.2), '🧺 Düzenle', 'need', () => Game.player.GoTo(WP(fac, sp.edge || sp.p), fi)); });
       if (L.mode === 'kitchen') fac.spots.forEach((sp, i) => { if (sp.dirty) UI.Label('fd' + i, WP(fac, sp.p, 1.3), '🍽 Topla', 'need', () => Game.player.GoTo(WP(fac, sp.at), fi)); });
     }
   }
@@ -745,7 +772,7 @@ const Facilities = (() => {
         const fac = S.fac[id]; if (!fac.built) continue;
         for (const g of fac.guests.slice()) if (!alive(g) || g.s !== Guest.S.Visit || g.fv?.fac !== fac) { if (g.fv && g.fv.fac === fac) release(g); else { arrRemove(fac.guests, g); for (const s of fac.spots) if (s.by === g) s.by = null; } }
         reflow(fac);
-        if (fac.L.mode === 'kitchen') kitchenVis(fac);
+        if (fac.L.mode === 'kitchen') kitchenVis(fac); else if (fac.id === 'havuz') poolVis(fac);
       }
       playerTick(dt);
       for (const w of S.waters) if (alive(w.m)) w.m.position.y = w.y + Math.sin(S.t * 1.6 + w.y * 7) * 0.012;
