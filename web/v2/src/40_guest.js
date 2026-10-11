@@ -34,6 +34,7 @@ class Guest extends Behaviour {
 
   Update() {
     const dt = Time.deltaTime; if (dt <= 0) return;
+    if (this.taxiWait) { this.rig.Tick(0); return; }
     if (this.moodT > 0) { this.moodT -= dt; if (this.moodT <= 0) this.mood.obj.visible = false; }
     if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
     const S = Guest.S;

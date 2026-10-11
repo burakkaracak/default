@@ -86,7 +86,7 @@ const Game = {
     // oyuncu işleri: banko, temizlik, istek
     this.PlayerWork(dt);
     this.TillTick(dt);
-    Facilities.Tick(dt); Wc.Tick(dt);
+    Facilities.Tick(dt); Wc.Tick(dt); Taxi.Tick(dt);
     Life.Tick(dt);
     Ach.Tick(dt);
     Wedding.Tick(dt);
@@ -224,7 +224,7 @@ const Game = {
     const pool = Data.Guests.filter(t => !t.minStars || stars >= t.minStars);
     let type = typeId ? Data.Guests.find(t => t.id === typeId) : null;
     if (!type) { const wt = t => t.w * Life.TypeMul(t.id); let sum = 0; for (const t of pool) sum += wt(t); let k = Math.random() * sum; for (const t of pool) { k -= wt(t); if (k <= 0) { type = t; break; } } type = type || pool[0]; }
-    const g = new Guest(type); this.guests.push(g); Social.MaybeArc(g); return g;
+    const g = new Guest(type); this.guests.push(g); Taxi.Maybe(g); Social.MaybeArc(g); return g;
   },
   Queue(g) { this.queue.push(g); this.Reflow(); },
   Dequeue(g) { const i = this.queue.indexOf(g); if (i >= 0) { this.queue.splice(i, 1); this.Reflow(); } },
