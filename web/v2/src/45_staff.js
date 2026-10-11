@@ -74,7 +74,7 @@ class Staff extends Behaviour {
     if (this.liftT > 0) { this.liftT -= dt; this.rig.Tick(0); if (this.liftT <= 0) { this.floor = this.liftTo; this.pos.y = Hotel.FloorY(this.floor); } return; }
     if (this.path.length) {
       const n = this.path[0];
-      if (n.lift !== undefined) { this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9; this.pos.set(n.x, this.pos.y, n.z); return; }
+      if (n.lift !== undefined) { this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9 / Game.UpgMul('lift'); this.pos.set(n.x, this.pos.y, n.z); return; }
       if (!U.Walk(this.go, this.path, this.speed, this.rig)) return;
     }
     if (this.role === 'receptionist') return this.ReceptionTick(dt);

@@ -75,7 +75,7 @@ class Player extends Behaviour {
   // Asansör yolculuğu: kapı açılır → karakter kabine girer → kabin (ve kamera) katlar boyunca kayar → kapı açılır, karakter çıkar
   StartLift(f, clearPath = false) {
     if (clearPath) this.path = []; this.liftFrom = this.floor; this.liftTo = f;
-    this.liftDur = 1.4 + 0.35 * Math.abs(f - this.floor); this.liftT = this.liftDur; this.liftPhase = 0;
+    this.liftDur = (1.4 + 0.35 * Math.abs(f - this.floor)) / Game.UpgMul('lift'); this.liftT = this.liftDur; this.liftPhase = 0;
     Hotel.LiftDoor(this.floor, true); Sfx.Play('tick', 0.6);
     UI.Toast((f === 0 ? 'Lobi' : f > Hotel.floors ? 'Çatı' : f + '. kat') + (f > this.floor ? ' ↑' : ' ↓'), 'info');
   }

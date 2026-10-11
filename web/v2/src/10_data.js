@@ -20,6 +20,7 @@ const Data = {
   // Hız yükseltmeleri (seviye başına +step)
   Upgrades: {
     me: { name: 'Koşu ayakkabısı', icon: '👟', desc: 'Müdürün yürüme hızı artar.', cost: [200, 450, 900, 1600, 2800], step: 0.10 },
+    lift: { name: 'Asansör motoru', icon: '🛗', desc: 'Asansör daha hızlı çıkar iner (müdür, misafir ve personel için).', cost: [250, 600, 1200, 2200], step: 0.2 },
     carry: { name: 'Taşıma sepeti', icon: '🧺', desc: 'Elinde bir seferde daha çok eşya (havlu, kâğıt, yemek tabağı) taşırsın.', cost: [150, 350, 700, 1300, 2200], step: 1, add: 2 },
     staff: { name: 'Ekip eğitimi', icon: '⚡', desc: 'Bütün personel daha hızlı çalışır.', cost: [300, 700, 1400, 2600, 4200], step: 0.08 },
   },

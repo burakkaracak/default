@@ -40,7 +40,7 @@ class Guest extends Behaviour {
     const S = Guest.S;
     if (this.path.length) {
       const n = this.path[0];
-      if (n.lift !== undefined) { this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9; this.pos.set(n.x, this.pos.y, n.z); return; }
+      if (n.lift !== undefined) { this.path.shift(); this.liftTo = n.lift; this.liftT = 0.9 / Game.UpgMul('lift'); this.pos.set(n.x, this.pos.y, n.z); return; }
       const done = U.Walk(this.go, this.path, 3.2, this.rig);
       if (!done) return;
     }
