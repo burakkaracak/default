@@ -28,6 +28,7 @@ const Game = {
     Social.Defaults(); Social.GetSample(); Gallery.Init(); Pets.Init();
     this.BindUI();
     this.loaded = true;
+    this.AwayCheck();
     this.RefreshFloors();
     Input.tapHandlers.push((x, y) => this.OnTap(x, y));
     Life.ApplySeasonLook();
@@ -39,7 +40,20 @@ const Game = {
     if (!this.loaded) return;
     this.st.day = World.day; this.st.time = World.time; this.st.weather = World.weather;
     const rooms = {}; for (const r of Hotel.rooms.values()) if (r.level >= 0) { const prev = this.st.rooms[r.id]; rooms[r.id] = (prev && typeof prev === 'object') ? Object.assign(prev, { lv: r.level }) : r.level; } this.st.rooms = rooms;
+    this.st.lastSeen = Date.now();
     Store.Set('game', this.st); Store.Save();
+  },
+  // Sen yokken kazanç: uygulama kapalı/arka plandayken en az 5 dakika geçtiyse ve resepsiyonist varsa otel kendi kendine kazanır.
+  // Kazanç = son 3 günün ortalaması × (geçen dk / 5) × %25, en çok 8 saat sayılır. Test için window.__noAway = 1 kapatır.
+  AwayCheck() {
+    const last = this.st.lastSeen || 0, now = Date.now(); this.st.lastSeen = now;
+    if (!last || window.__noAway || !this.st.staff.receptionist) return;
+    const mins = Math.min((now - last) / 60000, 480); if (!(mins >= 5)) return;
+    const earn = Math.round(Chain.Avg() * (mins / 5) * 0.25); if (earn <= 0) return;
+    this.st.money += earn; this.Save();
+    const h = Math.floor(mins / 60), m = Math.round(mins % 60);
+    UI.Dialog({ tag: 'SEN YOKKEN', title: '💰 Otel çalışmaya devam etti', html: `<p>${h ? h + ' sa ' : ''}${m} dk yoktun. Resepsiyonist oteli çalıştırdı ve kasaya <b>${UI.fmt(earn)}</b> girdi!</p>`, buttons: [{ text: 'Harika!', cls: 'gold' }] });
+    Sfx.Play('ding', 0.6);
   },
   Reset() { Album.Clear(); Gallery.Clear(); Store.DeleteAll(); Cloud.Wipe(); location.reload(); },
 
