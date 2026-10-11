@@ -664,7 +664,7 @@ const Facilities = (() => {
         const v = g.fv; if (!v || v.phase !== 'wait' || g.path.length) continue;
         const txt = (v.t > (L.patience ?? PATIENCE) * 0.6 ? '⏳ ' : d.icon + ' ') + L.waitText;
         if (L.mode === 'kitchen') {
-          UI.Label('fw' + g.id, Vec.add(g.pos, V(0, v.seated ? 1.9 : 2.3, 0)), txt, 'need', () => {
+          UI.Label('fw' + g.id, Vec.add(g.pos, V(0, (v.seated ? 1.9 : 2.3) + (fac.spots.indexOf(v.spot) % 3) * 0.42, 0)), txt, 'need', () => { // yan yana oturanların etiketleri üst üste binmesin
             const P = Game.player;
             if (P.Count('plate') > 0) P.GoTo(WP(fac, v.spot.at), fi);
             else if (fac.plates > 0) { P.GoTo(WP(fac, L.counter), fi); UI.Toast('Tezgâhtan tabak al 🍽', 'info'); }

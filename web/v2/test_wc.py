@@ -43,7 +43,7 @@ try:
         # 2) kapasite yükseltmesi
         ev(pg, f'{G}.BuyUpgrade("carry")')
         check('Taşıma sepeti: kapasite 3', ev(pg, f'{G}.player.CarryCap') == 3 and ev(pg, f'{G}.UpgLv("carry")') == 1)
-        pg.wait_for_timeout(1000)
+        wait_until(pg, f'{G}.player.items.length>=3', 8)
         check('kapasite artınca bir eşya daha alındı', ev(pg, f'{G}.player.items.length') == 3, ev(pg, f'{G}.player.items'))
         n = ev(pg, f"(()=>{{{G}.MenuSheet('gelisim'); return document.querySelectorAll('.sheet .item').length}})()")
         txt = ev(pg, "document.querySelector('.sheet') ? document.querySelector('.sheet').innerText : ''")
@@ -56,7 +56,7 @@ try:
         m0 = ev(pg, f'{G}.st.money'); ok = ev(pg, f'{W}.Buy()')
         check('tuvalet satın alındı, 600 ödendi', ok and ev(pg, f'{W}.Built()') and abs((m0 - ev(pg, f'{G}.st.money')) - 600) < 1, ev(pg, f'{G}.st.wc'))
         check('kabin görseli ve kabin içi yürünemez', ev(pg, f'!!{W}.S.grp && {W}.S.rolls.length==2 && {W}.Blocks({{x:12,y:0,z:4}}) && !window.__game.Hotel.Walkable({{x:12,y:0,z:4}},0)'))
-        ev(pg, TP, [11.7, 0.95]); pg.wait_for_timeout(1200)
+        ev(pg, TP, [11.7, 0.95]); wait_until(pg, f'{G}.player.Count("paper")>=1', 8)
         check('tuvalet açılınca kâğıt alınır', ev(pg, f'{G}.player.Count("paper")') >= 1, ev(pg, f'{G}.player.items'))
         look(pg, 0, 10, 2, 13, 0); shot(pg, 'raf_kabin')
         # 4) misafir: oda + resepsiyonist, giriş, çıkış → tuvalet
