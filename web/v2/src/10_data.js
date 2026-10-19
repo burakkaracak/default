@@ -42,6 +42,10 @@ const Data = {
     terapist: { name: 'Terapist', icon: '💆', cost: [800, 1500], wage: 60, desc: 'Spada masaj yapar.', look: ['character-female-f', 'character-male-b'] },
     cankurtaran: { name: 'Cankurtaran', icon: '🛟', cost: 600, wage: 45, desc: 'Havuz başında nöbet tutar; misafirler daha rahat ve mutlu.', look: ['character-male-e', 'character-female-a'] },
     barmen: { name: 'Barmen', icon: '🍹', cost: [900, 1600], wage: 60, desc: 'Çatı barında kokteyl hazırlar.', look: ['character-male-c', 'character-female-b'] },
+    // diğer personel (MoreStaff): ilgili yer açılınca işe alınabilir
+    tuvaletci: { name: 'Tuvalet görevlisi', icon: '🧻', cost: 450, wage: 30, desc: 'Yalnız tuvalete bakar: kâğıdı doldurur, kirlenince hemen temizler.', look: ['character-female-b', 'character-male-b'], need: 'wc' },
+    vale: { name: 'Vale', icon: '🚗', cost: [800, 1500], wage: 40, desc: 'Otoparkta arabayla gelen misafiri karşılar, kapısını açar: misafir daha mutlu, %10 fazla öder.', look: ['character-male-d', 'character-female-d'], need: 'park' },
+    kapici: { name: 'Kapı görevlisi', icon: '🎩', cost: 600, wage: 35, desc: 'Otel kapısında gelenleri selamlar: misafirler sırada daha sabırlı ve mutlu.', look: ['character-male-c', 'character-female-c'], need: 'stars2' },
     bahcivan: { name: 'Bahçıvan', icon: '🌱', cost: 500, wage: 35, desc: 'Çiçekleri bakımlı tutar; açmış bahçe bütün misafirleri mutlu eder.', look: ['character-female-a', 'character-male-a'] },
   },
 

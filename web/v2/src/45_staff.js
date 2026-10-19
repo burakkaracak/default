@@ -29,6 +29,7 @@ class Staff extends Behaviour {
     this.tag = U.Text(this.go, V(0, 2.2, 0), def.icon + ' ' + this.name, 0.055, C(0.75, 0.95, 1), true);
     this.mood = U.Text(this.go, V(0, 2.65, 0), '', 0.09, Col.white, true); this.mood.obj.visible = false; this.moodT = 0;
     if (role === 'receptionist') { this.go.position.copy(Hotel.Lobby.deskBack); setEuler(this.go, 0, 0, 0); }
+    if (MoreStaff.Has(role)) MoreStaff.Place(this);
     this.Persist();
   }
   get pos() { return this.go.position; }
@@ -80,6 +81,7 @@ class Staff extends Behaviour {
     if (this.role === 'receptionist') return this.ReceptionTick(dt);
     if (this.role === 'cleaner') return this.CleanerTick(dt);
     if (this.role === 'bellhop') return this.BellhopTick(dt);
+    if (MoreStaff.Has(this.role)) return MoreStaff.Tick(this, dt);
     Facilities.StaffTick(this, dt);
   }
   ReceptionTick(dt) {
