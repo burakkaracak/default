@@ -16,7 +16,11 @@ class Staff extends Behaviour {
     super(); this.go.name = 'Personel';
     this.role = role; this.key = key;
     const sd = Game.st.staffData[key] || {};
-    this.name = sd.name || Random.Pick(Random.Chance(0.5) ? Data.Names.f : Data.Names.m);
+    if (!(this.name = sd.name)) {  // yeni personel: başka çalışanın adını almasın
+      const used = new Set(Game.staff.map(s => s.name)), all = Random.Chance(0.5) ? Data.Names.f : Data.Names.m;
+      const free = all.filter(n => !used.has(n));
+      this.name = Random.Pick(free.length ? free : all);
+    }
     this.lv = sd.lv || 1; this.xp = sd.xp || 0; this.morale = sd.morale ?? 0.85;
     this.trait = Staff.Traits.find(t => t.id === sd.trait) || Random.Pick(Staff.Traits);
     this.look = sd.look;

@@ -17,6 +17,7 @@ const Decor = {
     { k: 'loungeChair', n: 'Berjer', i: '🛋', m: 'loungeChair', w: 2, d: 2, cost: 140, comfort: 7, cat: 'mobilya', star: 1, yaw: 180 },
     { k: 'loungeChairRelax', n: 'Dinlenme koltuğu', i: '🛋', m: 'loungeChairRelax', w: 2, d: 3, cost: 220, comfort: 10, cat: 'mobilya', star: 2, yaw: 180 },
     { k: 'loungeDesignSofa', n: 'Kanepe', i: '🛋', m: 'loungeDesignSofa', w: 4, d: 2, cost: 380, comfort: 14, cat: 'mobilya', star: 2, yaw: 180 },
+    { k: 'granata', n: 'Granata koltuk', i: '🛋', b: 'granata', w: 3, d: 2, cost: 260, comfort: 12, cat: 'mobilya', star: 2 },
     { k: 'sideTable', n: 'Sehpa', i: '🪵', m: 'sideTable', w: 1, d: 1, cost: 40, comfort: 2, cat: 'mobilya', star: 1 },
     { k: 'tableCoffeeGlass', n: 'Cam orta sehpa', i: '🪟', m: 'tableCoffeeGlass', w: 3, d: 2, cost: 160, comfort: 5, cat: 'mobilya', star: 2 },
     { k: 'tableRound', n: 'Yuvarlak masa', i: '🟤', m: 'tableRound', w: 2, d: 2, cost: 110, comfort: 4, cat: 'mobilya', star: 1 },
@@ -178,6 +179,21 @@ const Decor = {
   Make_tvSet(z, it, d, c, yaw) {
     const g = U.Pivot(z.parent, V(c.x, 0, c.zz), 'TV'); g.rotation.y = yaw * Mathf.Deg2Rad;
     U.Model('cabinetTelevision', g, V(0, 0, 0), 0, 1); U.Model('televisionModern', g, V(0, 0.5, 0), 0, 1);
+    return g;
+  },
+  // Loda "Granata" koltuğundan (fotoğraf, img2threejs yöntemiyle parçalara ayrıldı): bordo tabla üstünde krem bukle koltuk, sağda tabla rafı, altta iki kızak ayak. Önü +z.
+  Make_granata(z, it, d, c, yaw) {
+    const g = U.Pivot(z.parent, V(c.x, 0, c.zz), 'Granata'); g.rotation.y = yaw * Mathf.Deg2Rad;
+    const kumas = U.Mat(C(0.92, 0.9, 0.86), { tex: U.CarpetTex, tiling: { x: 1, y: 1 } }), bordo = U.Mat(C(0.45, 0.1, 0.12), 0.6);
+    U.Box('AyakSol', g, V(-0.5, 0.06, 0), V(0.07, 0.12, 0.72), C(0.9, 0.88, 0.84));
+    for (const zz of [-0.18, 0.18]) U.Box('AyakDalga', g, V(-0.5, 0.06, zz), V(0.16, 0.12, 0.16), C(0.9, 0.88, 0.84), 'Cylinder');
+    U.Prim('AyakSag', g, V(0.62, 0.06, 0), V(0.05, 0.12, 0.72), U.Mat(C(0.72, 0.73, 0.76), 0.7));
+    U.Prim('Tabla', g, V(0, 0.15, 0), V(1.5, 0.05, 1), bordo);
+    U.Prim('Oturak', g, V(-0.15, 0.3, 0.06), V(0.8, 0.24, 0.76), kumas, 'Round');
+    U.Prim('KolSol', g, V(-0.65, 0.37, -0.04), V(0.2, 0.38, 0.92), kumas, 'Round');
+    U.Prim('KolSag', g, V(0.35, 0.37, -0.04), V(0.2, 0.38, 0.92), kumas, 'Round');
+    U.Prim('Sirt', g, V(-0.15, 0.42, -0.4), V(0.8, 0.5, 0.2), kumas, 'Round');
+    const y = U.Prim('Yastik', g, V(-0.2, 0.6, -0.24), V(0.36, 0.36, 0.1), kumas, 'RoundBig'); y.rotation.x = -0.25;
     return g;
   },
   Make_rug(z, it, d, c, yaw) {
