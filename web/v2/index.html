@@ -139,7 +139,8 @@
   @media (pointer: coarse) {
     .sheet .tabs button { min-height: 36px; }
     .hud button, .pill, .sheet .tabs button, .sheet button.ghost, .item button, .decor-bar button, .chat .chead button { position: relative; }
-    .hud button::after, .pill::after, .sheet .tabs button::after, .sheet button.ghost::after, .item button::after, .decor-bar button::after, .chat .chead button::after { content: ''; position: absolute; inset: -6px; }
+    .hud button::after, .pill::after, .decor-bar button::after, .chat .chead button::after { content: ''; position: absolute; inset: -6px; }
+    .sheet .tabs button::after, .sheet button.ghost::after, .item button::after { content: ''; position: absolute; inset: -5px 0; }  /* menü içinde yalnız dikeyde: yanlara taşmasın */
   }
   /* dekorasyon */
   body.decor .hud.tl, body.decor .hud.tr, body.decor .hud.br, body.decor #quest-card, body.decor #hint { display: none !important; }
