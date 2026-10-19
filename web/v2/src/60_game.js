@@ -526,7 +526,7 @@ const Game = {
         body.prepend(lb);
         const sw = document.createElement('div'); Life.RenderStars(sw); body.prepend(...sw.childNodes);
       } else if (t === 'personel') {
-        for (const role of ['receptionist', 'cleaner', 'bellhop', ...Facilities.StaffRoles()]) {
+        for (const role of ['receptionist', 'cleaner', 'bellhop', ...Facilities.StaffRoles(), ...MoreStaff.Roles()]) {
           const def = Data.Staff[role]; const have = this.staff.filter(s => s.role === role);
           for (const s of have) {
             const d = document.createElement('div'); d.className = 'item done';

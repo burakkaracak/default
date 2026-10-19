@@ -1,9 +1,11 @@
 # Yeni özellikler: hız yükseltmeleri, oda parçaları, bankodaki para yığını, kuyruk çubuğu, eski kayıt uyumu.
 import glob, sys, subprocess, time, os
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8834'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 OUT = sys.argv[1] if len(sys.argv) > 1 else '/tmp'
 fails = []
@@ -16,7 +18,7 @@ try:
         pg = b.new_page(viewport={'width': 1280, 'height': 800}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)[:300]))
         pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append(m.text[:300]))
-        pg.goto('http://localhost:8834/play.html'); pg.wait_for_function('window.__ready === true', timeout=90000)
+        pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=90000)
         E = lambda s: pg.evaluate(s)
         E("(()=>{const g=window.__game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; g.Quality.Set(0); g.Game.spawnT=999; window.__noRender=1;})()")
         # hız yükseltmeleri
