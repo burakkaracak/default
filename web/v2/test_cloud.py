@@ -1,9 +1,11 @@
 # Bulut kaydı (Lavanta Koyu): birden çok "cihaz" aynı sahte veritabanını paylaşır. Kayıp senaryoları denenir.
 import glob, sys, subprocess, time, os, json
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8837'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 CLOUD = {}
 MOCK = '''
@@ -27,7 +29,7 @@ def device(b, delay=0):
     c.add_init_script(f'window.__cloudDelay = {delay};' + MOCK)
     pg = c.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
-    pg.goto('http://localhost:8837/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
+    pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
     pg.evaluate('window.__noRender=1; window.__game.UI.ClearDialogs()')
     return c, pg, errs
 def push(pg): pg.evaluate("(async()=>{ window.__game.Game.Save(); await window.__game.Cloud.Push(); })()"); pg.wait_for_timeout(400)

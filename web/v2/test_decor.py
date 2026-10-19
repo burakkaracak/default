@@ -1,9 +1,11 @@
 # Dekorasyon testi: dekor kipine girme, eşya alma, döndürme, sürükleme, kaldırma, duvar/zemin, kayıt ve yeniden yükleme; lobi.
 import glob, sys, subprocess, time, os, json
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8839'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 SHOT = sys.argv[1] if len(sys.argv) > 1 else HERE + '/decor'
 fails = []
@@ -16,7 +18,7 @@ try:
         pg = b.new_page(viewport={'width': 1100, 'height': 760}); errs = []
         pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:400]))
         pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append('CONSOLE ' + m.text[:300]))
-        pg.goto('http://localhost:8839/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
+        pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
         pg.evaluate("(()=>{const g=window.__game,G=g.Game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; g.Quality.Set(0); G.spawnT=999; G.st.money=100000; G.BuyRoom(G.NextRoom()); G.UpgradeRoom(g.Hotel.Room(11)); g.Decor.Enter('oda11');})()")
         pg.wait_for_timeout(1500)
         s = pg.evaluate("(()=>{const D=window.__game.Decor; return {active: D.active && D.active.id, n: D.active.items.length, comfort: D.Comfort(D.active), sheet: window.__game.UI.SheetOpen}})()")

@@ -2,11 +2,13 @@
 # Kullanım: python3 test_boot.py çıktı.png [en] [boy] [saniye] [js] [--touch]
 import glob, sys, subprocess, time, os
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
 args = [a for a in sys.argv[1:] if not a.startswith('--')]
 touch = '--touch' in sys.argv
-port = 8831
+port = FREE
 srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(port)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 out = args[0] if len(args) > 0 else HERE + '/shot.png'

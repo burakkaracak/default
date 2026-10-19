@@ -2,9 +2,11 @@
 # Test dosyası: kısa üretilmiş bir WAV. Kullanım: python3 test_music.py
 import glob, sys, subprocess, time, os, struct, math
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8849'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 fails = []
 def check(name, ok, info=''):
@@ -20,7 +22,7 @@ try:
         b = p.chromium.launch(executable_path=C, args=['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'])
         pg = b.new_page(viewport={'width': 393, 'height': 760}, device_scale_factor=2, is_mobile=True, has_touch=True); errs = []
         pg.on('pageerror', lambda e: errs.append('HATA ' + str(e)[:300]))
-        pg.goto('http://localhost:8849/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
+        pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
         pg.evaluate(BOOT)
         pg.evaluate("window.__game.Sfx.Init()"); pg.wait_for_timeout(800)
         r = pg.evaluate("(()=>{const M=window.__Music; return {ctx:!!M.ctx, has:M.Has, src:!!M.src}})()")

@@ -2,11 +2,13 @@
 # Kullanım: python3 test_social.py [çıktı_klasörü]
 import glob, sys, subprocess, time, os
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
 OUT = sys.argv[1] if len(sys.argv) > 1 else HERE + '/social_shots'
 os.makedirs(OUT, exist_ok=True)
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8845'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 fails = []
 def check(name, ok, info=''):
@@ -19,7 +21,7 @@ try:
         pg = b.new_page(viewport={'width': 393, 'height': 760}, device_scale_factor=2, is_mobile=True, has_touch=True); errs = []
         pg.on('pageerror', lambda e: errs.append('HATA ' + str(e)[:300]))
         pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append('KONSOL ' + m.text[:300]))
-        pg.goto('http://localhost:8845/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
+        pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
         pg.evaluate("(()=>{const g=window.__game,G=g.Game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Quality.auto=false; g.Quality.Set(0); G.spawnT=1e9; G.st.money=1e6; G.st.tutorial=99; for(let i=0;i<3;i++) G.BuyRoom(G.NextRoom()); g.UI.ClearDialogs(); window.__noRender=1; return 1})()")
         # --- 1) sohbet oyunu durdurur ve misafiri etkiler
         info = pg.evaluate(SEAT); pg.wait_for_timeout(300)

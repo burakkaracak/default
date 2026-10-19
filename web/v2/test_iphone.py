@@ -2,6 +2,8 @@
 # Kullanım: python3 test_iphone.py [çıktı_klasörü] [--cihaz mac|iphone15|iphone14|hepsi]  (varsayılan: iphone14)
 import glob, sys, subprocess, time, os, base64
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
 ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
@@ -9,7 +11,7 @@ CIHAZ = sys.argv[sys.argv.index('--cihaz') + 1] if '--cihaz' in sys.argv else 'i
 if CIHAZ in ARGS: ARGS.remove(CIHAZ)
 OUT = ARGS[0] if ARGS else HERE + '/iphone_shots'
 os.makedirs(OUT, exist_ok=True)
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8835'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 def iua(v): return f'Mozilla/5.0 (iPhone; CPU iPhone OS {v}_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/{v}.0 Mobile/15E148 Safari/604.1'
 MAC_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
@@ -80,7 +82,7 @@ try:
             pg = ctx.new_page(); errs = []
             pg.on('pageerror', lambda e: errs.append('HATA ' + str(e)[:300]))
             pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append('KONSOL ' + m.text[:300]))
-            pg.goto('http://localhost:8835/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
+            pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=120000)
             real = pg.evaluate("(()=>{const q=window.__game.Quality,l=q.level,pr=q.PixelRatio(); return {kalite:q.names[l],oran:+pr.toFixed(2),mpx:Math.round(innerWidth*pr*innerHeight*pr/1e5)/10}})()")
             pg.evaluate(SETUP)
             pg.evaluate("(()=>{const q=window.__game.Quality; q.Set(0)})()")  # başsız yazılım çizimi Yüksek/Orta'da çok yavaş; düzen denetimi Düşük'te yapılır

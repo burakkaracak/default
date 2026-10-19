@@ -2,9 +2,11 @@
 # Hızlandırılmış zaman (window.__sub). Sonunda beklenen durumları denetler.
 import glob, sys, subprocess, time, os, json
 from playwright.sync_api import sync_playwright
+import socket
+_sk = socket.socket(); _sk.bind(('127.0.0.1', 0)); FREE = _sk.getsockname()[1]; _sk.close()  # boş port: testler aynı anda çalışabilsin
 HERE = os.path.dirname(os.path.abspath(__file__))
 C = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux*/chrome'))[0]
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8833'], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(FREE)], cwd=HERE + '/dist', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(0.8)
 SHOT = sys.argv[1] if len(sys.argv) > 1 else HERE + '/flow'
 fails = []
@@ -19,7 +21,7 @@ try:
         pg = b.new_page(viewport={'width': 1280, 'height': 800}); errs = []
         pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:400]))
         pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append('CONSOLE ' + m.text[:300]))
-        pg.goto('http://localhost:8833/play.html'); pg.wait_for_function('window.__ready === true', timeout=90000)
+        pg.goto(f'http://localhost:{FREE}/play.html'); pg.wait_for_function('window.__ready === true', timeout=90000)
         pg.evaluate("(()=>{const g=window.__game; g.Store.DeleteAll(); g.UI.ClearDialogs(); g.Game.st.money=120; g.Quality.auto=false; g.Quality.Set(0); g.Game.spawnT=999; g.Game.player.GoTo(g.Hotel.Lobby.deskBack,0); g.Game.Spawn('turist'); window.__sub=6; window.__noRender=1;})()")
         pg.wait_for_timeout(3000); print('fps:', pg.evaluate("(()=>{const f0=window.__game.Time.frameCount; return new Promise(r=>setTimeout(()=>r(window.__game.Time.frameCount-f0),2000))})()") / 2)
         # 1) misafir gelsin ve karşılansın
